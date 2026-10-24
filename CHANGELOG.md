@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.3 (2026-10-25)
+
+**Features**
+
+- **app** New app icon: a plain black disc with a crescent bite on white, replacing the inherited FlClash icon on Android (adaptive and legacy icons), Android TV and Windows (5615dc1)
+
+**Bug Fixes**
+
+- **config** Universal import has real action buttons now: download and parse, choose file and parse text sit under their fields instead of hiding in the section header rows, and a disabled confirm button shows where the import will be confirmed before anything is parsed (9f108b0)
+- **windows** The Windows install no longer carries FlClash names: the core and helper binaries are KFusionCore.exe and KFusionHelperService.exe, helper service name included (ac61373)
+- **desktop** The desktop entry written for protocol registration is named KFusion, the last visible piece of the rename (b1a8a7c)
+
 ## v0.2.2 (2026-10-24)
 
 **Bug Fixes**

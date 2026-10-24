@@ -2,6 +2,44 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.3",
+      "tag": "v0.2.3",
+      "date": "2026-10-25",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "5615dc1",
+              "scope": "app",
+              "text": "New app icon: a plain black disc with a crescent bite on white, replacing the inherited FlClash icon on Android (adaptive and legacy icons), Android TV and Windows"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "9f108b0",
+              "scope": "config",
+              "text": "Universal import has real action buttons now: download and parse, choose file and parse text sit under their fields instead of hiding in the section header rows, and a disabled confirm button shows where the import will be confirmed before anything is parsed"
+            },
+            {
+              "id": "ac61373",
+              "scope": "windows",
+              "text": "The Windows install no longer carries FlClash names: the core and helper binaries are KFusionCore.exe and KFusionHelperService.exe, helper service name included"
+            },
+            {
+              "id": "b1a8a7c",
+              "scope": "desktop",
+              "text": "The desktop entry written for protocol registration is named KFusion, the last visible piece of the rename"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.2",
       "tag": "v0.2.2",
       "date": "2026-10-24",
