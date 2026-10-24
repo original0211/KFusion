@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
+import javax.inject.Inject
 
 plugins {
     id("com.android.application")
@@ -98,32 +99,57 @@ flutter {
 
 // Packaged APKs must keep their manifest-declared classes; a namespace/class
 // mismatch here crashes the app before any UI, and unit tests cannot see it.
-val checkReleaseApk by tasks.registering(Exec::class) {
-    group = "verification"
-    description = "Runs tool/check_apk.py over the packaged release APKs."
-    dependsOn("packageRelease")
-    val python =
-        if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3"
-    commandLine(python, "--version")
-    doFirst {
-        val apkDir = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+abstract class CheckReleaseApk : DefaultTask() {
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    @get:Internal
+    abstract val apkDirectory: DirectoryProperty
+
+    @get:Internal
+    abstract val scriptFile: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        val dir = apkDirectory.get().asFile
         val apks =
-            apkDir
+            dir
                 .walkTopDown()
                 .filter { it.isFile && it.extension == "apk" }
                 .sortedBy { it.path }
                 .toList()
         check(apks.isNotEmpty()) {
-            "checkReleaseApk: no release APK under ${apkDir.path}; packageRelease must run first"
+            "checkReleaseApk: no release APK under ${dir.path}; packageRelease must run first"
         }
-        commandLine(
-            listOf(python, rootProject.file("../tool/check_apk.py").absolutePath) +
-                apks.map { it.absolutePath },
-        )
+        val python =
+            if (System.getProperty("os.name").lowercase().contains("win")) {
+                "python"
+            } else {
+                "python3"
+            }
+        execOperations.exec {
+            commandLine(
+                listOf(python, scriptFile.get().asFile.absolutePath) +
+                    apks.map { it.absolutePath },
+            )
+        }
     }
 }
 
-tasks.named("assembleRelease") { dependsOn(checkReleaseApk) }
+val checkReleaseApk =
+    tasks.register<CheckReleaseApk>("checkReleaseApk") {
+        group = "verification"
+        description = "Runs tool/check_apk.py over the packaged release APKs."
+        dependsOn("packageRelease")
+        apkDirectory.set(project.layout.buildDirectory.dir("outputs/apk/release"))
+        scriptFile.fileValue(rootProject.file("../tool/check_apk.py"))
+    }
+
+tasks.configureEach {
+    if (name == "assembleRelease") {
+        dependsOn(checkReleaseApk)
+    }
+}
 
 dependencies {
     implementation(project(":service"))
