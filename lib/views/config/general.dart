@@ -1,4 +1,5 @@
 import 'package:kfusion/common/common.dart';
+import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/features/form/form.dart';
@@ -51,6 +52,76 @@ class BeginnerModeItem extends ConsumerWidget {
       onChanged: (value) {
         ref.read(beginnerModeProvider.notifier).set(value);
       },
+    );
+  }
+}
+
+class SingBoxStatusItem extends ConsumerWidget {
+  const SingBoxStatusItem({super.key});
+
+  Future<String?> _findBinary() async {
+    final homeDir = await appPath.homeDirPath;
+    final stored = await Preferences().getSingBoxBinaryPath();
+    return findSingBoxBinary(
+      singBoxCandidates(
+        executableDir: appPath.executableDirPath,
+        homeDir: homeDir,
+        storedPath: stored,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status =
+        ref.watch(singBoxActionProvider).value ??
+        const SingBoxStatus(state: SingBoxState.idle);
+    final running = status.state == SingBoxState.running;
+    final starting = status.state == SingBoxState.starting;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListItem(
+          title: const Text('sing-box 核心'),
+          subtitle: Text(
+            status.message.isEmpty
+                ? (system.isAndroid ? 'Android 运行时待 P3 接入' : '未运行')
+                : status.message,
+          ),
+        ),
+        if (system.isWindows)
+          FutureBuilder<String?>(
+            future: _findBinary(),
+            builder: (context, snapshot) {
+              final binary = snapshot.data;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  binary == null
+                      ? '未找到 sing-box 二进制，见 tools/singbox/README.md'
+                      : '二进制：$binary',
+                ),
+              );
+            },
+          ),
+        if (system.isWindows)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FilledButton(
+              onPressed: starting
+                  ? null
+                  : () {
+                      final action = ref.read(singBoxActionProvider.notifier);
+                      if (running) {
+                        action.stop();
+                      } else {
+                        action.start();
+                      }
+                    },
+              child: Text(running ? '停止 sing-box' : '启动 sing-box'),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -284,6 +355,7 @@ class GeneralView extends ConsumerWidget {
   List<Widget> _startupItems(AppLocalizations appLocalizations) {
     return [
       const BeginnerModeItem(),
+      const SingBoxStatusItem(),
       if (system.isDesktop) ...[
         _appSettingToggle(
           title: (l) => l.autoLaunch,

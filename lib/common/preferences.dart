@@ -48,6 +48,65 @@ class Preferences {
     await preferences?.setBool('beginnerMode', value);
   }
 
+  Future<Map<int, String>> getCoreKindMap() async {
+    final preferences = await _store.value;
+    final raw = preferences?.getString('coreKinds');
+    if (raw == null) return {};
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final MapEntry(:key, :value) in decoded.entries)
+          if (int.tryParse(key.toString()) != null)
+            int.parse(key.toString()): value.toString(),
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> setCoreKindMap(Map<int, String> kinds) async {
+    final preferences = await _store.value;
+    await preferences?.setString(
+      'coreKinds',
+      json.encode({for (final e in kinds.entries) e.key.toString(): e.value}),
+    );
+  }
+
+  Future<String> getActiveCoreKind() async {
+    final preferences = await _store.value;
+    return preferences?.getString('activeCoreKind') ?? 'mihomo';
+  }
+
+  Future<void> setActiveCoreKind(String value) async {
+    final preferences = await _store.value;
+    await preferences?.setString('activeCoreKind', value);
+  }
+
+  Future<bool> getSingBoxTunEnabled() async {
+    final preferences = await _store.value;
+    return preferences?.getBool('singboxTunEnabled') ?? false;
+  }
+
+  Future<void> setSingBoxTunEnabled(bool value) async {
+    final preferences = await _store.value;
+    await preferences?.setBool('singboxTunEnabled', value);
+  }
+
+  Future<String?> getSingBoxBinaryPath() async {
+    final preferences = await _store.value;
+    return preferences?.getString('singboxBinaryPath');
+  }
+
+  Future<void> setSingBoxBinaryPath(String? value) async {
+    final preferences = await _store.value;
+    if (value == null) {
+      await preferences?.remove('singboxBinaryPath');
+    } else {
+      await preferences?.setString('singboxBinaryPath', value);
+    }
+  }
+
   Future<int> getVersion() async {
     final preferences = await _store.value;
     return preferences?.getInt('version') ?? 0;

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
@@ -314,6 +315,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
           _AgeSecretKeyField(controller: _ageSecretKeyController),
         ],
       ),
+      generateSection(items: [_CoreKindField(profileId: widget.profile.id)]),
       if (isUrl)
         generateSection(
           items: [
@@ -427,6 +429,48 @@ class _ProfileNameField extends StatelessWidget {
         inputFormatters: TextInputLimits.limit(TextInputLimits.name),
         onChanged: onChanged,
       ),
+    );
+  }
+}
+
+class _CoreKindField extends ConsumerWidget {
+  const _CoreKindField({required this.profileId});
+
+  final int profileId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final kind = ref.watch(coreKindsProvider).value?[profileId];
+    final current = kind ?? CoreKind.mihomo;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FormRow(
+          title: '运行核心',
+          trailing: DropdownButton<CoreKind>(
+            value: current,
+            items: [
+              for (final option in CoreKind.values)
+                DropdownMenuItem(value: option, child: Text(option.value)),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(coreKindsProvider.notifier).setKind(profileId, value);
+              }
+            },
+          ),
+        ),
+        if (current == CoreKind.singbox && system.isAndroid)
+          const Padding(
+            padding: EdgeInsets.only(left: 16, bottom: 8),
+            child: Text('Android 仅导出 sing-box 配置，运行时待 P3 接入。'),
+          ),
+        if (current == CoreKind.singbox && system.isWindows)
+          const Padding(
+            padding: EdgeInsets.only(left: 16, bottom: 8),
+            child: Text('Windows 下由 sing-box 子进程运行，需先放好二进制。'),
+          ),
+      ],
     );
   }
 }

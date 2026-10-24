@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:kfusion/common/common.dart';
+import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/models/common.dart';
 import 'package:kfusion/models/core.dart';
 import 'package:kfusion/models/profile.dart';
@@ -72,6 +73,8 @@ class _ExternalProvidersSliverState
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final providers = widget.providers;
+    final activeKind =
+        ref.watch(activeCoreKindProvider).value ?? CoreKind.mihomo;
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -87,6 +90,13 @@ class _ExternalProvidersSliverState
             ],
           ),
         ),
+        if (activeKind == CoreKind.singbox)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('sing-box 不提供 provider 接口，provider 数据不可用。'),
+            ),
+          ),
         SliverList.builder(
           itemCount: providers.length,
           itemBuilder: (_, index) {

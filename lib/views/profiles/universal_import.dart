@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:kfusion/common/common.dart';
+import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
@@ -29,6 +30,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
   IrParseResult? _preview;
   ConfigFormat? _format;
   String? _error;
+  String? _exportMessage;
   var _busy = false;
 
   @override
@@ -128,6 +130,35 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
     }
   }
 
+  Future<void> _exportSingBox() async {
+    final preview = _preview;
+    if (preview == null) return;
+    setState(() => _busy = true);
+    try {
+      final SingBoxRenderResult rendered = renderSingBox(
+        preview.profile,
+        secret: generateSingBoxSecret(),
+      );
+      final bytes = Uint8List.fromList(
+        utf8.encode(json.encode(rendered.config)),
+      );
+      final uri = await picker.saveFile('kfusion-singbox.json', bytes);
+      if (!mounted) return;
+      setState(() {
+        _exportMessage = uri == null
+            ? '已取消导出。'
+            : 'sing-box 配置已保存到 $uri'
+                  '${rendered.unsupported.isEmpty ? '' : '，未翻译：${rendered.unsupported.join('、')}'}';
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _exportMessage = '导出失败：${compactError(e)}');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final preview = _preview;
@@ -209,6 +240,23 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
                 child: const Text('确认导入'),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: FilledButton.tonal(
+                onPressed: _busy ? null : _exportSingBox,
+                child: const Text('导出 sing-box 配置'),
+              ),
+            ),
+            if (system.isAndroid)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Android 仅导出 sing-box 配置，运行时待 P3 接入。'),
+              ),
+            if (_exportMessage != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_exportMessage!),
+              ),
           ],
         ],
       ),
