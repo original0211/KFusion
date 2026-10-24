@@ -181,16 +181,30 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
               decoration: const InputDecoration(hintText: 'https://…'),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: FilledButton.tonal(
+              onPressed: _busy ? null : _loadFromUrl,
+              child: const Text('下载并解析'),
+            ),
+          ),
           ListItem(
             leading: const GlyphIcon(AppGlyphs.importFile),
             title: const Text('从文件导入'),
             subtitle: const Text('Clash YAML / sing-box JSON / 链接文本'),
             onTap: _busy ? null : _loadFromFile,
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FilledButton.tonal(
+              onPressed: _busy ? null : _loadFromFile,
+              child: const Text('选择文件'),
+            ),
+          ),
           ListItem(
             leading: const GlyphIcon(AppGlyphs.customize),
             title: const Text('解析粘贴的文本'),
-            subtitle: const Text('粘贴内容后点此解析'),
+            subtitle: const Text('粘贴内容后点「解析文本」'),
             onTap: _busy ? null : () => _showPreview(_pasteController.text),
           ),
           Padding(
@@ -200,6 +214,15 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
               minLines: 4,
               maxLines: null,
               decoration: const InputDecoration(hintText: '粘贴配置文本…'),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: FilledButton.tonal(
+              onPressed: _busy
+                  ? null
+                  : () => _showPreview(_pasteController.text),
+              child: const Text('解析文本'),
             ),
           ),
           Padding(
@@ -257,6 +280,15 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
                 padding: const EdgeInsets.all(16),
                 child: Text(_exportMessage!),
               ),
+          ] else ...[
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: FilledButton(onPressed: null, child: Text('确认导入')),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text('解析成功后可在此确认导入'),
+            ),
           ],
         ],
       ),
