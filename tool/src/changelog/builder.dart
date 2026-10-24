@@ -52,9 +52,19 @@ class ChangelogBuilder {
 
   ChangelogBuildResult build({PendingVersion? pending}) {
     final boundaryTag = VersionTag.tryParse(boundary);
+    // A tag qualifies by semver, as upstream, or by sitting on top of the
+    // boundary commit: this fork restarted versioning at 0.1.0, below the
+    // boundary, so its releases are descendants of v0.8.96 without being
+    // greater than it. The boundary tag itself stays frozen either way.
     final stable = git
         .stableTags()
-        .where((tag) => boundaryTag == null || tag.compareTo(boundaryTag) > 0)
+        .where(
+          (tag) =>
+              tag.name != boundary &&
+              (boundaryTag == null ||
+                  tag.compareTo(boundaryTag) > 0 ||
+                  git.isAncestor(boundary, tag.name)),
+        )
         .toList();
     final parser = ChangelogParser();
     final versions = <ChangelogVersion>[];

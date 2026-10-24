@@ -115,6 +115,19 @@ class Git {
   bool tagIsReachable(String name, {String revision = 'HEAD'}) =>
       _run(['tag', '--merged', revision, '--list', name]).trim().isNotEmpty;
 
+  /// Whether [ancestor] is a commit [descendant] was built on top of.
+  ///
+  /// Exits non-zero both when it is not and when either ref is unknown, so a
+  /// missing boundary tag simply reads as "not an ancestor".
+  bool isAncestor(String ancestor, String descendant) =>
+      Process.runSync('git', [
+        'merge-base',
+        '--is-ancestor',
+        ancestor,
+        descendant,
+      ], workingDirectory: workingDirectory).exitCode ==
+      0;
+
   String tagDate(String name) =>
       _run(['log', '-1', '--format=%cs', name]).trim();
 
