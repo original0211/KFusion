@@ -2,6 +2,29 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.1",
+      "tag": "v0.2.1",
+      "date": "2026-10-24",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "825dcae",
+              "scope": "android",
+              "text": "Fix the crash on launch: the app manifest now names the application and component classes the app actually ships, instead of classes resolved from the renamed application id namespace, which did not exist"
+            },
+            {
+              "id": "825dcae",
+              "scope": "android",
+              "text": "Fix the platform channel prefix mismatch left over from the rename, so the Dart side reaches the app, battery, service and tile channels the native side registers"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.0",
       "tag": "v0.2.0",
       "date": "2026-10-24",

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.1 (2026-10-24)
+
+**Bug Fixes**
+
+- **android** Fix the crash on launch: the app manifest now names the application and component classes the app actually ships, instead of classes resolved from the renamed application id namespace, which did not exist (825dcae)
+- **android** Fix the platform channel prefix mismatch left over from the rename, so the Dart side reaches the app, battery, service and tile channels the native side registers (825dcae)
+
 ## v0.2.0 (2026-10-24)
 
 **Features**
