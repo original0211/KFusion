@@ -2,6 +2,34 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.0",
+      "tag": "v0.2.0",
+      "date": "2026-10-24",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "bbd1c41",
+              "scope": "android",
+              "text": "Android sing-box runtime: libbox built from the pinned sing-box source in Gradle and hosted by SingBoxVpnService, with two-way exclusion against the mihomo core"
+            },
+            {
+              "id": "4e437f2",
+              "scope": "android",
+              "text": "The Android sing-box service runs on the libbox command server, the entry point of sing-box 1.14"
+            },
+            {
+              "id": "238acce",
+              "scope": "android",
+              "text": "The libbox and mihomo gomobile runtimes coexist in one package: a single shared Seq copy at runtime, with the libbox bindings compiled against a compile-only Seq jar"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "tag": "v0.1.0",
       "date": "2026-10-24",

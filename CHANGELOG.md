@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0 (2026-10-24)
+
+**Features**
+
+- **android** Android sing-box runtime: libbox built from the pinned sing-box source in Gradle and hosted by SingBoxVpnService, with two-way exclusion against the mihomo core (bbd1c41)
+- **android** The Android sing-box service runs on the libbox command server, the entry point of sing-box 1.14 (4e437f2)
+- **android** The libbox and mihomo gomobile runtimes coexist in one package: a single shared Seq copy at runtime, with the libbox bindings compiled against a compile-only Seq jar (238acce)
+
 ## v0.1.0 (2026-10-24)
 
 **Features**
