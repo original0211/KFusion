@@ -46,6 +46,29 @@ String _target(String target) {
   }
 }
 
+/// Registers a remote rule set for a Clash GEOIP/GEOSITE [code] in
+/// [ruleSets]; sing-box 1.12 removed the geoip/geosite rule fields.
+String _registerGeoRuleSet(
+  Map<String, Map<String, Object?>> ruleSets,
+  String kind,
+  String code,
+) {
+  final tag = '$kind-${code.toLowerCase()}';
+  ruleSets.putIfAbsent(
+    tag,
+    () => {
+      'type': 'remote',
+      'tag': tag,
+      'format': 'binary',
+      'url':
+          'https://raw.githubusercontent.com/SagerNet/sing-$kind/'
+          'rule-set/$tag.srs',
+      'download_detour': 'direct',
+    },
+  );
+  return tag;
+}
+
 Map<String, Object?> _tlsFromClash(Map<String, Object?> params) {
   if (params['tls'] != true) return const {};
   final tls = <String, Object?>{'enabled': true};
@@ -53,11 +76,14 @@ Map<String, Object?> _tlsFromClash(Map<String, Object?> params) {
   if (servername != null) tls['server_name'] = servername;
   if (params['skip-cert-verify'] == true) tls['insecure'] = true;
   if (params['alpn'] != null) tls['alpn'] = params['alpn'];
+  final reality = _asMap(params['reality-opts']);
   final fingerprint = params['fingerprint'];
   if (fingerprint != null) {
     tls['utls'] = {'enabled': true, 'fingerprint': fingerprint};
+  } else if (reality.isNotEmpty) {
+    // sing-box requires uTLS for reality clients; mihomo defaults to chrome.
+    tls['utls'] = {'enabled': true, 'fingerprint': 'chrome'};
   }
-  final reality = _asMap(params['reality-opts']);
   if (reality.isNotEmpty) {
     tls['reality'] = {
       'enabled': true,
@@ -182,36 +208,6 @@ Map<String, Object?>? _nodeToSingBox(IrNode node, List<String> unsupported) {
           if (params['alpn'] != null) 'alpn': params['alpn'],
         },
       };
-    case 'wireguard':
-      final ip = _asString(params['ip']);
-      final ipv6 = _asString(params['ipv6']);
-      final local = ip.isNotEmpty
-          ? '$ip/32'
-          : ipv6.isNotEmpty
-          ? '$ipv6/128'
-          : '';
-      return {
-        ...base,
-        'type': 'wireguard',
-        if (local.isNotEmpty) 'local_address': [local],
-        if (params['private-key'] != null) 'private_key': params['private-key'],
-        if (params['public-key'] != null)
-          'peer_public_key': params['public-key'],
-        if (params['preshared-key'] != null)
-          'pre_shared_key': params['preshared-key'],
-        if (params['reserved'] != null) 'reserved': params['reserved'],
-        'peers': [
-          {
-            'address': '${node.server}:${node.port}',
-            if (params['public-key'] != null)
-              'public_key': params['public-key'],
-            if (params['preshared-key'] != null)
-              'pre_shared_key': params['preshared-key'],
-            'allowed_ips': ['0.0.0.0/0', '::/0'],
-            if (params['reserved'] != null) 'reserved': params['reserved'],
-          },
-        ],
-      };
     case 'socks5':
       return {
         ...base,
@@ -233,6 +229,44 @@ Map<String, Object?>? _nodeToSingBox(IrNode node, List<String> unsupported) {
   }
 }
 
+/// Renders a Clash wireguard node as a sing-box endpoint.
+Map<String, Object?>? _wireGuardEndpoint(
+  IrNode node,
+  List<String> unsupported,
+) {
+  final params = node.params;
+  final ip = _asString(params['ip']);
+  final ipv6 = _asString(params['ipv6']);
+  final addresses = [
+    if (ip.isNotEmpty) '$ip/32',
+    if (ipv6.isNotEmpty) '$ipv6/128',
+  ];
+  if (addresses.isEmpty) {
+    unsupported.add(
+      'wireguard node "${node.name}" has no local address (ip/ipv6)',
+    );
+    return null;
+  }
+  return {
+    'type': 'wireguard',
+    'tag': node.name,
+    'address': addresses,
+    if (params['private-key'] != null) 'private_key': params['private-key'],
+    if (params['mtu'] != null) 'mtu': params['mtu'],
+    'peers': [
+      {
+        'address': node.server,
+        'port': node.port,
+        if (params['public-key'] != null) 'public_key': params['public-key'],
+        if (params['preshared-key'] != null)
+          'pre_shared_key': params['preshared-key'],
+        'allowed_ips': ['0.0.0.0/0', '::/0'],
+        if (params['reserved'] != null) 'reserved': params['reserved'],
+      },
+    ],
+  };
+}
+
 Map<String, Object?>? _groupToSingBox(
   Map<String, Object?> group,
   List<String> unsupported,
@@ -240,7 +274,7 @@ Map<String, Object?>? _groupToSingBox(
   final name = _asString(group['name']);
   final type = _asString(group['type']);
   final proxies = [
-    for (final entry in _asList(group['proxies'])) entry.toString(),
+    for (final entry in _asList(group['proxies'])) _target(entry.toString()),
   ];
   switch (type) {
     case 'select':
@@ -269,7 +303,11 @@ String _intervalText(Object? value) {
   return text;
 }
 
-Map<String, Object?>? _ruleToSingBox(String line, List<String> unsupported) {
+Map<String, Object?>? _ruleToSingBox(
+  String line,
+  List<String> unsupported,
+  Map<String, Map<String, Object?>> ruleSets,
+) {
   var parts = line.split(',');
   if (parts.length < 2) {
     unsupported.add('rule "$line"');
@@ -279,46 +317,71 @@ Map<String, Object?>? _ruleToSingBox(String line, List<String> unsupported) {
     parts = parts.sublist(0, parts.length - 1);
   }
   final kind = parts.first.trim();
-  final target = _target(parts.last.trim());
+  final rawTarget = parts.last.trim();
   final args = parts.sublist(1, parts.length - 1).map((e) => e.trim()).toList();
+  final Map<String, Object?> rule;
   switch (kind) {
     case 'DOMAIN':
-      return {'domain': args, 'outbound': target};
+      rule = {'domain': args};
     case 'DOMAIN-SUFFIX':
-      return {'domain_suffix': args, 'outbound': target};
+      rule = {'domain_suffix': args};
     case 'DOMAIN-KEYWORD':
-      return {'domain_keyword': args, 'outbound': target};
+      rule = {'domain_keyword': args};
     case 'DOMAIN-REGEX':
-      return {'domain_regex': args, 'outbound': target};
+      rule = {'domain_regex': args};
     case 'IP-CIDR':
     case 'IP-CIDR6':
-      return {'ip_cidr': args, 'outbound': target};
+      rule = {'ip_cidr': args};
     case 'SRC-IP-CIDR':
-      return {'source_ip_cidr': args, 'outbound': target};
+      rule = {'source_ip_cidr': args};
     case 'SRC-PORT':
-      return _portRule(args, target, 'source_port', 'source_port_range');
+      rule = _portRuleFields(args, 'source_port', 'source_port_range');
     case 'DST-PORT':
-      return _portRule(args, target, 'port', 'port_range');
+      rule = _portRuleFields(args, 'port', 'port_range');
     case 'GEOIP':
       final codes = args.where((arg) => arg != 'no-resolve').toList();
-      return {'geoip': codes, 'outbound': target};
+      if (codes.isEmpty) {
+        unsupported.add('rule "$line"');
+        return null;
+      }
+      rule = {
+        'rule_set': [
+          for (final code in codes)
+            _registerGeoRuleSet(ruleSets, 'geoip', code),
+        ],
+      };
     case 'GEOSITE':
-      return {'geosite': args, 'outbound': target};
+      if (args.isEmpty) {
+        unsupported.add('rule "$line"');
+        return null;
+      }
+      rule = {
+        'rule_set': [
+          for (final code in args)
+            _registerGeoRuleSet(ruleSets, 'geosite', code),
+        ],
+      };
     case 'PROCESS-NAME':
-      return {'process_name': args, 'outbound': target};
+      rule = {'process_name': args};
     default:
       unsupported.add('rule "$line"');
       return null;
   }
+  // A REJECT target becomes the rule action; no outbound represents it.
+  if (rawTarget == 'REJECT') {
+    rule['action'] = 'reject';
+  } else {
+    rule['outbound'] = _target(rawTarget);
+  }
+  return rule;
 }
 
-Map<String, Object?> _portRule(
+Map<String, Object?> _portRuleFields(
   List<String> args,
-  String target,
   String singleKey,
   String rangeKey,
 ) {
-  final rule = <String, Object?>{'outbound': target};
+  final rule = <String, Object?>{};
   final singles = <int>[];
   final ranges = <String>[];
   for (final arg in args) {
@@ -389,7 +452,13 @@ SingBoxRenderResult renderSingBox(
 }) {
   final unsupported = <String>[];
   final outbounds = <Map<String, Object?>>[];
+  final endpoints = <Map<String, Object?>>[];
   for (final node in profile.nodes) {
+    if (node.type == 'wireguard') {
+      final endpoint = _wireGuardEndpoint(node, unsupported);
+      if (endpoint != null) endpoints.add(endpoint);
+      continue;
+    }
     final outbound = _nodeToSingBox(node, unsupported);
     if (outbound != null) outbounds.add(outbound);
   }
@@ -404,9 +473,12 @@ SingBoxRenderResult renderSingBox(
   outbounds.addAll(const [
     {'type': 'direct', 'tag': 'direct'},
     {'type': 'block', 'tag': 'block'},
-    {'type': 'dns', 'tag': 'dns'},
   ]);
-  final rules = <Map<String, Object?>>[];
+  final ruleSets = <String, Map<String, Object?>>{};
+  final dnsRuleSet = _registerGeoRuleSet(ruleSets, 'geosite', 'cn');
+  final rules = <Map<String, Object?>>[
+    {'protocol': 'dns', 'action': 'hijack-dns'},
+  ];
   var finalOutbound = '';
   for (final line in profile.rules) {
     final trimmed = line.trim();
@@ -417,7 +489,7 @@ SingBoxRenderResult renderSingBox(
       finalOutbound = _target(target);
       continue;
     }
-    final rule = _ruleToSingBox(trimmed, unsupported);
+    final rule = _ruleToSingBox(trimmed, unsupported, ruleSets);
     if (rule != null) rules.add(rule);
   }
   if (finalOutbound.isEmpty) {
@@ -447,7 +519,7 @@ SingBoxRenderResult renderSingBox(
       'type': 'tun',
       'tag': 'tun-in',
       'interface_name': 'kfusion-tun',
-      'inet4_address': '172.19.0.1/30',
+      'address': ['172.19.0.1/30'],
       'auto_route': true,
       'strict_route': true,
       'stack': 'system',
@@ -458,41 +530,50 @@ SingBoxRenderResult renderSingBox(
     'dns': {
       'servers': [
         {
+          'type': 'https',
           'tag': 'remote',
-          'address': 'https://dns.google/dns-query',
+          'server': 'dns.google',
+          'path': '/dns-query',
           'detour': proxyOutbound,
         },
-        {'tag': 'direct', 'address': '223.5.5.5', 'detour': 'direct'},
+        {'type': 'udp', 'tag': 'direct', 'server': '223.5.5.5'},
+        {
+          'type': 'fakeip',
+          'tag': 'fakeip',
+          'inet4_range': '198.18.0.0/15',
+          'inet6_range': 'fc00::/18',
+        },
       ],
       'rules': [
         {
-          'geosite': ['cn'],
+          'rule_set': [dnsRuleSet],
           'server': 'direct',
+        },
+        {
+          'query_type': ['A', 'AAAA'],
+          'server': 'fakeip',
         },
       ],
       'final': 'remote',
       'strategy': 'prefer_ipv4',
-      'fakeip': {
-        'enabled': true,
-        'inet4_range': '198.18.0.0/15',
-        'inet6_range': 'fc00::/18',
-      },
     },
     'inbounds': inbounds,
     'outbounds': outbounds,
+    if (endpoints.isNotEmpty) 'endpoints': endpoints,
     'route': {
       'rules': rules,
+      if (ruleSets.isNotEmpty) 'rule_set': ruleSets.values.toList(),
       'final': finalOutbound,
       'auto_detect_interface': true,
+      'default_domain_resolver': {'server': 'direct'},
     },
     'experimental': {
       'clash_api': {
         'external_controller': '127.0.0.1:$clashApiPort',
         'secret': secret,
         'default_mode': 'rule',
-        'store_selected': true,
-        'cache_file': true,
       },
+      'cache_file': {'enabled': true, 'path': 'cache.db'},
     },
   };
   return SingBoxRenderResult(config: config, unsupported: unsupported);

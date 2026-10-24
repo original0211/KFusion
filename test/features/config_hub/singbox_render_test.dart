@@ -33,7 +33,10 @@ Map<String, Object?> _clashSample() {
         'flow': 'xtls-rprx-vision',
         'tls': true,
         'servername': 'example.com',
-        'reality-opts': {'public-key': 'pubkey', 'short-id': 'shortid'},
+        'reality-opts': {
+          'public-key': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          'short-id': '0123456789abcdef',
+        },
       },
       {
         'name': 'Trojan',
@@ -123,7 +126,11 @@ void main() {
     expect(byTag['VLESS']?['flow'], 'xtls-rprx-vision');
     expect(
       ((byTag['VLESS']?['tls'] as Map?)?['reality'] as Map?)?['public_key'],
-      'pubkey',
+      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+    );
+    expect(
+      ((byTag['VLESS']?['tls'] as Map?)?['utls'] as Map?)?['fingerprint'],
+      'chrome',
     );
     expect(byTag['Trojan']?['type'], 'trojan');
     expect(byTag['HY2']?['type'], 'hysteria2');
@@ -135,20 +142,122 @@ void main() {
     expect(byTag['block']?['type'], 'block');
     final route = config['route'] as Map;
     final rules = route['rules'] as List;
-    expect(rules.length, 6);
+    expect(rules.length, 7);
+    expect((rules.first as Map)['protocol'], 'dns');
+    expect((rules.first as Map)['action'], 'hijack-dns');
     expect(route['final'], 'PROXY');
+    final geoRules = [
+      for (final entry in rules.skip(1))
+        if ((entry as Map)['rule_set'] != null) entry,
+    ];
+    expect(geoRules.length, 2);
+    final ruleSetTags = {
+      for (final def in route['rule_set'] as List)
+        ((def as Map)['tag'] as String),
+    };
+    expect(ruleSetTags, containsAll(['geoip-cn', 'geosite-cn']));
     final dns = config['dns'] as Map;
-    expect((dns['servers'] as List).length, 2);
+    final dnsServers = dns['servers'] as List;
+    expect(dnsServers.length, 3);
+    expect((dnsServers[0] as Map)['type'], 'https');
+    expect((dnsServers[2] as Map)['type'], 'fakeip');
     expect(dns['final'], 'remote');
     final inbounds = config['inbounds'] as List;
     expect((inbounds.first as Map)['listen_port'], 7890);
     expect(inbounds.where((entry) => (entry as Map)['type'] == 'tun'), isEmpty);
-    final clashApi = (config['experimental'] as Map)['clash_api'] as Map;
+    final experimental = config['experimental'] as Map;
+    final clashApi = experimental['clash_api'] as Map;
     expect(clashApi['external_controller'], '127.0.0.1:9091');
     expect(clashApi['secret'], 'test-secret');
-    expect(clashApi['cache_file'], true);
+    expect(clashApi.containsKey('cache_file'), isFalse);
+    expect((experimental['cache_file'] as Map)['enabled'], true);
     expect(result.unsupported.length, 1);
     expect(result.unsupported.first, contains('RULE-SET'));
+  });
+
+  test('rendered config carries no sing-box 1.14 removed constructs', () {
+    final result = renderSingBoxFromClash(
+      _clashSample(),
+      secret: 'test-secret',
+      tunEnabled: true,
+    );
+    final keys = <String>{};
+    void collect(Object? value) {
+      if (value is Map) {
+        for (final entry in value.entries) {
+          keys.add(entry.key.toString());
+          collect(entry.value);
+        }
+      } else if (value is List) {
+        for (final entry in value) {
+          collect(entry);
+        }
+      }
+    }
+
+    collect(result.config);
+    expect(keys, isNot(contains('geosite')));
+    expect(keys, isNot(contains('geoip')));
+    expect(keys, isNot(contains('inet4_address')));
+    expect(keys, isNot(contains('inet6_address')));
+    expect(keys, isNot(contains('fakeip'))); // the dns-level block is a key
+    final outbounds = _outbounds(result.config);
+    expect(outbounds.where((outbound) => outbound['type'] == 'dns'), isEmpty);
+    final dns = result.config['dns'] as Map;
+    for (final server in dns['servers'] as List) {
+      expect((server as Map).containsKey('address'), isFalse);
+    }
+    final tun =
+        (result.config['inbounds'] as List).firstWhere(
+              (entry) => (entry as Map)['type'] == 'tun',
+            )
+            as Map;
+    expect(tun['address'], ['172.19.0.1/30']);
+  });
+
+  test('DIRECT and REJECT members and rule targets are mapped', () {
+    final clash = _clashSample();
+    (clash['proxy-groups'] as List).add({
+      'name': 'Pick',
+      'type': 'select',
+      'proxies': ['DIRECT', 'REJECT', 'SS'],
+    });
+    (clash['rules'] as List).insert(0, 'DOMAIN-SUFFIX,ads.example.com,REJECT');
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final outbounds = _outbounds(result.config);
+    final pick = outbounds.firstWhere((outbound) => outbound['tag'] == 'Pick');
+    expect(pick['outbounds'], ['direct', 'block', 'SS']);
+    final rules = (result.config['route'] as Map)['rules'] as List;
+    final reject =
+        rules.firstWhere((entry) => (entry as Map)['action'] == 'reject')
+            as Map;
+    expect(reject['domain_suffix'], ['ads.example.com']);
+    expect(reject.containsKey('outbound'), isFalse);
+  });
+
+  test('wireguard node renders as an endpoint, not an outbound', () {
+    final clash = _clashSample();
+    (clash['proxies'] as List).add({
+      'name': 'WG',
+      'type': 'wireguard',
+      'server': '5.5.5.5',
+      'port': 51820,
+      'ip': '10.0.0.2',
+      'private-key': 'privatekey',
+      'public-key': 'publickey',
+    });
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final outbounds = _outbounds(result.config);
+    expect(outbounds.where((outbound) => outbound['tag'] == 'WG'), isEmpty);
+    final endpoints = result.config['endpoints'] as List;
+    expect(endpoints.length, 1);
+    final endpoint = endpoints.first as Map;
+    expect(endpoint['type'], 'wireguard');
+    expect(endpoint['address'], ['10.0.0.2/32']);
+    final peer = (endpoint['peers'] as List).first as Map;
+    expect(peer['address'], '5.5.5.5');
+    expect(peer['port'], 51820);
+    expect(peer['public_key'], 'publickey');
   });
 
   test('tun inbound appears only when enabled', () {
