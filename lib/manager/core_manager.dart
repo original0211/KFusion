@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/core/core.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/action.dart';
 import 'package:kfusion/providers/app.dart';
@@ -70,6 +71,15 @@ class _CoreContainerState extends ConsumerState<CoreManager>
         _syncLogStream();
       }
     }, fireImmediately: true);
+    // The two cores never run together: mihomo coming up stops sing-box.
+    ref.listenManual(coreStatusProvider, (prev, next) {
+      if (next == CoreStatus.connected && prev != CoreStatus.connected) {
+        final singBox = ref.read(singBoxActionProvider).value;
+        if (singBox?.state == SingBoxState.running) {
+          unawaited(ref.read(singBoxActionProvider.notifier).stop());
+        }
+      }
+    });
   }
 
   void _syncLogStream() {

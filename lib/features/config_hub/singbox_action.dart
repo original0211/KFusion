@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:kfusion/common/common.dart';
@@ -7,6 +8,7 @@ import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/core_kind.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
 import 'package:kfusion/models/models.dart';
+import 'package:kfusion/plugins/singbox.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,35 +37,65 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
   SingBoxClashApi? _api;
 
   @override
-  Future<SingBoxStatus> build() {
-    return Future.value(const SingBoxStatus(state: SingBoxState.idle));
+  Future<SingBoxStatus> build() async {
+    if (system.isAndroid) {
+      final running = await singBoxService?.isRunning() ?? false;
+      if (running) {
+        return const SingBoxStatus(
+          state: SingBoxState.running,
+          message: 'sing-box 运行中（Android TUN）',
+        );
+      }
+    }
+    return const SingBoxStatus(state: SingBoxState.idle);
   }
 
   SingBoxClashApi? get api => _api;
 
+  Future<({SingBoxRenderResult rendered, String secret})>
+  _renderCurrentProfile({required bool tunEnabled}) async {
+    final profile = ref.read(currentProfileProvider);
+    if (profile == null) {
+      throw StateError('没有选中的配置。');
+    }
+    final kind = ref.read(coreKindsProvider).value?[profile.id];
+    if (kind != CoreKind.singbox) {
+      throw StateError('当前配置的核心是 mihomo，请先在配置编辑中切换为 sing-box。');
+    }
+    final yamlText = await readTextFileTask(
+      await appPath.getProfilePath(profile.id.toString()),
+    );
+    if (yamlText == null || yamlText.isEmpty) {
+      throw StateError('配置内容为空。');
+    }
+    final clashMap = _asMap(loadPlainYaml(yamlText));
+    final secret = generateSingBoxSecret();
+    final rendered = renderSingBoxFromClash(
+      clashMap,
+      secret: secret,
+      tunEnabled: tunEnabled,
+      clashApiPort: singBoxClashApiPort,
+      mixedPort: singBoxMixedPort,
+    );
+    return (rendered: rendered, secret: secret);
+  }
+
   Future<void> start() async {
+    state = const AsyncData(SingBoxStatus(state: SingBoxState.starting));
+    if (system.isAndroid) {
+      await _startAndroid();
+      return;
+    }
     if (!system.isWindows) {
       state = const AsyncData(
         SingBoxStatus(
           state: SingBoxState.error,
-          message: 'Android 的 sing-box 运行时待 P3 接入，本轮仅支持导出配置。',
+          message: '当前平台暂不支持 sing-box 运行时。',
         ),
       );
       return;
     }
-    state = const AsyncData(SingBoxStatus(state: SingBoxState.starting));
     try {
-      final profile = ref.read(currentProfileProvider);
-      if (profile == null) {
-        throw StateError('没有选中的配置。');
-      }
-      final kind = ref.read(coreKindsProvider).value?[profile.id];
-      if (kind != CoreKind.singbox) {
-        throw StateError('当前配置的核心是 mihomo，请先在配置编辑中切换为 sing-box。');
-      }
-      if (ref.read(coreStatusProvider) == CoreStatus.connected) {
-        throw StateError('mihomo 正在运行，请先停止 mihomo 再启动 sing-box。');
-      }
       final homeDir = await appPath.homeDirPath;
       final stored = await Preferences().getSingBoxBinaryPath();
       final binary = findSingBoxBinary(
@@ -80,21 +112,12 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       if (tunEnabled && !await isWindowsAdmin()) {
         throw StateError('开启 TUN 需要管理员权限，当前不是管理员，已拒绝启动。');
       }
-      final yamlText = await readTextFileTask(
-        await appPath.getProfilePath(profile.id.toString()),
-      );
-      if (yamlText == null || yamlText.isEmpty) {
-        throw StateError('配置内容为空。');
-      }
-      final clashMap = _asMap(loadPlainYaml(yamlText));
-      final secret = generateSingBoxSecret();
-      final SingBoxRenderResult rendered = renderSingBoxFromClash(
-        clashMap,
-        secret: secret,
+      final (:rendered, :secret) = await _renderCurrentProfile(
         tunEnabled: tunEnabled,
-        clashApiPort: singBoxClashApiPort,
-        mixedPort: singBoxMixedPort,
       );
+      if (ref.read(coreStatusProvider) == CoreStatus.connected) {
+        throw StateError('mihomo 正在运行，请先停止 mihomo 再启动 sing-box。');
+      }
       final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
       final runner = SingBoxRunner(
         launcher: IoProcessLauncher(),
@@ -141,7 +164,67 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
     }
   }
 
+  Future<void> _startAndroid() async {
+    try {
+      final service = singBoxService;
+      if (service == null) {
+        throw StateError('sing-box 方法通道不可用。');
+      }
+      final (:rendered, :secret) = await _renderCurrentProfile(
+        tunEnabled: true,
+      );
+      if (ref.read(coreStatusProvider) == CoreStatus.connected) {
+        await ref.read(coreHandlerProvider).stop();
+        final stopped = await waitForValue<CoreStatus>(
+          read: () async => ref.read(coreStatusProvider),
+          target: CoreStatus.disconnected,
+        );
+        if (!stopped) {
+          throw StateError('mihomo 未能停止，sing-box 未启动，避免双核心同时运行。');
+        }
+      }
+      final homeDir = await appPath.homeDirPath;
+      final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
+      await configDir.create(recursive: true);
+      final configFile = File(
+        '${configDir.path}${Platform.pathSeparator}config.json',
+      );
+      await configFile.writeAsString(jsonEncode(rendered.config));
+      final error = await service.start(configFile.path);
+      if (error.isNotEmpty) {
+        throw StateError(error);
+      }
+      _api = SingBoxClashApi(port: singBoxClashApiPort, secret: secret);
+      await ref.read(activeCoreKindProvider.notifier).set(CoreKind.singbox);
+      final unsupportedNote = rendered.unsupported.isEmpty
+          ? ''
+          : '（${rendered.unsupported.length} 条规则或节点未翻译，见导出说明）';
+      state = AsyncData(
+        SingBoxStatus(
+          state: SingBoxState.running,
+          message:
+              'sing-box 运行中（Android TUN，面板 127.0.0.1:$singBoxClashApiPort）$unsupportedNote',
+          unsupportedCount: rendered.unsupported.length,
+        ),
+      );
+    } catch (e) {
+      state = AsyncData(
+        SingBoxStatus(state: SingBoxState.error, message: e.toString()),
+      );
+    }
+  }
+
   Future<void> stop() async {
+    if (system.isAndroid) {
+      try {
+        await singBoxService?.stop();
+      } finally {
+        _api = null;
+        await ref.read(activeCoreKindProvider.notifier).set(CoreKind.mihomo);
+        state = const AsyncData(SingBoxStatus(state: SingBoxState.idle));
+      }
+      return;
+    }
     try {
       await systemProxyQueue?.apply(
         const ProxyState(
@@ -188,4 +271,24 @@ Map<String, Object?> _asMap(Object? value) {
     };
   }
   return const {};
+}
+
+/// Polls [read] until it yields [target]; gives up after [timeout].
+Future<bool> waitForValue<T>({
+  required Future<T> Function() read,
+  required T target,
+  Duration timeout = const Duration(seconds: 15),
+  Duration interval = const Duration(milliseconds: 200),
+  Future<void> Function(Duration duration)? pause,
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (true) {
+    if (await read() == target) {
+      return true;
+    }
+    if (!DateTime.now().isBefore(deadline)) {
+      return false;
+    }
+    await (pause?.call(interval) ?? Future<void>.delayed(interval));
+  }
 }

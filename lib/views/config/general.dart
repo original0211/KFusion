@@ -85,7 +85,7 @@ class SingBoxStatusItem extends ConsumerWidget {
           title: const Text('sing-box 核心'),
           subtitle: Text(
             status.message.isEmpty
-                ? (system.isAndroid ? 'Android 运行时待 P3 接入' : '未运行')
+                ? (system.isAndroid ? 'Android sing-box VPN 运行时（真机待验）' : '未运行')
                 : status.message,
           ),
         ),
@@ -104,7 +104,7 @@ class SingBoxStatusItem extends ConsumerWidget {
               );
             },
           ),
-        if (system.isWindows)
+        if (system.isWindows || system.isAndroid)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: FilledButton(

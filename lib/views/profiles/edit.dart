@@ -463,7 +463,7 @@ class _CoreKindField extends ConsumerWidget {
         if (current == CoreKind.singbox && system.isAndroid)
           const Padding(
             padding: EdgeInsets.only(left: 16, bottom: 8),
-            child: Text('Android 仅导出 sing-box 配置，运行时待 P3 接入。'),
+            child: Text('Android 由 sing-box VPN 运行时接管（真机待验）。'),
           ),
         if (current == CoreKind.singbox && system.isWindows)
           const Padding(
