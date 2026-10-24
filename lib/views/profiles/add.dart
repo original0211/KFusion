@@ -6,6 +6,7 @@ import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/profiles/custom/custom.dart';
+import 'package:kfusion/views/profiles/universal_import.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -148,6 +149,15 @@ class AddProfileView extends ConsumerWidget {
           title: Text(appLocalizations.customProfile),
           subtitle: Text(appLocalizations.customProfileDesc),
           onTap: () => _toAddCustom(context, ref),
+        ),
+        ListItem(
+          leading: const GlyphIcon(AppGlyphs.importFile),
+          title: const Text('万能导入'),
+          subtitle: const Text('Clash / sing-box / 分享链接 / 订阅，一次导入'),
+          onTap: () => BaseNavigator.push(
+            context,
+            const UniversalImportView(),
+          ),
         ),
       ],
     );

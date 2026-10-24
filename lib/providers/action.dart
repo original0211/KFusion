@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:kfusion/common/app_data.dart';
 import 'package:kfusion/common/boot_guard.dart';

@@ -213,6 +213,19 @@ class ProfilesAction extends _$ProfilesAction {
     return profile.id;
   }
 
+  /// Creates a file profile from rendered Clash YAML, as the universal
+  /// import does. The core validates the file before it is stored, so a
+  /// broken render never becomes a profile.
+  Future<Profile> addUniversalProfile(String label, String yaml) async {
+    final profile = Profile.normal(label: label);
+    final saved = await profile.saveFile(
+      Uint8List.fromList(utf8.encode(yaml)),
+      validate: (path, key) => _core.validateProfile(path, key),
+    );
+    putProfile(saved);
+    return saved;
+  }
+
   void touchProfile(int id) {
     final profile = ref.read(profilesProvider).getProfile(id);
     if (profile == null) return;

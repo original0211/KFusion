@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/core/core.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
@@ -55,6 +56,8 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     if (!editable) {
       _editing = false;
     }
+    final beginnerMode =
+        ref.watch(beginnerModeProvider).valueOrNull ?? true;
     final editing = _editing;
     final gap = cardSpacingOf(context, ref.watch(viewModeProvider));
     final appLocalizations = context.appLocalizations;
@@ -73,7 +76,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             )
           : null,
       iconActions: [
-        if (editable && !editing)
+        if (editable && !editing && !beginnerMode)
           IconButtonData(
             glyph: AppGlyphs.edit,
             tooltip: appLocalizations.editDashboard,

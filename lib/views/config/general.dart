@@ -1,5 +1,6 @@
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
@@ -25,6 +26,26 @@ class LogLevelItem extends ConsumerWidget {
       onChanged: (ref, value) => ref
           .read(patchClashConfigProvider.notifier)
           .update((state) => state.copyWith(logLevel: value)),
+    );
+  }
+}
+
+/// Beginner mode toggle. The label is a literal for now because adding a
+/// localized string needs an intl regeneration run, which this change
+/// deliberately avoids.
+class BeginnerModeItem extends ConsumerWidget {
+  const BeginnerModeItem({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final beginnerMode =
+        ref.watch(beginnerModeProvider).valueOrNull ?? true;
+    return ListItem.toggle(
+      title: const Text('新手模式 · Beginner mode'),
+      value: beginnerMode,
+      onChanged: (value) {
+        ref.read(beginnerModeProvider.notifier).set(value);
+      },
     );
   }
 }
@@ -257,6 +278,7 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _startupItems(AppLocalizations appLocalizations) {
     return [
+      const BeginnerModeItem(),
       if (system.isDesktop) ...[
         _appSettingToggle(
           title: (l) => l.autoLaunch,

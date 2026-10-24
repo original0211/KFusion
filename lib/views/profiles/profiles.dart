@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
@@ -401,12 +402,15 @@ class ProfileItem extends ConsumerWidget {
     final appLocalizations = context.appLocalizations;
     final isUrl = profile.type == ProfileType.url;
     final isCustom = profile.type == ProfileType.custom;
+    final beginnerMode =
+        ref.watch(beginnerModeProvider).valueOrNull ?? true;
     return [
-      CommonPopupMenuItem(
-        glyph: AppGlyphs.edit,
-        label: appLocalizations.edit,
-        onPressed: () => _handleEdit(context),
-      ),
+      if (!beginnerMode)
+        CommonPopupMenuItem(
+          glyph: AppGlyphs.edit,
+          label: appLocalizations.edit,
+          onPressed: () => _handleEdit(context),
+        ),
       if (isCustom) ...[
         CommonPopupMenuItem(
           glyph: AppGlyphs.textShort,
@@ -422,7 +426,7 @@ class ProfileItem extends ConsumerWidget {
             _handlePreview(context);
           },
         ),
-      ] else
+      ] else if (!beginnerMode)
         CommonPopupMenuItem(
           glyph: AppGlyphs.puzzle,
           label: appLocalizations.extend,
