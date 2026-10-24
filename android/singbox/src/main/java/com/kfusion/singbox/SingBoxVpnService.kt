@@ -22,6 +22,8 @@ import com.follow.clash.common.ensureNotificationChannel
 import com.follow.clash.common.startForeground
 import io.nekohasekai.libbox.BridgeOptions
 import io.nekohasekai.libbox.BridgeSession
+import io.nekohasekai.libbox.CommandServer
+import io.nekohasekai.libbox.CommandServerHandler
 import io.nekohasekai.libbox.ConnectionOwner
 import io.nekohasekai.libbox.InterfaceUpdateListener
 import io.nekohasekai.libbox.Libbox
@@ -29,12 +31,14 @@ import io.nekohasekai.libbox.LocalDNSTransport
 import io.nekohasekai.libbox.NeighborUpdateListener
 import io.nekohasekai.libbox.NetworkInterfaceIterator
 import io.nekohasekai.libbox.Notification
+import io.nekohasekai.libbox.OverrideOptions
 import io.nekohasekai.libbox.PlatformInterface
 import io.nekohasekai.libbox.PlatformUser
 import io.nekohasekai.libbox.RoutePrefix
 import io.nekohasekai.libbox.SetupOptions
 import io.nekohasekai.libbox.ShellSession
 import io.nekohasekai.libbox.StringIterator
+import io.nekohasekai.libbox.SystemProxyStatus
 import io.nekohasekai.libbox.TunOptions
 import io.nekohasekai.libbox.WIFIState
 import java.io.File
@@ -43,15 +47,14 @@ import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import kotlin.concurrent.thread
 import android.net.VpnService as SystemVpnService
-import io.nekohasekai.libbox.BoxService as LibboxService
 import io.nekohasekai.libbox.NetworkInterface as LibboxNetworkInterface
 
-class SingBoxVpnService : SystemVpnService(), PlatformInterface {
+class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHandler {
     private val connectivity by lazy { getSystemService<ConnectivityManager>() }
     private val notificationManager by lazy { getSystemService<NotificationManager>() }
 
     @Volatile
-    private var boxService: LibboxService? = null
+    private var commandServer: CommandServer? = null
     private var tunDescriptor: ParcelFileDescriptor? = null
     private var myInterfaceName: String? = null
     private var interfaceListener: InterfaceUpdateListener? = null
@@ -107,10 +110,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface {
             val content = configFile.readText()
             setupLibbox()
             Libbox.checkConfig(content)
-            stopBox()
-            val service = Libbox.newService(content, this)
-            boxService = service
-            service.start()
+            val server = commandServer ?: CommandServer(this, this).also {
+                it.start()
+                commandServer = it
+            }
+            server.startOrReloadService(content, OverrideOptions())
             SingBoxStatus.write(this, SingBoxStatus.State.RUNNING, "")
             GlobalState.log("sing-box service started")
         } catch (error: Exception) {
@@ -125,13 +129,47 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface {
     }
 
     private fun stopBox() {
-        val service = boxService
-        boxService = null
-        runCatching { service?.close() }
+        val server = commandServer
+        commandServer = null
+        runCatching { server?.closeService() }
+        runCatching { server?.close() }
         val descriptor = tunDescriptor
         tunDescriptor = null
         runCatching { descriptor?.close() }
     }
+
+    override fun serviceStop() {
+        SingBoxStatus.write(this, SingBoxStatus.State.STOPPED, "")
+        stopSelf()
+    }
+
+    override fun serviceReload() {
+        val configPath = preferences().getString(PREF_CONFIG_PATH, null)
+            ?: error("sing-box config path is missing")
+        val server = commandServer ?: error("sing-box command server is not running")
+        server.startOrReloadService(File(configPath).readText(), OverrideOptions())
+    }
+
+    override fun getSystemProxyStatus(): SystemProxyStatus {
+        val status = SystemProxyStatus()
+        status.available = false
+        status.enabled = false
+        return status
+    }
+
+    override fun setSystemProxyEnabled(enabled: Boolean) {
+        throw UnsupportedOperationException("system proxy is managed by the VPN tunnel")
+    }
+
+    override fun triggerNativeCrash() {
+        throw UnsupportedOperationException("native crash trigger is not supported")
+    }
+
+    override fun writeDebugMessage(message: String?) {
+        GlobalState.log("sing-box: $message")
+    }
+
+    override fun connectSSHAgent(): Int = -1
 
     private fun setupLibbox() {
         synchronized(setupLock) {
