@@ -208,6 +208,9 @@ abstract class BindLibbox : DefaultTask() {
     @get:OutputFile
     abstract val classesJar: RegularFileProperty
 
+    @get:OutputFile
+    abstract val seqJar: RegularFileProperty
+
     @TaskAction
     fun bind() {
         val go = goExecutable.get()
@@ -258,14 +261,18 @@ abstract class BindLibbox : DefaultTask() {
         built.copyTo(aar.get().asFile, overwrite = true)
         // The app already carries one go.Seq/go.Universe from the :core AAR:
         // a second copy cannot dex, and the fork's Seq differs from the stock
-        // one only in an access flag that no generated code path calls.
+        // one only in an access flag that no generated code path calls. The
+        // generated libbox classes still extend go.Seq.Proxy, so the go.*
+        // classes are kept in a separate compile-only jar for this module.
         ZipFile(aar.get().asFile).use { aarFile ->
             ZipInputStream(aarFile.getInputStream(aarFile.getEntry("classes.jar"))).use { jar ->
-                ZipOutputStream(classesJar.get().asFile.outputStream()).use { out ->
-                    generateSequence { jar.nextEntry }.forEach { entry ->
-                        if (entry.name.startsWith("go/")) return@forEach
-                        out.putNextEntry(ZipEntry(entry.name).apply { time = entry.time })
-                        out.write(jar.readBytes())
+                ZipOutputStream(classesJar.get().asFile.outputStream()).use { classes ->
+                    ZipOutputStream(seqJar.get().asFile.outputStream()).use { seq ->
+                        generateSequence { jar.nextEntry }.forEach { entry ->
+                            val out = if (entry.name.startsWith("go/")) seq else classes
+                            out.putNextEntry(ZipEntry(entry.name).apply { time = entry.time })
+                            out.write(jar.readBytes())
+                        }
                     }
                 }
             }
@@ -343,6 +350,7 @@ val bindLibbox =
         ndkDirectory.set(androidComponents.sdkComponents.ndkDirectory)
         aar.set(layout.buildDirectory.file("gomobile/libbox.aar"))
         classesJar.set(layout.buildDirectory.file("gomobile/classes.jar"))
+        seqJar.set(layout.buildDirectory.file("gomobile/seq.jar"))
     }
 
 androidComponents {
@@ -357,6 +365,7 @@ androidComponents {
 
 dependencies {
     implementation(files(bindLibbox.flatMap { it.classesJar }))
+    compileOnly(files(bindLibbox.flatMap { it.seqJar }))
     implementation(project(":common"))
     implementation(libs.androidx.core)
 }
