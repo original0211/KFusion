@@ -2,6 +2,29 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.2",
+      "tag": "v0.2.2",
+      "date": "2026-10-24",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "283e857",
+              "scope": "core",
+              "text": "Fix sing-box profile activation failing against the bundled sing-box 1.14 runtime: the renderer now emits the 1.14 configuration format (typed DNS servers with a fakeip server and a DNS hijack rule action, rule-set based GEOIP and GEOSITE rules, the TUN address list, WireGuard endpoints and the experimental cache file) instead of the removed pre-1.12 formats"
+            },
+            {
+              "id": "283e857",
+              "scope": "config",
+              "text": "Map the Clash built-in policies when rendering sing-box groups and rules: DIRECT and REJECT group members resolve to the direct and block outbounds, and REJECT rule targets become reject rule actions"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.1",
       "tag": "v0.2.1",
       "date": "2026-10-24",
