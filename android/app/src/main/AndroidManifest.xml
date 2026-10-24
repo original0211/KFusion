@@ -30,13 +30,13 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 
     <application
-        android:name=".FlClashApplication"
+        android:name="com.follow.clash.FlClashApplication"
         android:banner="@mipmap/ic_banner"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name">
         <activity
-            android:name=".MainActivity"
+            android:name="com.follow.clash.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:exported="true"
             android:hardwareAccelerated="true"
@@ -75,7 +75,7 @@
         </activity>
 
         <activity
-            android:name=".QuickActionActivity"
+            android:name="com.follow.clash.QuickActionActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:theme="@style/TransparentTheme">
@@ -94,7 +94,7 @@
         </activity>
 
         <service
-            android:name=".TileService"
+            android:name="com.follow.clash.TileService"
             android:exported="true"
             android:icon="@drawable/ic"
             android:label="@string/app_name"
@@ -108,7 +108,7 @@
         </service>
 
         <receiver
-            android:name=".ServiceBroadcastReceiver"
+            android:name="com.follow.clash.ServiceBroadcastReceiver"
             android:enabled="true"
             android:exported="true"
             android:permission="${applicationId}.permission.RECEIVE_BROADCASTS">

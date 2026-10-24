@@ -96,6 +96,35 @@ flutter {
     source = "../.."
 }
 
+// Packaged APKs must keep their manifest-declared classes; a namespace/class
+// mismatch here crashes the app before any UI, and unit tests cannot see it.
+val checkReleaseApk by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Runs tool/check_apk.py over the packaged release APKs."
+    dependsOn("packageRelease")
+    val python =
+        if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3"
+    commandLine(python, "--version")
+    doFirst {
+        val apkDir = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+        val apks =
+            apkDir
+                .walkTopDown()
+                .filter { it.isFile && it.extension == "apk" }
+                .sortedBy { it.path }
+                .toList()
+        check(apks.isNotEmpty()) {
+            "checkReleaseApk: no release APK under ${apkDir.path}; packageRelease must run first"
+        }
+        commandLine(
+            listOf(python, rootProject.file("../tool/check_apk.py").absolutePath) +
+                apks.map { it.absolutePath },
+        )
+    }
+}
+
+tasks.named("assembleRelease") { dependsOn(checkReleaseApk) }
+
 dependencies {
     implementation(project(":service"))
     implementation(project(":common"))
