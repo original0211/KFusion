@@ -26,6 +26,16 @@
               "text": "Second core: sing-box rendering and a Windows sidecar runtime, mutually exclusive with the mihomo core"
             }
           ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "347d38f",
+              "scope": "tool",
+              "text": "Changelog tooling derives releases built on the frozen boundary commit, so tagged releases verify"
+            }
+          ]
         }
       ]
     },

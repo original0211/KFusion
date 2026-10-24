@@ -8,6 +8,10 @@
 - **config** Config hub: universal import for Clash, sing-box, share-link and subscription formats, routing templates and beginner mode (e506259)
 - **core** Second core: sing-box rendering and a Windows sidecar runtime, mutually exclusive with the mihomo core (682de79)
 
+**Bug Fixes**
+
+- **tool** Changelog tooling derives releases built on the frozen boundary commit, so tagged releases verify (347d38f)
+
 ## v0.9.1 (2026-10-17)
 
 **Breaking Changes**
