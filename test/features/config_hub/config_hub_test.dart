@@ -119,9 +119,7 @@ void main() {
   test('share links sample parses every protocol without field loss', () {
     final result = parseConfig(shareLinksSample);
     expect(result.profile.nodes.length, 5);
-    final byType = {
-      for (final node in result.profile.nodes) node.type: node,
-    };
+    final byType = {for (final node in result.profile.nodes) node.type: node};
     expect(byType['ss']!.params['password'], 'password');
     expect(byType['ss']!.port, 8388);
     expect(
@@ -178,10 +176,7 @@ void main() {
   test('sniffing distinguishes the four input kinds', () {
     expect(detectFormat(clashSample), ConfigFormat.clash);
     expect(detectFormat(singboxSample), ConfigFormat.singbox);
-    expect(
-      detectFormat(base64SubscriptionSample),
-      ConfigFormat.subscription,
-    );
+    expect(detectFormat(base64SubscriptionSample), ConfigFormat.subscription);
     expect(detectFormat(shareLinksSample), ConfigFormat.shareLinks);
   });
 

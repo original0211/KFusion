@@ -21,8 +21,7 @@ IrParseResult parseConfig(String content) {
 Map<String, Object?> _asMap(Object? value) {
   if (value is Map) {
     return {
-      for (final MapEntry(:key, :value) in value.entries)
-        key.toString(): value,
+      for (final MapEntry(:key, :value) in value.entries) key.toString(): value,
     };
   }
   return const {};
@@ -72,12 +71,8 @@ IrParseResult fromClash(String content) {
   return IrParseResult(
     profile: IrProfile(
       nodes: nodes,
-      groups: [
-        for (final entry in _asList(doc['proxy-groups'])) _asMap(entry),
-      ],
-      rules: [
-        for (final entry in _asList(doc['rules'])) entry.toString(),
-      ],
+      groups: [for (final entry in _asList(doc['proxy-groups'])) _asMap(entry)],
+      rules: [for (final entry in _asList(doc['rules'])) entry.toString()],
     ),
   );
 }
@@ -105,8 +100,7 @@ IrParseResult fromSingBox(String content) {
           'name': tag,
           'type': 'select',
           'proxies': [
-            for (final name in _asList(outbound['outbounds']))
-              name.toString(),
+            for (final name in _asList(outbound['outbounds'])) name.toString(),
           ],
         });
       case 'urltest':
@@ -114,13 +108,11 @@ IrParseResult fromSingBox(String content) {
           'name': tag,
           'type': 'url-test',
           'proxies': [
-            for (final name in _asList(outbound['outbounds']))
-              name.toString(),
+            for (final name in _asList(outbound['outbounds'])) name.toString(),
           ],
           if (outbound['url'] != null) 'url': outbound['url'],
           if (outbound['interval'] != null) 'interval': outbound['interval'],
-          if (outbound['tolerance'] != null)
-            'tolerance': outbound['tolerance'],
+          if (outbound['tolerance'] != null) 'tolerance': outbound['tolerance'],
         });
       case 'shadowsocks':
       case 'vmess':
@@ -342,8 +334,11 @@ IrParseResult fromShareLinks(String content) {
     final node = switch (scheme) {
       'ss' => _parseSsLink(line),
       'vmess' => _parseVmessLink(line),
-      'vless' || 'trojan' || 'hysteria2' || 'hy2' || 'tuic' =>
-        _parseUrlLink(line),
+      'vless' ||
+      'trojan' ||
+      'hysteria2' ||
+      'hy2' ||
+      'tuic' => _parseUrlLink(line),
       _ => null,
     };
     if (node == null) {
@@ -435,10 +430,7 @@ IrNode? _parseSsLink(String line) {
   final password = userinfo.substring(colon + 1);
   final portColon = hostport.lastIndexOf(':');
   if (portColon == -1) return null;
-  final params = <String, Object?>{
-    'cipher': method,
-    'password': password,
-  };
+  final params = <String, Object?>{'cipher': method, 'password': password};
   final plugin = query['plugin'];
   if (plugin != null && plugin.isNotEmpty) {
     final parts = plugin.split(';');
@@ -485,9 +477,7 @@ IrNode? _parseVmessLink(String line) {
           if (host.isNotEmpty) 'headers': {'Host': host},
         };
       case 'grpc':
-        params['grpc-opts'] = {
-          if (path.isNotEmpty) 'grpc-service-name': path,
-        };
+        params['grpc-opts'] = {if (path.isNotEmpty) 'grpc-service-name': path};
       case 'h2':
         params['h2-opts'] = {
           if (host.isNotEmpty) 'host': [host],

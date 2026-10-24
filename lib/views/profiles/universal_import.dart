@@ -119,9 +119,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
           .read(profilesActionProvider.notifier)
           .addUniversalProfile(label, yamlText);
       if (!mounted) return;
-      globalState.navigatorKey.currentState?.popUntil(
-        (route) => route.isFirst,
-      );
+      globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
       ref.read(currentPageLabelProvider.notifier).toProfiles();
     } catch (e) {
       setState(() => _error = '导入失败：${compactError(e)}');
@@ -136,10 +134,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
     return CommonScaffold(
       title: '万能导入',
       body: ListView(
-        padding: EdgeInsets.only(
-          top: context.contentTopPadding,
-          bottom: 16,
-        ),
+        padding: EdgeInsets.only(top: context.contentTopPadding, bottom: 16),
         children: [
           ListItem(
             leading: const GlyphIcon(AppGlyphs.cloudDownload),
@@ -152,9 +147,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             child: TextField(
               controller: _urlController,
               keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
-                hintText: 'https://…',
-              ),
+              decoration: const InputDecoration(hintText: 'https://…'),
             ),
           ),
           ListItem(
@@ -167,9 +160,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             leading: const GlyphIcon(AppGlyphs.customize),
             title: const Text('解析粘贴的文本'),
             subtitle: const Text('粘贴内容后点此解析'),
-            onTap: _busy
-                ? null
-                : () => _showPreview(_pasteController.text),
+            onTap: _busy ? null : () => _showPreview(_pasteController.text),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -177,18 +168,14 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
               controller: _pasteController,
               minLines: 4,
               maxLines: null,
-              decoration: const InputDecoration(
-                hintText: '粘贴配置文本…',
-              ),
+              decoration: const InputDecoration(hintText: '粘贴配置文本…'),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               controller: _labelController,
-              decoration: const InputDecoration(
-                labelText: '配置名称',
-              ),
+              decoration: const InputDecoration(labelText: '配置名称'),
             ),
           ),
           Padding(
@@ -209,16 +196,11 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             ),
           ),
           if (_error != null)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(_error!),
-            ),
+            Padding(padding: const EdgeInsets.all(16), child: Text(_error!)),
           if (preview != null) ...[
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                _previewText(preview),
-              ),
+              child: Text(_previewText(preview)),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

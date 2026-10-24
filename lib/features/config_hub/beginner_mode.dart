@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Whether the simplified beginner UI is active. New installs default to
 /// true; the toggle lives in the general settings page. Kept as a plain
 /// AsyncNotifier (no code generation) so it needs no build_runner run.
-final beginnerModeProvider =
-    AsyncNotifierProvider<BeginnerModeNotifier, bool>(
-      BeginnerModeNotifier.new,
-    );
+final beginnerModeProvider = AsyncNotifierProvider<BeginnerModeNotifier, bool>(
+  BeginnerModeNotifier.new,
+);
 
 class BeginnerModeNotifier extends AsyncNotifier<bool> {
   @override

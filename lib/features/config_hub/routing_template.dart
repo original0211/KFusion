@@ -43,9 +43,7 @@ Map<String, Object?> applyTemplate(
     for (final entry in (clashConfig['proxies'] as List? ?? const []))
       if (entry is Map) entry,
   ];
-  final names = [
-    for (final proxy in proxies) proxy['name'].toString(),
-  ];
+  final names = [for (final proxy in proxies) proxy['name'].toString()];
   final result = Map<String, Object?>.from(clashConfig);
   result['proxy-groups'] = [
     {

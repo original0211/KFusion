@@ -402,8 +402,13 @@ class ProfileItem extends ConsumerWidget {
     final appLocalizations = context.appLocalizations;
     final isUrl = profile.type == ProfileType.url;
     final isCustom = profile.type == ProfileType.custom;
-    final beginnerMode =
-        ref.watch(beginnerModeProvider).valueOrNull ?? true;
+    final beginnerMode = ref
+        .watch(beginnerModeProvider)
+        .when(
+          data: (value) => value,
+          loading: () => true,
+          error: (_, _) => true,
+        );
     return [
       if (!beginnerMode)
         CommonPopupMenuItem(
@@ -638,9 +643,8 @@ class _ReorderableProfilesSheetState
         padding: const EdgeInsets.only(bottom: 32),
         child: ReorderableListView.builder(
           buildDefaultDragHandles: false,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-          ).copyWith(top: context.contentTopPadding),
+          padding: const EdgeInsets.symmetric(horizontal: 16)
+              .copyWith(top: context.contentTopPadding),
           proxyDecorator: (child, index, animation) {
             return commonProxyDecorator(_buildItem(index), index, animation);
           },

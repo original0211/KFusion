@@ -20,12 +20,12 @@ class IrNode {
 
   /// The full Clash proxy map this node renders to.
   Map<String, Object?> toClashMap() => {
-        'name': name,
-        'type': type,
-        'server': server,
-        'port': port,
-        ...params,
-      };
+    'name': name,
+    'type': type,
+    'server': server,
+    'port': port,
+    ...params,
+  };
 }
 
 /// The normalized form of any import payload.
@@ -42,10 +42,10 @@ class IrProfile {
 
   /// The Clash config map this profile renders to, before any template.
   Map<String, Object?> toClashMap() => {
-        'proxies': [for (final node in nodes) node.toClashMap()],
-        if (groups.isNotEmpty) 'proxy-groups': groups,
-        if (rules.isNotEmpty) 'rules': rules,
-      };
+    'proxies': [for (final node in nodes) node.toClashMap()],
+    if (groups.isNotEmpty) 'proxy-groups': groups,
+    if (rules.isNotEmpty) 'rules': rules,
+  };
 }
 
 /// The outcome of parsing one import payload.

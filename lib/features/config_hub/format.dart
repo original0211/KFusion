@@ -1,12 +1,7 @@
 import 'dart:convert';
 
 /// The input formats the universal import understands.
-enum ConfigFormat {
-  clash,
-  singbox,
-  shareLinks,
-  subscription,
-}
+enum ConfigFormat { clash, singbox, shareLinks, subscription }
 
 /// Sniffs the format of an import payload without parsing it fully.
 ConfigFormat detectFormat(String content) {

@@ -38,8 +38,13 @@ class BeginnerModeItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final beginnerMode =
-        ref.watch(beginnerModeProvider).valueOrNull ?? true;
+    final beginnerMode = ref
+        .watch(beginnerModeProvider)
+        .when(
+          data: (value) => value,
+          loading: () => true,
+          error: (_, _) => true,
+        );
     return ListItem.toggle(
       title: const Text('新手模式 · Beginner mode'),
       value: beginnerMode,
@@ -456,9 +461,8 @@ class GeneralView extends ConsumerWidget {
     return BaseScaffold(
       title: appLocalizations.general,
       body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-        ).copyWith(top: context.appBarInset, bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16)
+            .copyWith(top: context.appBarInset, bottom: 16),
         children: [
           generateSection(
             title: appLocalizations.startupAndBackground,

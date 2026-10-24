@@ -56,8 +56,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     if (!editable) {
       _editing = false;
     }
-    final beginnerMode =
-        ref.watch(beginnerModeProvider).valueOrNull ?? true;
+    final beginnerMode = ref
+        .watch(beginnerModeProvider)
+        .when(
+          data: (value) => value,
+          loading: () => true,
+          error: (_, _) => true,
+        );
     final editing = _editing;
     final gap = cardSpacingOf(context, ref.watch(viewModeProvider));
     final appLocalizations = context.appLocalizations;

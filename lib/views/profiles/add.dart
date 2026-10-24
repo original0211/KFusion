@@ -154,10 +154,7 @@ class AddProfileView extends ConsumerWidget {
           leading: const GlyphIcon(AppGlyphs.importFile),
           title: const Text('万能导入'),
           subtitle: const Text('Clash / sing-box / 分享链接 / 订阅，一次导入'),
-          onTap: () => BaseNavigator.push(
-            context,
-            const UniversalImportView(),
-          ),
+          onTap: () => BaseNavigator.push(context, const UniversalImportView()),
         ),
       ],
     );
