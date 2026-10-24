@@ -83,13 +83,15 @@ void main() {
           widget is Semantics && widget.properties.label == Color(color).hex,
     );
 
-    testWidgets('starts on blue among the system colors', (tester) async {
+    testWidgets('starts on the brand accent among the preset colors', (
+      tester,
+    ) async {
       container
           .read(themeSettingProvider.notifier)
           .update((_) => defaultThemeProps);
       await pumpThemeView(tester);
 
-      expect(readTheme().primaryColor, 0xFF007AFF);
+      expect(readTheme().primaryColor, defaultPrimaryColor);
       for (final color in defaultPrimaryColors) {
         expect(swatch(color), findsOneWidget);
       }
@@ -171,16 +173,16 @@ void main() {
       tester,
     ) async {
       await pumpThemeView(tester);
-      await tester.tap(swatch(0xFF007AFF));
+      await tester.tap(swatch(defaultPrimaryColor));
       await tester.pumpAndSettle();
       final count = readTheme().primaryColors.length;
 
-      await editColor(tester, 0xFFAF52DE, '007AFF');
+      await editColor(tester, 0xFFAF52DE, '00B4D8');
 
       expect(readTheme().primaryColors, hasLength(count - 1));
       expect(readTheme().primaryColors, isNot(contains(0xFFAF52DE)));
-      expect(readTheme().primaryColor, 0xFF007AFF);
-      expect(swatch(0xFF007AFF), findsOneWidget);
+      expect(readTheme().primaryColor, defaultPrimaryColor);
+      expect(swatch(defaultPrimaryColor), findsOneWidget);
     });
 
     testWidgets('adds a custom color once and selects it', (tester) async {

@@ -126,6 +126,39 @@ class SingBoxStatusItem extends ConsumerWidget {
   }
 }
 
+/// The current profile's core kind, mirrored from the profile edit page.
+class CurrentProfileCoreKindItem extends ConsumerWidget {
+  const CurrentProfileCoreKindItem({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(currentProfileProvider);
+    final kind = profile == null
+        ? null
+        : ref.watch(coreKindsProvider).value?[profile.id];
+    return ListItem(
+      title: const Text('运行核心'),
+      subtitle: Text(profile?.realLabel ?? '未选择配置'),
+      trailing: profile == null
+          ? null
+          : DropdownButton<CoreKind>(
+              value: kind ?? CoreKind.mihomo,
+              items: [
+                for (final option in CoreKind.values)
+                  DropdownMenuItem(value: option, child: Text(option.value)),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  ref
+                      .read(coreKindsProvider.notifier)
+                      .setKind(profile.id, value);
+                }
+              },
+            ),
+    );
+  }
+}
+
 class UaItem extends ConsumerWidget {
   const UaItem({super.key});
 
@@ -481,6 +514,7 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _coreItems() {
     return [
+      const CurrentProfileCoreKindItem(),
       _clashToggle(
         title: (l) => 'IPv6',
         select: (state) => state.ipv6,
