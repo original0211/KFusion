@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.0 (2026-10-24)
+
+**Features**
+
+- **app** KFusion baseline on the FlClash base: Android and Windows only, rebranded as an independent app (2c9ee29)
+- **config** Config hub: universal import for Clash, sing-box, share-link and subscription formats, routing templates and beginner mode (e506259)
+- **core** Second core: sing-box rendering and a Windows sidecar runtime, mutually exclusive with the mihomo core (682de79)
+
 ## v0.9.1 (2026-10-17)
 
 **Breaking Changes**
