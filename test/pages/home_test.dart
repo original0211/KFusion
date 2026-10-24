@@ -20,12 +20,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/glyph_finders.dart';
+import '../helpers/preferences.dart';
 import '../helpers/test_app.dart';
 
 Finder _glyph(Glyph glyph) => find.byGlyph(glyph);
 
 void main() {
-  setUp(() {
+  setUp(() async {
+    // Beginner mode adds a row to the general settings page and hides
+    // advanced entries; these layout tests assume the advanced layout.
+    await mockPreferences({'beginnerMode': false});
     navigationPort = navigation;
     addTearDown(() => navigationPort = null);
   });

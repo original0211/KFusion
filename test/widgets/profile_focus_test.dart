@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../helpers/context_menu.dart';
+import '../helpers/preferences.dart';
 import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
 
@@ -95,6 +96,12 @@ Future<ProviderContainer> pumpProfiles(
 }
 
 void main() {
+  setUp(() async {
+    // The extend entry under test is hidden in beginner mode by
+    // default; opt out of it here.
+    await mockPreferences({'beginnerMode': false});
+  });
+
   testWidgets('a focused profile card opens its menu', (tester) async {
     final profiles = [
       urlProfile('url 1'),

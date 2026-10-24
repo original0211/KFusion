@@ -16,9 +16,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 
 import '../helpers/glyph_finders.dart';
+import '../helpers/preferences.dart';
 import '../helpers/test_app.dart';
 
 void main() {
+  setUp(() async {
+    // The dashboard edit-layer tests enter edit mode, which beginner
+    // mode hides by default; opt out of it here.
+    await mockPreferences({'beginnerMode': false});
+  });
   testWidgets('back layers are consumed from inner to outer', (tester) async {
     var innerActive = true;
     var outerActive = true;
