@@ -499,6 +499,11 @@ void main() {
             )
             .first,
       );
+      // The settings page grew by one row (beginner-mode toggle), which
+      // can leave the item's center just below the viewport edge even
+      // after scrollUntilVisible; make it fully visible before tapping.
+      await tester.ensureVisible(logItem);
+      await tester.pumpAndSettle();
       await tester.tap(logItem);
       await tester.pumpAndSettle();
 
