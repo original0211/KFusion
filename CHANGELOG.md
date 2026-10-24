@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.4 (2026-10-25)
+
+**Features**
+
+- **app** A new look that matches the T disc logo: a signal-cyan accent over near-neutral black, white and grey surfaces, with light and dark following the system by default (34b31c0)
+- **config** Settings gains a running-core switch for the current profile, so the core a profile runs on can be changed without opening the profile editor (34b31c0)
+
+**Bug Fixes**
+
+- **config** Universal import page spacing: the download, file and parse-text buttons no longer crowd the fields around them, and the profile name field no longer overlaps the parse-text button (2b47d08)
+- **app** The About page links point at the right places now: the core link goes to the real upstream, MetaCubeX/Clash.Meta, and the stale credits for the old icon designers are gone (2b47d08)
+- **dashboard** The dashboard edit button is shown in beginner mode too, so cards can be added, removed and reordered without turning beginner mode off first (f2a33f3)
+
 ## v0.2.3 (2026-10-25)
 
 **Features**

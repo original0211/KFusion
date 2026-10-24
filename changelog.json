@@ -2,6 +2,49 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.4",
+      "tag": "v0.2.4",
+      "date": "2026-10-25",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "34b31c0",
+              "scope": "app",
+              "text": "A new look that matches the T disc logo: a signal-cyan accent over near-neutral black, white and grey surfaces, with light and dark following the system by default"
+            },
+            {
+              "id": "34b31c0",
+              "scope": "config",
+              "text": "Settings gains a running-core switch for the current profile, so the core a profile runs on can be changed without opening the profile editor"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "2b47d08",
+              "scope": "config",
+              "text": "Universal import page spacing: the download, file and parse-text buttons no longer crowd the fields around them, and the profile name field no longer overlaps the parse-text button"
+            },
+            {
+              "id": "2b47d08",
+              "scope": "app",
+              "text": "The About page links point at the right places now: the core link goes to the real upstream, MetaCubeX/Clash.Meta, and the stale credits for the old icon designers are gone"
+            },
+            {
+              "id": "f2a33f3",
+              "scope": "dashboard",
+              "text": "The dashboard edit button is shown in beginner mode too, so cards can be added, removed and reordered without turning beginner mode off first"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.3",
       "tag": "v0.2.3",
       "date": "2026-10-25",
