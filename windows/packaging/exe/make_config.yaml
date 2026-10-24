@@ -1,8 +1,8 @@
 script_template: inno_setup.iss
 app_id: 728B3532-C74B-4870-9068-BE70FE12A3E6
 app_name: KFusion
-publisher: chen08209
-publisher_url: https://github.com/chen08209/FlClash
+publisher: original0211
+publisher_url: https://github.com/original0211/KFusion
 display_name: KFusion
 executable_name: KFusion.exe
 output_base_file_name: KFusion.exe
