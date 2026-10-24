@@ -10,14 +10,6 @@ String _androidAttribute(String source, String element, String attribute) {
   ).firstMatch(elementTag)!.group(1)!;
 }
 
-double _androidDoubleAttribute(
-  String source,
-  String element,
-  String attribute,
-) {
-  return double.parse(_androidAttribute(source, element, attribute));
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -49,7 +41,12 @@ void main() {
     }
   });
 
-  test('TV adaptive launcher icon stays centered in the safe zone', () {
+  // The foreground is a raster disc now, not a vector glyph, so the old
+  // test's path-geometry safe-zone math no longer applies. What can still
+  // be pinned is the wiring and the raster itself: the TV adaptive icon
+  // must reference the bitmap foreground, and every density must ship a
+  // transparent PNG at the adaptive-icon size for that density.
+  test('TV adaptive launcher icon uses the raster foreground', () async {
     final adaptiveIcon = File(
       'android/app/src/main/res/'
       'mipmap-television-anydpi-v26/ic_launcher.xml',
@@ -63,40 +60,50 @@ void main() {
       '@color/ic_launcher_background',
     );
 
-    final vector = File(
+    final foreground = File(
       'android/app/src/main/res/drawable/'
       'ic_launcher_foreground_tv.xml',
     ).readAsStringSync();
-    final scaleX = _androidDoubleAttribute(vector, 'group', 'scaleX');
-    final scaleY = _androidDoubleAttribute(vector, 'group', 'scaleY');
-    final translateX = _androidDoubleAttribute(vector, 'group', 'translateX');
-    final translateY = _androidDoubleAttribute(vector, 'group', 'translateY');
-    final viewportWidth = _androidDoubleAttribute(
-      vector,
-      'vector',
-      'viewportWidth',
-    );
-    final viewportHeight = _androidDoubleAttribute(
-      vector,
-      'vector',
-      'viewportHeight',
+    expect(foreground, contains('<bitmap'));
+    expect(
+      _androidAttribute(foreground, 'bitmap', 'src'),
+      '@mipmap/ic_launcher_foreground',
     );
 
-    // Conservative bounds of the current logo, including the curved caps.
-    const logoBounds = ui.Rect.fromLTRB(54, 33, 179, 206.5);
-    final transformedBounds = ui.Rect.fromLTRB(
-      (logoBounds.left * scaleX + translateX) / viewportWidth * 108,
-      (logoBounds.top * scaleY + translateY) / viewportHeight * 108,
-      (logoBounds.right * scaleX + translateX) / viewportWidth * 108,
-      (logoBounds.bottom * scaleY + translateY) / viewportHeight * 108,
-    );
-    const safeZone = ui.Rect.fromLTWH(18, 18, 72, 72);
+    const expectedSizes = {
+      'mdpi': 108,
+      'hdpi': 162,
+      'xhdpi': 216,
+      'xxhdpi': 324,
+      'xxxhdpi': 432,
+    };
+    for (final MapEntry(key: density, value: size) in expectedSizes.entries) {
+      final file = File(
+        'android/app/src/main/res/'
+        'mipmap-$density/ic_launcher_foreground.png',
+      );
+      expect(file.existsSync(), isTrue, reason: 'missing ${file.path}');
 
-    expect(transformedBounds.left, greaterThanOrEqualTo(safeZone.left));
-    expect(transformedBounds.top, greaterThanOrEqualTo(safeZone.top));
-    expect(transformedBounds.right, lessThanOrEqualTo(safeZone.right));
-    expect(transformedBounds.bottom, lessThanOrEqualTo(safeZone.bottom));
-    expect(transformedBounds.center.dx, closeTo(safeZone.center.dx, 0.05));
-    expect(transformedBounds.center.dy, closeTo(safeZone.center.dy, 0.05));
+      final bytes = await file.readAsBytes();
+      expect(bytes.sublist(0, 8), [
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+      ], reason: '${file.path} is not a PNG');
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      expect(
+        (frame.image.width, frame.image.height),
+        (size, size),
+        reason: file.path,
+      );
+      frame.image.dispose();
+      codec.dispose();
+    }
   });
 }
