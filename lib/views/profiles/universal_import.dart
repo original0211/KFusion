@@ -182,12 +182,13 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: FilledButton.tonal(
               onPressed: _busy ? null : _loadFromUrl,
               child: const Text('下载并解析'),
             ),
           ),
+          const SizedBox(height: 16),
           ListItem(
             leading: const GlyphIcon(AppGlyphs.importFile),
             title: const Text('从文件导入'),
@@ -195,12 +196,13 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             onTap: _busy ? null : _loadFromFile,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: FilledButton.tonal(
               onPressed: _busy ? null : _loadFromFile,
               child: const Text('选择文件'),
             ),
           ),
+          const SizedBox(height: 16),
           ListItem(
             leading: const GlyphIcon(AppGlyphs.customize),
             title: const Text('解析粘贴的文本'),
@@ -217,7 +219,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: FilledButton.tonal(
               onPressed: _busy
                   ? null
@@ -226,7 +228,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: TextField(
               controller: _labelController,
               decoration: const InputDecoration(labelText: '配置名称'),
@@ -264,7 +266,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: FilledButton.tonal(
                 onPressed: _busy ? null : _exportSingBox,
                 child: const Text('导出 sing-box 配置'),
