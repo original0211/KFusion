@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.9 (2026-10-25)
+
+**Features**
+
+- **app** The sing-box card in Settings is now a core switch with a mihomo / sing-box segmented control: one tap stops the running core, starts the target and re-applies the current profile for it, naming each stage as it goes, and the current profile is rendered for the target core up front, so one that cannot be converted is refused before anything stops (7af328f)
+
+**Bug Fixes**
+
+- **core** Starting sing-box on Android while mihomo was running no longer hangs and then fails with a raw error claiming mihomo could not stop: the switch stops mihomo through the real run-state chain, the stopped state is written back where the rest of the app reads it, and a stop that does not take effect no longer leaves every other core action reporting the core as not connected (779bf77)
+- **app** When a core switch fails part-way through, the core that ran before is restored, and the card explains in one plain sentence which step failed and what to do next, instead of surfacing the raw exception (7af328f)
+- **ui** The proxies page joins the settled interface standards: node cards sit on the neutral surface at the card corner step, the signal colour stays only on functional marks such as the current node and the selected group, and delays read as small labels in semantic colours (523424b)
+
 ## v0.2.8 (2026-10-25)
 
 **Features**
