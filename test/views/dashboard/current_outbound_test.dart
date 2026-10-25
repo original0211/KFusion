@@ -406,9 +406,7 @@ void main() {
       tester,
     ) async {
       final core = _MockCore();
-      when(
-        () => core.outboundIp(any()),
-      ).thenAnswer((_) async => _address());
+      when(() => core.outboundIp(any())).thenAnswer((_) async => _address());
       await tester.pumpWidget(_probingApp(core));
       await tester.pump();
       await tester.pump(commonDuration);

@@ -68,9 +68,7 @@ class _RetryProbe extends Notifier<RoutedProbeState<String, String>>
   ) async {
     calls.add(target);
     final value = answers.isEmpty ? 'ok' : answers.removeAt(0);
-    return {
-      target: ProbeAnswer(value: value, coreEpoch: 1, picksVersion: 1),
-    };
+    return {target: ProbeAnswer(value: value, coreEpoch: 1, picksVersion: 1)};
   }
 }
 
