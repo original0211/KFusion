@@ -256,17 +256,23 @@ class _DesktopGrid extends StatelessWidget {
           end: base.end + inset,
         );
         double span(int columns) => column * columns + gap * (columns - 1);
-        Widget row(List<(int, Widget)> cards) => Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: gap,
-          children: [
-            for (final (columns, card) in cards)
-              SizedBox(
-                width: span(columns),
-                child: RepaintBoundary(child: card),
-              ),
-          ],
-        );
+        Widget row(List<(int, Widget)> cards) {
+          final filled = dashboardFilledSpans([
+            for (final (cellSpan, _) in cards) cellSpan,
+          ], columns);
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: gap,
+            children: [
+              for (var index = 0; index < cards.length; index++)
+                SizedBox(
+                  width: span(filled[index]),
+                  child: RepaintBoundary(child: cards[index].$2),
+                ),
+            ],
+          );
+        }
+
         Widget sized(double height, Widget child) =>
             SizedBox(height: height, child: child);
 

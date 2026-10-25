@@ -37,6 +37,17 @@ void main() {
     expect(dashboardColumnsOf(859), 2);
   });
 
+  test('a row fills its tier from the spans of the cards left in it', () {
+    expect(dashboardFilledSpans(const [2, 1, 1], 4), const [2, 1, 1]);
+    expect(dashboardFilledSpans(const [2, 2], 4), const [2, 2]);
+    expect(dashboardFilledSpans(const [2], 4), const [4]);
+    expect(dashboardFilledSpans(const [1], 2), const [2]);
+    expect(dashboardFilledSpans(const [1, 1], 4), const [2, 2]);
+    expect(dashboardFilledSpans(const [1, 2], 4), const [1, 3]);
+    expect(dashboardFilledSpans(const [1, 1, 1], 4), const [2, 1, 1]);
+    expect(dashboardFilledSpans(const [], 4), const <int>[]);
+  });
+
   late ProviderContainer container;
 
   setUp(() async {
@@ -464,6 +475,85 @@ void main() {
       expect(find.byType(NetworkSpeedCard), findsNothing);
       expect(tester.takeException(), isNull);
     }
+
+    await teardown(tester);
+  });
+
+  testWidgets('deleting the speed cards lets the exit fill the top row', (
+    tester,
+  ) async {
+    await pumpDashboard(tester, const Size(1280, 960));
+    final before = rectOf(tester, CurrentOutboundCard);
+    expect(before.width, lessThan(1280 - 16 - 24));
+
+    seedWidgets(const [
+      DashboardWidget.currentOutbound,
+      DashboardWidget.profiles,
+      DashboardWidget.outboundMode,
+      DashboardWidget.networkTakeover,
+      DashboardWidget.intranetIp,
+      DashboardWidget.serviceStatus,
+      DashboardWidget.connectionStats,
+      DashboardWidget.proxyGroups,
+    ]);
+    await tester.pump();
+
+    final after = rectOf(tester, CurrentOutboundCard);
+    expect(find.byType(SpeedCard), findsNothing);
+    expect(after.width, greaterThan(before.width));
+    expect(after.width, closeTo(1280 - 16 - 24, 0.01));
+    expect(after.right, closeTo(1280 - 24, 0.01));
+    expect(rectOf(tester, OutboundModeBar).top, after.bottom + 16);
+    expect(tester.takeException(), isNull);
+
+    await teardown(tester);
+  });
+
+  testWidgets('deleting a middle card widens the cards beside it', (
+    tester,
+  ) async {
+    seedWidgets(const [
+      DashboardWidget.currentOutbound,
+      DashboardWidget.networkSpeed,
+      DashboardWidget.outboundMode,
+      DashboardWidget.networkTakeover,
+      DashboardWidget.intranetIp,
+      DashboardWidget.serviceStatus,
+      DashboardWidget.connectionStats,
+      DashboardWidget.proxyGroups,
+    ]);
+    await pumpDashboard(tester, const Size(1440, 900));
+
+    final intranet = rectOf(tester, IntranetIpCard);
+    final service = rectOf(tester, ServiceStatusCard);
+    expect(service.left, closeTo(intranet.right + 16, 0.01));
+    expect(service.width, closeTo(intranet.width, 0.01));
+    expect(service.right, closeTo(1440 - 24, 0.01));
+    expect(tester.takeException(), isNull);
+
+    await teardown(tester);
+  });
+
+  testWidgets('deleting the whole control row leaves no gap for it', (
+    tester,
+  ) async {
+    seedWidgets(const [
+      DashboardWidget.currentOutbound,
+      DashboardWidget.networkSpeed,
+      DashboardWidget.profiles,
+      DashboardWidget.intranetIp,
+      DashboardWidget.serviceStatus,
+      DashboardWidget.connectionStats,
+      DashboardWidget.proxyGroups,
+    ]);
+    await pumpDashboard(tester, const Size(1280, 960));
+
+    expect(find.byType(OutboundModeBar), findsNothing);
+    expect(find.byType(NetworkTakeoverTile), findsNothing);
+    final current = rectOf(tester, CurrentOutboundCard);
+    final intranet = rectOf(tester, IntranetIpCard);
+    expect(intranet.top, current.bottom + 16);
+    expect(tester.takeException(), isNull);
 
     await teardown(tester);
   });
