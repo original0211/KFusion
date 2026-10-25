@@ -218,6 +218,7 @@ class _CoreSwitchItemState extends ConsumerState<CoreSwitchItem> {
           ? (system.isAndroid ? 'Android sing-box VPN 运行时（真机待验）' : '未运行')
           : status.message;
     }
+    final mihomoRunning = ref.watch(isStartProvider);
     return CoreSwitchCard(
       statusText: statusText,
       statusIsFailure: failure != null,
@@ -237,8 +238,11 @@ class _CoreSwitchItemState extends ConsumerState<CoreSwitchItem> {
       selectedCore: coreSwitchSelectedCore(
         status: status,
         activeKind: ref.watch(activeCoreKindProvider).value ?? CoreKind.mihomo,
-        mihomoRunning: ref.watch(isStartProvider),
+        mihomoRunning: mihomoRunning,
       ),
+      mihomoRunning: mihomoRunning,
+      singBoxRunning: status.state == SingBoxState.running,
+      failureDetail: status.failureDetail,
       switching: switching || _downloading,
       onSelectCore: (target) {
         ref.read(singBoxActionProvider.notifier).switchCore(target);
@@ -264,6 +268,9 @@ class CoreSwitchCard extends StatelessWidget {
     required this.onDownload,
     required this.showSwitch,
     required this.selectedCore,
+    required this.mihomoRunning,
+    required this.singBoxRunning,
+    required this.failureDetail,
     required this.switching,
     required this.onSelectCore,
     required this.localizations,
@@ -290,6 +297,11 @@ class CoreSwitchCard extends StatelessWidget {
   final VoidCallback onDownload;
   final bool showSwitch;
   final CoreKind selectedCore;
+  final bool mihomoRunning;
+  final bool singBoxRunning;
+
+  /// The native message under a failure sentence; empty when none arrived.
+  final String failureDetail;
   final bool switching;
   final ValueChanged<CoreKind> onSelectCore;
   final AppLocalizations localizations;
@@ -343,6 +355,54 @@ class CoreSwitchCard extends StatelessWidget {
     );
   }
 
+  Widget _coreRow(BuildContext context, CoreKind kind) {
+    final selected = kind == selectedCore;
+    final running = kind == CoreKind.mihomo ? mihomoRunning : singBoxRunning;
+    final colorScheme = context.colorScheme;
+    const shape = AppShape.md;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: context.raisedSurfaceLevel.colorOf(colorScheme),
+        shape: shape,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          customBorder: shape,
+          onTap: switching || selected ? null : () => onSelectCore(kind),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                DashboardDiscMotif(
+                  size: 20,
+                  color: selected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    coreKindDisplayName(kind),
+                    style: context.listTitleStyle,
+                  ),
+                ),
+                Text(
+                  running ? localizations.running : localizations.notRunning,
+                  style: context.listSubtitleStyle,
+                ),
+                if (selected) ...[
+                  const SizedBox(width: 8),
+                  const SelectionCheck(),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _downloadingText() {
     final percent = progress;
     final base = percent == null
@@ -382,26 +442,24 @@ class CoreSwitchCard extends StatelessWidget {
                     )
                   : context.listSubtitleStyle,
             ),
+            if (statusIsFailure && failureDetail.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                localizations.coreSwitchFailureDetail(failureDetail),
+                style: context.listSubtitleStyle.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             if (showBinary && binaryChecked) ...[
               const SizedBox(height: 8),
               _binaryContent(context),
             ],
             if (showSwitch) ...[
               const SizedBox(height: 12),
-              SegmentedButton<CoreKind>(
-                segments: const [
-                  ButtonSegment(value: CoreKind.mihomo, label: Text('mihomo')),
-                  ButtonSegment(
-                    value: CoreKind.singbox,
-                    label: Text('sing-box'),
-                  ),
-                ],
-                selected: {selectedCore},
-                showSelectedIcon: false,
-                onSelectionChanged: switching
-                    ? null
-                    : (selection) => onSelectCore(selection.first),
-              ),
+              _coreRow(context, CoreKind.mihomo),
+              const SizedBox(height: 8),
+              _coreRow(context, CoreKind.singbox),
             ],
             const SizedBox(height: 12),
             if (!isEnd)

@@ -963,6 +963,7 @@
   "coreSwitchPlatformUnsupported": "Esta plataforma no admite cambiar a sing-box.",
   "coreSwitchRollbackFailed": "El cambio falló y el núcleo anterior tampoco se pudo reiniciar. Inicia un núcleo manualmente desde el panel.",
   "coreSwitchFailed": "El cambio falló. El núcleo anterior no se vio afectado; inténtalo de nuevo en un momento.",
+  "coreSwitchFailureDetail": "Mensaje original: {detail}",
   "customImportDroppedSubRules": "{count, plural, =1{Se descartó 1 regla SUB-RULE, porque los perfiles personalizados no admiten subreglas} other{Se descartaron {label} reglas SUB-RULE, porque los perfiles personalizados no admiten subreglas}}",
   "autoInclude": "Incluir automáticamente",
   "allReferencedProxies": "Todos los proxies referenciados",

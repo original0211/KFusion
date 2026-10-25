@@ -963,6 +963,7 @@
   "coreSwitchPlatformUnsupported": "当前平台暂不支持切换到 sing-box。",
   "coreSwitchRollbackFailed": "切换失败，且原核心也未能自动恢复。请到仪表盘手动启动核心。",
   "coreSwitchFailed": "切换失败，原核心未受影响。请稍后重试。",
+  "coreSwitchFailureDetail": "原始信息：{detail}",
   "customImportDroppedSubRules": "{count, plural, other{自定义配置不支持子规则，已丢弃 {label} 条 SUB-RULE 规则}}",
   "autoInclude": "自动包含",
   "allReferencedProxies": "全部被引用的代理",

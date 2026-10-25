@@ -963,6 +963,7 @@
   "coreSwitchPlatformUnsupported": "This platform does not support switching to sing-box.",
   "coreSwitchRollbackFailed": "The switch failed, and the previous core could not be restarted either. Start a core manually on the dashboard.",
   "coreSwitchFailed": "The switch failed. The previous core is unchanged; try again in a moment.",
+  "coreSwitchFailureDetail": "Original message: {detail}",
   "customImportDroppedSubRules": "{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}",
   "autoInclude": "Auto-include",
   "allReferencedProxies": "All referenced proxies",

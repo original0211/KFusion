@@ -963,6 +963,7 @@
   "coreSwitchPlatformUnsupported": "このプラットフォームでは sing-box への切り替えに対応していません。",
   "coreSwitchRollbackFailed": "切り替えに失敗し、元のコアも自動で復旧できませんでした。ダッシュボードでコアを手動で起動してください。",
   "coreSwitchFailed": "切り替えに失敗しました。元のコアには影響ありません。しばらくしてから再試行してください。",
+  "coreSwitchFailureDetail": "元のメッセージ：{detail}",
   "customImportDroppedSubRules": "{count, plural, other{カスタム設定はサブルールに対応していないため、SUB-RULE ルール {label} 件を破棄しました}}",
   "autoInclude": "自動で含める",
   "allReferencedProxies": "参照されているすべてのプロキシ",

@@ -963,6 +963,7 @@
   "coreSwitchPlatformUnsupported": "이 플랫폼에서는 sing-box로 전환할 수 없습니다.",
   "coreSwitchRollbackFailed": "전환에 실패했고 이전 코어도 자동으로 다시 시작하지 못했습니다. 대시보드에서 코어를 수동으로 시작하세요.",
   "coreSwitchFailed": "전환에 실패했습니다. 이전 코어는 영향이 없습니다. 잠시 후 다시 시도하세요.",
+  "coreSwitchFailureDetail": "원본 메시지: {detail}",
   "customImportDroppedSubRules": "{count, plural, other{사용자 지정 프로필은 하위 규칙을 지원하지 않아 SUB-RULE 규칙 {label}개를 제외했습니다}}",
   "autoInclude": "자동 포함",
   "allReferencedProxies": "참조된 모든 프록시",

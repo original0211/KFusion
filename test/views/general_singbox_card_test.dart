@@ -29,6 +29,9 @@ void main() {
     String? downloadError,
     bool showSwitch = false,
     CoreKind selectedCore = CoreKind.mihomo,
+    bool mihomoRunning = true,
+    bool singBoxRunning = false,
+    String failureDetail = '',
     bool switching = false,
     ValueChanged<CoreKind>? onSelectCore,
   }) async {
@@ -52,6 +55,9 @@ void main() {
                 onDownload: () {},
                 showSwitch: showSwitch,
                 selectedCore: selectedCore,
+                mihomoRunning: mihomoRunning,
+                singBoxRunning: singBoxRunning,
+                failureDetail: failureDetail,
                 switching: switching,
                 onSelectCore: onSelectCore ?? (_) {},
                 localizations: context.appLocalizations,
@@ -75,7 +81,7 @@ void main() {
         (widget) =>
             widget is Text ||
             widget is FilledButton ||
-            widget is SegmentedButton ||
+            widget is InkWell ||
             widget is LinearProgressIndicator,
       ),
     );
@@ -93,7 +99,7 @@ void main() {
     }
   }
 
-  testWidgets('managed binary found: selector shows, no download offer', (
+  testWidgets('managed binary found: core rows show, no download offer', (
     tester,
   ) async {
     await pumpCard(
@@ -102,10 +108,12 @@ void main() {
       showSwitch: true,
     );
     expect(find.text('核心切换'), findsOneWidget);
-    expect(find.text('未运行'), findsOneWidget);
+    expect(find.text('未运行'), findsNWidgets(2));
+    expect(find.text('运行中'), findsOneWidget);
     expect(find.textContaining('应用托管的二进制'), findsOneWidget);
     expect(find.text('mihomo'), findsOneWidget);
     expect(find.text('sing-box'), findsOneWidget);
+    expect(find.byType(SelectionCheck), findsOneWidget);
     expect(find.text('下载 sing-box'), findsNothing);
     expectAllInsideCard(tester);
   });
@@ -130,7 +138,7 @@ void main() {
     expectAllInsideCard(tester);
   });
 
-  testWidgets('while switching the selector is inert', (tester) async {
+  testWidgets('while switching the core rows are inert', (tester) async {
     CoreKind? requested;
     await pumpCard(
       tester,
@@ -140,14 +148,39 @@ void main() {
       switching: true,
       onSelectCore: (target) => requested = target,
     );
-    final selector = tester.widget<SegmentedButton<CoreKind>>(
-      find.byType(SegmentedButton<CoreKind>),
-    );
-    expect(selector.onSelectionChanged, isNull);
+    for (final name in ['mihomo', 'sing-box']) {
+      final row = tester
+          .widgetList<InkWell>(
+            find.ancestor(
+              of: find.text(name),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .first;
+      expect(row.onTap, isNull);
+    }
     await tester.tap(find.text('mihomo'));
     await tester.pump();
     expect(requested, isNull);
     expect(find.text('正在停止当前核心…'), findsOneWidget);
+    expectAllInsideCard(tester);
+  });
+
+  testWidgets('a failure detail renders under the failure sentence', (
+    tester,
+  ) async {
+    await pumpCard(
+      tester,
+      statusText: 'sing-box 启动失败，已恢复使用 mihomo。请稍后重试。',
+      statusIsFailure: true,
+      failureDetail: 'FATAL[0000] unknown outbound type: block',
+      showSwitch: true,
+      selectedCore: CoreKind.mihomo,
+    );
+    expect(
+      find.text('原始信息：FATAL[0000] unknown outbound type: block'),
+      findsOneWidget,
+    );
     expectAllInsideCard(tester);
   });
 
@@ -174,7 +207,8 @@ void main() {
     expect(find.text('未找到 sing-box 二进制'), findsOneWidget);
     expect(find.textContaining('tools/singbox/README.md'), findsOneWidget);
     expect(find.text('下载 sing-box'), findsOneWidget);
-    expect(find.byType(SegmentedButton<CoreKind>), findsNothing);
+    expect(find.text('mihomo'), findsNothing);
+    expect(find.text('sing-box'), findsNothing);
     expectAllInsideCard(tester);
   });
 
@@ -210,7 +244,7 @@ void main() {
     expectAllInsideCard(tester);
   });
 
-  testWidgets('without a binary section the card holds title and selector', (
+  testWidgets('without a binary section the card holds title and core rows', (
     tester,
   ) async {
     await pumpCard(
@@ -220,9 +254,13 @@ void main() {
       binaryChecked: false,
       showSwitch: true,
       selectedCore: CoreKind.singbox,
+      mihomoRunning: false,
+      singBoxRunning: true,
     );
     expect(find.text('核心切换'), findsOneWidget);
-    expect(find.byType(SegmentedButton<CoreKind>), findsOneWidget);
+    expect(find.text('mihomo'), findsOneWidget);
+    expect(find.text('sing-box'), findsOneWidget);
+    expect(find.text('运行中'), findsOneWidget);
     expect(find.text('未找到 sing-box 二进制'), findsNothing);
     expectAllInsideCard(tester);
   });

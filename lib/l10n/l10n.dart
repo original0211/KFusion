@@ -8063,6 +8063,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Original message: {detail}`
+  String coreSwitchFailureDetail(Object detail) {
+    return Intl.message(
+      'Original message: $detail',
+      name: 'coreSwitchFailureDetail',
+      desc: '',
+      args: [detail],
+    );
+  }
+
   /// `{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}`
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
