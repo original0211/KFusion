@@ -1,4 +1,5 @@
 export 'core_kind.dart';
+export 'core_switch.dart';
 export 'format.dart';
 export 'ir.dart';
 export 'parsers.dart';

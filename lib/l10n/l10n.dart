@@ -7873,6 +7873,196 @@ class AppLocalizations {
     );
   }
 
+  /// `Core switching`
+  String get coreSwitchTitle {
+    return Intl.message(
+      'Core switching',
+      name: 'coreSwitchTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Stopping the current core…`
+  String get coreSwitchStopping {
+    return Intl.message(
+      'Stopping the current core…',
+      name: 'coreSwitchStopping',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Starting {core}…`
+  String coreSwitchStarting(Object core) {
+    return Intl.message(
+      'Starting $core…',
+      name: 'coreSwitchStarting',
+      desc: '',
+      args: [core],
+    );
+  }
+
+  /// `Applying the current profile…`
+  String get coreSwitchApplying {
+    return Intl.message(
+      'Applying the current profile…',
+      name: 'coreSwitchApplying',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Switch failed. Restoring the previous core…`
+  String get coreSwitchRestoring {
+    return Intl.message(
+      'Switch failed. Restoring the previous core…',
+      name: 'coreSwitchRestoring',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No profile is selected. Pick a profile on the Profiles page first, then switch the core.`
+  String get coreSwitchNoProfile {
+    return Intl.message(
+      'No profile is selected. Pick a profile on the Profiles page first, then switch the core.',
+      name: 'coreSwitchNoProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The current profile is empty or cannot be read. Check the profile, then try again.`
+  String get coreSwitchProfileUnreadable {
+    return Intl.message(
+      'The current profile is empty or cannot be read. Check the profile, then try again.',
+      name: 'coreSwitchProfileUnreadable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The current profile cannot be converted for {core}, so the switch was cancelled. Adjust the profile, then try again.`
+  String coreSwitchNotRenderable(Object core) {
+    return Intl.message(
+      'The current profile cannot be converted for $core, so the switch was cancelled. Adjust the profile, then try again.',
+      name: 'coreSwitchNotRenderable',
+      desc: '',
+      args: [core],
+    );
+  }
+
+  /// `The current core could not be stopped, so the switch was cancelled. Try again in a moment, or stop the core on the dashboard first.`
+  String get coreSwitchStopFailed {
+    return Intl.message(
+      'The current core could not be stopped, so the switch was cancelled. Try again in a moment, or stop the core on the dashboard first.',
+      name: 'coreSwitchStopFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{core} failed to start. Check the logs, then try again.`
+  String coreSwitchStartFailed(Object core) {
+    return Intl.message(
+      '$core failed to start. Check the logs, then try again.',
+      name: 'coreSwitchStartFailed',
+      desc: '',
+      args: [core],
+    );
+  }
+
+  /// `{core} failed to start, so {restored} is running again. Try again in a moment.`
+  String coreSwitchStartFailedRestored(Object core, Object restored) {
+    return Intl.message(
+      '$core failed to start, so $restored is running again. Try again in a moment.',
+      name: 'coreSwitchStartFailedRestored',
+      desc: '',
+      args: [core, restored],
+    );
+  }
+
+  /// `The core started, but the current profile could not be applied. Try again in a moment.`
+  String get coreSwitchApplyFailed {
+    return Intl.message(
+      'The core started, but the current profile could not be applied. Try again in a moment.',
+      name: 'coreSwitchApplyFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The profile could not be applied, so {restored} is running again. Try again in a moment.`
+  String coreSwitchApplyFailedRestored(Object restored) {
+    return Intl.message(
+      'The profile could not be applied, so $restored is running again. Try again in a moment.',
+      name: 'coreSwitchApplyFailedRestored',
+      desc: '',
+      args: [restored],
+    );
+  }
+
+  /// `The sing-box binary could not be downloaded, so the switch was cancelled. Check the network and retry, or place sing-box.exe manually as described.`
+  String get coreSwitchBinaryUnavailable {
+    return Intl.message(
+      'The sing-box binary could not be downloaded, so the switch was cancelled. Check the network and retry, or place sing-box.exe manually as described.',
+      name: 'coreSwitchBinaryUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN is enabled, which needs administrator rights. Run the app as administrator, then switch again.`
+  String get coreSwitchAdminRequired {
+    return Intl.message(
+      'TUN is enabled, which needs administrator rights. Run the app as administrator, then switch again.',
+      name: 'coreSwitchAdminRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The sing-box service channel is unavailable, so the switch was cancelled. Restart the app, then try again.`
+  String get coreSwitchChannelUnavailable {
+    return Intl.message(
+      'The sing-box service channel is unavailable, so the switch was cancelled. Restart the app, then try again.',
+      name: 'coreSwitchChannelUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This platform does not support switching to sing-box.`
+  String get coreSwitchPlatformUnsupported {
+    return Intl.message(
+      'This platform does not support switching to sing-box.',
+      name: 'coreSwitchPlatformUnsupported',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The switch failed, and the previous core could not be restarted either. Start a core manually on the dashboard.`
+  String get coreSwitchRollbackFailed {
+    return Intl.message(
+      'The switch failed, and the previous core could not be restarted either. Start a core manually on the dashboard.',
+      name: 'coreSwitchRollbackFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The switch failed. The previous core is unchanged; try again in a moment.`
+  String get coreSwitchFailed {
+    return Intl.message(
+      'The switch failed. The previous core is unchanged; try again in a moment.',
+      name: 'coreSwitchFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}`
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(

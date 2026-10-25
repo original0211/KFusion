@@ -32,14 +32,91 @@ class LogLevelItem extends ConsumerWidget {
   }
 }
 
-class SingBoxStatusItem extends ConsumerStatefulWidget {
-  const SingBoxStatusItem({super.key});
-
-  @override
-  ConsumerState<SingBoxStatusItem> createState() => _SingBoxStatusItemState();
+/// The core the card presents as current: switch target first, then the running core, then the persisted kind.
+CoreKind coreSwitchSelectedCore({
+  required SingBoxStatus status,
+  required CoreKind activeKind,
+  required bool mihomoRunning,
+}) {
+  final target = status.switchTarget;
+  if (status.state == SingBoxState.starting && target != null) {
+    return target;
+  }
+  if (status.state == SingBoxState.running) {
+    return CoreKind.singbox;
+  }
+  if (mihomoRunning) {
+    return CoreKind.mihomo;
+  }
+  return activeKind;
 }
 
-class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
+/// The name a core goes by in sentences; the persisted sing-box value drops its hyphen.
+String coreKindDisplayName(CoreKind kind) {
+  return switch (kind) {
+    CoreKind.mihomo => 'mihomo',
+    CoreKind.singbox => 'sing-box',
+  };
+}
+
+String coreSwitchStageText(AppLocalizations l10n, SingBoxStatus status) {
+  final target = status.switchTarget;
+  final base = switch (status.switchStage) {
+    CoreSwitchStage.stopping => l10n.coreSwitchStopping,
+    CoreSwitchStage.starting => l10n.coreSwitchStarting(
+      target == null ? '' : coreKindDisplayName(target),
+    ),
+    CoreSwitchStage.applying => l10n.coreSwitchApplying,
+    CoreSwitchStage.restoring => l10n.coreSwitchRestoring,
+    null => status.message,
+  };
+  final detail = status.stageDetail;
+  return detail.isEmpty ? base : '$base $detail';
+}
+
+/// The one sentence a failed switch shows; raw exception text never reaches it.
+String coreSwitchFailureText(AppLocalizations l10n, SingBoxStatus status) {
+  final failure = status.failure ?? CoreSwitchFailure.unknown;
+  if (status.failedStage != null && !status.restored) {
+    return l10n.coreSwitchRollbackFailed;
+  }
+  final targetKind = status.switchTarget;
+  final target = targetKind == null ? '' : coreKindDisplayName(targetKind);
+  final from = status.switchFrom;
+  return switch (failure) {
+    CoreSwitchFailure.noProfile => l10n.coreSwitchNoProfile,
+    CoreSwitchFailure.profileUnreadable => l10n.coreSwitchProfileUnreadable,
+    CoreSwitchFailure.profileNotRenderable => l10n.coreSwitchNotRenderable(
+      target,
+    ),
+    CoreSwitchFailure.stopFailed => l10n.coreSwitchStopFailed,
+    CoreSwitchFailure.startFailed =>
+      status.restored && from != null
+          ? l10n.coreSwitchStartFailedRestored(
+              target,
+              coreKindDisplayName(from),
+            )
+          : l10n.coreSwitchStartFailed(target),
+    CoreSwitchFailure.applyFailed =>
+      status.restored && from != null
+          ? l10n.coreSwitchApplyFailedRestored(coreKindDisplayName(from))
+          : l10n.coreSwitchApplyFailed,
+    CoreSwitchFailure.binaryUnavailable => l10n.coreSwitchBinaryUnavailable,
+    CoreSwitchFailure.adminRequired => l10n.coreSwitchAdminRequired,
+    CoreSwitchFailure.channelUnavailable => l10n.coreSwitchChannelUnavailable,
+    CoreSwitchFailure.platformUnsupported => l10n.coreSwitchPlatformUnsupported,
+    CoreSwitchFailure.unknown => l10n.coreSwitchFailed,
+  };
+}
+
+class CoreSwitchItem extends ConsumerStatefulWidget {
+  const CoreSwitchItem({super.key});
+
+  @override
+  ConsumerState<CoreSwitchItem> createState() => _CoreSwitchItemState();
+}
+
+class _CoreSwitchItemState extends ConsumerState<CoreSwitchItem> {
   String? _binary;
   String? _managedPath;
   var _binaryChecked = false;
@@ -118,10 +195,8 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
     final status =
         ref.watch(singBoxActionProvider).value ??
         const SingBoxStatus(state: SingBoxState.idle);
-    final running = status.state == SingBoxState.running;
-    final starting = status.state == SingBoxState.starting;
-    // A start can fetch the binary itself; rescan once it settles so the
-    // card below switches from the download offer to the found binary.
+    final switching = status.state == SingBoxState.starting;
+    // A switch can fetch the binary itself; rescan once it settles.
     ref.listen(singBoxActionProvider, (previous, next) {
       final settled = next.value?.state;
       if (settled == SingBoxState.running ||
@@ -132,10 +207,20 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
     });
     final l10n = context.appLocalizations;
     final binary = _binary;
-    return SingBoxStatusCard(
-      statusText: status.message.isEmpty
+    final failure = status.failure;
+    final String statusText;
+    if (failure != null) {
+      statusText = coreSwitchFailureText(l10n, status);
+    } else if (switching && status.switchStage != null) {
+      statusText = coreSwitchStageText(l10n, status);
+    } else {
+      statusText = status.message.isEmpty
           ? (system.isAndroid ? 'Android sing-box VPN 运行时（真机待验）' : '未运行')
-          : status.message,
+          : status.message;
+    }
+    return CoreSwitchCard(
+      statusText: statusText,
+      statusIsFailure: failure != null,
       showBinary: system.isWindows,
       binaryChecked: _binaryChecked,
       binaryLabel: binary == null
@@ -148,29 +233,27 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
       downloadRoute: _downloadRoute,
       downloadError: _downloadError,
       onDownload: _downloadBinary,
-      showToggle: system.isAndroid || (system.isWindows && binary != null),
-      running: running,
-      starting: starting,
-      onToggle: () {
-        final action = ref.read(singBoxActionProvider.notifier);
-        if (running) {
-          action.stop();
-        } else {
-          action.start();
-        }
+      showSwitch: system.isAndroid || (system.isWindows && binary != null),
+      selectedCore: coreSwitchSelectedCore(
+        status: status,
+        activeKind: ref.watch(activeCoreKindProvider).value ?? CoreKind.mihomo,
+        mihomoRunning: ref.watch(isStartProvider),
+      ),
+      switching: switching || _downloading,
+      onSelectCore: (target) {
+        ref.read(singBoxActionProvider.notifier).switchCore(target);
       },
       localizations: l10n,
     );
   }
 }
 
-/// The sing-box settings row as one card: title, run state, binary state
-/// and every action stay inside the card's surface and padding, shaped
-/// like the neighbouring rows of its section.
-class SingBoxStatusCard extends StatelessWidget {
-  const SingBoxStatusCard({
+/// The core switch settings row as one card, shaped like its section neighbours.
+class CoreSwitchCard extends StatelessWidget {
+  const CoreSwitchCard({
     super.key,
     required this.statusText,
+    required this.statusIsFailure,
     required this.showBinary,
     required this.binaryChecked,
     required this.binaryLabel,
@@ -179,14 +262,17 @@ class SingBoxStatusCard extends StatelessWidget {
     required this.downloadRoute,
     required this.downloadError,
     required this.onDownload,
-    required this.showToggle,
-    required this.running,
-    required this.starting,
-    required this.onToggle,
+    required this.showSwitch,
+    required this.selectedCore,
+    required this.switching,
+    required this.onSelectCore,
     required this.localizations,
   });
 
   final String statusText;
+
+  /// Failure sentences render in the error color; other sentences stay neutral.
+  final bool statusIsFailure;
   final bool showBinary;
 
   /// False until the first binary scan lands; the section stays empty.
@@ -202,10 +288,10 @@ class SingBoxStatusCard extends StatelessWidget {
   final String? downloadRoute;
   final String? downloadError;
   final VoidCallback onDownload;
-  final bool showToggle;
-  final bool running;
-  final bool starting;
-  final VoidCallback onToggle;
+  final bool showSwitch;
+  final CoreKind selectedCore;
+  final bool switching;
+  final ValueChanged<CoreKind> onSelectCore;
   final AppLocalizations localizations;
 
   Widget _binaryContent(BuildContext context) {
@@ -286,18 +372,35 @@ class SingBoxStatusCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            Text('sing-box 核心', style: context.listTitleStyle),
+            Text(localizations.coreSwitchTitle, style: context.listTitleStyle),
             const SizedBox(height: 2),
-            Text(statusText, style: context.listSubtitleStyle),
+            Text(
+              statusText,
+              style: statusIsFailure
+                  ? context.listSubtitleStyle.copyWith(
+                      color: context.colorScheme.error,
+                    )
+                  : context.listSubtitleStyle,
+            ),
             if (showBinary && binaryChecked) ...[
               const SizedBox(height: 8),
               _binaryContent(context),
             ],
-            if (showToggle) ...[
+            if (showSwitch) ...[
               const SizedBox(height: 12),
-              FilledButton(
-                onPressed: starting ? null : onToggle,
-                child: Text(running ? '停止 sing-box' : '启动 sing-box'),
+              SegmentedButton<CoreKind>(
+                segments: const [
+                  ButtonSegment(value: CoreKind.mihomo, label: Text('mihomo')),
+                  ButtonSegment(
+                    value: CoreKind.singbox,
+                    label: Text('sing-box'),
+                  ),
+                ],
+                selected: {selectedCore},
+                showSelectedIcon: false,
+                onSelectionChanged: switching
+                    ? null
+                    : (selection) => onSelectCore(selection.first),
               ),
             ],
             const SizedBox(height: 12),
@@ -578,7 +681,7 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _startupItems(AppLocalizations appLocalizations) {
     return [
-      const SingBoxStatusItem(),
+      const CoreSwitchItem(),
       if (system.isDesktop) ...[
         _appSettingToggle(
           title: (l) => l.autoLaunch,
