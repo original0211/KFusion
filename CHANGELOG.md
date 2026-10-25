@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.5 (2026-10-25)
+
+**Features**
+
+- **app** New PC icon set in the outlined-disc scheme: the Windows app, installer and shortcut icons drop the white tile for the T disc on transparency with a light outline, and the tray icons are discs too — grey when stopped, black when running, a gold ring while TUN is on and orange in safe mode (c18fdea)
+
+**Bug Fixes**
+
+- **app** The bite cut out of the disc is filled white instead of showing through, so it stays readable on dark wallpapers across the app and tray icons (11a8fc3)
+
 ## v0.2.4 (2026-10-25)
 
 **Features**
