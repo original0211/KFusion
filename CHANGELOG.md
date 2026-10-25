@@ -4,9 +4,9 @@
 
 **Features**
 
-- **app** The phone home has a new hierarchy: the current node, speed and profile cards lead, and the status card carries the logo's disc-and-bite motif (0653e552)
-- **dashboard** Beginner mode narrows the home to the core cards, and with no profile yet a universal-import guide card leads the first setup instead of an empty dashboard (0653e552)
-- **desktop** The desktop dashboard now shares the phone's saved card list: cards can be removed, added back and reordered on desktop too, instead of a fixed layout (7feac84d)
+- **app** The phone home has a new hierarchy: the current node, speed and profile cards lead, and the status card carries the logo's disc-and-bite motif (0653e55)
+- **dashboard** Beginner mode narrows the home to the core cards, and with no profile yet a universal-import guide card leads the first setup instead of an empty dashboard (0653e55)
+- **desktop** The desktop dashboard now shares the phone's saved card list: cards can be removed, added back and reordered on desktop too, instead of a fixed layout (7feac84)
 
 ## v0.2.5 (2026-10-25)
 

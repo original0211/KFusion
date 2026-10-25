@@ -11,17 +11,17 @@
           "type": "feat",
           "entries": [
             {
-              "id": "0653e552",
+              "id": "0653e55",
               "scope": "app",
               "text": "The phone home has a new hierarchy: the current node, speed and profile cards lead, and the status card carries the logo's disc-and-bite motif"
             },
             {
-              "id": "0653e552",
+              "id": "0653e55",
               "scope": "dashboard",
               "text": "Beginner mode narrows the home to the core cards, and with no profile yet a universal-import guide card leads the first setup instead of an empty dashboard"
             },
             {
-              "id": "7feac84d",
+              "id": "7feac84",
               "scope": "desktop",
               "text": "The desktop dashboard now shares the phone's saved card list: cards can be removed, added back and reordered on desktop too, instead of a fixed layout"
             }
