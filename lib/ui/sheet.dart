@@ -42,6 +42,9 @@ const stackedSheetPeek = 14.0;
 /// Flutter's Cupertino sheet measured this on iOS 18.
 const stackedSheetScale = 1 - 0.0835;
 
+/// Opens a sheet: a bottom sheet in the mobile layout, and elsewhere a
+/// side sheet. Every sheet in the app comes through here or [showFormSheet],
+/// taking its top corner and its handle from the one base.
 Future<T?> showSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,

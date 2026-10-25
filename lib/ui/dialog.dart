@@ -317,6 +317,9 @@ class _RenderAlertGlass extends RenderProxyBox {
   }
 }
 
+/// The dialog base, raised by [showFloatingDialog]: the alert corner from
+/// the dialog theme, a headline title over a variant body, and one actions
+/// row. A raw Material dialog is never raised in the app.
 class CommonDialog extends StatelessWidget {
   final String title;
   final Widget? trailing;

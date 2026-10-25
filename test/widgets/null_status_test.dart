@@ -1,6 +1,7 @@
 import 'package:kfusion/common/app_localizations.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/providers/app.dart';
+import 'package:kfusion/ui/disc_motif.dart';
 import 'package:kfusion/ui/null_status.dart';
 import 'package:kfusion/ui/paged_sheet.dart';
 import 'package:kfusion/ui/sheet.dart';
@@ -57,6 +58,23 @@ void main() {
       expect(tester.getSize(background), const Size.square(160));
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('the brand variant stands the disc mark for the illustration', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: NullStatus.brand(label: 'Nothing here')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DashboardDiscMotif), findsOneWidget);
+    expect(find.byType(EmptyIllustration), findsNothing);
+    expect(
+      tester.getSize(find.byType(DashboardDiscMotif)),
+      const Size.square(128),
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('shrinks the illustration on a short screen', (tester) async {

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:kfusion/ui/context.dart';
+import 'package:kfusion/ui/disc_motif.dart';
 import 'package:kfusion/ui/fade_box.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/inherited.dart';
@@ -149,6 +150,7 @@ class NullStatus extends StatefulWidget {
   final String? description;
   final Widget? action;
   final NullStatusIllustration illustration;
+  final bool brandMark;
 
   const NullStatus({
     super.key,
@@ -156,7 +158,12 @@ class NullStatus extends StatefulWidget {
     this.description,
     this.action,
     this.illustration = NullStatusIllustration.data,
-  });
+  }) : brandMark = false;
+
+  /// The brand variant, for a surface with nothing to enumerate yet: the disc mark stands where an illustration would, in the variant tone.
+  const NullStatus.brand({super.key, this.label, this.description, this.action})
+    : illustration = NullStatusIllustration.data,
+      brandMark = true;
 
   @override
   State<NullStatus> createState() => _NullStatusState();
@@ -179,7 +186,8 @@ class _NullStatusState extends State<NullStatus> {
 
   @override
   Widget build(BuildContext context) {
-    final NullStatus(:label, :description, :action, :illustration) = widget;
+    final NullStatus(:label, :description, :action, :illustration, :brandMark) =
+        widget;
     final colorScheme = context.colorScheme;
     final compact = MediaQuery.sizeOf(context).height < _compactHeight;
     return Align(
@@ -193,10 +201,15 @@ class _NullStatusState extends State<NullStatus> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _EnterItem(
-                child: EmptyIllustration(
-                  type: illustration,
-                  dimension: compact ? 120 : 160,
-                ),
+                child: brandMark
+                    ? DashboardDiscMotif(
+                        size: compact ? 96 : 128,
+                        color: colorScheme.onSurfaceVariant,
+                      )
+                    : EmptyIllustration(
+                        type: illustration,
+                        dimension: compact ? 120 : 160,
+                      ),
               ),
               if (label != null) ...[
                 SizedBox(height: compact ? 12 : 16),

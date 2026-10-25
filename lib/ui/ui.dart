@@ -13,6 +13,7 @@ export 'context_menu.dart';
 export 'deferred_push.dart';
 export 'dialog.dart';
 export 'disabled_mask.dart';
+export 'disc_motif.dart';
 export 'drag_back.dart';
 export 'effect.dart';
 export 'fade_box.dart';
