@@ -2,6 +2,34 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.6",
+      "tag": "v0.2.6",
+      "date": "2026-10-25",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "0653e552",
+              "scope": "app",
+              "text": "The phone home has a new hierarchy: the current node, speed and profile cards lead, and the status card carries the logo's disc-and-bite motif"
+            },
+            {
+              "id": "0653e552",
+              "scope": "dashboard",
+              "text": "Beginner mode narrows the home to the core cards, and with no profile yet a universal-import guide card leads the first setup instead of an empty dashboard"
+            },
+            {
+              "id": "7feac84d",
+              "scope": "desktop",
+              "text": "The desktop dashboard now shares the phone's saved card list: cards can be removed, added back and reordered on desktop too, instead of a fixed layout"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.5",
       "tag": "v0.2.5",
       "date": "2026-10-25",
