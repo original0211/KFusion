@@ -42,6 +42,10 @@ double recordListExtentEstimation(int? index, double crossAxisExtent) {
   };
 }
 
+/// The card row of a record list — requests, connections, DNS queries,
+/// resources: one record per card at the xl corner, never a ruled table
+/// row. A layout wide enough to read across columns takes `RecordTable`
+/// over the same [RecordTextStyles] instead.
 class RecordListItem extends StatelessWidget {
   final Widget header;
   final Widget body;

@@ -9,6 +9,15 @@ ShapeBorder? _shapeOf(WidgetTester tester, Finder button) => tester
     .shape;
 
 void main() {
+  test('the declared main corner tiers keep their values', () {
+    expect(AppCorner.xl, 24, reason: 'card');
+    expect(AppCorner.md, 16, reason: 'block');
+    expect(AppCorner.sm, 8, reason: 'small mark or chip');
+    expect(AppShape.xl.borderRadius, AppRadius.xl);
+    expect(AppShape.md.borderRadius, AppRadius.md);
+    expect(AppShape.sm.borderRadius, AppRadius.sm);
+  });
+
   testWidgets('pill buttons take the superellipse capsule, not the stadium', (
     tester,
   ) async {

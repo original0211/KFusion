@@ -8,6 +8,10 @@ import 'package:kfusion/ui/typography.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 
+/// A neutral chip: the raised surface at the sm corner under variant text.
+/// Chips mark, they do not carry structure — a status takes a [TonalChip]
+/// in its semantic container colour, as `RecordLabel` does, and selection
+/// is a `SelectionCheck` or `SelectionBadge`, never a chip's fill.
 class CommonChip extends StatelessWidget {
   final String label;
   final VoidCallback? onDeleted;

@@ -2,18 +2,23 @@ import 'package:material_ui/material_ui.dart';
 
 /// Apple's iOS Dynamic Type scale at its default size, a dp per point, with
 /// two steps it lacks: [display] for a dashboard figure, [pageTitle] for an app
-/// bar.
+/// bar; titles sit one weight lighter than Apple's table here, body a point looser, and [display] figures tabular.
 enum AppTextStyle {
-  display(40, 44, emphasizedWeight: FontWeight.w700),
-  largeTitle(34, 41, emphasizedWeight: FontWeight.w700),
-  title1(28, 34, emphasizedWeight: FontWeight.w700),
-  pageTitle(24, 30, weight: FontWeight.w600, emphasizedWeight: FontWeight.w700),
-  title2(22, 28, emphasizedWeight: FontWeight.w700),
-  title3(20, 25),
+  display(
+    40,
+    44,
+    emphasizedWeight: FontWeight.w600,
+    fontFeatures: [FontFeature.tabularFigures()],
+  ),
+  largeTitle(34, 41, emphasizedWeight: FontWeight.w600),
+  title1(28, 34, emphasizedWeight: FontWeight.w600),
+  pageTitle(24, 30, weight: FontWeight.w600, emphasizedWeight: FontWeight.w600),
+  title2(22, 28, emphasizedWeight: FontWeight.w600),
+  title3(20, 25, emphasizedWeight: FontWeight.w500),
   headline(17, 22, weight: FontWeight.w600),
-  body(17, 22),
-  callout(16, 21),
-  subheadline(15, 20),
+  body(17, 23),
+  callout(16, 22),
+  subheadline(15, 21),
   footnote(13, 18),
   caption1(12, 16),
   caption2(11, 13);
@@ -23,12 +28,14 @@ enum AppTextStyle {
     this.leading, {
     this.weight = FontWeight.w400,
     this.emphasizedWeight = FontWeight.w600,
+    this.fontFeatures = const [],
   });
 
   final double size;
   final double leading;
   final FontWeight weight;
   final FontWeight emphasizedWeight;
+  final List<FontFeature> fontFeatures;
 
   TextStyle of(BuildContext context, {bool emphasized = false}) =>
       _apply(_slotOf(Theme.of(context).textTheme)!, emphasized: emphasized);
@@ -72,6 +79,7 @@ enum AppTextStyle {
     height: leading / size,
     fontWeight: emphasized ? emphasizedWeight : weight,
     letterSpacing: 0,
+    fontFeatures: fontFeatures.isEmpty ? null : fontFeatures,
   );
 
   TextStyle? _on(TextStyle? base, {bool emphasized = false}) =>

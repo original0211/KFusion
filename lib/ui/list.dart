@@ -107,6 +107,11 @@ final class _InputAction extends _ListItemAction {
   });
 }
 
+/// The row of a grouped list — a settings page, a tools index, a grouped
+/// form rendered as rows: a title with an optional subtitle and leading,
+/// and the control its named constructor binds at the end, a switch, a
+/// checkbox, a value menu, an input dialog, or the page the row opens.
+/// Sections are headed by [ListHeader] and assembled by [generateSection].
 class ListItem<T> extends StatelessWidget {
   final Widget? leading;
   final Widget title;

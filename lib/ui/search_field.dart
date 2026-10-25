@@ -7,6 +7,10 @@ import 'package:material_ui/material_ui.dart';
 /// Below this many items a sheet is short enough to scan without a search.
 const sheetSearchMinItemCount = 10;
 
+/// The one search input: a search action, a clear button once it holds
+/// text, and the query as it changes. A presentation fills it as a pill —
+/// the scaffold's docked search floats it over the list, and a field among
+/// filled controls takes their fill through `FilledInputTheme`.
 class SearchField extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final TextEditingController? controller;

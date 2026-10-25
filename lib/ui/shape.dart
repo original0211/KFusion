@@ -3,6 +3,11 @@ import 'dart:ui' show ClipOp, lerpDouble;
 
 import 'package:material_ui/material_ui.dart';
 
+/// Corner radii. A surface takes one of the main tiers — [xl] for a card,
+/// [md] for a block inside one, [sm] for a small mark or chip, [full] for a
+/// pill — rather than a step in between; [xs], [lg] and [xxl] serve the
+/// steps of [AppCorner.fit], sheets and other named shapes, and [alert] is
+/// a dialog's own.
 abstract final class AppCorner {
   static const double none = 0;
   static const double xs = 4;

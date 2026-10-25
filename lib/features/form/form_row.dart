@@ -56,12 +56,19 @@ class EntryButton extends StatelessWidget {
   }
 }
 
+/// The row of a grouped form — a sheet or an editor that edits values in
+/// place: a title against its control in the trailing slot, a bare field
+/// there being a [FormRowTextField]. A grouped settings list takes a
+/// `ListItem` instead, and a provider-bound config row a `Config*Item`
+/// over one; the three share the row metrics, only the trailing control
+/// differs.
 class FormRow extends StatelessWidget {
   static const _spacing = 16.0;
   static const _titleMaxLines = 2;
   static const _titleMaxWidthFactor = 0.5;
 
   final String title;
+  final String? subtitle;
   final TextStyle? titleStyle;
   final Widget? leading;
   final Widget? trailing;
@@ -71,6 +78,7 @@ class FormRow extends StatelessWidget {
   const FormRow({
     super.key,
     required this.title,
+    this.subtitle,
     this.titleStyle,
     this.leading,
     this.trailing,
@@ -97,11 +105,13 @@ class FormRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final subtitle = this.subtitle;
     return DecorationListItem(
       invalid: invalid,
       onPressed: onPressed,
       minVerticalPadding: trailing == null ? null : 0,
       leading: leading,
+      subtitle: subtitle == null ? null : Text(subtitle),
       title: LayoutBuilder(
         builder: (context, constraints) {
           return Row(
