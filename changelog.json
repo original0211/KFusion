@@ -2,6 +2,59 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.7",
+      "tag": "v0.2.7",
+      "date": "2026-10-25",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "f69e8b0",
+              "scope": "app",
+              "text": "The sing-box core now takes care of itself on Windows: if the binary is missing, Settings offers a one-tap download of the pinned release, verified by checksum, into the app data folder, and starting a sing-box profile fetches it automatically — upgrades no longer lose it"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "f69e8b0",
+              "scope": "config",
+              "text": "Profile downloads route through the running sing-box core too, which ends the add-profile timeouts that hit whenever sing-box was in charge and no other core was running"
+            },
+            {
+              "id": "555907b",
+              "scope": "dashboard",
+              "text": "The dashboard editor lists the addable cards at the top instead of below every card already shown, and says so when every card has been added"
+            },
+            {
+              "id": "5e80e41",
+              "scope": "desktop",
+              "text": "Desktop dashboard cards refill their row when a card is removed, instead of leaving an empty gap behind"
+            },
+            {
+              "id": "a76f554",
+              "scope": "app",
+              "text": "The YouTube service check probes a lightweight endpoint first and only then judges the region, so a slow premium page no longer shows up as a timeout; a failed check also retries once instead of staying frozen"
+            },
+            {
+              "id": "ca55247",
+              "scope": "app",
+              "text": "When the core is stopped, the status and service cards label their results as direct-route readings instead of presenting them as the selected node's"
+            },
+            {
+              "id": "a7226e1",
+              "scope": "app",
+              "text": "The Android notification and quick-settings tile icons now use the KFusion disc rather than the leftover upstream glyph"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.6",
       "tag": "v0.2.6",
       "date": "2026-10-25",

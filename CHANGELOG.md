@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.7 (2026-10-25)
+
+**Features**
+
+- **app** The sing-box core now takes care of itself on Windows: if the binary is missing, Settings offers a one-tap download of the pinned release, verified by checksum, into the app data folder, and starting a sing-box profile fetches it automatically — upgrades no longer lose it (f69e8b0)
+
+**Bug Fixes**
+
+- **config** Profile downloads route through the running sing-box core too, which ends the add-profile timeouts that hit whenever sing-box was in charge and no other core was running (f69e8b0)
+- **dashboard** The dashboard editor lists the addable cards at the top instead of below every card already shown, and says so when every card has been added (555907b)
+- **desktop** Desktop dashboard cards refill their row when a card is removed, instead of leaving an empty gap behind (5e80e41)
+- **app** The YouTube service check probes a lightweight endpoint first and only then judges the region, so a slow premium page no longer shows up as a timeout; a failed check also retries once instead of staying frozen (a76f554)
+- **app** When the core is stopped, the status and service cards label their results as direct-route readings instead of presenting them as the selected node's (ca55247)
+- **app** The Android notification and quick-settings tile icons now use the KFusion disc rather than the leftover upstream glyph (a7226e1)
+
 ## v0.2.6 (2026-10-25)
 
 **Features**
