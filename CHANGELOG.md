@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.8 (2026-10-25)
+
+**Features**
+
+- **dashboard** Beginner mode is removed: every install now gets the full dashboard, and the import card on the home screen is simply the empty state shown to everyone while no profile exists yet (0f4ce2b)
+
+**Bug Fixes**
+
+- **app** The sing-box section in Settings now keeps everything inside its card — status, the binary location, download progress with the route in use, and any error — instead of spilling rows below it (120bd11)
+- **app** Downloading the sing-box binary now tries the Windows system proxy first, then a running core, then a direct connection, with a timeout on each hop and partial downloads cleaned up, instead of going direct and hanging until it times out (120bd11)
+- **core** When the core is not connected, profile actions no longer claim it returned an empty profile; they say the core is not connected and ask for it to be started first (d2c473f)
+- **ui** The shared interface kit is settled ahead of the screen-by-screen restyle: title weights step down a grade, body text gets a little more line height, large numbers use tabular figures, and cards, blocks and chips follow declared corner steps (8b28a47)
+- **ui** Empty states gain a brand variant that carries the disc mark, and dialogs and bottom sheets now rest on one declared base (6df7214)
+
 ## v0.2.7 (2026-10-25)
 
 **Features**

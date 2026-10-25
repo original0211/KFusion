@@ -2,6 +2,54 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.8",
+      "tag": "v0.2.8",
+      "date": "2026-10-25",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "0f4ce2b",
+              "scope": "dashboard",
+              "text": "Beginner mode is removed: every install now gets the full dashboard, and the import card on the home screen is simply the empty state shown to everyone while no profile exists yet"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "120bd11",
+              "scope": "app",
+              "text": "The sing-box section in Settings now keeps everything inside its card — status, the binary location, download progress with the route in use, and any error — instead of spilling rows below it"
+            },
+            {
+              "id": "120bd11",
+              "scope": "app",
+              "text": "Downloading the sing-box binary now tries the Windows system proxy first, then a running core, then a direct connection, with a timeout on each hop and partial downloads cleaned up, instead of going direct and hanging until it times out"
+            },
+            {
+              "id": "d2c473f",
+              "scope": "core",
+              "text": "When the core is not connected, profile actions no longer claim it returned an empty profile; they say the core is not connected and ask for it to be started first"
+            },
+            {
+              "id": "8b28a47",
+              "scope": "ui",
+              "text": "The shared interface kit is settled ahead of the screen-by-screen restyle: title weights step down a grade, body text gets a little more line height, large numbers use tabular figures, and cards, blocks and chips follow declared corner steps"
+            },
+            {
+              "id": "6df7214",
+              "scope": "ui",
+              "text": "Empty states gain a brand variant that carries the disc mark, and dialogs and bottom sheets now rest on one declared base"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.7",
       "tag": "v0.2.7",
       "date": "2026-10-25",
