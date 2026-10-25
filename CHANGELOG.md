@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.10 (2026-10-26)
+
+**Bug Fixes**
+
+- **core** Core switching on Android now trusts only the current attempt's native answers: every sing-box start stamps the status snapshot with its own epoch, so a previous failure can no longer answer every later retry within milliseconds and a dead process's leftover RUNNING can no longer pass as success; the service channel waits for each start and stop request's real outcome in the native state machine before it replies; a start counts only once the core's own API probes back; starts are single-flight, the service no longer resurrects its previous configuration after being killed, and the native and Dart start budgets are aligned at 40 and 45 seconds so the native verdict is always the one acted on; and on Windows a switch first reclaims this app's own orphaned sing-box processes and waits for the mixed port to free before the new core spawns (559b58d)
+- **core** The sing-box configuration the app renders no longer contains the legacy block outbound that sing-box removed in 1.13 and the bundled 1.14.4 rejects outright: REJECT group members are dropped with a note, a MATCH out to REJECT becomes a trailing reject rule instead, and the rendered configuration is strictly validated with Libbox.checkConfig before any core is stopped, so a profile the bundled sing-box cannot accept is refused up front, in the checker's own words, instead of burning a switch on it (559b58d)
+- **ui** The core switch card drops the stock segmented button, which sat inside it like a foreign widget, for two rows in the card's own language — a block-tier fill, the disc motif as the row mark in the signal colour only on the selected core, the core's name and running state, and the shared selection check — and a failed switch now shows the native detail (a libbox rejection, a service failure) in small type under its plain-language sentence instead of discarding it (2cf728f)
+- **ui** The add-profile page gathers its five entries — QR code, file, link, custom and universal import — from bare rows on the page fill into one grouped card that shares the dashboard and settings surface step, corner tier and hairlines, with the universal import row taking the page's single accent spot, a sparkle glyph in the primary colour, instead of a second copy of the file glyph (2c4c053)
+
 ## v0.2.9 (2026-10-25)
 
 **Features**
