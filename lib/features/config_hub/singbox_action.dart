@@ -100,19 +100,25 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       final homeDir = await appPath.homeDirPath;
       final stored = await Preferences().getSingBoxBinaryPath();
       var lastPercent = -1;
+      String? downloadRoute;
       final binary = await singBoxBinaryManager.ensure(
         executableDir: appPath.executableDirPath,
         homeDir: homeDir,
         storedPath: stored,
+        appProxyRoute: (url) =>
+            FlClashHttpOverrides.findProxyForReader(ref.read, url),
+        onRoute: (label) => downloadRoute = label,
         onProgress: (received, total) {
           if (total == null) return;
           final percent = received * 100 ~/ total;
           if (percent == lastPercent) return;
           lastPercent = percent;
+          final route = downloadRoute;
           state = AsyncData(
             SingBoxStatus(
               state: SingBoxState.starting,
-              message: '正在下载 sing-box 二进制（$percent%）',
+              message:
+                  '正在下载 sing-box 二进制（$percent%${route == null ? '' : '，经$route'}）',
             ),
           );
         },

@@ -20,6 +20,8 @@ class _FakeDownloader implements SingBoxDownloader {
     Uri url,
     File target, {
     SingBoxProgress? onProgress,
+    SingBoxRouteReporter? onRoute,
+    SingBoxAppProxyReader? appProxyRoute,
   }) async {
     calls++;
     lastUrl = url;
@@ -177,5 +179,222 @@ void main() {
       singBoxZipUri('arm64').path,
       endsWith('sing-box-1.14.4-windows-arm64.zip'),
     );
+  });
+
+  group('proxyRouteFromProxyServer', () {
+    test('parses a bare host:port for every protocol', () {
+      expect(
+        proxyRouteFromProxyServer('127.0.0.1:7890'),
+        'PROXY 127.0.0.1:7890',
+      );
+    });
+
+    test('prefers the https pair of a per-protocol value', () {
+      expect(
+        proxyRouteFromProxyServer('http=127.0.0.1:1080;https=127.0.0.1:7890'),
+        'PROXY 127.0.0.1:7890',
+      );
+    });
+
+    test('falls back to the http pair and strips a scheme', () {
+      expect(
+        proxyRouteFromProxyServer('http=http://127.0.0.1:1080'),
+        'PROXY 127.0.0.1:1080',
+      );
+    });
+
+    test('returns null for empty values (PAC-only setups included)', () {
+      expect(proxyRouteFromProxyServer(null), isNull);
+      expect(proxyRouteFromProxyServer('  '), isNull);
+      expect(proxyRouteFromProxyServer('https='), isNull);
+    });
+  });
+
+  group('singBoxDownloadRoutes', () {
+    test('orders system proxy, app proxy, then direct', () {
+      final routes = singBoxDownloadRoutes(
+        systemProxy: 'PROXY 127.0.0.1:7890',
+        appProxy: 'PROXY localhost:7891',
+      );
+      expect(routes.map((route) => route.label), ['系统代理', '核心代理', '直连']);
+    });
+
+    test('drops duplicates, DIRECT answers and empty values', () {
+      final routes = singBoxDownloadRoutes(
+        systemProxy: 'PROXY 127.0.0.1:7890',
+        appProxy: 'PROXY 127.0.0.1:7890',
+      );
+      expect(routes.map((route) => route.label), ['系统代理', '直连']);
+      expect(singBoxDownloadRoutes(systemProxy: null, appProxy: 'DIRECT'), [
+        singBoxDirectRoute,
+      ]);
+    });
+  });
+
+  group('HttpSingBoxDownloader routes', () {
+    late Directory dir;
+    late HttpServer origin;
+    late HttpServer proxy;
+    var originHits = 0;
+    var proxyHits = 0;
+
+    Future<void> serveOrigin(void Function(HttpRequest request) respond) async {
+      origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) {
+        originHits++;
+        respond(request);
+      });
+    }
+
+    Future<void> serveProxy({bool hang = false}) async {
+      proxy = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      proxy.listen((request) async {
+        proxyHits++;
+        if (hang) return;
+        final client = HttpClient()..findProxy = (_) => 'DIRECT';
+        try {
+          final upstream = await client.getUrl(request.uri);
+          final response = await upstream.close();
+          request.response.statusCode = response.statusCode;
+          await response.pipe(request.response);
+        } finally {
+          client.close();
+        }
+      });
+    }
+
+    setUp(() async {
+      dir = await Directory.systemTemp.createTemp('kfusion-singbox-http');
+      originHits = 0;
+      proxyHits = 0;
+    });
+
+    tearDown(() async {
+      await origin.close(force: true);
+      await proxy.close(force: true);
+      try {
+        await dir.delete(recursive: true);
+      } catch (_) {}
+    });
+
+    void serveBytes(HttpRequest request) {
+      request.response.write('zip-bytes');
+      request.response.close();
+    }
+
+    HttpSingBoxDownloader downloader({String? systemProxy}) {
+      return HttpSingBoxDownloader(
+        systemProxyRoute: () => systemProxy,
+        stallTimeout: const Duration(milliseconds: 500),
+      );
+    }
+
+    test('goes through the system proxy when one is set', () async {
+      await serveOrigin(serveBytes);
+      await serveProxy();
+      final routes = <String>[];
+      final target = File(p.join(dir.path, 'out.zip'));
+      await downloader(systemProxy: 'PROXY 127.0.0.1:${proxy.port}').download(
+        Uri.parse('http://127.0.0.1:${origin.port}/file'),
+        target,
+        onRoute: routes.add,
+        appProxyRoute: (_) => null,
+      );
+      expect(await target.readAsString(), 'zip-bytes');
+      expect(proxyHits, 1);
+      expect(routes, ['系统代理']);
+    });
+
+    test('falls back to direct when the system proxy is dead', () async {
+      await serveOrigin(serveBytes);
+      await serveProxy();
+      final routes = <String>[];
+      final target = File(p.join(dir.path, 'out.zip'));
+      await downloader(systemProxy: 'PROXY 127.0.0.1:1').download(
+        Uri.parse('http://127.0.0.1:${origin.port}/file'),
+        target,
+        onRoute: routes.add,
+        appProxyRoute: (_) => null,
+      );
+      expect(await target.readAsString(), 'zip-bytes');
+      expect(originHits, 1);
+      expect(routes, ['系统代理', '直连']);
+    });
+
+    test('uses the app core route when no system proxy is set', () async {
+      await serveOrigin(serveBytes);
+      await serveProxy();
+      final routes = <String>[];
+      final target = File(p.join(dir.path, 'out.zip'));
+      await downloader().download(
+        Uri.parse('http://127.0.0.1:${origin.port}/file'),
+        target,
+        onRoute: routes.add,
+        appProxyRoute: (_) => 'PROXY 127.0.0.1:${proxy.port}',
+      );
+      expect(await target.readAsString(), 'zip-bytes');
+      expect(proxyHits, 1);
+      expect(routes, ['核心代理']);
+    });
+
+    test('a stalled hop counts as failed and the next route runs', () async {
+      await serveOrigin(serveBytes);
+      await serveProxy(hang: true);
+      final routes = <String>[];
+      final target = File(p.join(dir.path, 'out.zip'));
+      await downloader(systemProxy: 'PROXY 127.0.0.1:${proxy.port}').download(
+        Uri.parse('http://127.0.0.1:${origin.port}/file'),
+        target,
+        onRoute: routes.add,
+        appProxyRoute: (_) => null,
+      );
+      expect(await target.readAsString(), 'zip-bytes');
+      expect(routes, ['系统代理', '直连']);
+    });
+
+    test('a server error does not hop to the next route', () async {
+      await serveOrigin((request) {
+        request.response.statusCode = HttpStatus.notFound;
+        request.response.close();
+      });
+      await serveProxy();
+      final target = File(p.join(dir.path, 'out.zip'));
+      await expectLater(
+        downloader(systemProxy: 'PROXY 127.0.0.1:${proxy.port}').download(
+          Uri.parse('http://127.0.0.1:${origin.port}/file'),
+          target,
+          appProxyRoute: (_) => null,
+        ),
+        throwsA(
+          isA<SingBoxBinaryException>().having(
+            (e) => e.message,
+            'message',
+            contains('服务器返回 404'),
+          ),
+        ),
+      );
+      expect(originHits, 1);
+    });
+
+    test('names every attempted route when all of them fail', () async {
+      await serveOrigin(serveBytes);
+      await serveProxy();
+      final target = File(p.join(dir.path, 'out.zip'));
+      await expectLater(
+        downloader(systemProxy: 'PROXY 127.0.0.1:1').download(
+          Uri.parse('http://127.0.0.1:1/file'),
+          target,
+          appProxyRoute: (_) => null,
+        ),
+        throwsA(
+          isA<SingBoxBinaryException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('已依次尝试'), contains('系统代理'), contains('直连')),
+          ),
+        ),
+      );
+      expect(await target.exists(), isFalse);
+    });
   });
 }

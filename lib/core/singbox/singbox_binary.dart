@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
+import 'package:win32_registry/win32_registry.dart';
 
 import 'singbox_runner.dart';
 
@@ -52,24 +53,170 @@ class SingBoxBinaryException implements Exception {
 
 typedef SingBoxProgress = void Function(int received, int? total);
 
+typedef SingBoxRouteReporter = void Function(String label);
+
+/// One way to reach the download host. A download tries its routes in
+/// order until one delivers the file.
+class SingBoxDownloadRoute {
+  const SingBoxDownloadRoute(this.label, this.proxy);
+
+  /// User-facing name of the route: 系统代理 / 核心代理 / 直连.
+  final String label;
+
+  /// The `findProxy` answer for this route, e.g. `PROXY 127.0.0.1:7890`.
+  final String proxy;
+}
+
+const singBoxDirectRoute = SingBoxDownloadRoute('直连', 'DIRECT');
+
+typedef SingBoxSystemProxyReader = String? Function();
+
+typedef SingBoxAppProxyReader = String? Function(Uri url);
+
+/// Turns a WinINET `ProxyServer` value into a `findProxy` answer. The value
+/// is either one `host:port` for every protocol or `protocol=host:port`
+/// pairs separated by `;`; the download is HTTPS, so an `https` pair wins,
+/// then an `http` pair, then the bare form. Null when nothing is usable.
+String? proxyRouteFromProxyServer(String? server) {
+  final trimmed = server?.trim() ?? '';
+  if (trimmed.isEmpty) return null;
+  String? bare;
+  String? http;
+  String? https;
+  for (final part in trimmed.split(';')) {
+    final entry = part.trim();
+    if (entry.isEmpty) continue;
+    final eq = entry.indexOf('=');
+    if (eq < 0) {
+      bare ??= entry;
+      continue;
+    }
+    final value = entry.substring(eq + 1).trim();
+    switch (entry.substring(0, eq).trim().toLowerCase()) {
+      case 'https':
+        https ??= value;
+      case 'http':
+        http ??= value;
+    }
+  }
+  final host = https ?? http ?? bare;
+  if (host == null) return null;
+  final cleaned = host.replaceFirst(RegExp(r'^https?://'), '');
+  return cleaned.isEmpty ? null : 'PROXY $cleaned';
+}
+
+/// The current user's Windows system proxy (WinINET) as a `findProxy`
+/// answer; null off Windows, when the proxy is off, or when only a PAC
+/// script is configured (dart:io cannot evaluate PAC).
+String? readWindowsSystemProxyRoute() {
+  if (!Platform.isWindows) return null;
+  try {
+    final key = CURRENT_USER.open(
+      r'Software\Microsoft\Windows\CurrentVersion\Internet Settings',
+    );
+    try {
+      if (key.getInt('ProxyEnable') != 1) return null;
+      return proxyRouteFromProxyServer(key.getString('ProxyServer'));
+    } finally {
+      key.close();
+    }
+  } catch (_) {
+    return null;
+  }
+}
+
+/// The routes one download tries, best first: the Windows system proxy is
+/// the machine-wide choice the user already made, the app core's own proxy
+/// follows, and a direct attempt always closes the list. Duplicates and
+/// empty answers drop out.
+List<SingBoxDownloadRoute> singBoxDownloadRoutes({
+  String? systemProxy,
+  String? appProxy,
+}) {
+  final routes = <SingBoxDownloadRoute>[];
+  void add(String label, String? proxy) {
+    final value = proxy?.trim() ?? '';
+    if (value.isEmpty || value == 'DIRECT') return;
+    if (routes.any((route) => route.proxy == value)) return;
+    routes.add(SingBoxDownloadRoute(label, value));
+  }
+
+  add('系统代理', systemProxy);
+  add('核心代理', appProxy);
+  routes.add(singBoxDirectRoute);
+  return routes;
+}
+
+class _RouteFailure implements Exception {
+  _RouteFailure(this.error);
+
+  final Object error;
+}
+
 abstract class SingBoxDownloader {
-  Future<void> download(Uri url, File target, {SingBoxProgress? onProgress});
+  Future<void> download(
+    Uri url,
+    File target, {
+    SingBoxProgress? onProgress,
+    SingBoxRouteReporter? onRoute,
+    SingBoxAppProxyReader? appProxyRoute,
+  });
 }
 
 class HttpSingBoxDownloader implements SingBoxDownloader {
+  HttpSingBoxDownloader({
+    SingBoxSystemProxyReader? systemProxyRoute,
+    this.stallTimeout = const Duration(seconds: 60),
+  }) : _systemProxyRoute = systemProxyRoute ?? readWindowsSystemProxyRoute;
+
+  final SingBoxSystemProxyReader _systemProxyRoute;
+
+  /// A hop that delivers no bytes for this long counts as failed.
+  final Duration stallTimeout;
+
   @override
   Future<void> download(
     Uri url,
     File target, {
     SingBoxProgress? onProgress,
+    SingBoxRouteReporter? onRoute,
+    SingBoxAppProxyReader? appProxyRoute,
+  }) async {
+    final routes = singBoxDownloadRoutes(
+      systemProxy: _systemProxyRoute(),
+      appProxy: appProxyRoute?.call(url),
+    );
+    for (final route in routes) {
+      onRoute?.call(route.label);
+      try {
+        await _downloadVia(url, target, route.proxy, onProgress: onProgress);
+        return;
+      } on _RouteFailure {
+        await _deleteQuietly(target);
+      }
+    }
+    throw SingBoxBinaryException(
+      '下载 sing-box 失败：已依次尝试'
+      '${routes.map((route) => route.label).join('、')}，均未成功。'
+      '请检查网络后重试。',
+    );
+  }
+
+  Future<void> _downloadVia(
+    Uri url,
+    File target,
+    String proxy, {
+    SingBoxProgress? onProgress,
   }) async {
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 30);
     client.userAgent = 'KFusion';
+    client.findProxy = (_) => proxy;
     try {
       final request = await client.getUrl(url);
-      final response = await request.close();
+      final response = await request.close().timeout(stallTimeout);
       if (response.statusCode != HttpStatus.ok) {
+        // The server answered, so the route works; hopping cannot fix this.
         throw SingBoxBinaryException(
           '下载 sing-box 失败：服务器返回 ${response.statusCode}。',
         );
@@ -78,7 +225,7 @@ class HttpSingBoxDownloader implements SingBoxDownloader {
       var received = 0;
       final sink = target.openWrite();
       try {
-        await for (final chunk in response) {
+        await for (final chunk in response.timeout(stallTimeout)) {
           sink.add(chunk);
           received += chunk.length;
           onProgress?.call(received, total);
@@ -87,8 +234,14 @@ class HttpSingBoxDownloader implements SingBoxDownloader {
       } finally {
         await sink.close();
       }
+    } on SingBoxBinaryException {
+      rethrow;
+    } catch (e) {
+      throw _RouteFailure(e);
     } finally {
-      client.close();
+      // A timed-out hop leaves its request hanging; force the client shut
+      // so the next route starts immediately.
+      client.close(force: true);
     }
   }
 }
@@ -137,6 +290,8 @@ class SingBoxBinaryManager {
     required String homeDir,
     String? storedPath,
     SingBoxProgress? onProgress,
+    SingBoxRouteReporter? onRoute,
+    SingBoxAppProxyReader? appProxyRoute,
   }) {
     final running = _inFlight;
     if (running != null) return running;
@@ -147,6 +302,8 @@ class SingBoxBinaryManager {
           homeDir: homeDir,
           storedPath: storedPath,
           onProgress: onProgress,
+          onRoute: onRoute,
+          appProxyRoute: appProxyRoute,
         ).whenComplete(() {
           if (identical(_inFlight, future)) _inFlight = null;
         });
@@ -159,6 +316,8 @@ class SingBoxBinaryManager {
     required String homeDir,
     String? storedPath,
     SingBoxProgress? onProgress,
+    SingBoxRouteReporter? onRoute,
+    SingBoxAppProxyReader? appProxyRoute,
   }) async {
     final existing = findSingBoxBinary(
       singBoxCandidates(
@@ -180,7 +339,13 @@ class SingBoxBinaryManager {
     final targetPath = singBoxManagedPath(homeDir);
     try {
       await downloader
-          .download(singBoxZipUri(arch), zipFile, onProgress: onProgress)
+          .download(
+            singBoxZipUri(arch),
+            zipFile,
+            onProgress: onProgress,
+            onRoute: onRoute,
+            appProxyRoute: appProxyRoute,
+          )
           .timeout(
             downloadTimeout,
             onTimeout: () {
@@ -213,12 +378,12 @@ class SingBoxBinaryManager {
   static Future<bool> _extractInIsolate(String zipPath, String targetPath) {
     return Isolate.run(() => _extractSingBoxExe(zipPath, targetPath));
   }
+}
 
-  static Future<void> _deleteQuietly(File file) async {
-    try {
-      await file.delete();
-    } catch (_) {}
-  }
+Future<void> _deleteQuietly(File file) async {
+  try {
+    await file.delete();
+  } catch (_) {}
 }
 
 final singBoxBinaryManager = SingBoxBinaryManager();

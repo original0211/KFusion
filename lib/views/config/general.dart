@@ -71,6 +71,7 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
   var _downloading = false;
   double? _progress;
   String? _downloadError;
+  String? _downloadRoute;
 
   @override
   void initState() {
@@ -101,6 +102,7 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
       _downloading = true;
       _progress = null;
       _downloadError = null;
+      _downloadRoute = null;
     });
     try {
       final homeDir = await appPath.homeDirPath;
@@ -109,6 +111,12 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
         executableDir: appPath.executableDirPath,
         homeDir: homeDir,
         storedPath: stored,
+        appProxyRoute: (url) =>
+            FlClashHttpOverrides.findProxyForReader(ref.read, url),
+        onRoute: (label) {
+          if (!mounted) return;
+          setState(() => _downloadRoute = label);
+        },
         onProgress: (received, total) {
           if (!mounted || total == null) return;
           setState(() => _progress = received / total);
@@ -130,47 +138,6 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
     }
   }
 
-  Widget _binarySection(AppLocalizations l10n) {
-    final binary = _binary;
-    if (!_binaryChecked) return const SizedBox.shrink();
-    if (binary != null) {
-      return Text(
-        binary == _managedPath
-            ? l10n.singBoxManagedBinary(singBoxPinnedVersion, binary)
-            : '二进制：$binary',
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(l10n.singBoxBinaryMissing),
-        Text(l10n.singBoxDownloadHint),
-        if (_downloadError != null) Text(_downloadError!),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            FilledButton(
-              onPressed: _downloading ? null : _downloadBinary,
-              child: Text(
-                _downloadError == null
-                    ? l10n.singBoxDownload
-                    : l10n.singBoxDownloadRetry,
-              ),
-            ),
-            if (_downloading) ...[
-              const SizedBox(width: 12),
-              Expanded(child: LinearProgressIndicator(value: _progress)),
-              if (_progress != null) ...[
-                const SizedBox(width: 12),
-                Text(l10n.singBoxDownloading((_progress! * 100).round())),
-              ],
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final status =
@@ -179,7 +146,7 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
     final running = status.state == SingBoxState.running;
     final starting = status.state == SingBoxState.starting;
     // A start can fetch the binary itself; rescan once it settles so the
-    // section below switches from the download offer to the found binary.
+    // card below switches from the download offer to the found binary.
     ref.listen(singBoxActionProvider, (previous, next) {
       final settled = next.value?.state;
       if (settled == SingBoxState.running ||
@@ -188,40 +155,189 @@ class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
         _refreshBinary();
       }
     });
+    final l10n = context.appLocalizations;
+    final binary = _binary;
+    return SingBoxStatusCard(
+      statusText: status.message.isEmpty
+          ? (system.isAndroid ? 'Android sing-box VPN 运行时（真机待验）' : '未运行')
+          : status.message,
+      showBinary: system.isWindows,
+      binaryChecked: _binaryChecked,
+      binaryLabel: binary == null
+          ? null
+          : (binary == _managedPath
+                ? l10n.singBoxManagedBinary(singBoxPinnedVersion, binary)
+                : '二进制：$binary'),
+      downloading: _downloading,
+      progress: _progress,
+      downloadRoute: _downloadRoute,
+      downloadError: _downloadError,
+      onDownload: _downloadBinary,
+      showToggle: system.isAndroid || (system.isWindows && binary != null),
+      running: running,
+      starting: starting,
+      onToggle: () {
+        final action = ref.read(singBoxActionProvider.notifier);
+        if (running) {
+          action.stop();
+        } else {
+          action.start();
+        }
+      },
+      localizations: l10n,
+    );
+  }
+}
+
+/// The sing-box settings row as one card: title, run state, binary state
+/// and every action stay inside the card's surface and padding, shaped
+/// like the neighbouring rows of its section.
+class SingBoxStatusCard extends StatelessWidget {
+  const SingBoxStatusCard({
+    super.key,
+    required this.statusText,
+    required this.showBinary,
+    required this.binaryChecked,
+    required this.binaryLabel,
+    required this.downloading,
+    required this.progress,
+    required this.downloadRoute,
+    required this.downloadError,
+    required this.onDownload,
+    required this.showToggle,
+    required this.running,
+    required this.starting,
+    required this.onToggle,
+    required this.localizations,
+  });
+
+  final String statusText;
+  final bool showBinary;
+
+  /// False until the first binary scan lands; the section stays empty.
+  final bool binaryChecked;
+
+  /// The found-binary line (managed or manual); null while it is missing.
+  final String? binaryLabel;
+  final bool downloading;
+  final double? progress;
+
+  /// Label of the download route in use, e.g. 系统代理; null before the
+  /// first attempt reports one.
+  final String? downloadRoute;
+  final String? downloadError;
+  final VoidCallback onDownload;
+  final bool showToggle;
+  final bool running;
+  final bool starting;
+  final VoidCallback onToggle;
+  final AppLocalizations localizations;
+
+  Widget _binaryContent(BuildContext context) {
+    final label = binaryLabel;
+    if (label != null) {
+      return Text(label, style: context.listSubtitleStyle);
+    }
+    final error = downloadError;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListItem(
-          title: const Text('sing-box 核心'),
-          subtitle: Text(
-            status.message.isEmpty
-                ? (system.isAndroid ? 'Android sing-box VPN 运行时（真机待验）' : '未运行')
-                : status.message,
-          ),
+        Text(
+          localizations.singBoxBinaryMissing,
+          style: context.listSubtitleStyle,
         ),
-        if (system.isWindows)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _binarySection(context.appLocalizations),
+        const SizedBox(height: 2),
+        Text(
+          localizations.singBoxDownloadHint,
+          style: context.listSubtitleStyle,
+        ),
+        if (error != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            error,
+            style: context.listSubtitleStyle.copyWith(
+              color: context.colorScheme.error,
+            ),
           ),
-        if (system.isWindows || system.isAndroid)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: FilledButton(
-              onPressed: starting
-                  ? null
-                  : () {
-                      final action = ref.read(singBoxActionProvider.notifier);
-                      if (running) {
-                        action.stop();
-                      } else {
-                        action.start();
-                      }
-                    },
-              child: Text(running ? '停止 sing-box' : '启动 sing-box'),
+        ],
+        const SizedBox(height: 8),
+        if (downloading)
+          Row(
+            children: [
+              Expanded(child: LinearProgressIndicator(value: progress)),
+              const SizedBox(width: 12),
+              Text(_downloadingText(), style: context.listSubtitleStyle),
+            ],
+          )
+        else
+          FilledButton(
+            onPressed: onDownload,
+            child: Text(
+              error == null
+                  ? localizations.singBoxDownload
+                  : localizations.singBoxDownloadRetry,
             ),
           ),
       ],
+    );
+  }
+
+  String _downloadingText() {
+    final percent = progress;
+    final base = percent == null
+        ? '正在下载 sing-box…'
+        : localizations.singBoxDownloading((percent * 100).round());
+    final route = downloadRoute;
+    return route == null ? base : '$base（经$route）';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final position = ItemPositionProvider.of(context)?.position;
+    final isStart =
+        position == ItemPosition.start || position == ItemPosition.startAndEnd;
+    final isEnd =
+        position == ItemPosition.end || position == ItemPosition.startAndEnd;
+    final borderRadius = AppRadius.vertical(
+      top: isStart ? AppCorner.xl : AppCorner.none,
+      bottom: isEnd ? AppCorner.xl : AppCorner.none,
+    );
+    return CommonCard(
+      shape: AppShape.of(borderRadius),
+      padding: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text('sing-box 核心', style: context.listTitleStyle),
+            const SizedBox(height: 2),
+            Text(statusText, style: context.listSubtitleStyle),
+            if (showBinary && binaryChecked) ...[
+              const SizedBox(height: 8),
+              _binaryContent(context),
+            ],
+            if (showToggle) ...[
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: starting ? null : onToggle,
+                child: Text(running ? '停止 sing-box' : '启动 sing-box'),
+              ),
+            ],
+            const SizedBox(height: 12),
+            if (!isEnd)
+              Divider(
+                height: 1,
+                indent: 0,
+                endIndent: 14,
+                color:
+                    DividerTheme.of(context).color ??
+                    context.colorScheme.outlineVariant,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

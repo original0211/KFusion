@@ -21,9 +21,13 @@ against downloaded copies) or the download is discarded. Because the
 binary lives in the application support directory, app updates, which
 replace the install directory, no longer remove it.
 
-The first download runs without any core up, so it goes direct and can be
-slow on networks where GitHub is hard to reach; the Settings section shows
-progress and offers a retry. The downloaded `sing-box.exe` is unsigned and
+The download tries, in order, the Windows system proxy (the WinINET
+setting other apps such as Karing set), the app core's own proxy while a
+core is running, and a direct connection; a route that fails or stalls is
+dropped for the next one, and the Settings section names the route in use
+while downloading and the routes tried when one fails. Only the official
+release is ever fetched — the pinned SHA-256 above is what makes the
+transport safe to vary. The downloaded `sing-box.exe` is unsigned and
 landed under AppData, so SmartScreen or Defender may flag its first run —
 that check happens on the device, not in CI.
 
