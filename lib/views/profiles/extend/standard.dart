@@ -283,7 +283,7 @@ class _MatchTargetItem extends ConsumerWidget {
             .copyWith(
               color: invalid
                   ? context.colorScheme.error
-                  : context.colorScheme.tertiary,
+                  : context.colorScheme.onSurfaceVariant,
             ),
       ),
       onPressed: () {

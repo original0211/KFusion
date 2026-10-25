@@ -613,7 +613,7 @@ class _StatusText extends StatelessWidget {
         color: invalid
             ? colorScheme.error
             : active
-            ? colorScheme.tertiary
+            ? colorScheme.onSurface
             : colorScheme.onSurfaceVariant,
       ),
     );

@@ -26,14 +26,19 @@ enum _MemberKind {
 
   _MemberKind get run => this == provider ? proxy : this;
 
-  (Color, Color) chipColorsOf(ColorScheme colorScheme) => switch (this) {
-    proxy || provider || allProxies || allProviders => (
-      colorScheme.secondaryContainer,
-      colorScheme.onSecondaryContainer,
-    ),
-    filter => (colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
-    excludeFilter => (colorScheme.errorContainer, colorScheme.onErrorContainer),
-  };
+  (Color, Color) chipColorsOf(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return switch (this) {
+      excludeFilter => (
+        colorScheme.errorContainer,
+        colorScheme.onErrorContainer,
+      ),
+      _ => (
+        context.raisedSurfaceLevel.colorOf(colorScheme),
+        colorScheme.onSurfaceVariant,
+      ),
+    };
+  }
 
   List<String> partsOf(String name) => isFilter ? filterParts(name) : [name];
 
@@ -556,9 +561,7 @@ class _MemberRow extends ConsumerWidget {
     final profileId = ProfileIdProvider.of(context)!.profileId;
     final isValid = member.kind.isValid(ref, profileId, member.name);
     final subtitle = this.subtitle;
-    final (chipColor, chipForeground) = member.kind.chipColorsOf(
-      context.colorScheme,
-    );
+    final (chipColor, chipForeground) = member.kind.chipColorsOf(context);
     return DecorationListItem(
       invalid: !isValid,
       contentPadding: const EdgeInsets.only(left: 16),

@@ -53,8 +53,10 @@ class RuleItem extends StatelessWidget {
       final color = switch (ruleTarget) {
         'DIRECT' || 'COMPATIBLE' => context.colorScheme.success,
         'REJECT' || 'REJECT-DROP' => context.colorScheme.warning,
-        'PASS' || 'PASS-RULE' || 'GLOBAL' => context.colorScheme.tertiary,
-        'MATCH' when hasMatch => context.colorScheme.tertiary,
+        'PASS' ||
+        'PASS-RULE' ||
+        'GLOBAL' => context.colorScheme.onSurfaceVariant,
+        'MATCH' when hasMatch => context.colorScheme.onSurfaceVariant,
         _ => null,
       };
       if (color != null) {
@@ -64,7 +66,9 @@ class RuleItem extends StatelessWidget {
     final invalid = invalidMessageOf == null || message != null;
     return (
       invalid: invalid,
-      color: invalid ? context.colorScheme.error : context.colorScheme.tertiary,
+      color: invalid
+          ? context.colorScheme.error
+          : context.colorScheme.onSurfaceVariant,
       message: message,
     );
   }
