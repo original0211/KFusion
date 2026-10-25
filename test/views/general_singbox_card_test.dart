@@ -151,10 +151,7 @@ void main() {
     for (final name in ['mihomo', 'sing-box']) {
       final row = tester
           .widgetList<InkWell>(
-            find.ancestor(
-              of: find.text(name),
-              matching: find.byType(InkWell),
-            ),
+            find.ancestor(of: find.text(name), matching: find.byType(InkWell)),
           )
           .first;
       expect(row.onTap, isNull);
