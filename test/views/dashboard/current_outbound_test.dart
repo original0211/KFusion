@@ -399,11 +399,9 @@ void main() {
       containerOf(tester).read(runTimeProvider.notifier).value = 1;
     }
 
-    ProbePhase phaseOf(WidgetTester tester) =>
-        containerOf(tester)
-            .read(outboundIpProbeProvider)
-            .entryOf(routedOutbound)
-            .phase;
+    ProbePhase phaseOf(WidgetTester tester) => containerOf(
+      tester,
+    ).read(outboundIpProbeProvider).entryOf(routedOutbound).phase;
 
     testWidgets('labels the address as direct until the core runs', (
       tester,

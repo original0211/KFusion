@@ -757,8 +757,9 @@ class ServiceStatusSheet extends ConsumerWidget {
         IconButtonData(
           glyph: AppGlyphs.sliders,
           tooltip: localizations.serviceManage,
-          onPressed: () => Navigator.of(context)
-              .push(PagedSheetRoute(builder: (_) => const ServiceManageView())),
+          onPressed: () => Navigator.of(
+            context,
+          ).push(PagedSheetRoute(builder: (_) => const ServiceManageView())),
         ),
       ],
       body: CustomScrollView(
