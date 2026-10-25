@@ -69,7 +69,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             NotificationCompat.Builder(this, GlobalState.NOTIFICATION_CHANNEL)
                 .setContentTitle("KFusion · sing-box")
                 .setContentText("sing-box VPN 正在启动")
-                .setSmallIcon(applicationInfo.icon)
+                .setSmallIcon(R.drawable.ic_stat_disc)
                 .setOngoing(true)
                 .build(),
         )
@@ -440,7 +440,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             .setContentTitle(notification.title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setSmallIcon(applicationInfo.icon)
+            .setSmallIcon(R.drawable.ic_stat_disc)
             .build()
         runCatching { manager.notify(notification.identifier.hashCode(), built) }
     }
