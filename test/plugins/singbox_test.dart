@@ -36,6 +36,21 @@ void main() {
     expect(await service.start('/tmp/config.json'), 'VPN 权限未授予，sing-box 未启动');
   });
 
+  test('checkConfig passes the path and returns the native verdict', () async {
+    MethodCall? captured;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      captured = call;
+      return 'legacy special outbound block is removed';
+    });
+    final service = SingBoxService(channel: channel);
+    final result = await service.checkConfig('/data/app/singbox/config.json');
+    expect(result, 'legacy special outbound block is removed');
+    expect(captured?.method, 'checkConfig');
+    expect(captured?.arguments, {
+      'configPath': '/data/app/singbox/config.json',
+    });
+  });
+
   test('stop and isRunning map native booleans', () async {
     final methods = <String>[];
     messenger.setMockMethodCallHandler(channel, (call) async {

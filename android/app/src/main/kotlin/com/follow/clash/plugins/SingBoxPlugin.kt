@@ -58,6 +58,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "start" -> start(call.argument<String>("configPath"), result)
+            "checkConfig" -> checkConfig(call.argument<String>("configPath"), result)
             "stop" -> stop(result)
             "isRunning" -> result.success(SingBoxStatus.isRunning(GlobalState.application))
             else -> result.notImplemented()
@@ -75,6 +76,9 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 return@prepareVpn
             }
             val context = GlobalState.application
+            // The poll below only settles on snapshots from this epoch on.
+            val epoch = System.currentTimeMillis()
+            SingBoxStatus.writeAt(context, SingBoxStatus.State.STARTING, "", epoch)
             val intent = Intent(context, SingBoxVpnService::class.java)
                 .putExtra(SingBoxVpnService.EXTRA_CONFIG_PATH, configPath)
             try {
@@ -88,18 +92,17 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 var message = "sing-box 服务启动超时"
                 while (System.currentTimeMillis() < deadline) {
                     val snapshot = SingBoxStatus.read(context)
-                    if (snapshot != null) {
-                        when (snapshot.state) {
-                            SingBoxStatus.State.RUNNING -> {
-                                message = ""
-                                break
-                            }
-                            SingBoxStatus.State.FAILED -> {
-                                message = snapshot.message.ifEmpty { "sing-box 启动失败" }
-                                break
-                            }
-                            SingBoxStatus.State.STOPPED -> Unit
+                    when (SingBoxStartGate.verdict(snapshot, epoch, SingBoxStatus::isPidAlive)) {
+                        SingBoxStartGate.Verdict.RUNNING -> {
+                            message = ""
+                            break
                         }
+                        SingBoxStartGate.Verdict.FAILED -> {
+                            message = snapshot?.message?.ifEmpty { null }
+                                ?: "sing-box 启动失败"
+                            break
+                        }
+                        SingBoxStartGate.Verdict.PENDING -> Unit
                     }
                     Thread.sleep(POLL_INTERVAL_MS)
                 }
@@ -108,8 +111,41 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         }
     }
 
+    private fun checkConfig(configPath: String?, result: MethodChannel.Result) {
+        if (configPath.isNullOrEmpty()) {
+            result.success("sing-box 配置路径为空")
+            return
+        }
+        val context = GlobalState.application
+        val requestId = System.currentTimeMillis()
+        val intent = Intent(context, SingBoxVpnService::class.java)
+            .setAction(SingBoxVpnService.ACTION_CHECK_CONFIG)
+            .putExtra(SingBoxVpnService.EXTRA_CONFIG_PATH, configPath)
+            .putExtra(SingBoxVpnService.EXTRA_REQUEST_ID, requestId)
+        try {
+            ContextCompat.startForegroundService(context, intent)
+        } catch (error: Exception) {
+            result.success("sing-box 配置校验不可用：${error.message}")
+            return
+        }
+        thread(name = "singbox-check-wait") {
+            val deadline = System.currentTimeMillis() + CHECK_TIMEOUT_MS
+            var message = "sing-box 配置校验超时"
+            while (System.currentTimeMillis() < deadline) {
+                val check = SingBoxStatus.readCheckResult(context)
+                if (check != null && check.requestId == requestId) {
+                    message = if (check.ok) "" else check.message.ifEmpty { "sing-box 配置校验失败" }
+                    break
+                }
+                Thread.sleep(POLL_INTERVAL_MS)
+            }
+            mainHandler.post { result.success(message) }
+        }
+    }
+
     private fun stop(result: MethodChannel.Result) {
         val context = GlobalState.application
+        SingBoxVpnService.clearSavedConfigPath(context)
         context.stopService(Intent(context, SingBoxVpnService::class.java))
         thread(name = "singbox-stop-wait") {
             val deadline = System.currentTimeMillis() + STOP_TIMEOUT_MS
@@ -146,7 +182,9 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     private companion object {
         val SINGBOX_CHANNEL = "${Components.PACKAGE_NAME}/singbox"
         const val VPN_PERMISSION_REQUEST_CODE = 1007
-        const val START_TIMEOUT_MS = 25_000L
+        // Under the Dart channel budget (45s): the verdict stays the service's.
+        const val START_TIMEOUT_MS = 40_000L
+        const val CHECK_TIMEOUT_MS = 30_000L
         const val STOP_TIMEOUT_MS = 5_000L
         const val POLL_INTERVAL_MS = 200L
     }

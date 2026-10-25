@@ -1,6 +1,7 @@
 package com.kfusion.singbox
 
 import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
@@ -45,6 +46,7 @@ import java.io.File
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 import android.net.VpnService as SystemVpnService
 import io.nekohasekai.libbox.NetworkInterface as LibboxNetworkInterface
@@ -55,6 +57,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     @Volatile
     private var commandServer: CommandServer? = null
+    private val serverLock = Any()
+    private val startGate = AtomicBoolean(false)
     private var tunDescriptor: ParcelFileDescriptor? = null
     private var myInterfaceName: String? = null
     private var interfaceListener: InterfaceUpdateListener? = null
@@ -68,11 +72,28 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         startForeground(
             NotificationCompat.Builder(this, GlobalState.NOTIFICATION_CHANNEL)
                 .setContentTitle("KFusion · sing-box")
-                .setContentText("sing-box VPN 正在启动")
+                .setContentText(
+                    if (commandServer != null) "sing-box VPN 运行中" else "sing-box VPN 正在启动",
+                )
                 .setSmallIcon(R.drawable.ic_stat_disc)
                 .setOngoing(true)
                 .build(),
         )
+        when (intent?.action) {
+            ACTION_CHECK_CONFIG -> {
+                val requestId = intent.getLongExtra(EXTRA_REQUEST_ID, 0)
+                val configPath = intent.getStringExtra(EXTRA_CONFIG_PATH)
+                thread(name = "singbox-check") { runCheck(configPath, requestId) }
+                return START_NOT_STICKY
+            }
+            ACTION_STOP -> {
+                clearSavedConfigPath(this)
+                stopBox()
+                SingBoxStatus.write(this, SingBoxStatus.State.STOPPED, "")
+                stopSelf()
+                return START_NOT_STICKY
+            }
+        }
         val configPath = intent?.getStringExtra(EXTRA_CONFIG_PATH)
             ?: preferences().getString(PREF_CONFIG_PATH, null)
         if (configPath == null) {
@@ -80,8 +101,40 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             return START_NOT_STICKY
         }
         preferences().edit().putString(PREF_CONFIG_PATH, configPath).apply()
-        thread(name = "singbox-start") { startBox(configPath) }
-        return START_STICKY
+        SingBoxStatus.write(this, SingBoxStatus.State.STARTING, "")
+        if (!startGate.compareAndSet(false, true)) {
+            GlobalState.log("sing-box start ignored: another start is in flight")
+            return START_NOT_STICKY
+        }
+        thread(name = "singbox-start") {
+            try {
+                startBox(configPath)
+            } finally {
+                startGate.set(false)
+            }
+        }
+        return START_NOT_STICKY
+    }
+
+    private fun runCheck(configPath: String?, requestId: Long) {
+        try {
+            val configFile = File(configPath ?: "")
+            check(configFile.isFile) { "sing-box 配置文件不存在：$configPath" }
+            val content = configFile.readText()
+            setupLibbox()
+            Libbox.checkConfig(content)
+            SingBoxStatus.writeCheckResult(this, requestId, true, "")
+        } catch (error: Exception) {
+            SingBoxStatus.writeCheckResult(
+                this,
+                requestId,
+                false,
+                error.message ?: error.toString(),
+            )
+        } finally {
+            // A check that borrowed an idle service leaves nothing running.
+            if (commandServer == null && !startGate.get()) stopSelf()
+        }
     }
 
     override fun onRevoke() {
@@ -101,7 +154,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     }
 
     private fun preferences() =
-        getSharedPreferences("singbox_service", MODE_PRIVATE)
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
     private fun startBox(configPath: String) {
         try {
@@ -110,9 +163,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             val content = configFile.readText()
             setupLibbox()
             Libbox.checkConfig(content)
-            val server = commandServer ?: CommandServer(this, this).also {
-                it.start()
-                commandServer = it
+            val server = synchronized(serverLock) {
+                commandServer ?: CommandServer(this, this).also {
+                    it.start()
+                    commandServer = it
+                }
             }
             server.startOrReloadService(content, OverrideOptions())
             SingBoxStatus.write(this, SingBoxStatus.State.RUNNING, "")
@@ -508,7 +563,19 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     companion object {
         const val EXTRA_CONFIG_PATH = "com.kfusion.singbox.extra.CONFIG_PATH"
+        const val EXTRA_REQUEST_ID = "com.kfusion.singbox.extra.REQUEST_ID"
+        const val ACTION_STOP = "com.kfusion.singbox.action.STOP"
+        const val ACTION_CHECK_CONFIG = "com.kfusion.singbox.action.CHECK_CONFIG"
         private const val PREF_CONFIG_PATH = "config_path"
+        private const val PREFS_NAME = "singbox_service"
+
+        // An explicit stop drops the saved path: no later resurrection on it.
+        fun clearSavedConfigPath(context: Context) {
+            context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .edit()
+                .remove(PREF_CONFIG_PATH)
+                .apply()
+        }
 
         private val setupLock = Any()
         private var setupDone = false

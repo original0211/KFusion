@@ -18,6 +18,15 @@ class SingBoxService {
     return result ?? '';
   }
 
+  // Validates the config with the real libbox in the service process,
+  // without starting anything; same empty-means-success contract as start.
+  Future<String> checkConfig(String configPath) async {
+    final result = await _channel.invokeMethod<String>('checkConfig', {
+      'configPath': configPath,
+    });
+    return result ?? '';
+  }
+
   Future<bool> stop() async {
     final result = await _channel.invokeMethod<bool>('stop');
     return result ?? false;

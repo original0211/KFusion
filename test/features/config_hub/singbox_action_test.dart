@@ -71,6 +71,35 @@ void main() {
     });
   });
 
+  group('waitForSingBoxApi', () {
+    test('an answering probe means ready', () async {
+      final detail = await waitForSingBoxApi(() async {}, pause: noPause);
+      expect(detail, isNull);
+    });
+
+    test('a probe that answers after failures still means ready', () async {
+      var attempts = 0;
+      final detail = await waitForSingBoxApi(() async {
+        if (++attempts < 3) {
+          throw StateError('connection refused');
+        }
+      }, pause: noPause);
+      expect(detail, isNull);
+      expect(attempts, 3);
+    });
+
+    test('a silent probe yields the last error as detail', () async {
+      final detail = await waitForSingBoxApi(
+        () async => throw StateError('connection refused'),
+        timeout: const Duration(milliseconds: 30),
+        interval: const Duration(milliseconds: 5),
+        pause: noPause,
+      );
+      expect(detail, isNotNull);
+      expect(detail, contains('connection refused'));
+    });
+  });
+
   test('waitForValue gives up after the timeout', () async {
     var reads = 0;
     final result = await waitForValue<String>(

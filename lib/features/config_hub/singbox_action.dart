@@ -28,6 +28,7 @@ class SingBoxStatus {
     this.failedStage,
     this.restored = false,
     this.stageDetail = '',
+    this.failureDetail = '',
   });
 
   final SingBoxState state;
@@ -55,6 +56,9 @@ class SingBoxStatus {
 
   /// Live detail for the current stage, such as a download percent.
   final String stageDetail;
+
+  /// The failing layer's own message, shown under the failure sentence.
+  final String failureDetail;
 }
 
 const int singBoxMixedPort = 7890;
@@ -71,7 +75,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
   var _switching = false;
 
   static const _stopTimeout = Duration(seconds: 20);
-  static const _startTimeout = Duration(seconds: 30);
+  // Above the plugin's 40s poll, so Dart acts on the service's own verdict.
+  static const _startTimeout = Duration(seconds: 45);
+  static const _checkTimeout = Duration(seconds: 35);
   static const _applyTimeout = Duration(seconds: 30);
 
   @override
@@ -167,45 +173,56 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       );
     }
 
-    Future<CoreSwitchFailure?> preflight() async {
+    Future<CoreSwitchStepResult> preflight() async {
+      const notRenderable = CoreSwitchStepResult(
+        failure: CoreSwitchFailure.profileNotRenderable,
+      );
       final profile = ref.read(currentProfileProvider);
       if (profile == null) {
-        return CoreSwitchFailure.noProfile;
+        return const CoreSwitchStepResult(failure: CoreSwitchFailure.noProfile);
       }
       profileId = profile.id;
       final yamlText = await readTextFileTask(
         await appPath.getProfilePath(profile.id.toString()),
       );
       if (yamlText == null || yamlText.isEmpty) {
-        return CoreSwitchFailure.profileUnreadable;
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.profileUnreadable,
+        );
       }
       if (target == CoreKind.mihomo) {
         try {
           final parsed = loadPlainYaml(yamlText);
           if (parsed is! Map || parsed.isEmpty) {
-            return CoreSwitchFailure.profileNotRenderable;
+            return notRenderable;
           }
         } catch (_) {
-          return CoreSwitchFailure.profileNotRenderable;
+          return notRenderable;
         }
-        return null;
+        return const CoreSwitchStepResult.ok();
       }
       if (system.isAndroid) {
         if (singBoxService == null) {
-          return CoreSwitchFailure.channelUnavailable;
+          return const CoreSwitchStepResult(
+            failure: CoreSwitchFailure.channelUnavailable,
+          );
         }
       } else if (!system.isWindows) {
-        return CoreSwitchFailure.platformUnsupported;
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.platformUnsupported,
+        );
       }
       final tunEnabled =
           system.isAndroid || await Preferences().getSingBoxTunEnabled();
       if (system.isWindows && tunEnabled && !await isWindowsAdmin()) {
-        return CoreSwitchFailure.adminRequired;
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.adminRequired,
+        );
       }
       try {
         final clashMap = _asMap(loadPlainYaml(yamlText));
         if (clashMap.isEmpty) {
-          return CoreSwitchFailure.profileNotRenderable;
+          return notRenderable;
         }
         final secret = generateSingBoxSecret();
         final rendered = renderSingBoxFromClash(
@@ -216,13 +233,36 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           mixedPort: singBoxMixedPort,
         );
         if (!_hasUsableOutbound(rendered)) {
-          return CoreSwitchFailure.profileNotRenderable;
+          return notRenderable;
         }
         prepared = (rendered: rendered, secret: secret);
       } catch (_) {
-        return CoreSwitchFailure.profileNotRenderable;
+        return notRenderable;
       }
-      return null;
+      if (system.isAndroid) {
+        // Strictly checked before any core stops, not after.
+        final ready = prepared;
+        if (ready == null) {
+          return const CoreSwitchStepResult(failure: CoreSwitchFailure.unknown);
+        }
+        try {
+          final configPath = await _writeSingBoxConfig(ready.rendered);
+          final checkError = await singBoxService!
+              .checkConfig(configPath)
+              .timeout(_checkTimeout);
+          if (checkError.isNotEmpty) {
+            return CoreSwitchStepResult(
+              failure: CoreSwitchFailure.profileNotRenderable,
+              detail: checkError,
+            );
+          }
+        } catch (_) {
+          return const CoreSwitchStepResult(
+            failure: CoreSwitchFailure.channelUnavailable,
+          );
+        }
+      }
+      return const CoreSwitchStepResult.ok();
     }
 
     Future<bool> stopCurrent() async {
@@ -255,11 +295,11 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       return true;
     }
 
-    Future<CoreSwitchFailure?> startTarget() async {
+    Future<CoreSwitchStepResult> startTarget() async {
       if (target == CoreKind.singbox) {
         final ready = prepared;
         if (ready == null) {
-          return CoreSwitchFailure.unknown;
+          return const CoreSwitchStepResult(failure: CoreSwitchFailure.unknown);
         }
         return _startSingBoxMechanics(
           ready,
@@ -273,18 +313,25 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
             .setRunning(true)
             .timeout(_startTimeout);
         if (!started || !ref.read(isStartProvider)) {
-          return CoreSwitchFailure.startFailed;
+          return const CoreSwitchStepResult(
+            failure: CoreSwitchFailure.startFailed,
+          );
         }
-        return null;
+        return const CoreSwitchStepResult.ok();
       } catch (_) {
-        return CoreSwitchFailure.startFailed;
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.startFailed,
+        );
       }
     }
 
-    Future<CoreSwitchFailure?> applyTarget() async {
+    Future<CoreSwitchStepResult> applyTarget() async {
+      const applyFailed = CoreSwitchStepResult(
+        failure: CoreSwitchFailure.applyFailed,
+      );
       if (target == CoreKind.singbox) {
         if (!system.isWindows) {
-          return null;
+          return const CoreSwitchStepResult.ok();
         }
         try {
           await systemProxyQueue?.apply(
@@ -295,9 +342,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
               port: singBoxMixedPort,
             ),
           );
-          return null;
+          return const CoreSwitchStepResult.ok();
         } catch (_) {
-          return CoreSwitchFailure.applyFailed;
+          return applyFailed;
         }
       }
       try {
@@ -305,9 +352,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
             .read(setupActionProvider.notifier)
             .applyProfile(force: true)
             .timeout(_applyTimeout);
-        return applied ? null : CoreSwitchFailure.applyFailed;
+        return applied ? const CoreSwitchStepResult.ok() : applyFailed;
       } catch (_) {
-        return CoreSwitchFailure.applyFailed;
+        return applyFailed;
       }
     }
 
@@ -348,8 +395,8 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       if (ready == null) {
         return false;
       }
-      final failure = await _startSingBoxMechanics(ready);
-      if (failure != null) {
+      final startResult = await _startSingBoxMechanics(ready);
+      if (startResult.failure != null) {
         return false;
       }
       if (system.isWindows) {
@@ -407,6 +454,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         failure: outcome.failure,
         failedStage: outcome.failedStage,
         restored: outcome.restored,
+        failureDetail: outcome.detail,
       ),
     );
   }
@@ -494,42 +542,63 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         : 'sing-box 运行中，系统代理 127.0.0.1:$singBoxMixedPort$unsupportedNote';
   }
 
+  Future<String> _writeSingBoxConfig(SingBoxRenderResult rendered) async {
+    final homeDir = await appPath.homeDirPath;
+    final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
+    await configDir.create(recursive: true);
+    final configFile = File(
+      '${configDir.path}${Platform.pathSeparator}config.json',
+    );
+    await configFile.writeAsString(jsonEncode(rendered.config));
+    return configFile.path;
+  }
+
   /// Starts the sing-box runtime on a prepared render; on Windows this is
   /// also where the binary is fetched, with progress going to [onProgress].
-  Future<CoreSwitchFailure?> _startSingBoxMechanics(
+  Future<CoreSwitchStepResult> _startSingBoxMechanics(
     _PreparedSingBox prepared, {
     void Function(String detail)? onProgress,
   }) async {
     if (system.isAndroid) {
       final service = singBoxService;
       if (service == null) {
-        return CoreSwitchFailure.channelUnavailable;
-      }
-      try {
-        final homeDir = await appPath.homeDirPath;
-        final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
-        await configDir.create(recursive: true);
-        final configFile = File(
-          '${configDir.path}${Platform.pathSeparator}config.json',
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.channelUnavailable,
         );
-        await configFile.writeAsString(jsonEncode(prepared.rendered.config));
-        final error = await service
-            .start(configFile.path)
-            .timeout(_startTimeout);
-        if (error.isNotEmpty) {
-          return CoreSwitchFailure.startFailed;
-        }
+      }
+      String startError;
+      try {
+        final configPath = await _writeSingBoxConfig(prepared.rendered);
+        startError = await service.start(configPath).timeout(_startTimeout);
       } catch (_) {
-        return CoreSwitchFailure.startFailed;
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.startFailed,
+        );
+      }
+      if (startError.isNotEmpty) {
+        return CoreSwitchStepResult(
+          failure: CoreSwitchFailure.startFailed,
+          detail: startError,
+        );
       }
       _api = SingBoxClashApi(
         port: singBoxClashApiPort,
         secret: prepared.secret,
       );
-      return null;
+      // RUNNING alone is not readiness; the panel API has to answer.
+      final probeDetail = await waitForSingBoxApi(() => _api!.getProxies());
+      if (probeDetail != null) {
+        return CoreSwitchStepResult(
+          failure: CoreSwitchFailure.startFailed,
+          detail: probeDetail,
+        );
+      }
+      return const CoreSwitchStepResult.ok();
     }
     if (!system.isWindows) {
-      return CoreSwitchFailure.platformUnsupported;
+      return const CoreSwitchStepResult(
+        failure: CoreSwitchFailure.platformUnsupported,
+      );
     }
     try {
       final homeDir = await appPath.homeDirPath;
@@ -553,6 +622,19 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         },
       );
       final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
+      final configPath =
+          '${configDir.path}${Platform.pathSeparator}config.json';
+      // A leftover process would answer probes with a stale secret.
+      await reclaimOrphanedSingBoxProcesses(
+        executable: binary,
+        configPath: configPath,
+      );
+      if (!await CoreSwitch().awaitPortFree(singBoxMixedPort)) {
+        return const CoreSwitchStepResult(
+          failure: CoreSwitchFailure.startFailed,
+          detail: '端口 $singBoxMixedPort 仍被其他程序占用，sing-box 未启动',
+        );
+      }
       final runner = SingBoxRunner(
         launcher: IoProcessLauncher(),
         onCrash: (code, tail) {
@@ -567,18 +649,28 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         secret: prepared.secret,
       );
       if (!result.ok) {
-        return CoreSwitchFailure.startFailed;
+        final tail = result.tailLines.isEmpty ? '' : result.tailLines.last;
+        return CoreSwitchStepResult(
+          failure: CoreSwitchFailure.startFailed,
+          detail: [
+            result.message,
+            tail,
+          ].where((part) => part.isNotEmpty).join(' · '),
+        );
       }
       _runner = runner;
       _api = SingBoxClashApi(
         port: singBoxClashApiPort,
         secret: prepared.secret,
       );
-      return null;
-    } on SingBoxBinaryException {
-      return CoreSwitchFailure.binaryUnavailable;
+      return const CoreSwitchStepResult.ok();
+    } on SingBoxBinaryException catch (error) {
+      return CoreSwitchStepResult(
+        failure: CoreSwitchFailure.binaryUnavailable,
+        detail: error.message,
+      );
     } catch (_) {
-      return CoreSwitchFailure.startFailed;
+      return const CoreSwitchStepResult(failure: CoreSwitchFailure.startFailed);
     }
   }
 
@@ -663,6 +755,29 @@ Future<void> ensureMihomoStopped({
   }
   if (!await stopMihomo()) {
     throw StateError('mihomo 未能停止，sing-box 未启动，避免双核心同时运行。');
+  }
+}
+
+/// Polls [probe] until it answers; on timeout, the last error's text.
+Future<String?> waitForSingBoxApi(
+  Future<void> Function() probe, {
+  Duration timeout = const Duration(seconds: 10),
+  Duration interval = const Duration(milliseconds: 500),
+  Future<void> Function(Duration duration)? pause,
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  Object? lastError;
+  while (true) {
+    try {
+      await probe();
+      return null;
+    } catch (error) {
+      lastError = error;
+    }
+    if (!DateTime.now().isBefore(deadline)) {
+      return 'sing-box 已启动，但面板接口未响应（$lastError）';
+    }
+    await (pause?.call(interval) ?? Future<void>.delayed(interval));
   }
 }
 

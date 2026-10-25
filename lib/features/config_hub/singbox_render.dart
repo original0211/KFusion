@@ -39,8 +39,6 @@ String _target(String target) {
   switch (target) {
     case 'DIRECT':
       return 'direct';
-    case 'REJECT':
-      return 'block';
     default:
       return target;
   }
@@ -273,9 +271,21 @@ Map<String, Object?>? _groupToSingBox(
 ) {
   final name = _asString(group['name']);
   final type = _asString(group['type']);
-  final proxies = [
-    for (final entry in _asList(group['proxies'])) _target(entry.toString()),
-  ];
+  final proxies = <String>[];
+  for (final entry in _asList(group['proxies'])) {
+    final member = entry.toString();
+    if (member == 'REJECT') {
+      unsupported.add(
+        'REJECT in proxy-group "$name" (no block outbound in sing-box 1.13+)',
+      );
+      continue;
+    }
+    proxies.add(_target(member));
+  }
+  if (proxies.isEmpty) {
+    unsupported.add('proxy-group "$name" has no usable member');
+    return null;
+  }
   switch (type) {
     case 'select':
       return {'type': 'selector', 'tag': name, 'outbounds': proxies};
@@ -472,7 +482,6 @@ SingBoxRenderResult renderSingBox(
   }
   outbounds.addAll(const [
     {'type': 'direct', 'tag': 'direct'},
-    {'type': 'block', 'tag': 'block'},
   ]);
   final ruleSets = <String, Map<String, Object?>>{};
   final dnsRuleSet = _registerGeoRuleSet(ruleSets, 'geosite', 'cn');
@@ -480,17 +489,25 @@ SingBoxRenderResult renderSingBox(
     {'protocol': 'dns', 'action': 'hijack-dns'},
   ];
   var finalOutbound = '';
+  var finalRejected = false;
   for (final line in profile.rules) {
     final trimmed = line.trim();
     if (trimmed.isEmpty) continue;
     final kind = trimmed.split(',').first.trim();
     if (kind == 'MATCH' || kind == 'FINAL') {
       final target = trimmed.split(',').last.trim();
-      finalOutbound = _target(target);
+      if (target == 'REJECT') {
+        finalRejected = true;
+      } else {
+        finalOutbound = _target(target);
+      }
       continue;
     }
     final rule = _ruleToSingBox(trimmed, unsupported, ruleSets);
     if (rule != null) rules.add(rule);
+  }
+  if (finalRejected) {
+    rules.add({'action': 'reject'});
   }
   if (finalOutbound.isEmpty) {
     if (groupNames.isNotEmpty) {

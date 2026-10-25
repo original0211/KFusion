@@ -139,7 +139,7 @@ void main() {
     expect(byTag['Auto']?['type'], 'urltest');
     expect(byTag['Auto']?['interval'], '300s');
     expect(byTag['direct']?['type'], 'direct');
-    expect(byTag['block']?['type'], 'block');
+    expect(byTag.containsKey('block'), isFalse);
     final route = config['route'] as Map;
     final rules = route['rules'] as List;
     expect(rules.length, 7);
@@ -203,6 +203,7 @@ void main() {
     expect(keys, isNot(contains('fakeip'))); // the dns-level block is a key
     final outbounds = _outbounds(result.config);
     expect(outbounds.where((outbound) => outbound['type'] == 'dns'), isEmpty);
+    expect(outbounds.where((outbound) => outbound['type'] == 'block'), isEmpty);
     final dns = result.config['dns'] as Map;
     for (final server in dns['servers'] as List) {
       expect((server as Map).containsKey('address'), isFalse);
@@ -215,7 +216,7 @@ void main() {
     expect(tun['address'], ['172.19.0.1/30']);
   });
 
-  test('DIRECT and REJECT members and rule targets are mapped', () {
+  test('DIRECT members map and REJECT members are dropped with a note', () {
     final clash = _clashSample();
     (clash['proxy-groups'] as List).add({
       'name': 'Pick',
@@ -226,13 +227,42 @@ void main() {
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
     final outbounds = _outbounds(result.config);
     final pick = outbounds.firstWhere((outbound) => outbound['tag'] == 'Pick');
-    expect(pick['outbounds'], ['direct', 'block', 'SS']);
+    expect(pick['outbounds'], ['direct', 'SS']);
+    expect(
+      result.unsupported.any((note) => note.contains('REJECT in proxy-group')),
+      isTrue,
+    );
     final rules = (result.config['route'] as Map)['rules'] as List;
     final reject =
         rules.firstWhere((entry) => (entry as Map)['action'] == 'reject')
             as Map;
     expect(reject['domain_suffix'], ['ads.example.com']);
     expect(reject.containsKey('outbound'), isFalse);
+  });
+
+  test('a MATCH to REJECT ends the rules with a reject action', () {
+    final clash = _clashSample();
+    final rules = clash['rules'] as List;
+    rules[rules.length - 1] = 'MATCH,REJECT';
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final route = result.config['route'] as Map;
+    final rendered = route['rules'] as List;
+    expect((rendered.last as Map)['action'], 'reject');
+    final outbounds = _outbounds(result.config);
+    expect(outbounds.any((outbound) => outbound['tag'] == 'block'), isFalse);
+    expect(route['final'], isNot('block'));
+  });
+
+  test('a group of only REJECT members is dropped entirely', () {
+    final clash = _clashSample();
+    (clash['proxy-groups'] as List).add({
+      'name': 'Deny',
+      'type': 'select',
+      'proxies': ['REJECT'],
+    });
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final outbounds = _outbounds(result.config);
+    expect(outbounds.any((outbound) => outbound['tag'] == 'Deny'), isFalse);
   });
 
   test('wireguard node renders as an endpoint, not an outbound', () {

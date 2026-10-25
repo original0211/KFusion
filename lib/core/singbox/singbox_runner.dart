@@ -308,6 +308,17 @@ class CoreSwitch {
   final Duration portWaitTimeout;
   final Duration portPollInterval;
 
+  /// Waits until [port] can be bound again; false when it stays occupied.
+  Future<bool> awaitPortFree(int port) async {
+    var free = await isPortFree(port);
+    final deadline = DateTime.now().add(portWaitTimeout);
+    while (!free && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(portPollInterval);
+      free = await isPortFree(port);
+    }
+    return free;
+  }
+
   Future<void> switchTo({
     required CoreBackend from,
     required CoreBackend to,
@@ -315,13 +326,7 @@ class CoreSwitch {
   }) async {
     if (from.isRunning) {
       await from.stop();
-      final deadline = DateTime.now().add(portWaitTimeout);
-      var free = await isPortFree(releasedPort);
-      while (!free && DateTime.now().isBefore(deadline)) {
-        await Future<void>.delayed(portPollInterval);
-        free = await isPortFree(releasedPort);
-      }
-      if (!free) {
+      if (!await awaitPortFree(releasedPort)) {
         throw StateError('旧核心未释放端口 $releasedPort，切换已中止。');
       }
     }
@@ -334,4 +339,94 @@ class CoreSwitch {
       rethrow;
     }
   }
+}
+
+/// One entry of a process listing, reduced to what orphan matching needs.
+class SingBoxProcessInfo {
+  const SingBoxProcessInfo({
+    required this.pid,
+    required this.executablePath,
+    required this.commandLine,
+  });
+
+  final int pid;
+  final String executablePath;
+  final String commandLine;
+}
+
+/// Only this app's own binary started on this app's own config qualifies.
+bool isAppSingBoxProcess(
+  SingBoxProcessInfo info, {
+  required String executable,
+  required String configPath,
+}) {
+  String normalize(String path) => path.replaceAll('/', '\\').toLowerCase();
+  return normalize(info.executablePath) == normalize(executable) &&
+      normalize(info.commandLine).contains(normalize(configPath));
+}
+
+Future<List<SingBoxProcessInfo>> _listSingBoxProcesses() async {
+  try {
+    const script =
+        "Get-CimInstance Win32_Process "
+        "-Filter \"Name='sing-box.exe'\" | "
+        'Select-Object ProcessId, ExecutablePath, CommandLine | '
+        'ConvertTo-Json -Compress';
+    final result = await Process.run('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      script,
+    ]);
+    if (result.exitCode != 0) {
+      return const [];
+    }
+    final text = (result.stdout as String).trim();
+    if (text.isEmpty) {
+      return const [];
+    }
+    final decoded = json.decode(text);
+    final entries = decoded is List ? decoded : [decoded];
+    return [
+      for (final entry in entries)
+        if (entry is Map)
+          SingBoxProcessInfo(
+            pid: (entry['ProcessId'] as num?)?.toInt() ?? 0,
+            executablePath: entry['ExecutablePath']?.toString() ?? '',
+            commandLine: entry['CommandLine']?.toString() ?? '',
+          ),
+    ];
+  } catch (_) {
+    return const [];
+  }
+}
+
+/// Kills this app's leftover sing-box processes; never blocks the start.
+Future<int> reclaimOrphanedSingBoxProcesses({
+  required String executable,
+  required String configPath,
+  Future<List<SingBoxProcessInfo>> Function()? listProcesses,
+  Future<void> Function(int pid)? killProcess,
+}) async {
+  final processes = await (listProcesses ?? _listSingBoxProcesses)();
+  var reclaimed = 0;
+  for (final info in processes) {
+    if (info.pid <= 0 ||
+        !isAppSingBoxProcess(
+          info,
+          executable: executable,
+          configPath: configPath,
+        )) {
+      continue;
+    }
+    try {
+      await (killProcess ?? _taskKill)(info.pid);
+      reclaimed++;
+    } catch (_) {}
+  }
+  return reclaimed;
+}
+
+Future<void> _taskKill(int pid) async {
+  await Process.run('taskkill', ['/PID', '$pid', '/F']);
 }

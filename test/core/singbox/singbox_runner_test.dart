@@ -231,6 +231,56 @@ void main() {
     expect(to.isRunning, isFalse);
   });
 
+  test('awaitPortFree returns as soon as the port frees', () async {
+    var probes = 0;
+    final switcher = CoreSwitch(
+      isPortFree: (port) async => ++probes >= 3,
+      portWaitTimeout: const Duration(seconds: 5),
+      portPollInterval: const Duration(milliseconds: 10),
+    );
+    expect(await switcher.awaitPortFree(7890), isTrue);
+    expect(probes, 3);
+  });
+
+  test('awaitPortFree gives up after the wait budget', () async {
+    final switcher = CoreSwitch(
+      isPortFree: (port) async => false,
+      portWaitTimeout: const Duration(milliseconds: 100),
+      portPollInterval: const Duration(milliseconds: 20),
+    );
+    expect(await switcher.awaitPortFree(7890), isFalse);
+  });
+
+  test('orphan reclaim kills only this app binary on its own config', () async {
+    const executable = r'C:\Users\me\AppData\KFusion\sing-box.exe';
+    const configPath = r'C:\Users\me\AppData\KFusion\singbox\config.json';
+    final killed = <int>[];
+    final reclaimed = await reclaimOrphanedSingBoxProcesses(
+      executable: executable,
+      configPath: configPath,
+      listProcesses: () async => const [
+        SingBoxProcessInfo(
+          pid: 101,
+          executablePath: executable,
+          commandLine: 'sing-box.exe run -c "$configPath"',
+        ),
+        SingBoxProcessInfo(
+          pid: 102,
+          executablePath: r'C:\other\sing-box.exe',
+          commandLine: 'sing-box.exe run -c "$configPath"',
+        ),
+        SingBoxProcessInfo(
+          pid: 103,
+          executablePath: executable,
+          commandLine: r'sing-box.exe run -c "C:\other\config.json"',
+        ),
+      ],
+      killProcess: (pid) async => killed.add(pid),
+    );
+    expect(reclaimed, 1);
+    expect(killed, [101]);
+  });
+
   test('binary lookup returns the first existing candidate', () {
     final found = findSingBoxBinary([
       '/nope/sing-box',

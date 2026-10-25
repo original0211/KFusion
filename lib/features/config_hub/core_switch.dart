@@ -22,6 +22,7 @@ class CoreSwitchOutcome {
     this.failure,
     this.failedStage,
     this.restored = false,
+    this.detail = '',
   });
 
   final CoreSwitchFailure? failure;
@@ -30,10 +31,22 @@ class CoreSwitchOutcome {
   /// True when the previously running core runs again, or was never touched.
   final bool restored;
 
+  /// The failing layer's own words, kept under the sentence the user reads.
+  final String detail;
+
   bool get succeeded => failure == null;
 }
 
-typedef CoreSwitchStep = Future<CoreSwitchFailure?> Function();
+class CoreSwitchStepResult {
+  const CoreSwitchStepResult({this.failure, this.detail = ''});
+
+  const CoreSwitchStepResult.ok() : failure = null, detail = '';
+
+  final CoreSwitchFailure? failure;
+  final String detail;
+}
+
+typedef CoreSwitchStep = Future<CoreSwitchStepResult> Function();
 
 /// Runs a core switch in stage order, restoring the original core after any failure past preflight.
 Future<CoreSwitchOutcome> runCoreSwitch({
@@ -44,18 +57,24 @@ Future<CoreSwitchOutcome> runCoreSwitch({
   required Future<bool> Function() restoreOriginal,
   required void Function(CoreSwitchStage stage) onStage,
 }) async {
-  CoreSwitchFailure? preflightFailure;
+  CoreSwitchStepResult preflightResult;
   try {
-    preflightFailure = await preflight();
+    preflightResult = await preflight();
   } catch (_) {
-    preflightFailure = CoreSwitchFailure.unknown;
+    preflightResult = const CoreSwitchStepResult(
+      failure: CoreSwitchFailure.unknown,
+    );
   }
-  if (preflightFailure != null) {
-    return CoreSwitchOutcome(failure: preflightFailure, restored: true);
+  if (preflightResult.failure != null) {
+    return CoreSwitchOutcome(
+      failure: preflightResult.failure,
+      restored: true,
+      detail: preflightResult.detail,
+    );
   }
 
   Future<CoreSwitchOutcome> fail(
-    CoreSwitchFailure failure,
+    CoreSwitchStepResult result,
     CoreSwitchStage stage,
   ) async {
     onStage(CoreSwitchStage.restoring);
@@ -66,9 +85,10 @@ Future<CoreSwitchOutcome> runCoreSwitch({
       restored = false;
     }
     return CoreSwitchOutcome(
-      failure: failure,
+      failure: result.failure,
       failedStage: stage,
       restored: restored,
+      detail: result.detail,
     );
   }
 
@@ -80,27 +100,30 @@ Future<CoreSwitchOutcome> runCoreSwitch({
     stopped = false;
   }
   if (!stopped) {
-    return fail(CoreSwitchFailure.stopFailed, CoreSwitchStage.stopping);
+    return fail(
+      const CoreSwitchStepResult(failure: CoreSwitchFailure.stopFailed),
+      CoreSwitchStage.stopping,
+    );
   }
 
-  Future<CoreSwitchFailure?> runStep(CoreSwitchStep step) async {
+  Future<CoreSwitchStepResult> runStep(CoreSwitchStep step) async {
     try {
       return await step();
     } catch (_) {
-      return CoreSwitchFailure.unknown;
+      return const CoreSwitchStepResult(failure: CoreSwitchFailure.unknown);
     }
   }
 
   onStage(CoreSwitchStage.starting);
-  final startFailure = await runStep(startTarget);
-  if (startFailure != null) {
-    return fail(startFailure, CoreSwitchStage.starting);
+  final startResult = await runStep(startTarget);
+  if (startResult.failure != null) {
+    return fail(startResult, CoreSwitchStage.starting);
   }
 
   onStage(CoreSwitchStage.applying);
-  final applyFailure = await runStep(applyTarget);
-  if (applyFailure != null) {
-    return fail(applyFailure, CoreSwitchStage.applying);
+  final applyResult = await runStep(applyTarget);
+  if (applyResult.failure != null) {
+    return fail(applyResult, CoreSwitchStage.applying);
   }
 
   return const CoreSwitchOutcome(restored: true);

@@ -1,6 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kfusion/features/config_hub/core_switch.dart';
 
+const _ok = CoreSwitchStepResult.ok();
+
+CoreSwitchStepResult _failed(CoreSwitchFailure failure, [String detail = '']) {
+  return CoreSwitchStepResult(failure: failure, detail: detail);
+}
+
 void main() {
   group('runCoreSwitch', () {
     test(
@@ -9,10 +15,10 @@ void main() {
         final stages = <CoreSwitchStage>[];
         var restores = 0;
         final outcome = await runCoreSwitch(
-          preflight: () async => null,
+          preflight: () async => _ok,
           stopCurrent: () async => true,
-          startTarget: () async => null,
-          applyTarget: () async => null,
+          startTarget: () async => _ok,
+          applyTarget: () async => _ok,
           restoreOriginal: () async {
             restores++;
             return true;
@@ -37,13 +43,14 @@ void main() {
         var stops = 0;
         var restores = 0;
         final outcome = await runCoreSwitch(
-          preflight: () async => CoreSwitchFailure.profileNotRenderable,
+          preflight: () async =>
+              _failed(CoreSwitchFailure.profileNotRenderable),
           stopCurrent: () async {
             stops++;
             return true;
           },
-          startTarget: () async => null,
-          applyTarget: () async => null,
+          startTarget: () async => _ok,
+          applyTarget: () async => _ok,
           restoreOriginal: () async {
             restores++;
             return true;
@@ -63,8 +70,8 @@ void main() {
       final outcome = await runCoreSwitch(
         preflight: () async => throw StateError('boom'),
         stopCurrent: () async => true,
-        startTarget: () async => null,
-        applyTarget: () async => null,
+        startTarget: () async => _ok,
+        applyTarget: () async => _ok,
         restoreOriginal: () async => true,
         onStage: (_) {},
       );
@@ -76,13 +83,13 @@ void main() {
       final stages = <CoreSwitchStage>[];
       var starts = 0;
       final outcome = await runCoreSwitch(
-        preflight: () async => null,
+        preflight: () async => _ok,
         stopCurrent: () async => false,
         startTarget: () async {
           starts++;
-          return null;
+          return _ok;
         },
-        applyTarget: () async => null,
+        applyTarget: () async => _ok,
         restoreOriginal: () async => true,
         onStage: stages.add,
       );
@@ -97,12 +104,12 @@ void main() {
       final stages = <CoreSwitchStage>[];
       var applies = 0;
       final outcome = await runCoreSwitch(
-        preflight: () async => null,
+        preflight: () async => _ok,
         stopCurrent: () async => true,
-        startTarget: () async => CoreSwitchFailure.binaryUnavailable,
+        startTarget: () async => _failed(CoreSwitchFailure.binaryUnavailable),
         applyTarget: () async {
           applies++;
-          return null;
+          return _ok;
         },
         restoreOriginal: () async => true,
         onStage: stages.add,
@@ -120,10 +127,10 @@ void main() {
 
     test('a failed apply restores and reports the restore result', () async {
       final outcome = await runCoreSwitch(
-        preflight: () async => null,
+        preflight: () async => _ok,
         stopCurrent: () async => true,
-        startTarget: () async => null,
-        applyTarget: () async => CoreSwitchFailure.applyFailed,
+        startTarget: () async => _ok,
+        applyTarget: () async => _failed(CoreSwitchFailure.applyFailed),
         restoreOriginal: () async => false,
         onStage: (_) {},
       );
@@ -134,10 +141,10 @@ void main() {
 
     test('a raw exception from a step never escapes the runner', () async {
       final outcome = await runCoreSwitch(
-        preflight: () async => null,
+        preflight: () async => _ok,
         stopCurrent: () async => true,
         startTarget: () async => throw StateError('Bad state: mihomo 未能停止'),
-        applyTarget: () async => null,
+        applyTarget: () async => _ok,
         restoreOriginal: () async => true,
         onStage: (_) {},
       );
@@ -148,15 +155,47 @@ void main() {
 
     test('a throwing restore leaves the outcome unrestored', () async {
       final outcome = await runCoreSwitch(
-        preflight: () async => null,
+        preflight: () async => _ok,
         stopCurrent: () async => true,
-        startTarget: () async => CoreSwitchFailure.startFailed,
-        applyTarget: () async => null,
+        startTarget: () async => _failed(CoreSwitchFailure.startFailed),
+        applyTarget: () async => _ok,
         restoreOriginal: () async => throw StateError('gone'),
         onStage: (_) {},
       );
       expect(outcome.failure, CoreSwitchFailure.startFailed);
       expect(outcome.restored, isFalse);
+    });
+
+    test('a step detail reaches the outcome untouched', () async {
+      final outcome = await runCoreSwitch(
+        preflight: () async => _ok,
+        stopCurrent: () async => true,
+        startTarget: () async => _failed(
+          CoreSwitchFailure.startFailed,
+          'FATAL[0000] unknown outbound type: block',
+        ),
+        applyTarget: () async => _ok,
+        restoreOriginal: () async => true,
+        onStage: (_) {},
+      );
+      expect(outcome.failure, CoreSwitchFailure.startFailed);
+      expect(outcome.detail, 'FATAL[0000] unknown outbound type: block');
+    });
+
+    test('a preflight detail reaches the outcome untouched', () async {
+      final outcome = await runCoreSwitch(
+        preflight: () async => _failed(
+          CoreSwitchFailure.profileNotRenderable,
+          'checkConfig: legacy block outbound',
+        ),
+        stopCurrent: () async => true,
+        startTarget: () async => _ok,
+        applyTarget: () async => _ok,
+        restoreOriginal: () async => true,
+        onStage: (_) {},
+      );
+      expect(outcome.failure, CoreSwitchFailure.profileNotRenderable);
+      expect(outcome.detail, 'checkConfig: legacy block outbound');
     });
   });
 }

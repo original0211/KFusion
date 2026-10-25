@@ -110,16 +110,24 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         }
     }
 
+    // The channel answer waits for the request's own Deferred: true means the
+    // transition actually landed, not merely that it was accepted. A request
+    // a newer intent superseded answers false, which is the latest-intent
+    // contract Dart already reads from the answer.
     private fun start(call: MethodCall, result: MethodChannel.Result) {
         commandRevision = call.arguments as? Int ?: commandRevision
-        ServiceState.requestStart()
-        result.success(true)
+        val deferred = ServiceState.requestStart()
+        scope.launch {
+            result.success(runCatching { deferred.await() }.getOrDefault(false))
+        }
     }
 
     private fun stop(call: MethodCall, result: MethodChannel.Result) {
         commandRevision = call.arguments as? Int ?: commandRevision
-        ServiceState.requestStop()
-        result.success(true)
+        val deferred = ServiceState.requestStop()
+        scope.launch {
+            result.success(runCatching { deferred.await() }.getOrDefault(false))
+        }
     }
 
     // Read on the platform thread, where start and stop arrive: revision and intent are one instant.
