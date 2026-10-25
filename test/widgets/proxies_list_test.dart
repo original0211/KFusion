@@ -368,4 +368,41 @@ void main() {
 
     expect(find.byType(CommonCircleLoading), findsNothing);
   });
+
+  testWidgets('proxy cards take the card corner tier', (tester) async {
+    await pumpList(tester);
+
+    final card = tester.widget<CommonCard>(
+      find
+          .descendant(
+            of: find.byType(ProxyCard),
+            matching: find.byType(CommonCard),
+          )
+          .first,
+    );
+    expect(card.radius, AppCorner.xl);
+  });
+
+  testWidgets('the plain group icon keeps the neutral mark colour', (
+    tester,
+  ) async {
+    await pumpList(tester);
+
+    container.read(proxiesStyleSettingProvider.notifier).value =
+        const ProxiesStyleProps(iconStyle: ProxiesIconStyle.plain);
+    await tester.pump();
+
+    final element = tester.element(
+      find
+          .descendant(
+            of: headerOf('G0'),
+            matching: find.byType(CommonTargetIcon),
+          )
+          .first,
+    );
+    expect(
+      IconTheme.of(element).color,
+      Theme.of(element).colorScheme.onSurfaceVariant,
+    );
+  });
 }

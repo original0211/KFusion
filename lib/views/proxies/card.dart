@@ -131,7 +131,7 @@ class ProxyCard extends ConsumerWidget {
               proxyNameProvider(groupName).select((name) => name == proxy.name),
             );
         return CommonCard(
-          radius: AppCorner.lg,
+          radius: AppCorner.xl,
           enterActionsOnRight: true,
           key: key,
           onPressed: () {

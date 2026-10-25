@@ -747,7 +747,7 @@ class _GroupIcon extends ConsumerWidget {
             return IconTheme.merge(
               data: IconThemeData(
                 size: constraints.maxHeight,
-                color: context.colorScheme.primary,
+                color: context.colorScheme.onSurfaceVariant,
               ),
               child: CommonTargetIcon(src: src, fallback: GroupMonogram(name)),
             );
