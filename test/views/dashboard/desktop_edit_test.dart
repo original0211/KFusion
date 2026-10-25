@@ -1,4 +1,5 @@
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/views/dashboard/dashboard.dart';
@@ -105,7 +106,7 @@ void main() {
       DashboardWidget.networkSpeed,
       DashboardWidget.memoryInfo,
     ]);
-    await pumpEditor(tester);
+    await pumpEditor(tester, size: const Size(1280, 1400));
 
     expect(find.byTooltip('Remove Status'), findsNothing);
     expect(find.byTooltip('Remove Network speed'), findsOneWidget);
@@ -122,7 +123,7 @@ void main() {
       DashboardWidget.networkSpeed,
       DashboardWidget.memoryInfo,
     ]);
-    await pumpEditor(tester);
+    await pumpEditor(tester, size: const Size(1280, 1400));
 
     await tester.tap(find.byTooltip('Remove Memory info'));
     await tester.pump();
@@ -143,8 +144,7 @@ void main() {
     tester,
   ) async {
     seed(const [DashboardWidget.currentOutbound, DashboardWidget.networkSpeed]);
-    // Tall enough for the whole addable list to stand in the viewport.
-    await pumpEditor(tester, size: const Size(1280, 1600));
+    await pumpEditor(tester);
 
     await tester.tap(find.byTooltip('Add Memory info'));
     await settle(tester);
@@ -160,6 +160,68 @@ void main() {
     await teardown(tester);
   });
 
+  testWidgets('the addable rows stand on the first screen, above the '
+      'cards', (tester) async {
+    seed(defaultDashboardWidgets);
+    await pumpEditor(tester);
+
+    expect(find.text('Available to add'), findsOneWidget);
+    final add = find.byTooltip('Add Memory info');
+    expect(add, findsOneWidget);
+    final rect = tester.getRect(add);
+    expect(rect.top, greaterThanOrEqualTo(0));
+    expect(rect.bottom, lessThanOrEqualTo(960));
+    expect(
+      rect.bottom,
+      lessThan(top(tester, find.byType(CurrentOutboundCard))),
+    );
+    expect(tester.takeException(), isNull);
+
+    await teardown(tester);
+  });
+
+  testWidgets('a card removed on the desktop joins the addable rows', (
+    tester,
+  ) async {
+    seed(defaultDashboardWidgets);
+    await pumpEditor(tester);
+
+    await tester.tap(find.byTooltip('Remove Network speed'));
+    await settle(tester);
+
+    expect(saved(), isNot(contains(DashboardWidget.networkSpeed)));
+    final add = find.byTooltip('Add Network speed');
+    expect(add, findsOneWidget);
+    expect(tester.getRect(add).bottom, lessThanOrEqualTo(960));
+    expect(tester.takeException(), isNull);
+
+    await teardown(tester);
+  });
+
+  testWidgets('with every card shown the addable section says so', (
+    tester,
+  ) async {
+    seed(const [
+      DashboardWidget.currentOutbound,
+      DashboardWidget.networkSpeed,
+      DashboardWidget.outboundMode,
+      DashboardWidget.networkTakeover,
+      DashboardWidget.serviceStatus,
+      DashboardWidget.profiles,
+      DashboardWidget.proxyGroups,
+      DashboardWidget.connectionStats,
+      DashboardWidget.intranetIp,
+      DashboardWidget.memoryInfo,
+    ]);
+    await pumpEditor(tester);
+
+    expect(find.text('Available to add'), findsOneWidget);
+    expect(find.text('All cards have been added'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await teardown(tester);
+  });
+
   testWidgets('a card dragged on the desktop saves the new order', (
     tester,
   ) async {
@@ -168,7 +230,7 @@ void main() {
       DashboardWidget.networkTakeover,
       DashboardWidget.profiles,
     ]);
-    await pumpEditor(tester);
+    await pumpEditor(tester, size: const Size(1280, 1400));
 
     final card = find.byType(ProfilesCard);
     final rise =

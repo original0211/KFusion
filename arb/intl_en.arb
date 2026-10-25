@@ -936,6 +936,7 @@
   "editDashboard": "Edit dashboard",
   "done": "Done",
   "dashboardAddableSection": "Available to add",
+  "dashboardAddableEmpty": "All cards have been added",
   "singBoxBinaryMissing": "sing-box binary not found",
   "singBoxDownloadHint": "KFusion does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.",
   "singBoxDownload": "Download sing-box",

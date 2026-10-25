@@ -478,6 +478,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("切り取り"),
     "dark": MessageLookupByLibrary.simpleMessage("ダーク"),
     "dashboard": MessageLookupByLibrary.simpleMessage("ダッシュボード"),
+    "dashboardAddableEmpty": MessageLookupByLibrary.simpleMessage(
+      "すべてのカードが追加済みです",
+    ),
     "dashboardAddableSection": MessageLookupByLibrary.simpleMessage("追加できるカード"),
     "databaseWriteFailedTip": MessageLookupByLibrary.simpleMessage(
       "変更の保存に失敗したため、元に戻しました",

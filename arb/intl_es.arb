@@ -936,6 +936,7 @@
   "editDashboard": "Editar panel",
   "done": "Hecho",
   "dashboardAddableSection": "Disponibles para añadir",
+  "dashboardAddableEmpty": "Ya se han añadido todas las tarjetas",
   "singBoxBinaryMissing": "No se encontró el binario de sing-box",
   "singBoxDownloadHint": "sing-box no viene incluido. Descargue la compilación oficial fijada (unos 33 MB) en la carpeta de datos de la aplicación; se conserva tras las actualizaciones. También puede colocar sing-box.exe manualmente, consulte tools/singbox/README.md.",
   "singBoxDownload": "Descargar sing-box",

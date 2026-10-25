@@ -600,6 +600,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("Couper"),
     "dark": MessageLookupByLibrary.simpleMessage("Sombre"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Tableau de bord"),
+    "dashboardAddableEmpty": MessageLookupByLibrary.simpleMessage(
+      "Toutes les cartes sont déjà ajoutées",
+    ),
     "dashboardAddableSection": MessageLookupByLibrary.simpleMessage(
       "Disponibles à l’ajout",
     ),

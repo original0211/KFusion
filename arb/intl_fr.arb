@@ -936,6 +936,7 @@
   "editDashboard": "Modifier le tableau de bord",
   "done": "Terminé",
   "dashboardAddableSection": "Disponibles à l’ajout",
+  "dashboardAddableEmpty": "Toutes les cartes sont déjà ajoutées",
   "singBoxBinaryMissing": "Binaire sing-box introuvable",
   "singBoxDownloadHint": "sing-box n’est pas inclus. Téléchargez la version officielle épinglée (environ 33 Mo) dans le dossier de données de l’application ; elle survit aux mises à jour. Vous pouvez aussi placer sing-box.exe manuellement, voir tools/singbox/README.md.",
   "singBoxDownload": "Télécharger sing-box",

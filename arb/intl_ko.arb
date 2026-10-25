@@ -936,6 +936,7 @@
   "editDashboard": "대시보드 편집",
   "done": "완료",
   "dashboardAddableSection": "추가 가능",
+  "dashboardAddableEmpty": "모든 카드가 추가되었습니다",
   "singBoxBinaryMissing": "sing-box 바이너리를 찾을 수 없습니다",
   "singBoxDownloadHint": "sing-box는 함께 제공되지 않습니다. 고정된 공식 빌드(약 33MB)를 앱 데이터 폴더에 다운로드하면 앱 업데이트 후에도 유지됩니다. tools/singbox/README.md를 참고해 sing-box.exe를 수동으로 배치할 수도 있습니다.",
   "singBoxDownload": "sing-box 다운로드",

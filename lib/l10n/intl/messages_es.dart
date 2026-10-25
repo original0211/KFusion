@@ -599,6 +599,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("Cortar"),
     "dark": MessageLookupByLibrary.simpleMessage("Oscuro"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Panel"),
+    "dashboardAddableEmpty": MessageLookupByLibrary.simpleMessage(
+      "Ya se han añadido todas las tarjetas",
+    ),
     "dashboardAddableSection": MessageLookupByLibrary.simpleMessage(
       "Disponibles para añadir",
     ),

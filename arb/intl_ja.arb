@@ -936,6 +936,7 @@
   "editDashboard": "ダッシュボードを編集",
   "done": "完了",
   "dashboardAddableSection": "追加できるカード",
+  "dashboardAddableEmpty": "すべてのカードが追加済みです",
   "singBoxBinaryMissing": "sing-box バイナリが見つかりません",
   "singBoxDownloadHint": "sing-box は同梱されていません。ピン留めされた公式ビルド（約 33 MB）をアプリのデータフォルダーにダウンロードできます。アプリを更新しても残ります。tools/singbox/README.md の手順で sing-box.exe を手動配置することもできます。",
   "singBoxDownload": "sing-box をダウンロード",

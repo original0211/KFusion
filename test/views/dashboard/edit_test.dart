@@ -96,7 +96,7 @@ void main() {
   ScrollPosition positionOf(WidgetTester tester) =>
       tester.state<ScrollableState>(find.byType(Scrollable).first).position;
 
-  testWidgets('edits the cards themselves, in order, above the ones to add', (
+  testWidgets('the ones to add stand above the cards being edited', (
     tester,
   ) async {
     seed(const [
@@ -110,9 +110,9 @@ void main() {
     final current = top(tester, find.byType(CurrentOutboundCard));
     final groups = top(tester, find.byType(ProxyGroupsCard));
     final speed = top(tester, find.byType(NetworkSpeedCard));
+    expect(top(tester, find.text('Available to add')), lessThan(current));
     expect(current, lessThan(groups));
     expect(groups, lessThan(speed));
-    expect(speed, lessThan(top(tester, find.text('Available to add'))));
     expect(find.byTooltip('Add Memory info'), findsOneWidget);
     expect(find.byType(SortHandle), findsNothing);
     // The desktop-only card has no row on a phone.
@@ -152,6 +152,7 @@ void main() {
     ]);
     await pumpEditor(tester);
     final profiles = top(tester, find.byType(ProfilesCard));
+    final gap = profiles - top(tester, find.byType(NetworkSpeedCard));
 
     await tester.tap(find.byTooltip('Remove Network speed'));
     await tester.pump();
@@ -163,11 +164,19 @@ void main() {
     final speed = find.byType(NetworkSpeedCard);
     await tester.pump(const Duration(milliseconds: 100));
     expect(opacityOf(tester, speed), inExclusiveRange(0, 1));
-    expect(top(tester, find.byType(ProfilesCard)), closeTo(profiles, 4));
+    // The room has not closed yet: the gap to the next card is unchanged,
+    // wherever the addable section above has pushed the two of them.
+    expect(
+      top(tester, find.byType(ProfilesCard)) - top(tester, speed),
+      closeTo(gap, 4),
+    );
 
     await tester.pump(const Duration(milliseconds: 200));
     expect(opacityOf(tester, speed), 0);
-    expect(top(tester, find.byType(ProfilesCard)), lessThan(profiles - 4));
+    expect(
+      top(tester, find.byType(ProfilesCard)) - top(tester, speed),
+      lessThan(gap - 4),
+    );
 
     await settle(tester);
     expect(find.byType(NetworkSpeedCard), findsNothing);
@@ -228,8 +237,6 @@ void main() {
     ]);
     await pumpEditor(tester, size: const Size(412, 700));
     final position = positionOf(tester);
-    position.jumpTo(position.maxScrollExtent - 330);
-    await tester.pump();
     final before = position.pixels;
     final speed = find.byType(NetworkSpeedCard);
 

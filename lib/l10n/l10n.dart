@@ -7793,6 +7793,16 @@ class AppLocalizations {
     );
   }
 
+  /// `All cards have been added`
+  String get dashboardAddableEmpty {
+    return Intl.message(
+      'All cards have been added',
+      name: 'dashboardAddableEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `sing-box binary not found`
   String get singBoxBinaryMissing {
     return Intl.message(

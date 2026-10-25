@@ -465,6 +465,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("잘라내기"),
     "dark": MessageLookupByLibrary.simpleMessage("다크"),
     "dashboard": MessageLookupByLibrary.simpleMessage("대시보드"),
+    "dashboardAddableEmpty": MessageLookupByLibrary.simpleMessage(
+      "모든 카드가 추가되었습니다",
+    ),
     "dashboardAddableSection": MessageLookupByLibrary.simpleMessage("추가 가능"),
     "databaseWriteFailedTip": MessageLookupByLibrary.simpleMessage(
       "변경 사항을 저장하지 못해 되돌렸습니다",

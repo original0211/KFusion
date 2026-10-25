@@ -17,7 +17,7 @@ import 'widget_registry.dart';
 
 const _rowHeight = 64.0;
 const _rowGap = 8.0;
-const _addableTop = 14.0;
+const _addableGap = 14.0;
 const _swayLoop = Duration(milliseconds: 3600);
 const _swaysPerLoop = [6, 7, 5];
 const _swayPhaseStep = 1.7;
@@ -139,6 +139,14 @@ class _DashboardEditorState extends ConsumerState<DashboardEditor>
       }
     });
     _save();
+    // The card joins at the end; jump there so its entrance can build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final position = Scrollable.maybeOf(context)?.position;
+      if (position != null && position.hasPixels) {
+        position.jumpTo(position.maxScrollExtent);
+      }
+    });
   }
 
   void _reorder(int from, int to) {
@@ -183,6 +191,23 @@ class _DashboardEditorState extends ConsumerState<DashboardEditor>
         padding: widget.padding,
         sliver: SliverMainAxisGroup(
           slivers: [
+            // First, not last: below every card the rows read as missing.
+            SliverPadding(
+              padding: const EdgeInsets.only(bottom: _addableGap),
+              sliver: SliverList.list(
+                children: [
+                  _SectionLabel(appLocalizations.dashboardAddableSection),
+                  if (addable.isEmpty)
+                    _AddableEmpty(appLocalizations.dashboardAddableEmpty)
+                  else
+                    for (final card in addable)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: _rowGap),
+                        child: _AddRow(item: card, onAdd: () => _add(card)),
+                      ),
+                ],
+              ),
+            ),
             SliverReorderableList(
               itemCount: cards.length,
               itemBuilder: (_, index) {
@@ -224,20 +249,6 @@ class _DashboardEditorState extends ConsumerState<DashboardEditor>
               ),
               onReorderItem: _reorder,
             ),
-            if (addable.isNotEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.only(top: _addableTop),
-                sliver: SliverList.list(
-                  children: [
-                    _SectionLabel(appLocalizations.dashboardAddableSection),
-                    for (final card in addable)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: _rowGap),
-                        child: _AddRow(item: card, onAdd: () => _add(card)),
-                      ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -532,6 +543,25 @@ class _SectionLabel extends StatelessWidget {
         text,
         style: AppTextStyle.footnote
             .of(context, emphasized: true)
+            .copyWith(color: context.colorScheme.onSurfaceVariant),
+      ),
+    );
+  }
+}
+
+class _AddableEmpty extends StatelessWidget {
+  const _AddableEmpty(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: Text(
+        text,
+        style: AppTextStyle.footnote
+            .of(context)
             .copyWith(color: context.colorScheme.onSurfaceVariant),
       ),
     );

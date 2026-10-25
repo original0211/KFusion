@@ -936,6 +936,7 @@
   "editDashboard": "编辑仪表盘",
   "done": "完成",
   "dashboardAddableSection": "可添加",
+  "dashboardAddableEmpty": "全部组件都已添加",
   "singBoxBinaryMissing": "未找到 sing-box 二进制",
   "singBoxDownloadHint": "sing-box 未随包附带。可下载官方钉版（约 33 MB）到应用数据目录，应用升级不会丢失；也可按 tools/singbox/README.md 手工摆放 sing-box.exe。",
   "singBoxDownload": "下载 sing-box",
