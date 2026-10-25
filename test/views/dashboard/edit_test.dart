@@ -18,8 +18,8 @@ void main() {
   late ProviderContainer container;
 
   setUp(() async {
-    // These tests exercise the dashboard editor, which beginner mode
-    // hides by default; opt out of it here.
+    // These tests exercise the full dashboard; the beginner home narrows
+    // it to the first-run cards, so opt out of it here.
     await mockPreferences({'beginnerMode': false});
     container = ProviderContainer(
       overrides: [profilesProvider.overrideWith(TestProfiles.new)],
@@ -418,20 +418,26 @@ void main() {
     await teardown(tester);
   });
 
-  testWidgets('a landscape phone gets the fixed grid without an edit mode', (
+  testWidgets('a landscape phone gets the fixed grid, with an edit mode', (
     tester,
   ) async {
-    seed(const [DashboardWidget.currentOutbound, DashboardWidget.profiles]);
+    seed(const [
+      DashboardWidget.currentOutbound,
+      DashboardWidget.outboundMode,
+      DashboardWidget.profiles,
+    ]);
     await pumpDashboard(tester, size: const Size(915, 412));
 
-    expect(find.byTooltip('Edit dashboard'), findsNothing);
-    expect(find.byType(DashboardEditor), findsNothing);
+    expect(find.byTooltip('Edit dashboard'), findsOneWidget);
     expect(find.byType(OutboundModeBar), findsOneWidget);
+
+    await edit(tester);
+    expect(find.byType(DashboardEditor), findsOneWidget);
 
     await teardown(tester);
   });
 
-  testWidgets('turning to the fixed grid ends editing for good', (
+  testWidgets('editing carries over to the fixed grid and back', (
     tester,
   ) async {
     seed(const [DashboardWidget.currentOutbound, DashboardWidget.profiles]);
@@ -445,15 +451,19 @@ void main() {
     }
 
     await resize(const Size(915, 412));
-    expect(find.byType(DashboardEditor), findsNothing);
+    expect(find.byType(DashboardEditor), findsOneWidget);
     await resize(const Size(412, 1400));
+    expect(find.byType(DashboardEditor), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Done'));
+    await tester.pump();
     expect(find.byType(DashboardEditor), findsNothing);
     expect(find.byTooltip('Edit dashboard'), findsOneWidget);
 
     await teardown(tester);
   });
 
-  testWidgets('the desktop grid keeps its fixed layout without an edit mode', (
+  testWidgets('the desktop grid offers the same editing as the phone', (
     tester,
   ) async {
     await pumpDashboard(
@@ -462,8 +472,10 @@ void main() {
       size: const Size(1220, 900),
     );
 
-    expect(find.byTooltip('Edit dashboard'), findsNothing);
-    expect(find.byType(DashboardEditor), findsNothing);
+    expect(find.byTooltip('Edit dashboard'), findsOneWidget);
+
+    await edit(tester);
+    expect(find.byType(DashboardEditor), findsOneWidget);
 
     await teardown(tester);
   });
