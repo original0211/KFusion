@@ -80,6 +80,10 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
 
   @override
   void onServiceStopped() {
+    // A reported stop is the only word that a run has ended, so it is also
+    // where the core status is settled: without this write a status set at
+    // start outlives the core it described.
+    ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
     unawaited(ref.read(setupActionProvider.notifier).setRunning(false));
     super.onServiceStopped();
   }

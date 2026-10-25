@@ -82,7 +82,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
   }
 
   Future<void> start() async {
-    state = const AsyncData(SingBoxStatus(state: SingBoxState.starting));
+    state = const AsyncData(
+      SingBoxStatus(state: SingBoxState.starting, message: '正在启动 sing-box…'),
+    );
     if (system.isAndroid) {
       await _startAndroid();
       return;
@@ -188,16 +190,22 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       final (:rendered, :secret) = await _renderCurrentProfile(
         tunEnabled: true,
       );
-      if (ref.read(coreStatusProvider) == CoreStatus.connected) {
-        await ref.read(coreHandlerProvider).stop();
-        final stopped = await waitForValue<CoreStatus>(
-          read: () async => ref.read(coreStatusProvider),
-          target: CoreStatus.disconnected,
-        );
-        if (!stopped) {
-          throw StateError('mihomo 未能停止，sing-box 未启动，避免双核心同时运行。');
-        }
-      }
+      await ensureMihomoStopped(
+        mihomoRunning: () => ref.read(isStartProvider),
+        stopMihomo: () async {
+          try {
+            return await ref
+                .read(setupActionProvider.notifier)
+                .setRunning(false);
+          } catch (error) {
+            commonPrint.log(
+              'Unable to stop mihomo before the sing-box start: $error',
+              logLevel: LogLevel.error,
+            );
+            return false;
+          }
+        },
+      );
       final homeDir = await appPath.homeDirPath;
       final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
       await configDir.create(recursive: true);
@@ -286,6 +294,19 @@ Map<String, Object?> _asMap(Object? value) {
     };
   }
   return const {};
+}
+
+/// Stops a running mihomo through the run-state chain before a sing-box start.
+Future<void> ensureMihomoStopped({
+  required bool Function() mihomoRunning,
+  required Future<bool> Function() stopMihomo,
+}) async {
+  if (!mihomoRunning()) {
+    return;
+  }
+  if (!await stopMihomo()) {
+    throw StateError('mihomo 未能停止，sing-box 未启动，避免双核心同时运行。');
+  }
 }
 
 /// Polls [read] until it yields [target]; gives up after [timeout].

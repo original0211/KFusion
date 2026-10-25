@@ -169,15 +169,33 @@ void main() {
       expect(service.calls, ['shutdown']);
     });
 
-    test('a failed shutdown throws but still closes the gate', () async {
+    test('a failed shutdown throws and leaves the connection open', () async {
       await lib.start();
       service.shutdownResult = false;
 
       await expectLater(lib.stop(), throwsA(isA<StateError>()));
 
       service.shutdownResult = true;
+      service.onInvokeMethod = (call) =>
+          CoreMethodResponse(id: call.id, result: 'payload');
+      await expectLater(
+        lib.invokeMethod<String>(method: CoreMethod.getProxies),
+        completion('payload'),
+      );
+
+      final again = await lib.stop();
+      expect(again.outcome, CoreLifecycleOutcome.applied);
+      expect(service.calls.where((call) => call == 'shutdown'), hasLength(2));
+    });
+
+    test('a successful stop closes the gate', () async {
+      await lib.start();
+      await lib.stop();
+      service.calls.clear();
+
       final again = await lib.stop();
       expect(again.outcome, CoreLifecycleOutcome.coalesced);
+      expect(service.calls, isEmpty);
     });
   });
 

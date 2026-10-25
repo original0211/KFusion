@@ -91,11 +91,14 @@ class CoreLib extends CoreHandlerInterface {
         outcome: CoreLifecycleOutcome.coalesced,
       );
     }
-    _connectedCompleter = Completer<bool>();
     final stopped = await _service?.shutdown() ?? true;
     if (!stopped) {
       throw StateError('Android Core service shutdown failed');
     }
+    // The gate closes only once the shutdown has actually been answered: a
+    // failed one leaves the live connection usable instead of stranding
+    // every later call on a completer nothing will ever complete.
+    _connectedCompleter = Completer<bool>();
     return CoreLifecycleResult(
       revision: revision,
       outcome: CoreLifecycleOutcome.applied,

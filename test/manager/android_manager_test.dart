@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/manager/android_manager.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/plugins/service.dart';
 import 'package:kfusion/providers/action.dart';
+import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/providers/state.dart';
@@ -85,6 +87,23 @@ void main() {
     listener.onServiceStopped();
     await tester.pump();
 
+    expect(_RecordingSetupAction.requests, [false]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a stop the service reports settles the core status', (
+    tester,
+  ) async {
+    await pumpAndroidManager(tester);
+    container.read(coreStatusProvider.notifier).value = CoreStatus.connected;
+    final listener =
+        tester.state(find.byType(AndroidManager)) as ServiceListener;
+
+    listener.onServiceStopped();
+    await tester.pump();
+
+    expect(container.read(coreStatusProvider), CoreStatus.disconnected);
     expect(_RecordingSetupAction.requests, [false]);
 
     await tester.pumpWidget(const SizedBox.shrink());
