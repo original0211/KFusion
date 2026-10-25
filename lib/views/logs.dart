@@ -228,38 +228,41 @@ class _LogBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final styles = RecordTextStyles.of(context);
+    final titleStyle = styles.title.toJetBrainsMono;
+    final primaryStyle = styles.primary.toJetBrainsMono;
+    final secondaryStyle = styles.secondary.toJetBrainsMono;
     final route = payload.route;
     if (route == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SelectableText(payload.message, style: styles.primary),
-          if (payload.tag.isNotEmpty)
-            Text(payload.tag, style: styles.secondary),
+          SelectableText(payload.message, style: primaryStyle),
+          if (payload.tag.isNotEmpty) Text(payload.tag, style: secondaryStyle),
         ],
       );
     }
     return SelectableText.rich(
       TextSpan(
         children: [
-          TextSpan(text: route.destination, style: styles.title),
+          TextSpan(text: route.destination, style: titleStyle),
           if (route.error.isNotEmpty)
             TextSpan(
               text: '\n${route.error}',
-              style: styles.secondary.copyWith(color: errorColor),
+              style: secondaryStyle.copyWith(color: errorColor),
             ),
           const TextSpan(text: '\n'),
           if (route.rule.isNotEmpty) ...[
-            TextSpan(text: route.rule, style: styles.secondary),
-            TextSpan(text: ' \u2192 ', style: styles.secondary.toJetBrainsMono),
+            TextSpan(text: route.rule, style: secondaryStyle),
+            TextSpan(text: ' \u2192 ', style: secondaryStyle),
           ],
           TextSpan(
             text: route.proxy,
             style: AppTextStyle.footnote
                 .of(context, emphasized: true)
-                .copyWith(color: context.colorScheme.primary),
+                .toJetBrainsMono
+                .copyWith(color: context.colorScheme.onSurface),
           ),
-          TextSpan(text: '\n$_sourceText', style: styles.secondary),
+          TextSpan(text: '\n$_sourceText', style: secondaryStyle),
         ],
       ),
     );
