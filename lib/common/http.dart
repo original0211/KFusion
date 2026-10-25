@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/state.dart';
@@ -42,16 +43,30 @@ class FlClashHttpOverrides extends HttpOverrides {
     }
     final isStart = read(isStartProvider);
     final suspend = read(suspendProvider);
-    if (!isStart || suspend) return 'DIRECT';
-    final mixedPort = read(
-      patchClashConfigProvider.select((state) => state.mixedPort),
-    );
-    final authentication = read(
-      networkSettingProvider.select((state) => state.authentication),
-    );
-    final credentials = authentication.credentials;
-    final userInfo = credentials.isNotEmpty ? '${credentials.first}@' : '';
-    return 'PROXY ${userInfo}localhost:$mixedPort';
+    if (isStart && !suspend) {
+      final mixedPort = read(
+        patchClashConfigProvider.select((state) => state.mixedPort),
+      );
+      final authentication = read(
+        networkSettingProvider.select((state) => state.authentication),
+      );
+      final credentials = authentication.credentials;
+      final userInfo = credentials.isNotEmpty ? '${credentials.first}@' : '';
+      return 'PROXY ${userInfo}localhost:$mixedPort';
+    }
+    if (!isStart && !suspend && _singBoxRunning(read)) {
+      return 'PROXY localhost:$singBoxMixedPort';
+    }
+    return 'DIRECT';
+  }
+
+  static bool _singBoxRunning(ProviderReader read) {
+    // A reader that cannot answer degrades to DIRECT, never broken traffic.
+    try {
+      return read(singBoxActionProvider).value?.state == SingBoxState.running;
+    } catch (_) {
+      return false;
+    }
   }
 
   static bool allowBadCertificate(

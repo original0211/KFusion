@@ -3,11 +3,25 @@ import 'dart:typed_data';
 
 import 'package:kfusion/common/constant.dart';
 import 'package:kfusion/common/http.dart';
+import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
+
+class _FakeSingBoxAction extends SingBoxAction {
+  _FakeSingBoxAction(this._running);
+
+  final bool _running;
+
+  @override
+  Future<SingBoxStatus> build() async {
+    return SingBoxStatus(
+      state: _running ? SingBoxState.running : SingBoxState.idle,
+    );
+  }
+}
 
 class _FakeCertificate implements X509Certificate {
   @override
@@ -41,9 +55,15 @@ void main() {
     List<String> excludeSSIDs = const [],
     int mixedPort = 7890,
     bool checkCertificate = true,
+    bool singBoxRunning = false,
   }) {
     final container = ProviderContainer(
-      overrides: [excludeSSIDsProvider.overrideWithValue(excludeSSIDs)],
+      overrides: [
+        excludeSSIDsProvider.overrideWithValue(excludeSSIDs),
+        singBoxActionProvider.overrideWith(
+          () => _FakeSingBoxAction(singBoxRunning),
+        ),
+      ],
     );
     addTearDown(container.dispose);
     container.read(runTimeProvider.notifier).value = running ? 1 : null;
@@ -111,6 +131,37 @@ void main() {
     final container = buildContainer(running: false);
 
     expect(FlClashHttpOverrides.findProxyFor(container, remote), 'DIRECT');
+  });
+
+  test('routes through the sing-box port while sing-box runs', () async {
+    final container = buildContainer(running: false, singBoxRunning: true);
+    await container.read(singBoxActionProvider.future);
+
+    expect(
+      FlClashHttpOverrides.findProxyFor(container, remote),
+      'PROXY localhost:$singBoxMixedPort',
+    );
+  });
+
+  test('stays direct while sing-box is idle and mihomo is stopped', () async {
+    final container = buildContainer(running: false);
+    await container.read(singBoxActionProvider.future);
+
+    expect(FlClashHttpOverrides.findProxyFor(container, remote), 'DIRECT');
+  });
+
+  test('mihomo keeps priority while it is running', () async {
+    final container = buildContainer(
+      running: true,
+      mixedPort: 7891,
+      singBoxRunning: true,
+    );
+    await container.read(singBoxActionProvider.future);
+
+    expect(
+      FlClashHttpOverrides.findProxyFor(container, remote),
+      'PROXY localhost:7891',
+    );
   });
 
   test('bypasses the proxy on an excluded SSID', () {

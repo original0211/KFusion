@@ -222,18 +222,23 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m76(link) => "Aucun proxy n’a pu être lu dans ${link}";
 
-  static String m77(label) => "${label} doit être un seul élément";
+  static String m77(percent) => "Téléchargement de sing-box… ${percent} %";
 
-  static String m78(value) => "Pic ${value}";
+  static String m78(version, path) =>
+      "Binaire géré par l’application (version ${version}) : ${path}";
 
-  static String m79(value) => "Total ${value}";
+  static String m79(label) => "${label} doit être un seul élément";
 
-  static String m80(label) => "${label} doit être une URL";
+  static String m80(value) => "Pic ${value}";
 
-  static String m81(count) =>
+  static String m81(value) => "Total ${value}";
+
+  static String m82(label) => "${label} doit être une URL";
+
+  static String m83(count) =>
       "${Intl.plural(count, one: 'il y a 1 an', other: 'il y a ${count} ans')}";
 
-  static String m82(count) =>
+  static String m84(count) =>
       "${Intl.plural(count, other: 'il y a ${count} a')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -1010,9 +1015,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Saisissez le contenu de la règle",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Ce système masque la liste des apps installées tant que l’autorisation n’est pas accordée. Accordez-la pour configurer le proxy par app.",
     ),
@@ -1802,12 +1808,26 @@ class MessageLookup extends MessageLookupByLibrary {
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Le lancement silencieux démarre l’app sans afficher la fenêtre.",
     ),
+    "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
+      "Binaire sing-box introuvable",
+    ),
+    "singBoxDownload": MessageLookupByLibrary.simpleMessage(
+      "Télécharger sing-box",
+    ),
+    "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
+      "sing-box n’est pas inclus. Téléchargez la version officielle épinglée (environ 33 Mo) dans le dossier de données de l’application ; elle survit aux mises à jour. Vous pouvez aussi placer sing-box.exe manuellement, voir tools/singbox/README.md.",
+    ),
+    "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage(
+      "Réessayer le téléchargement",
+    ),
+    "singBoxDownloading": m77,
+    "singBoxManagedBinary": m78,
     "singleAdd": MessageLookupByLibrary.simpleMessage("Ajout unique"),
     "singleImport": MessageLookupByLibrary.simpleMessage("Importation unique"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "Saisissez un seul lien ici ; pour en modifier plusieurs, utilisez la modification rapide de la liste",
     ),
-    "singleValueTip": m77,
+    "singleValueTip": m79,
     "size": MessageLookupByLibrary.simpleMessage("Taille"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage(
       "Ignorer la vérification du certificat",
@@ -1923,8 +1943,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Envoyé"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Port TProxy"),
     "traffic": MessageLookupByLibrary.simpleMessage("Trafic"),
-    "trafficPeak": m78,
-    "trafficTotal": m79,
+    "trafficPeak": m80,
+    "trafficTotal": m81,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Trafic utilisé"),
     "transport": MessageLookupByLibrary.simpleMessage("Transport"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -1962,7 +1982,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Bande passante d’envoi",
     ),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m80,
+    "urlTip": m82,
     "useHosts": MessageLookupByLibrary.simpleMessage("Utiliser hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Utiliser les hosts du système",
@@ -1991,8 +2011,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Écrire dans le système règle aussi l’horloge système ; Android l’ignore.",
     ),
-    "yearsAgo": m81,
-    "yearsAgoShort": m82,
+    "yearsAgo": m83,
+    "yearsAgoShort": m84,
     "yes": MessageLookupByLibrary.simpleMessage("Oui"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Chinois simplifié"),
   };

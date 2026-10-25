@@ -190,17 +190,21 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m76(link) => "읽을 수 있는 프록시가 없습니다: ${link}";
 
-  static String m77(label) => "${label}은(는) 하나만 입력해야 합니다";
+  static String m77(percent) => "sing-box 다운로드 중… ${percent}%";
 
-  static String m78(value) => "최고 ${value}";
+  static String m78(version, path) => "앱이 관리하는 바이너리(버전 ${version}): ${path}";
 
-  static String m79(value) => "합계 ${value}";
+  static String m79(label) => "${label}은(는) 하나만 입력해야 합니다";
 
-  static String m80(label) => "${label}은(는) URL이어야 합니다";
+  static String m80(value) => "최고 ${value}";
 
-  static String m81(count) => "${Intl.plural(count, other: '${count}년 전')}";
+  static String m81(value) => "합계 ${value}";
 
-  static String m82(count) => "${Intl.plural(count, other: '${count}년 전')}";
+  static String m82(label) => "${label}은(는) URL이어야 합니다";
+
+  static String m83(count) => "${Intl.plural(count, other: '${count}년 전')}";
+
+  static String m84(count) => "${Intl.plural(count, other: '${count}년 전')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1405,12 +1409,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "백그라운드 실행은 창을 표시하지 않고 시작합니다.",
     ),
+    "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
+      "sing-box 바이너리를 찾을 수 없습니다",
+    ),
+    "singBoxDownload": MessageLookupByLibrary.simpleMessage("sing-box 다운로드"),
+    "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
+      "sing-box는 함께 제공되지 않습니다. 고정된 공식 빌드(약 33MB)를 앱 데이터 폴더에 다운로드하면 앱 업데이트 후에도 유지됩니다. tools/singbox/README.md를 참고해 sing-box.exe를 수동으로 배치할 수도 있습니다.",
+    ),
+    "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage("다운로드 다시 시도"),
+    "singBoxDownloading": m77,
+    "singBoxManagedBinary": m78,
     "singleAdd": MessageLookupByLibrary.simpleMessage("개별 추가"),
     "singleImport": MessageLookupByLibrary.simpleMessage("개별 가져오기"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "여기에는 링크를 하나만 입력하세요. 여러 개는 목록의 빠른 편집에서 편집하세요",
     ),
-    "singleValueTip": m77,
+    "singleValueTip": m79,
     "size": MessageLookupByLibrary.simpleMessage("크기"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage("인증서 검증 건너뛰기"),
     "skipDomain": MessageLookupByLibrary.simpleMessage("건너뛸 도메인"),
@@ -1504,8 +1518,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("업로드량"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxy 포트"),
     "traffic": MessageLookupByLibrary.simpleMessage("트래픽"),
-    "trafficPeak": m78,
-    "trafficTotal": m79,
+    "trafficPeak": m80,
+    "trafficTotal": m81,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("트래픽 사용량"),
     "transport": MessageLookupByLibrary.simpleMessage("전송"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -1537,7 +1551,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("업로드"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("업로드 대역폭"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m80,
+    "urlTip": m82,
     "useHosts": MessageLookupByLibrary.simpleMessage("hosts 사용"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("시스템 hosts 사용"),
     "usedShort": MessageLookupByLibrary.simpleMessage("사용"),
@@ -1560,8 +1574,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "시스템에 기록하면 시스템 시계도 설정합니다. Android에서는 무시됩니다.",
     ),
-    "yearsAgo": m81,
-    "yearsAgoShort": m82,
+    "yearsAgo": m83,
+    "yearsAgoShort": m84,
     "yes": MessageLookupByLibrary.simpleMessage("예"),
     "zhCN": MessageLookupByLibrary.simpleMessage("중국어 간체"),
   };

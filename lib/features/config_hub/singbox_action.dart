@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/core/singbox/singbox_binary.dart';
 import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/core_kind.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
@@ -98,16 +99,24 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
     try {
       final homeDir = await appPath.homeDirPath;
       final stored = await Preferences().getSingBoxBinaryPath();
-      final binary = findSingBoxBinary(
-        singBoxCandidates(
-          executableDir: appPath.executableDirPath,
-          homeDir: homeDir,
-          storedPath: stored,
-        ),
+      var lastPercent = -1;
+      final binary = await singBoxBinaryManager.ensure(
+        executableDir: appPath.executableDirPath,
+        homeDir: homeDir,
+        storedPath: stored,
+        onProgress: (received, total) {
+          if (total == null) return;
+          final percent = received * 100 ~/ total;
+          if (percent == lastPercent) return;
+          lastPercent = percent;
+          state = AsyncData(
+            SingBoxStatus(
+              state: SingBoxState.starting,
+              message: '正在下载 sing-box 二进制（$percent%）',
+            ),
+          );
+        },
       );
-      if (binary == null) {
-        throw StateError('未找到 sing-box 二进制，见 tools/singbox/README.md。');
-      }
       final tunEnabled = await Preferences().getSingBoxTunEnabled();
       if (tunEnabled && !await isWindowsAdmin()) {
         throw StateError('开启 TUN 需要管理员权限，当前不是管理员，已拒绝启动。');

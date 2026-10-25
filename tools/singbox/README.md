@@ -8,10 +8,31 @@ order:
 2. `sing-box.exe` next to the KFusion executable.
 3. `singbox/sing-box.exe` inside the application support directory.
 
-## Obtaining a binary
+## Managed download (default)
 
-Download a Windows release from the official sing-box releases page
-(github.com/SagerNet/sing-box) and pick the asset matching the machine:
+When none of the locations above holds a binary, the app downloads one
+itself (`lib/core/singbox/singbox_binary.dart`): starting sing-box, or the
+download button in Settings → General, fetches the pinned official build —
+sing-box 1.14.4, `sing-box-1.14.4-windows-amd64.zip` or
+`sing-box-1.14.4-windows-arm64.zip` from the SagerNet/sing-box GitHub
+release — into location 3. The zip's SHA-256 must match the digest pinned
+in the source (taken from the release's asset digests and re-verified
+against downloaded copies) or the download is discarded. Because the
+binary lives in the application support directory, app updates, which
+replace the install directory, no longer remove it.
+
+The first download runs without any core up, so it goes direct and can be
+slow on networks where GitHub is hard to reach; the Settings section shows
+progress and offers a retry. The downloaded `sing-box.exe` is unsigned and
+landed under AppData, so SmartScreen or Defender may flag its first run —
+that check happens on the device, not in CI.
+
+## Placing a binary manually
+
+Manual placement still works and wins over the managed download: any
+candidate found above is used as-is. Download a Windows release from the
+official sing-box releases page (github.com/SagerNet/sing-box) and pick
+the asset matching the machine:
 `sing-box-<version>-windows-amd64.zip` for x64, `sing-box-<version>-windows-arm64.zip`
 for ARM64. Verify the published checksum for the asset before unzipping, then
 place `sing-box.exe` at one of the locations above.
@@ -22,12 +43,11 @@ KFusion renders: `external_controller`, `secret`, `default_mode`,
 
 ## CI note
 
-The GitHub Actions workflow does not download the binary yet. Adding a
-download step touches `.github/workflows/build.yaml`, which the API token
-cannot write (it lacks the `workflow` scope); that step is a separate
-browser task. Until it lands, CI validates the renderer, the runner logic
-with a fake process launcher, and the mutual-exclusion logic, but not a
-real sing-box process.
+The GitHub Actions workflow does not download the binary at build time;
+the app itself downloads it at first use instead, so no workflow step is
+needed. CI validates the renderer, the runner logic with a fake process
+launcher, the mutual-exclusion logic and the managed download against a
+fake downloader, but not a real sing-box process.
 
 ## Android
 

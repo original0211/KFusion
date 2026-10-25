@@ -7793,12 +7793,71 @@ class AppLocalizations {
     );
   }
 
+  /// `sing-box binary not found`
+  String get singBoxBinaryMissing {
+    return Intl.message(
+      'sing-box binary not found',
+      name: 'singBoxBinaryMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `KFusion does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.`
+  String get singBoxDownloadHint {
+    return Intl.message(
+      'KFusion does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.',
+      name: 'singBoxDownloadHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download sing-box`
+  String get singBoxDownload {
+    return Intl.message(
+      'Download sing-box',
+      name: 'singBoxDownload',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Retry download`
+  String get singBoxDownloadRetry {
+    return Intl.message(
+      'Retry download',
+      name: 'singBoxDownloadRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Downloading sing-box… {percent}%`
+  String singBoxDownloading(Object percent) {
+    return Intl.message(
+      'Downloading sing-box… $percent%',
+      name: 'singBoxDownloading',
+      desc: '',
+      args: [percent],
+    );
+  }
+
+  /// `App-managed binary (version {version}): {path}`
+  String singBoxManagedBinary(Object version, Object path) {
+    return Intl.message(
+      'App-managed binary (version $version): $path',
+      name: 'singBoxManagedBinary',
+      desc: '',
+      args: [version, path],
+    );
+  }
+
   /// `{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}`
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',

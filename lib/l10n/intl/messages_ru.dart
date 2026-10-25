@@ -211,18 +211,23 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m76(link) => "Не удалось прочитать прокси из ${link}";
 
-  static String m77(label) => "«${label}» — только одно значение";
+  static String m77(percent) => "Загрузка sing-box… ${percent}%";
 
-  static String m78(value) => "Пик ${value}";
+  static String m78(version, path) =>
+      "Управляемый приложением бинарный файл (версия ${version}): ${path}";
 
-  static String m79(value) => "Всего ${value}";
+  static String m79(label) => "«${label}» — только одно значение";
 
-  static String m80(label) => "Значение «${label}» должно быть URL";
+  static String m80(value) => "Пик ${value}";
 
-  static String m81(count) =>
+  static String m81(value) => "Всего ${value}";
+
+  static String m82(label) => "Значение «${label}» должно быть URL";
+
+  static String m83(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
-  static String m82(count) =>
+  static String m84(count) =>
       "${Intl.plural(count, one: '${count} г. назад', few: '${count} г. назад', many: '${count} л. назад', other: '${count} г. назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -981,9 +986,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -1749,12 +1755,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Тихий запуск не показывает окно.",
     ),
+    "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
+      "Бинарный файл sing-box не найден",
+    ),
+    "singBoxDownload": MessageLookupByLibrary.simpleMessage("Скачать sing-box"),
+    "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
+      "sing-box не входит в комплект. Скачайте закреплённую официальную сборку (около 33 МБ) в папку данных приложения — она сохранится при обновлениях. Можно также разместить sing-box.exe вручную, см. tools/singbox/README.md.",
+    ),
+    "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage(
+      "Повторить загрузку",
+    ),
+    "singBoxDownloading": m77,
+    "singBoxManagedBinary": m78,
     "singleAdd": MessageLookupByLibrary.simpleMessage("По одному"),
     "singleImport": MessageLookupByLibrary.simpleMessage("По одному"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "Здесь укажите одну ссылку, несколько можно задать в быстром редактировании списка",
     ),
-    "singleValueTip": m77,
+    "singleValueTip": m79,
     "size": MessageLookupByLibrary.simpleMessage("Размер"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage(
       "Пропускать проверку сертификата",
@@ -1872,8 +1890,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Отдано"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Порт TProxy"),
     "traffic": MessageLookupByLibrary.simpleMessage("Трафик"),
-    "trafficPeak": m78,
-    "trafficTotal": m79,
+    "trafficPeak": m80,
+    "trafficTotal": m81,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Статистика трафика"),
     "transport": MessageLookupByLibrary.simpleMessage("Транспорт"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -1909,7 +1927,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("Отдача"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Скорость отдачи"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m80,
+    "urlTip": m82,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системный hosts",
@@ -1942,8 +1960,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "«Записывать в систему» также устанавливает системные часы; Android это игнорирует.",
     ),
-    "yearsAgo": m81,
-    "yearsAgoShort": m82,
+    "yearsAgo": m83,
+    "yearsAgoShort": m84,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };

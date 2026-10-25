@@ -189,17 +189,21 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m76(link) => "${link} からプロキシを読み取れませんでした";
 
-  static String m77(label) => "${label}は1項目のみ指定できます";
+  static String m77(percent) => "sing-box をダウンロード中… ${percent}%";
 
-  static String m78(value) => "ピーク ${value}";
+  static String m78(version, path) => "アプリ管理のバイナリ（バージョン ${version}）：${path}";
 
-  static String m79(value) => "累計 ${value}";
+  static String m79(label) => "${label}は1項目のみ指定できます";
 
-  static String m80(label) => "${label}はURLである必要があります";
+  static String m80(value) => "ピーク ${value}";
 
-  static String m81(count) => "${count} 年前";
+  static String m81(value) => "累計 ${value}";
 
-  static String m82(count) => "${count} 年前";
+  static String m82(label) => "${label}はURLである必要があります";
+
+  static String m83(count) => "${count} 年前";
+
+  static String m84(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1434,12 +1438,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "サイレント起動ではウィンドウを表示しません。",
     ),
+    "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
+      "sing-box バイナリが見つかりません",
+    ),
+    "singBoxDownload": MessageLookupByLibrary.simpleMessage("sing-box をダウンロード"),
+    "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
+      "sing-box は同梱されていません。ピン留めされた公式ビルド（約 33 MB）をアプリのデータフォルダーにダウンロードできます。アプリを更新しても残ります。tools/singbox/README.md の手順で sing-box.exe を手動配置することもできます。",
+    ),
+    "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage("ダウンロードを再試行"),
+    "singBoxDownloading": m77,
+    "singBoxManagedBinary": m78,
     "singleAdd": MessageLookupByLibrary.simpleMessage("個別追加"),
     "singleImport": MessageLookupByLibrary.simpleMessage("個別インポート"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "ここにはリンクを 1 つだけ入力してください。複数の場合は一覧のクイック編集を使ってください",
     ),
-    "singleValueTip": m77,
+    "singleValueTip": m79,
     "size": MessageLookupByLibrary.simpleMessage("サイズ"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage("証明書の検証をスキップ"),
     "skipDomain": MessageLookupByLibrary.simpleMessage("スキップするドメイン"),
@@ -1531,8 +1545,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("アップロード量"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxyポート"),
     "traffic": MessageLookupByLibrary.simpleMessage("通信量"),
-    "trafficPeak": m78,
-    "trafficTotal": m79,
+    "trafficPeak": m80,
+    "trafficTotal": m81,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック統計"),
     "transport": MessageLookupByLibrary.simpleMessage("トランスポート"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -1562,7 +1576,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("アップロード帯域幅"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m80,
+    "urlTip": m82,
     "useHosts": MessageLookupByLibrary.simpleMessage("Hostsを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムのHostsを使用"),
     "usedShort": MessageLookupByLibrary.simpleMessage("使用済み"),
@@ -1585,8 +1599,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "システムに書き込むを有効にするとシステムクロックも設定します。Android では無視されます。",
     ),
-    "yearsAgo": m81,
-    "yearsAgoShort": m82,
+    "yearsAgo": m83,
+    "yearsAgoShort": m84,
     "yes": MessageLookupByLibrary.simpleMessage("はい"),
     "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };

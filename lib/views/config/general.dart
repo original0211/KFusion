@@ -1,4 +1,5 @@
 import 'package:kfusion/common/common.dart';
+import 'package:kfusion/core/singbox/singbox_binary.dart';
 import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/config_hub.dart';
@@ -56,28 +57,137 @@ class BeginnerModeItem extends ConsumerWidget {
   }
 }
 
-class SingBoxStatusItem extends ConsumerWidget {
+class SingBoxStatusItem extends ConsumerStatefulWidget {
   const SingBoxStatusItem({super.key});
 
-  Future<String?> _findBinary() async {
+  @override
+  ConsumerState<SingBoxStatusItem> createState() => _SingBoxStatusItemState();
+}
+
+class _SingBoxStatusItemState extends ConsumerState<SingBoxStatusItem> {
+  String? _binary;
+  String? _managedPath;
+  var _binaryChecked = false;
+  var _downloading = false;
+  double? _progress;
+  String? _downloadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshBinary();
+  }
+
+  Future<void> _refreshBinary() async {
     final homeDir = await appPath.homeDirPath;
     final stored = await Preferences().getSingBoxBinaryPath();
-    return findSingBoxBinary(
+    final binary = findSingBoxBinary(
       singBoxCandidates(
         executableDir: appPath.executableDirPath,
         homeDir: homeDir,
         storedPath: stored,
       ),
     );
+    if (!mounted) return;
+    setState(() {
+      _binary = binary;
+      _managedPath = singBoxManagedPath(homeDir);
+      _binaryChecked = true;
+    });
+  }
+
+  Future<void> _downloadBinary() async {
+    setState(() {
+      _downloading = true;
+      _progress = null;
+      _downloadError = null;
+    });
+    try {
+      final homeDir = await appPath.homeDirPath;
+      final stored = await Preferences().getSingBoxBinaryPath();
+      final path = await singBoxBinaryManager.ensure(
+        executableDir: appPath.executableDirPath,
+        homeDir: homeDir,
+        storedPath: stored,
+        onProgress: (received, total) {
+          if (!mounted || total == null) return;
+          setState(() => _progress = received / total);
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _binary = path;
+        _managedPath = singBoxManagedPath(homeDir);
+        _binaryChecked = true;
+        _downloading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _downloading = false;
+        _downloadError = e.toString();
+      });
+    }
+  }
+
+  Widget _binarySection(AppLocalizations l10n) {
+    final binary = _binary;
+    if (!_binaryChecked) return const SizedBox.shrink();
+    if (binary != null) {
+      return Text(
+        binary == _managedPath
+            ? l10n.singBoxManagedBinary(singBoxPinnedVersion, binary)
+            : '二进制：$binary',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.singBoxBinaryMissing),
+        Text(l10n.singBoxDownloadHint),
+        if (_downloadError != null) Text(_downloadError!),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            FilledButton(
+              onPressed: _downloading ? null : _downloadBinary,
+              child: Text(
+                _downloadError == null
+                    ? l10n.singBoxDownload
+                    : l10n.singBoxDownloadRetry,
+              ),
+            ),
+            if (_downloading) ...[
+              const SizedBox(width: 12),
+              Expanded(child: LinearProgressIndicator(value: _progress)),
+              if (_progress != null) ...[
+                const SizedBox(width: 12),
+                Text(l10n.singBoxDownloading((_progress! * 100).round())),
+              ],
+            ],
+          ],
+        ),
+      ],
+    );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final status =
         ref.watch(singBoxActionProvider).value ??
         const SingBoxStatus(state: SingBoxState.idle);
     final running = status.state == SingBoxState.running;
     final starting = status.state == SingBoxState.starting;
+    // A start can fetch the binary itself; rescan once it settles so the
+    // section below switches from the download offer to the found binary.
+    ref.listen(singBoxActionProvider, (previous, next) {
+      final settled = next.value?.state;
+      if (settled == SingBoxState.running ||
+          settled == SingBoxState.idle ||
+          settled == SingBoxState.error) {
+        _refreshBinary();
+      }
+    });
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -90,19 +200,9 @@ class SingBoxStatusItem extends ConsumerWidget {
           ),
         ),
         if (system.isWindows)
-          FutureBuilder<String?>(
-            future: _findBinary(),
-            builder: (context, snapshot) {
-              final binary = snapshot.data;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  binary == null
-                      ? '未找到 sing-box 二进制，见 tools/singbox/README.md'
-                      : '二进制：$binary',
-                ),
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _binarySection(context.appLocalizations),
           ),
         if (system.isWindows || system.isAndroid)
           Padding(

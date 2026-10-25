@@ -186,17 +186,21 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m76(link) => "无法从 ${link} 中读取代理";
 
-  static String m77(label) => "${label}只能是一项";
+  static String m77(percent) => "正在下载 sing-box…${percent}%";
 
-  static String m78(value) => "峰值 ${value}";
+  static String m78(version, path) => "应用托管的二进制（版本 ${version}）：${path}";
 
-  static String m79(value) => "累计 ${value}";
+  static String m79(label) => "${label}只能是一项";
 
-  static String m80(label) => "${label}必须为URL";
+  static String m80(value) => "峰值 ${value}";
 
-  static String m81(count) => "${count} 年前";
+  static String m81(value) => "累计 ${value}";
 
-  static String m82(count) => "${count} 年前";
+  static String m82(label) => "${label}必须为URL";
+
+  static String m83(count) => "${count} 年前";
+
+  static String m84(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1293,12 +1297,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "sidebarBlurDesc": MessageLookupByLibrary.simpleMessage("侧边栏透出窗口后方模糊的桌面"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("静默启动"),
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage("静默启动时不显示窗口。"),
+    "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
+      "未找到 sing-box 二进制",
+    ),
+    "singBoxDownload": MessageLookupByLibrary.simpleMessage("下载 sing-box"),
+    "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
+      "sing-box 未随包附带。可下载官方钉版（约 33 MB）到应用数据目录，应用升级不会丢失；也可按 tools/singbox/README.md 手工摆放 sing-box.exe。",
+    ),
+    "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage("重试下载"),
+    "singBoxDownloading": m77,
+    "singBoxManagedBinary": m78,
     "singleAdd": MessageLookupByLibrary.simpleMessage("单条添加"),
     "singleImport": MessageLookupByLibrary.simpleMessage("单条导入"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "这里只能填写一条链接，多条请在列表的快速编辑中填写",
     ),
-    "singleValueTip": m77,
+    "singleValueTip": m79,
     "size": MessageLookupByLibrary.simpleMessage("尺寸"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage("跳过证书验证"),
     "skipDomain": MessageLookupByLibrary.simpleMessage("跳过域名"),
@@ -1382,8 +1396,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("上传总量"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy端口"),
     "traffic": MessageLookupByLibrary.simpleMessage("流量"),
-    "trafficPeak": m78,
-    "trafficTotal": m79,
+    "trafficPeak": m80,
+    "trafficTotal": m81,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量统计"),
     "transport": MessageLookupByLibrary.simpleMessage("传输协议"),
     "tun": MessageLookupByLibrary.simpleMessage("虚拟网卡"),
@@ -1413,7 +1427,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("上行带宽"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m80,
+    "urlTip": m82,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "usedShort": MessageLookupByLibrary.simpleMessage("已用"),
@@ -1436,8 +1450,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "写入系统会同时设置系统时钟，Android 上不生效。",
     ),
-    "yearsAgo": m81,
-    "yearsAgoShort": m82,
+    "yearsAgo": m83,
+    "yearsAgoShort": m84,
     "yes": MessageLookupByLibrary.simpleMessage("是"),
     "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };

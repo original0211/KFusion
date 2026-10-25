@@ -213,18 +213,23 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m76(link) => "No proxy could be read from ${link}";
 
-  static String m77(label) => "${label} must be a single item";
+  static String m77(percent) => "Downloading sing-box… ${percent}%";
 
-  static String m78(value) => "Peak ${value}";
+  static String m78(version, path) =>
+      "App-managed binary (version ${version}): ${path}";
 
-  static String m79(value) => "Total ${value}";
+  static String m79(label) => "${label} must be a single item";
 
-  static String m80(label) => "${label} must be a URL";
+  static String m80(value) => "Peak ${value}";
 
-  static String m81(count) =>
+  static String m81(value) => "Total ${value}";
+
+  static String m82(label) => "${label} must be a URL";
+
+  static String m83(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
-  static String m82(count) => "${Intl.plural(count, other: '${count}y ago')}";
+  static String m84(count) => "${Intl.plural(count, other: '${count}y ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -944,9 +949,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Enter the rule content",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -1670,12 +1676,26 @@ class MessageLookup extends MessageLookupByLibrary {
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Silent launch starts without showing the window.",
     ),
+    "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
+      "sing-box binary not found",
+    ),
+    "singBoxDownload": MessageLookupByLibrary.simpleMessage(
+      "Download sing-box",
+    ),
+    "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
+      "KFusion does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.",
+    ),
+    "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage(
+      "Retry download",
+    ),
+    "singBoxDownloading": m77,
+    "singBoxManagedBinary": m78,
     "singleAdd": MessageLookupByLibrary.simpleMessage("Single add"),
     "singleImport": MessageLookupByLibrary.simpleMessage("Single import"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "Enter one link here; edit several from the quick edit of the list",
     ),
-    "singleValueTip": m77,
+    "singleValueTip": m79,
     "size": MessageLookupByLibrary.simpleMessage("Size"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage(
       "Skip certificate verification",
@@ -1783,8 +1803,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Uploaded"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxy port"),
     "traffic": MessageLookupByLibrary.simpleMessage("Traffic"),
-    "trafficPeak": m78,
-    "trafficTotal": m79,
+    "trafficPeak": m80,
+    "trafficTotal": m81,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),
     "transport": MessageLookupByLibrary.simpleMessage("Transport"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -1818,7 +1838,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Upload bandwidth"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m80,
+    "urlTip": m82,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "usedShort": MessageLookupByLibrary.simpleMessage("used"),
@@ -1843,8 +1863,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Write to system also sets the system clock; Android ignores it.",
     ),
-    "yearsAgo": m81,
-    "yearsAgoShort": m82,
+    "yearsAgo": m83,
+    "yearsAgoShort": m84,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
