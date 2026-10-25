@@ -288,18 +288,23 @@ void main() {
       );
     });
 
-    testWidgets('gives up instead of hanging when no connection arrives', (
+    testWidgets('reports a disconnected transport when no connection arrives', (
       tester,
     ) async {
-      Object? result = 'unset';
-      final pending = lib
-          .invokeMethod<String>(method: CoreMethod.getProxies)
-          .then((value) => result = value);
+      final pending = expectLater(
+        lib.invokeMethod<String>(method: CoreMethod.getProxies),
+        throwsA(
+          isA<CoreMethodException>().having(
+            (error) => error.code,
+            'code',
+            'transport_disconnected',
+          ),
+        ),
+      );
 
       await tester.pump(const Duration(seconds: 11));
       await pending;
 
-      expect(result, isNull);
       expect(service.calls, isEmpty);
     });
   });

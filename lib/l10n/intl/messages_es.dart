@@ -555,6 +555,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreBlockedBySmartAppControlTip": MessageLookupByLibrary.simpleMessage(
       "Smart App Control de Windows bloqueó KFusionCore.exe porque no está firmado. Abre Seguridad de Windows → Control de aplicaciones y navegador → Configuración de Smart App Control, elige Desactivado y vuelve a iniciar KFusion. Smart App Control no se puede volver a activar sin reinstalar Windows.",
     ),
+    "coreNotConnectedTip": MessageLookupByLibrary.simpleMessage(
+      "El núcleo no está conectado. Inicie el núcleo e inténtelo de nuevo",
+    ),
     "coreStatus": MessageLookupByLibrary.simpleMessage("Estado del núcleo"),
     "country": MessageLookupByLibrary.simpleMessage("Región"),
     "crashDetected": MessageLookupByLibrary.simpleMessage("Fallo detectado"),

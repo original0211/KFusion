@@ -236,6 +236,7 @@
   "ruleSetEmptyTip": "El conjunto de reglas no tiene entradas utilizables",
   "ruleSetMixedTip": "El conjunto de reglas mezcla dominios y rangos de IP, por lo que no se puede determinar su tipo",
   "ruleSetInvalidTip": "No se puede leer este archivo mrs",
+  "coreNotConnectedTip": "El núcleo no está conectado. Inicie el núcleo e inténtelo de nuevo",
   "subscriptionInfo": "Información de la suscripción",
   "ntpStatusDesc": "NTP obtiene la hora de un servidor NTP en lugar del reloj del sistema.",
   "server": "Servidor",

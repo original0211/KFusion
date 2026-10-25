@@ -236,6 +236,7 @@
   "ruleSetEmptyTip": "Le jeu de règles ne contient aucune entrée exploitable",
   "ruleSetMixedTip": "Le jeu de règles mélange des domaines et des plages d’IP : son type est indéterminable",
   "ruleSetInvalidTip": "Ce fichier mrs est illisible",
+  "coreNotConnectedTip": "Le cœur n'est pas connecté. Démarrez le cœur et réessayez",
   "subscriptionInfo": "Infos d’abonnement",
   "ntpStatusDesc": "NTP récupère l’heure auprès d’un serveur NTP au lieu de l’horloge système.",
   "server": "Serveur",

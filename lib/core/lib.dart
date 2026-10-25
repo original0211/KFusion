@@ -154,7 +154,11 @@ class CoreLib extends CoreHandlerInterface {
         'Invoke method ${method.name} before connection timed out: $error',
         logLevel: coreFailureLogLevel(error),
       );
-      return null;
+      // A connection that never came up cannot answer: report the transport.
+      throw const CoreMethodException(
+        code: 'transport_disconnected',
+        message: 'Core transport disconnected',
+      );
     }
     final id = '${++_methodCallId}';
     final response = await _service?.invokeMethod(

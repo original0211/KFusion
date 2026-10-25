@@ -236,6 +236,7 @@
   "ruleSetEmptyTip": "规则集中没有可用的条目",
   "ruleSetMixedTip": "规则集同时包含域名和 IP 段，无法判断类型",
   "ruleSetInvalidTip": "无法读取该 mrs 文件",
+  "coreNotConnectedTip": "核心未连接，请启动核心后重试",
   "subscriptionInfo": "订阅信息",
   "ntpStatusDesc": "开启 NTP 后从 NTP 服务器获取时间，而非系统时钟。",
   "server": "服务器",

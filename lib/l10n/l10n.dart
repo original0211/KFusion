@@ -1810,6 +1810,16 @@ class AppLocalizations {
     );
   }
 
+  /// `The core is not connected. Start the core and try again.`
+  String get coreNotConnectedTip {
+    return Intl.message(
+      'The core is not connected. Start the core and try again.',
+      name: 'coreNotConnectedTip',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Subscription info`
   String get subscriptionInfo {
     return Intl.message(

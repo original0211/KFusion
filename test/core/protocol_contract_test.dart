@@ -152,7 +152,7 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
     Object? arguments,
     Duration? timeout,
   }) async {
-    if (method == CoreMethod.getConfig) {
+    if (method == CoreMethod.getConfig || method == CoreMethod.getProfileBase) {
       return null;
     }
     return super.invokeMethod(
@@ -473,6 +473,21 @@ void main() {
 
     await expectLater(
       handler.getConfig('/config.yaml'),
+      throwsA(
+        isA<CoreMethodException>().having(
+          (error) => error.code,
+          'code',
+          'empty_result',
+        ),
+      ),
+    );
+  });
+
+  test('getProfileBase rejects empty transport results', () async {
+    final handler = _EmptyConfigCoreHandler();
+
+    await expectLater(
+      handler.getProfileBase('/profiles/1.yaml'),
       throwsA(
         isA<CoreMethodException>().having(
           (error) => error.code,

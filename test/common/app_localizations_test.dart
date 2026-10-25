@@ -174,6 +174,19 @@ void main() {
     );
   });
 
+  test('localizes a disconnected transport instead of echoing it', () {
+    expect(
+      userFacingErrorMessage(
+        const CoreMethodException(
+          code: 'transport_disconnected',
+          message: 'Core transport disconnected',
+        ),
+        appLocalizations,
+      ),
+      appLocalizations.coreNotConnectedTip,
+    );
+  });
+
   test('uses the Core message for non-request failures', () {
     expect(
       userFacingErrorMessage(

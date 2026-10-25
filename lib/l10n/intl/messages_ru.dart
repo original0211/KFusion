@@ -535,6 +535,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreBlockedBySmartAppControlTip": MessageLookupByLibrary.simpleMessage(
       "Smart App Control в Windows заблокировал неподписанный KFusionCore.exe. Откройте Безопасность Windows → Управление приложениями и браузером → Параметры Smart App Control, выберите «Выкл.» и снова запустите KFusion. Повторно включить Smart App Control без переустановки Windows нельзя.",
     ),
+    "coreNotConnectedTip": MessageLookupByLibrary.simpleMessage(
+      "Ядро не подключено. Запустите ядро и повторите попытку",
+    ),
     "coreStatus": MessageLookupByLibrary.simpleMessage("Статус ядра"),
     "country": MessageLookupByLibrary.simpleMessage("Регион"),
     "crashDetected": MessageLookupByLibrary.simpleMessage("Обнаружен сбой"),

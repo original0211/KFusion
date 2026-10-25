@@ -102,6 +102,8 @@ String userFacingErrorMessage(Object error, AppLocalizations appLocalizations) {
           appLocalizations.ruleSetMixedTip,
         CoreMethodException(code: 'rule_set_invalid') =>
           appLocalizations.ruleSetInvalidTip,
+        CoreMethodException(code: 'transport_disconnected') =>
+          appLocalizations.coreNotConnectedTip,
         CoreMethodException(:final message) => message,
         _ => error.toString(),
       };

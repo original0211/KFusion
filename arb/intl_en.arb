@@ -236,6 +236,7 @@
   "ruleSetEmptyTip": "The rule set has no usable entries",
   "ruleSetMixedTip": "The rule set mixes domains and IP ranges, so its type cannot be told",
   "ruleSetInvalidTip": "This mrs file cannot be read",
+  "coreNotConnectedTip": "The core is not connected. Start the core and try again.",
   "subscriptionInfo": "Subscription info",
   "ntpStatusDesc": "NTP takes the time from an NTP server instead of the system clock.",
   "server": "Server",

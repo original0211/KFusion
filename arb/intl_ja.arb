@@ -236,6 +236,7 @@
   "ruleSetEmptyTip": "ルールセットに使用できるエントリがありません",
   "ruleSetMixedTip": "ルールセットにドメインと IP 範囲が混在しているため、種類を判別できません",
   "ruleSetInvalidTip": "この mrs ファイルを読み込めません",
+  "coreNotConnectedTip": "コアに接続されていません。コアを起動してからもう一度お試しください",
   "subscriptionInfo": "サブスクリプション情報",
   "ntpStatusDesc": "NTP を有効にすると、システムクロックではなく NTP サーバーから時刻を取得します。",
   "server": "サーバー",

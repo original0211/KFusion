@@ -436,6 +436,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreBlockedBySmartAppControlTip": MessageLookupByLibrary.simpleMessage(
       "Windows のスマート アプリ コントロールが、署名されていない KFusionCore.exe をブロックしました。Windows セキュリティ → アプリとブラウザーの制御 → スマート アプリ コントロールの設定で「オフ」を選び、KFusion を再起動してください。一度オフにすると、Windows を再インストールしない限り再度オンにはできません。",
     ),
+    "coreNotConnectedTip": MessageLookupByLibrary.simpleMessage(
+      "コアに接続されていません。コアを起動してからもう一度お試しください",
+    ),
     "coreStatus": MessageLookupByLibrary.simpleMessage("コアの状態"),
     "country": MessageLookupByLibrary.simpleMessage("地域"),
     "crashDetected": MessageLookupByLibrary.simpleMessage("クラッシュを検出しました"),
