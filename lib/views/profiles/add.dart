@@ -124,37 +124,47 @@ class AddProfileView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
     return ListView(
-      padding: EdgeInsets.only(top: context.contentTopPadding, bottom: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+      ).copyWith(top: context.contentTopPadding, bottom: 16),
       children: [
-        ListItem(
-          leading: const GlyphIcon(AppGlyphs.qrCode),
-          title: Text(appLocalizations.qrcode),
-          subtitle: Text(appLocalizations.qrcodeDesc),
-          onTap: () => _toScan(ref),
-        ),
-        ListItem(
-          leading: const GlyphIcon(AppGlyphs.importFile),
-          title: Text(appLocalizations.file),
-          subtitle: Text(appLocalizations.fileDesc),
-          onTap: () => _handleAddProfileFormFile(ref),
-        ),
-        ListItem(
-          leading: const GlyphIcon(AppGlyphs.cloudDownload),
-          title: Text(appLocalizations.link),
-          subtitle: Text(appLocalizations.linkDesc),
-          onTap: () => _toAdd(ref),
-        ),
-        ListItem(
-          leading: const GlyphIcon(AppGlyphs.customize),
-          title: Text(appLocalizations.customProfile),
-          subtitle: Text(appLocalizations.customProfileDesc),
-          onTap: () => _toAddCustom(context, ref),
-        ),
-        ListItem(
-          leading: const GlyphIcon(AppGlyphs.importFile),
-          title: const Text('万能导入'),
-          subtitle: const Text('Clash / sing-box / 分享链接 / 订阅，一次导入'),
-          onTap: () => BaseNavigator.push(context, const UniversalImportView()),
+        generateSection(
+          items: [
+            ListItem(
+              leading: const GlyphIcon(AppGlyphs.qrCode),
+              title: Text(appLocalizations.qrcode),
+              subtitle: Text(appLocalizations.qrcodeDesc),
+              onTap: () => _toScan(ref),
+            ),
+            ListItem(
+              leading: const GlyphIcon(AppGlyphs.importFile),
+              title: Text(appLocalizations.file),
+              subtitle: Text(appLocalizations.fileDesc),
+              onTap: () => _handleAddProfileFormFile(ref),
+            ),
+            ListItem(
+              leading: const GlyphIcon(AppGlyphs.cloudDownload),
+              title: Text(appLocalizations.link),
+              subtitle: Text(appLocalizations.linkDesc),
+              onTap: () => _toAdd(ref),
+            ),
+            ListItem(
+              leading: const GlyphIcon(AppGlyphs.customize),
+              title: Text(appLocalizations.customProfile),
+              subtitle: Text(appLocalizations.customProfileDesc),
+              onTap: () => _toAddCustom(context, ref),
+            ),
+            ListItem(
+              leading: GlyphIcon(
+                AppGlyphs.sparkle,
+                color: context.colorScheme.primary,
+              ),
+              title: const Text('万能导入'),
+              subtitle: const Text('Clash / sing-box / 分享链接 / 订阅，一次导入'),
+              onTap: () =>
+                  BaseNavigator.push(context, const UniversalImportView()),
+            ),
+          ],
         ),
       ],
     );
