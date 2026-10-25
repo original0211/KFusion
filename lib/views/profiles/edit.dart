@@ -461,14 +461,20 @@ class _CoreKindField extends ConsumerWidget {
           ),
         ),
         if (current == CoreKind.singbox && system.isAndroid)
-          const Padding(
-            padding: EdgeInsets.only(left: 16, bottom: 8),
-            child: Text('Android 由 sing-box VPN 运行时接管（真机待验）。'),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 8),
+            child: Text(
+              'Android 由 sing-box VPN 运行时接管（真机待验）。',
+              style: context.listCaptionStyle,
+            ),
           ),
         if (current == CoreKind.singbox && system.isWindows)
-          const Padding(
-            padding: EdgeInsets.only(left: 16, bottom: 8),
-            child: Text('Windows 下由 sing-box 子进程运行，需先放好二进制。'),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 8),
+            child: Text(
+              'Windows 下由 sing-box 子进程运行，需先放好二进制。',
+              style: context.listCaptionStyle,
+            ),
           ),
       ],
     );

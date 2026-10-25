@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/config_hub.dart';
+import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
@@ -161,84 +162,89 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
     final preview = _preview;
-    return CommonScaffold(
-      title: '万能导入',
-      body: ListView(
-        padding: EdgeInsets.only(top: context.contentTopPadding, bottom: 16),
-        children: [
+    final sections = <Widget>[
+      generateSection(
+        items: [
           ListItem(
             leading: const GlyphIcon(AppGlyphs.cloudDownload),
             title: const Text('从订阅链接导入'),
             subtitle: const Text('支持 Clash / sing-box / 分享链接'),
+            trailing: TonalButton(
+              label: '下载并解析',
+              onPressed: _busy ? null : _loadFromUrl,
+            ),
             onTap: _busy ? null : _loadFromUrl,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
+          DecorationListItem(
+            title: TextField(
               controller: _urlController,
               keyboardType: TextInputType.url,
-              decoration: const InputDecoration(hintText: 'https://…'),
+              autocorrect: false,
+              decoration: const InputDecoration.collapsed(
+                border: NoInputBorder(),
+                hintText: 'https://…',
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: FilledButton.tonal(
-              onPressed: _busy ? null : _loadFromUrl,
-              child: const Text('下载并解析'),
-            ),
-          ),
-          const SizedBox(height: 16),
+        ],
+      ),
+      generateSection(
+        items: [
           ListItem(
             leading: const GlyphIcon(AppGlyphs.importFile),
             title: const Text('从文件导入'),
             subtitle: const Text('Clash YAML / sing-box JSON / 链接文本'),
+            trailing: TonalButton(
+              label: '选择文件',
+              onPressed: _busy ? null : _loadFromFile,
+            ),
             onTap: _busy ? null : _loadFromFile,
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: FilledButton.tonal(
-              onPressed: _busy ? null : _loadFromFile,
-              child: const Text('选择文件'),
-            ),
-          ),
-          const SizedBox(height: 16),
+        ],
+      ),
+      generateSection(
+        items: [
           ListItem(
             leading: const GlyphIcon(AppGlyphs.customize),
             title: const Text('解析粘贴的文本'),
             subtitle: const Text('粘贴内容后点「解析文本」'),
-            onTap: _busy ? null : () => _showPreview(_pasteController.text),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _pasteController,
-              minLines: 4,
-              maxLines: null,
-              decoration: const InputDecoration(hintText: '粘贴配置文本…'),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: FilledButton.tonal(
+            trailing: TonalButton(
+              label: '解析文本',
               onPressed: _busy
                   ? null
                   : () => _showPreview(_pasteController.text),
-              child: const Text('解析文本'),
+            ),
+            onTap: _busy ? null : () => _showPreview(_pasteController.text),
+          ),
+          DecorationListItem(
+            title: TextField(
+              controller: _pasteController,
+              minLines: 4,
+              maxLines: null,
+              autocorrect: false,
+              decoration: const InputDecoration.collapsed(
+                border: NoInputBorder(),
+                hintText: '粘贴配置文本…',
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: TextField(
+        ],
+      ),
+      generateSection(
+        items: [
+          FormRow(
+            title: '配置名称',
+            trailing: FormRowTextField(
               controller: _labelController,
-              decoration: const InputDecoration(labelText: '配置名称'),
+              hintText: 'KFusion 导入',
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButton<String>(
+          FormRow(
+            title: '路由模板',
+            trailing: DropdownButton<String>(
               value: _templateId,
-              isExpanded: true,
               items: [
                 for (final template in routingTemplates)
                   DropdownMenuItem(
@@ -251,47 +257,74 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
               },
             ),
           ),
-          if (_error != null)
-            Padding(padding: const EdgeInsets.all(16), child: Text(_error!)),
-          if (preview != null) ...[
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(_previewText(preview)),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: FilledButton(
-                onPressed: _busy ? null : _confirm,
-                child: const Text('确认导入'),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: FilledButton.tonal(
-                onPressed: _busy ? null : _exportSingBox,
-                child: const Text('导出 sing-box 配置'),
-              ),
-            ),
-            if (system.isAndroid)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Android 由 sing-box VPN 运行时接管（真机待验）。'),
-              ),
+        ],
+      ),
+      if (preview != null) ...[
+        generateSection(
+          title: '解析结果',
+          footer: system.isAndroid
+              ? 'Android 由 sing-box VPN 运行时接管（真机待验）。'
+              : null,
+          items: [
+            DecorationListItem(title: Text(_previewText(preview))),
             if (_exportMessage != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(_exportMessage!),
-              ),
-          ] else ...[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: FilledButton(onPressed: null, child: Text('确认导入')),
+              DecorationListItem(title: Text(_exportMessage!)),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 12,
+          children: [
+            FilledButton(
+              onPressed: _busy ? null : _confirm,
+              child: const Text('确认导入'),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text('解析成功后可在此确认导入'),
+            FilledButton.tonal(
+              onPressed: _busy ? null : _exportSingBox,
+              child: const Text('导出 sing-box 配置'),
             ),
           ],
+        ),
+      ] else ...[
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 8,
+          children: [
+            const FilledButton(onPressed: null, child: Text('确认导入')),
+            Text('解析成功后可在此确认导入', style: context.listCaptionStyle),
+          ],
+        ),
+      ],
+    ];
+    return CommonScaffold(
+      title: '万能导入',
+      body: ListView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+        ).copyWith(top: context.contentTopPadding, bottom: 16),
+        children: [
+          Row(
+            spacing: 16,
+            children: [
+              DashboardDiscMotif(size: 44, color: colorScheme.onSurface),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('万能导入', style: AppTextStyle.headline.of(context)),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Clash / sing-box / 分享链接 / 订阅，一次导入',
+                      style: AppTextStyle.footnote.of(context).toLighter,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ErrorBanner(message: _error),
+          ...sections.separated(const SizedBox(height: 24)),
         ],
       ),
     );

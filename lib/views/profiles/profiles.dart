@@ -115,10 +115,9 @@ class _ProfilesViewState extends ConsumerState<ProfilesView> {
           foldPrimaryAction: true,
           body: NullStatusSwitcher(
             isEmpty: state.profiles.isEmpty,
-            nullStatus: NullStatus(
+            nullStatus: NullStatus.brand(
               label: appLocalizations.nullTip(appLocalizations.profiles),
               description: appLocalizations.nullProfileDesc,
-              illustration: NullStatusIllustration.profile,
               action: TonalButton(
                 size: TonalButtonSize.bar,
                 glyph: AppGlyphs.addCircle,
@@ -569,8 +568,8 @@ class _GroupsCountChip extends ConsumerWidget {
       message: context.appLocalizations.proxyGroupsCount(count, count.compact),
       child: TonalChip(
         label: count.compact,
-        color: colorScheme.primary.opacity15,
-        foregroundColor: colorScheme.primary,
+        color: context.raisedSurfaceLevel.colorOf(colorScheme),
+        foregroundColor: colorScheme.onSurfaceVariant,
       ),
     );
   }

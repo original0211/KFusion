@@ -17,14 +17,17 @@ class ExpireChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    final color = expire.isBeforeNow ? colorScheme.error : colorScheme.primary;
+    final expired = expire.isBeforeNow;
+    final background = expired
+        ? colorScheme.error.opacity15
+        : context.raisedSurfaceLevel.colorOf(colorScheme);
+    final foreground = expired
+        ? colorScheme.error
+        : colorScheme.onSurfaceVariant;
     return Tooltip(
       message: context.appLocalizations.expireTime,
       child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: color.opacity15,
-          shape: AppShape.full,
-        ),
+        decoration: ShapeDecoration(color: background, shape: AppShape.full),
         child: Padding(
           padding: _padding,
           child: Text(
@@ -32,7 +35,7 @@ class ExpireChip extends StatelessWidget {
             maxLines: 1,
             style: AppTextStyle.caption1
                 .of(context, emphasized: true)
-                .copyWith(color: color),
+                .copyWith(color: foreground),
           ),
         ),
       ),
