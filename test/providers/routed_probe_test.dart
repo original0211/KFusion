@@ -429,9 +429,8 @@ void main() {
     await pumpEventQueue();
     expect(probe.calls, isEmpty);
 
-    trackerOf(
-      container,
-    ).applySnapshot(const RouteSnapshot(coreEpoch: 1, picksVersion: 1));
+    trackerOf(container)
+        .applySnapshot(const RouteSnapshot(coreEpoch: 1, picksVersion: 1));
     await pumpEventQueue();
 
     expect(probe.calls, ['a']);
