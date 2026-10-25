@@ -96,6 +96,11 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
         : isStart
         ? (appLocalizations.running, DashboardChipTone.ok)
         : (appLocalizations.notRunning, DashboardChipTone.idle);
+    // The header has no room for a second chip at phone widths; the title
+    // ellipsizes, so the direct route is named there instead.
+    final headerTitle = proxied
+        ? appLocalizations.status
+        : '${appLocalizations.status} · ${appLocalizations.direct}';
     return DashboardCard(
       padding: EdgeInsets.zero,
       semanticLabel: appLocalizations.status,
@@ -151,15 +156,13 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                     children: [
                       DashboardCardHeader(
                         glyph: AppGlyphs.status,
-                        title: appLocalizations.status,
+                        title: headerTitle,
                         leading: [
                           DashboardChip(
                             label: chipLabel,
                             tone: chipTone,
                             dot: isStart,
                           ),
-                          if (!proxied)
-                            DashboardChip(label: appLocalizations.direct),
                         ],
                       ),
                       SizedBox(height: metrics.ipTop),

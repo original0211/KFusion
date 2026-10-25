@@ -319,6 +319,35 @@ void main() {
       expect(probe.calls, hasLength(2));
     });
 
+    test('unwatching a failure disarms its retry', () async {
+      final container = buildRetry();
+      final probe = container.read(_retryProbeProvider.notifier);
+      probe.answers.addAll(['down', 'ok']);
+      probe.watch('a');
+      await pumpEventQueue();
+      expect(probe.calls, ['a']);
+
+      probe.unwatch('a');
+      await elapseRetry();
+      expect(probe.calls, ['a']);
+    });
+
+    test('asking again disarms the pending retry', () async {
+      final container = buildRetry();
+      final probe = container.read(_retryProbeProvider.notifier);
+      probe.answers.addAll(['down', 'ok', 'ok']);
+      probe.watch('a');
+      await pumpEventQueue();
+      expect(probe.calls, ['a']);
+
+      probe.refresh(['a']);
+      await pumpEventQueue();
+      expect(probe.calls, ['a', 'a']);
+
+      await elapseRetry();
+      expect(probe.calls, hasLength(2));
+    });
+
     test('a new route re-arms the retry', () async {
       final container = buildRetry();
       final probe = container.read(_retryProbeProvider.notifier);

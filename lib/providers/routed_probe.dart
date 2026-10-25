@@ -104,6 +104,7 @@ mixin RoutedProbe<K, V>
   @protected
   RoutedProbeState<K, V> buildProbe() {
     _route = ref.read(routeTrackerProvider);
+    ref.onDispose(_cancelAllFailureRetries);
     ref.listen(routeTrackerProvider, _onRoute);
     ref.listen(appVisibleProvider, (_, visible) {
       if (visible && _due.isNotEmpty) {
@@ -137,6 +138,8 @@ mixin RoutedProbe<K, V>
       return;
     }
     _watchers.remove(target);
+    _cancelFailureRetry(target);
+    _failureRetried.remove(target);
     final due = _due[target];
     if (due != null && !due.forced) {
       _due.remove(target);
@@ -171,6 +174,7 @@ mixin RoutedProbe<K, V>
   ProbeEntry<V> _entryOf(K target) => state.entryOf(target);
 
   void _mark(K target, {bool keepValue = false, bool forced = false}) {
+    _cancelFailureRetry(target);
     if (_inFlight.containsKey(target)) {
       return;
     }
@@ -294,6 +298,17 @@ mixin RoutedProbe<K, V>
     }
   }
 
+  void _cancelFailureRetry(K target) {
+    _failureRetryTimers.remove(target)?.cancel();
+  }
+
+  void _cancelAllFailureRetries() {
+    for (final timer in _failureRetryTimers.values) {
+      timer.cancel();
+    }
+    _failureRetryTimers.clear();
+  }
+
   // Fires only while the failure that scheduled it is still standing: a
   // route move or a newer answer replaces the entry and disarms it.
   void _scheduleFailureRetry(K target, RouteStamp stamp) {
@@ -365,6 +380,7 @@ mixin RoutedProbe<K, V>
   /// A stale entry is asked again while someone watches it and forgotten
   /// otherwise; either way its old value is never shown.
   void _invalidate(K target, Map<K, ProbeEntry<V>> entries) {
+    _cancelFailureRetry(target);
     if (_watchers.containsKey(target)) {
       entries[target] = ProbeEntry(phase: ProbePhase.probing);
       _due[target] = (keepValue: false, forced: false, supersede: true);

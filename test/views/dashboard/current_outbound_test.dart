@@ -181,7 +181,7 @@ void main() {
       expect(find.text('Residential'), findsOneWidget);
       expect(_chip(tester, 'Quality Good').tone, DashboardChipTone.ok);
       expect(find.text('Example Broadband'), findsOneWidget);
-      expect(find.text('Status'), findsOneWidget);
+      expect(find.text('Status · Direct'), findsOneWidget);
       expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
     });
 
@@ -218,7 +218,7 @@ void main() {
       expect(find.text('GB'), findsOneWidget);
       expect(find.text('Not running'), findsOneWidget);
       expect(_chip(tester, 'Unknown type').tone, DashboardChipTone.idle);
-      expect(find.byType(DashboardChip), findsNWidgets(3));
+      expect(find.byType(DashboardChip), findsNWidgets(2));
       expect(find.text('Example Broadband'), findsNothing);
     });
 
@@ -414,7 +414,7 @@ void main() {
 
       final directLabel = find.descendant(
         of: find.byType(CurrentOutboundCard),
-        matching: find.text('Direct'),
+        matching: find.text('Status · Direct'),
       );
       expect(directLabel, findsOneWidget);
 
@@ -423,6 +423,13 @@ void main() {
       await tester.pump(commonDuration);
 
       expect(directLabel, findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(CurrentOutboundCard),
+          matching: find.text('Status'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('that fails as the proxy starts shows as checking', (
