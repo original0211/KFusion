@@ -36,18 +36,6 @@ class Preferences {
     return _instance!;
   }
 
-  /// Beginner mode for the KFusion UI. New installs default to true so
-  /// the simplified import flow is what a first-time user meets.
-  Future<bool> getBeginnerMode() async {
-    final preferences = await _store.value;
-    return preferences?.getBool('beginnerMode') ?? true;
-  }
-
-  Future<void> setBeginnerMode(bool value) async {
-    final preferences = await _store.value;
-    await preferences?.setBool('beginnerMode', value);
-  }
-
   Future<Map<int, String>> getCoreKindMap() async {
     final preferences = await _store.value;
     final raw = preferences?.getString('coreKinds');

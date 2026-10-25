@@ -18,9 +18,7 @@ void main() {
   late ProviderContainer container;
 
   setUp(() async {
-    // These tests exercise the full dashboard; the beginner home narrows
-    // it to the first-run cards, so opt out of it here.
-    await mockPreferences({'beginnerMode': false});
+    await mockPreferences();
     container = ProviderContainer(
       overrides: [profilesProvider.overrideWith(TestProfiles.new)],
     );

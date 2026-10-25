@@ -18,7 +18,7 @@ void main() {
   late ProviderContainer container;
 
   setUp(() async {
-    await mockPreferences({'beginnerMode': false});
+    await mockPreferences();
     container = ProviderContainer(
       overrides: [profilesProvider.overrideWith(TestProfiles.new)],
     );

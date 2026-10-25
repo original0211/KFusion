@@ -27,9 +27,7 @@ Finder _glyph(Glyph glyph) => find.byGlyph(glyph);
 
 void main() {
   setUp(() async {
-    // Beginner mode adds a row to the general settings page and hides
-    // advanced entries; these layout tests assume the advanced layout.
-    await mockPreferences({'beginnerMode': false});
+    await mockPreferences();
     navigationPort = navigation;
     addTearDown(() => navigationPort = null);
   });
@@ -499,9 +497,9 @@ void main() {
             )
             .first,
       );
-      // The settings page grew by one row (beginner-mode toggle), which
-      // can leave the item's center just below the viewport edge even
-      // after scrollUntilVisible; make it fully visible before tapping.
+      // The settings page is long enough that the item's center can sit
+      // just below the viewport edge even after scrollUntilVisible; make
+      // it fully visible before tapping.
       await tester.ensureVisible(logItem);
       await tester.pumpAndSettle();
       await tester.tap(logItem);

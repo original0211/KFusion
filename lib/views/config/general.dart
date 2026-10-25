@@ -32,31 +32,6 @@ class LogLevelItem extends ConsumerWidget {
   }
 }
 
-/// Beginner mode toggle. The label is a literal for now because adding a
-/// localized string needs an intl regeneration run, which this change
-/// deliberately avoids.
-class BeginnerModeItem extends ConsumerWidget {
-  const BeginnerModeItem({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    final beginnerMode = ref
-        .watch(beginnerModeProvider)
-        .when(
-          data: (value) => value,
-          loading: () => true,
-          error: (_, _) => true,
-        );
-    return ListItem.toggle(
-      title: const Text('新手模式 · Beginner mode'),
-      value: beginnerMode,
-      onChanged: (value) {
-        ref.read(beginnerModeProvider.notifier).set(value);
-      },
-    );
-  }
-}
-
 class SingBoxStatusItem extends ConsumerStatefulWidget {
   const SingBoxStatusItem({super.key});
 
@@ -603,7 +578,6 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _startupItems(AppLocalizations appLocalizations) {
     return [
-      const BeginnerModeItem(),
       const SingBoxStatusItem(),
       if (system.isDesktop) ...[
         _appSettingToggle(

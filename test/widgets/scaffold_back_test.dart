@@ -21,9 +21,7 @@ import '../helpers/test_app.dart';
 
 void main() {
   setUp(() async {
-    // The dashboard edit-layer tests enter edit mode, which beginner
-    // mode hides by default; opt out of it here.
-    await mockPreferences({'beginnerMode': false});
+    await mockPreferences();
   });
   testWidgets('back layers are consumed from inner to outer', (tester) async {
     var innerActive = true;

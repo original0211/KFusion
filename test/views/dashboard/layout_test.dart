@@ -51,8 +51,7 @@ void main() {
   late ProviderContainer container;
 
   setUp(() async {
-    // These tests lay out the full dashboard; the beginner home narrows it.
-    await mockPreferences({'beginnerMode': false});
+    await mockPreferences();
     container = ProviderContainer(
       overrides: [profilesProvider.overrideWith(TestProfiles.new)],
     );

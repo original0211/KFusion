@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/core/core.dart';
 import 'package:kfusion/enum/enum.dart';
-import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/profiles/universal_import.dart';
@@ -23,14 +22,6 @@ import 'widgets/widgets.dart';
 // Narrower columns leave the service grid's cells too tight for a status, so
 // the grid takes the memory card's column instead.
 const _memoryColumnMin = 290.0;
-
-/// The beginner home shows only what a first run needs; editing and the
-/// full dashboard keep the rest of the saved list.
-const _beginnerHomeWidgets = {
-  DashboardWidget.currentOutbound,
-  DashboardWidget.networkSpeed,
-  DashboardWidget.profiles,
-};
 
 const _maxColumnWidth = 440.0;
 
@@ -425,15 +416,6 @@ class _MobileDashboard extends ConsumerWidget {
     final saved = ref.watch(
       dashboardStateProvider.select((state) => state.dashboardWidgets),
     );
-    // Until the preference lands the saved list shows as it stands; the
-    // narrowing is a preference, not a state worth hiding cards over.
-    final beginner = ref
-        .watch(beginnerModeProvider)
-        .when(
-          data: (value) => value,
-          loading: () => false,
-          error: (_, _) => false,
-        );
     final noProfiles = ref.watch(
       profilesProvider.select((state) => state.isEmpty),
     );
@@ -450,11 +432,7 @@ class _MobileDashboard extends ConsumerWidget {
             final side = dashboardMobileSideOf(constraints.crossAxisExtent);
             final widgets = [
               for (final widget in saved)
-                if (widget.platforms.contains(platform) &&
-                    (!beginner ||
-                        editing ||
-                        _beginnerHomeWidgets.contains(widget)))
-                  widget,
+                if (widget.platforms.contains(platform)) widget,
             ];
             if (editing) {
               return DashboardEditor(
@@ -479,7 +457,7 @@ class _MobileDashboard extends ConsumerWidget {
                         key: cardKeyOf(widget),
                         child: widget.card,
                       ),
-                    if (beginner && noProfiles) const _BeginnerImportCard(),
+                    if (noProfiles) const _ImportCard(),
                   ],
                 ),
               ),
@@ -491,10 +469,10 @@ class _MobileDashboard extends ConsumerWidget {
   }
 }
 
-/// The beginner home's way in when there is nothing to run yet: one card
-/// that opens the universal import.
-class _BeginnerImportCard extends StatelessWidget {
-  const _BeginnerImportCard();
+/// The home's way in when there is nothing to run yet: one card that
+/// opens the universal import, shown while no profile exists.
+class _ImportCard extends StatelessWidget {
+  const _ImportCard();
 
   @override
   Widget build(BuildContext context) {

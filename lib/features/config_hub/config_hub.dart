@@ -1,4 +1,3 @@
-export 'beginner_mode.dart';
 export 'core_kind.dart';
 export 'format.dart';
 export 'ir.dart';

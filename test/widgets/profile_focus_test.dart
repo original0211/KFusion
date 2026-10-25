@@ -97,9 +97,7 @@ Future<ProviderContainer> pumpProfiles(
 
 void main() {
   setUp(() async {
-    // The extend entry under test is hidden in beginner mode by
-    // default; opt out of it here.
-    await mockPreferences({'beginnerMode': false});
+    await mockPreferences();
   });
 
   testWidgets('a focused profile card opens its menu', (tester) async {
