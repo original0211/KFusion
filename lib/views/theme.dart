@@ -779,22 +779,23 @@ class _SidebarBlurItem extends ConsumerWidget {
     final sidebarBlur = ref.watch(
       themeSettingProvider.select((state) => state.sidebarBlur),
     );
-    return ListItem.toggle(
-      leading: const GlyphIcon(AppGlyphs.blur),
-      horizontalTitleGap: 12,
-      title: Text(
-        appLocalizations.sidebarBlur,
-        style: AppTextStyle.subheadline
-            .of(context, emphasized: true)
-            .copyWith(color: context.colorScheme.onSurfaceVariant),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: generateSection(
+        items: [
+          ListItem.toggle(
+            leading: const GlyphIcon(AppGlyphs.blur),
+            title: Text(appLocalizations.sidebarBlur),
+            subtitle: Text(appLocalizations.sidebarBlurDesc),
+            value: sidebarBlur,
+            onChanged: (value) {
+              ref
+                  .read(themeSettingProvider.notifier)
+                  .update((state) => state.copyWith(sidebarBlur: value));
+            },
+          ),
+        ],
       ),
-      subtitle: Text(appLocalizations.sidebarBlurDesc),
-      value: sidebarBlur,
-      onChanged: (value) {
-        ref
-            .read(themeSettingProvider.notifier)
-            .update((state) => state.copyWith(sidebarBlur: value));
-      },
     );
   }
 }
@@ -844,9 +845,9 @@ class _FontFamilyItem extends ConsumerWidget {
     final cardColor = context.raisedSurfaceLevel.colorOf(colorScheme);
     Widget card(VoidCallback onTap) => Material(
       color: cardColor,
-      shape: AppShape.lg,
+      shape: AppShape.xl,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(customBorder: AppShape.lg, onTap: onTap, child: preview),
+      child: InkWell(customBorder: AppShape.xl, onTap: onTap, child: preview),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -858,7 +859,7 @@ class _FontFamilyItem extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: context.isMobileView
               ? OpenContainer<void>(
-                  closedShape: AppShape.lg,
+                  closedShape: AppShape.xl,
                   closedColor: cardColor,
                   closedBuilder: (_, open) => card(open),
                   openBuilder: (_, _) => const FontFamilyView(),
@@ -943,7 +944,7 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 decoration: ShapeDecoration(
                   color: level.colorOf(colorScheme),
-                  shape: AppShape.lg,
+                  shape: AppShape.xl,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

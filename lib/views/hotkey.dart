@@ -141,7 +141,7 @@ class _HotKeyIntro extends StatelessWidget {
       child: Row(
         spacing: 14,
         children: [
-          GlyphIcon(AppGlyphs.keyboard, color: colorScheme.primary),
+          GlyphIcon(AppGlyphs.keyboard, color: colorScheme.onSurfaceVariant),
           Expanded(
             child: Text(
               context.appLocalizations.hotkeyDesc,
@@ -191,7 +191,7 @@ class _HotKeyItem extends ConsumerWidget {
               appLocalizations.hotkeyNotSet,
               style: AppTextStyle.subheadline
                   .of(context)
-                  .copyWith(color: colorScheme.outline),
+                  .copyWith(color: colorScheme.onSurfaceVariant),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
@@ -281,7 +281,13 @@ class _KeyCap extends StatelessWidget {
       child: Align(
         widthFactor: 1,
         heightFactor: 1,
-        child: Text(label, style: textStyle.copyWith(color: foregroundColor)),
+        child: Text(
+          label,
+          style: textStyle.copyWith(
+            color: foregroundColor,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
       ),
     );
   }
@@ -442,7 +448,7 @@ class _HotKeyRecorderState extends ConsumerState<HotKeyRecorder> {
       ),
       (false, final HotKeyAction conflict) => (
         appLocalizations.hotkeyConflictWith(conflict.action.label),
-        colorScheme.tertiary,
+        colorScheme.warning,
       ),
       _ => (null, null),
     };
