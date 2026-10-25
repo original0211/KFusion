@@ -112,14 +112,14 @@ final List<HotKeyAction> defaultHotKeyActions = system.isWindows
 const List<DashboardWidget> defaultDashboardWidgets = [
   DashboardWidget.currentOutbound,
   DashboardWidget.networkSpeed,
+  DashboardWidget.profiles,
   DashboardWidget.outboundMode,
   DashboardWidget.vpnButton,
   DashboardWidget.networkTakeover,
   DashboardWidget.intranetIp,
   DashboardWidget.serviceStatus,
-  DashboardWidget.profiles,
-  DashboardWidget.proxyGroups,
   DashboardWidget.connectionStats,
+  DashboardWidget.proxyGroups,
 ];
 
 const _legacyDefaultDashboardWidgets = {

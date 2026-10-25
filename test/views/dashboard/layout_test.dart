@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../helpers/glyph_finders.dart';
+import '../../helpers/preferences.dart';
 import '../../helpers/test_app.dart';
 import '../../helpers/test_profiles.dart';
 
@@ -38,13 +39,21 @@ void main() {
 
   late ProviderContainer container;
 
-  setUp(() {
+  setUp(() async {
+    // These tests lay out the full dashboard; the beginner home narrows it.
+    await mockPreferences({'beginnerMode': false});
     container = ProviderContainer(
       overrides: [profilesProvider.overrideWith(TestProfiles.new)],
     );
     globalState.container = container;
     container.listen(groupsProvider, (_, _) {});
   });
+
+  void seedWidgets(List<DashboardWidget> widgets) {
+    container
+        .read(appSettingProvider.notifier)
+        .update((state) => state.copyWith(dashboardWidgets: widgets));
+  }
 
   void seedGroups(int count) {
     container.read(groupsProvider.notifier).value = [
@@ -168,6 +177,7 @@ void main() {
 
   testWidgets('a wide window gives the memory card a column beside the '
       'services', (tester) async {
+    seedWidgets(const [...defaultDashboardWidgets, DashboardWidget.memoryInfo]);
     await pumpDashboard(tester, const Size(1440, 900));
 
     final upload = rectOf(tester, SpeedCard);
@@ -271,6 +281,7 @@ void main() {
   testWidgets('a wide window centres columns that stop growing', (
     tester,
   ) async {
+    seedWidgets(const [...defaultDashboardWidgets, DashboardWidget.memoryInfo]);
     await pumpDashboard(tester, const Size(2560, 1440));
 
     final current = rectOf(tester, CurrentOutboundCard);
@@ -340,6 +351,7 @@ void main() {
   testWidgets('a mid-width window stacks the same cards in two columns', (
     tester,
   ) async {
+    seedWidgets(const [...defaultDashboardWidgets, DashboardWidget.memoryInfo]);
     await pumpDashboard(tester, const Size(800, 900));
     final gap = cardSpacingOf(
       tester.element(find.byType(CurrentOutboundCard)),

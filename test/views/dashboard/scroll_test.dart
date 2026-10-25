@@ -6,13 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../helpers/preferences.dart';
 import '../../helpers/test_app.dart';
 import '../../helpers/test_profiles.dart';
 
 void main() {
   late ProviderContainer container;
 
-  setUp(() {
+  setUp(() async {
+    await mockPreferences({'beginnerMode': false});
     container = ProviderContainer(
       overrides: [profilesProvider.overrideWith(TestProfiles.new)],
     );

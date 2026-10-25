@@ -118,8 +118,8 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                         angle: _decorationTurn * progress,
                         child: Transform.scale(
                           scale: 1 + _decorationGrowth * progress,
-                          child: ShapeBadge(
-                            shape: MaterialShapes.cookie12Sided,
+                          child: DashboardDiscMotif(
+                            size: metrics.decorationSize,
                             color: Color.lerp(
                               colors.tone,
                               Color.alphaBlend(
@@ -128,7 +128,6 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                               ),
                               progress.clamp(0, 1),
                             )!,
-                            size: metrics.decorationSize,
                           ),
                         ),
                       ),
