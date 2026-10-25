@@ -316,6 +316,48 @@ void main() {
     expect(find.text('45 ms'), findsOneWidget);
   });
 
+  testWidgets('labels the card as direct while the proxy is off', (
+    tester,
+  ) async {
+    answer(
+      (params) => [
+        for (final name in params.names)
+          _item(name, ServiceProbeStatus.available),
+      ],
+    );
+    await tester.pumpWidget(app(started: false));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(ServiceStatusCard),
+        matching: find.text('Direct'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('carries no direct label while the proxy is running', (
+    tester,
+  ) async {
+    answer(
+      (params) => [
+        for (final name in params.names)
+          _item(name, ServiceProbeStatus.available),
+      ],
+    );
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(ServiceStatusCard),
+        matching: find.text('Direct'),
+      ),
+      findsNothing,
+    );
+  });
+
   Future<Finder> openCheckedSheet(
     WidgetTester tester, {
     required FutureOr<OutboundIpResult?> Function(OutboundIpParams params)

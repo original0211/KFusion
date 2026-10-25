@@ -22,6 +22,9 @@ class ServiceStatus extends _$ServiceStatus
       value.status == ServiceProbeStatus.failed;
 
   @override
+  bool get retryFailureOnce => true;
+
+  @override
   Future<Map<ServiceTarget, ProbeAnswer<ServiceCheck>>> probe(
     ServiceTarget target,
     RouteState route,

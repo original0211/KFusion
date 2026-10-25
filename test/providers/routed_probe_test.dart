@@ -44,6 +44,41 @@ class _Probe extends Notifier<RoutedProbeState<String, String>>
 final _probeProvider =
     NotifierProvider<_Probe, RoutedProbeState<String, String>>(_Probe.new);
 
+class _RetryProbe extends Notifier<RoutedProbeState<String, String>>
+    with RoutedProbe<String, String> {
+  final calls = <String>[];
+  final answers = <String>[];
+
+  @override
+  RoutedProbeState<String, String> build() => buildProbe();
+
+  @override
+  bool isFailure(String value) => value == 'down';
+
+  @override
+  bool get retryFailureOnce => true;
+
+  @override
+  Duration get failureRetryDelay => const Duration(milliseconds: 30);
+
+  @override
+  Future<Map<String, ProbeAnswer<String>>> probe(
+    String target,
+    RouteState route,
+  ) async {
+    calls.add(target);
+    final value = answers.isEmpty ? 'ok' : answers.removeAt(0);
+    return {
+      target: ProbeAnswer(value: value, coreEpoch: 1, picksVersion: 1),
+    };
+  }
+}
+
+final _retryProbeProvider =
+    NotifierProvider<_RetryProbe, RoutedProbeState<String, String>>(
+      _RetryProbe.new,
+    );
+
 const _route = RouteState(
   coreEpoch: 1,
   picksVersion: 1,
@@ -228,6 +263,80 @@ void main() {
     trackerOf(container).markResumed();
     await pumpEventQueue();
     expect(probe.calls, hasLength(3));
+  });
+
+  group('the one delayed retry', () {
+    ProviderContainer buildRetry() {
+      final container = ProviderContainer(
+        overrides: [routeTrackerProvider.overrideWithBuild((_, _) => _route)],
+      );
+      addTearDown(container.dispose);
+      container.listen(_retryProbeProvider, (_, _) {});
+      return container;
+    }
+
+    Future<void> elapseRetry() async {
+      await Future<void>.delayed(const Duration(milliseconds: 90));
+      await pumpEventQueue();
+    }
+
+    test('asks a failure once more after the delay, then no more', () async {
+      final container = buildRetry();
+      final probe = container.read(_retryProbeProvider.notifier);
+      probe.answers.addAll(['down', 'down', 'down']);
+      probe.watch('a');
+      await pumpEventQueue();
+      expect(probe.calls, ['a']);
+      expect(
+        container.read(_retryProbeProvider).entryOf('a').phase,
+        ProbePhase.failed,
+      );
+
+      await elapseRetry();
+      expect(probe.calls, ['a', 'a']);
+      expect(
+        container.read(_retryProbeProvider).entryOf('a').phase,
+        ProbePhase.failed,
+      );
+
+      await elapseRetry();
+      expect(probe.calls, hasLength(2));
+    });
+
+    test('a retry that answers replaces the failure', () async {
+      final container = buildRetry();
+      final probe = container.read(_retryProbeProvider.notifier);
+      probe.answers.addAll(['down', 'ok']);
+      probe.watch('a');
+      await pumpEventQueue();
+      expect(
+        container.read(_retryProbeProvider).entryOf('a').phase,
+        ProbePhase.failed,
+      );
+
+      await elapseRetry();
+      final entry = container.read(_retryProbeProvider).entryOf('a');
+      expect(entry.phase, ProbePhase.fresh);
+      expect(entry.value, 'ok');
+      expect(probe.calls, hasLength(2));
+    });
+
+    test('a new route re-arms the retry', () async {
+      final container = buildRetry();
+      final probe = container.read(_retryProbeProvider.notifier);
+      probe.answers.addAll(['down', 'down', 'down', 'down']);
+      probe.watch('a');
+      await pumpEventQueue();
+      await elapseRetry();
+      expect(probe.calls, hasLength(2));
+
+      trackerOf(container).bumpHostEpoch();
+      await pumpEventQueue();
+      expect(probe.calls, hasLength(3));
+
+      await elapseRetry();
+      expect(probe.calls, hasLength(4));
+    });
   });
 
   test('coming back to a failed target asks again', () async {

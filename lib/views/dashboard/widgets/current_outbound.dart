@@ -71,6 +71,9 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
     );
     final isStart = ref.watch(isStartProvider);
     final suspended = isStart && ref.watch(suspendProvider);
+    final proxied = ref.watch(
+      routeTrackerProvider.select((state) => state.proxied),
+    );
     final entry = ref.watch(
       outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
     );
@@ -155,6 +158,8 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                             tone: chipTone,
                             dot: isStart,
                           ),
+                          if (!proxied)
+                            DashboardChip(label: appLocalizations.direct),
                         ],
                       ),
                       SizedBox(height: metrics.ipTop),

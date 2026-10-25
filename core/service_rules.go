@@ -130,10 +130,19 @@ func chatGptIosStatus(result *ProbeResult) string {
 	}
 }
 
+// The premium page is the one heavy answer among the checks, so reachability
+// is settled on generate_204 and the page itself only refines the verdict.
 func checkYouTubePremium(env serviceEnv) ServiceCheckItem {
+	reach := env.get("https://www.youtube.com/generate_204", 0)
+	item := itemFrom(reach)
+	if !answered(item, reach) {
+		return item
+	}
+	item.Status = statusFromCode(reach.StatusCode)
+
 	result := env.get("https://www.youtube.com/premium?hl=en", serviceHtmlMaxBody)
-	item := itemFrom(result)
-	if !answered(item, result) {
+	premium := itemFrom(result)
+	if !answered(premium, result) {
 		return item
 	}
 	for _, pattern := range youTubeRegionPatterns {
@@ -142,19 +151,27 @@ func checkYouTubePremium(env serviceEnv) ServiceCheckItem {
 			break
 		}
 	}
+	if status, judged := youTubePremiumVerdict(result); judged {
+		item.Status = status
+	}
+	return item
+}
+
+// A page that neither names a region lockout nor shows Premium judges
+// nothing, and the reachability verdict stands.
+func youTubePremiumVerdict(result *ProbeResult) (string, bool) {
 	switch {
 	case bodyContains(result,
 		"youtube premium is not available in your country",
 		"premium is not available in your country",
 		"premium is not available in your region"):
-		item.Status = serviceUnsupportedRegion
+		return serviceUnsupportedRegion, true
 	case result.StatusCode >= 200 && result.StatusCode < 300 &&
 		bodyContains(result, "youtube premium", "ad-free", `"browseid":"spunlimited"`):
-		item.Status = serviceAvailable
+		return serviceAvailable, true
 	default:
-		item.Status = statusFromCode(result.StatusCode)
+		return "", false
 	}
-	return item
 }
 
 func checkSpotify(env serviceEnv) ServiceCheckItem {

@@ -80,6 +80,8 @@ mixin RoutedProbe<K, V>
   final Map<K, int> _inFlight = {};
   int _runs = 0;
   final Map<K, RouteState> _staleUnder = {};
+  final Map<K, RouteStamp> _failureRetried = {};
+  final Map<K, Timer> _failureRetryTimers = {};
   bool _scheduled = false;
   RouteState _route = const RouteState();
 
@@ -90,6 +92,14 @@ mixin RoutedProbe<K, V>
 
   @protected
   bool isFailure(V value) => false;
+
+  /// One delayed re-ask of a failure per route stamp, for consumers whose
+  /// failures are often a single slow answer rather than a verdict.
+  @protected
+  bool get retryFailureOnce => false;
+
+  @protected
+  Duration get failureRetryDelay => const Duration(seconds: 15);
 
   @protected
   RoutedProbeState<K, V> buildProbe() {
@@ -254,6 +264,9 @@ mixin RoutedProbe<K, V>
         value: value,
         stamp: stamp,
       );
+      if (failed) {
+        _scheduleFailureRetry(target, stamp);
+      }
     }
     for (final MapEntry(key: other, value: answer) in answers.entries) {
       final value = answer.value;
@@ -279,6 +292,27 @@ mixin RoutedProbe<K, V>
     if (_due.isNotEmpty) {
       _schedule();
     }
+  }
+
+  // Fires only while the failure that scheduled it is still standing: a
+  // route move or a newer answer replaces the entry and disarms it.
+  void _scheduleFailureRetry(K target, RouteStamp stamp) {
+    if (!retryFailureOnce || _failureRetried[target] == stamp) {
+      return;
+    }
+    _failureRetried[target] = stamp;
+    _failureRetryTimers[target]?.cancel();
+    _failureRetryTimers[target] = Timer(failureRetryDelay, () {
+      _failureRetryTimers.remove(target);
+      if (!ref.mounted || !_watchers.containsKey(target)) {
+        return;
+      }
+      final entry = _entryOf(target);
+      if (entry.phase != ProbePhase.failed || entry.stamp != stamp) {
+        return;
+      }
+      _mark(target, keepValue: true);
+    });
   }
 
   RouteStamp _stampOf(ProbeAnswer<V> answer, RouteState route) => RouteStamp(

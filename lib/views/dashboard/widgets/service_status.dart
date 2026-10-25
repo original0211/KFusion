@@ -203,6 +203,9 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
         .take(_shownServiceCount)
         .toList();
     _watchShown(shown.toSet());
+    final proxied = ref.watch(
+      routeTrackerProvider.select((state) => state.proxied),
+    );
     final state = ref.watch(serviceStatusProvider);
     final services = [
       for (final target in shown)
@@ -249,6 +252,7 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
             title: appLocalizations.serviceStatus,
             chevron: mobile,
             trailing: [
+              if (!proxied) DashboardChip(label: appLocalizations.direct),
               ?verdict,
               if (!mobile)
                 Transform.translate(

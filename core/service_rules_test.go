@@ -140,6 +140,31 @@ func TestYouTubeRegionPatterns(t *testing.T) {
 	}
 }
 
+func TestYouTubePremiumVerdict(t *testing.T) {
+	cases := []struct {
+		code   int
+		body   string
+		want   string
+		judged bool
+	}{
+		{http.StatusOK, "YouTube Premium is not available in your country", serviceUnsupportedRegion, true},
+		{http.StatusOK, "Premium is not available in your region", serviceUnsupportedRegion, true},
+		{http.StatusOK, "Get YouTube Premium for ad-free viewing", serviceAvailable, true},
+		{http.StatusOK, `{"browseId":"SPunlimited"}`, serviceAvailable, true},
+		{http.StatusOK, "<html>a consent page with no verdict</html>", "", false},
+		{http.StatusForbidden, "YouTube Premium", "", false},
+		{http.StatusNotFound, "", "", false},
+	}
+	for _, testCase := range cases {
+		result := &ProbeResult{StatusCode: testCase.code, Body: testCase.body}
+		got, judged := youTubePremiumVerdict(result)
+		if got != testCase.want || judged != testCase.judged {
+			t.Errorf("youTubePremiumVerdict(%d, %q) = %q, %v, want %q, %v",
+				testCase.code, testCase.body, got, judged, testCase.want, testCase.judged)
+		}
+	}
+}
+
 func TestDisneyAndPrimePatterns(t *testing.T) {
 	if got := firstSubmatch(disneyAssertionPattern, `{"assertion":"abc.def"}`); got != "abc.def" {
 		t.Errorf("assertion = %q", got)
