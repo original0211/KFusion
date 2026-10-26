@@ -1,5 +1,6 @@
 package com.kfusion.singbox
 
+import android.app.ApplicationExitInfo
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -48,6 +49,7 @@ import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
+import org.json.JSONObject
 import android.net.VpnService as SystemVpnService
 import io.nekohasekai.libbox.NetworkInterface as LibboxNetworkInterface
 
@@ -90,6 +92,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             }
             ACTION_STOP -> {
                 startAttempts.invalidate()
+                clearAttempt()
                 startGate.set(false)
                 SingBoxLog.append(this, "stop received; in-flight start retired")
                 clearSavedConfigPath(this)
@@ -131,6 +134,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         if (exit != null && exit.timestamp > prefs.getLong(PREF_EXIT_SURFACED, 0L)) {
             prefs.edit().putLong(PREF_EXIT_SURFACED, exit.timestamp).apply()
             SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit))
+            if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
+                SingBoxExitInfo.latestSignalLine(this)?.let { line ->
+                    SingBoxLog.append(this, "exit signal: $line")
+                }
+            }
             SingBoxExitInfo.traceExcerpt(this)?.let { trace ->
                 SingBoxLog.append(this, "exit trace excerpt:")
                 trace.lineSequence().take(12).forEach { line ->
@@ -198,6 +206,14 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             val configFile = File(configPath)
             check(configFile.isFile) { "sing-box 配置文件不存在：$configPath" }
             val content = configFile.readText()
+            val (decision, crashedLevel, crashedName) = startDecision()
+            if (decision == SingBoxStagedStart.Decision.REPORT) {
+                val verdict = SingBoxStagedStart.verdict(crashedLevel, crashedName)
+                SingBoxLog.append(this, verdict)
+                failStart(verdict)
+                return
+            }
+            isolateCacheIfDue()
             setupLibbox()
             SingBoxLog.append(this, "start: libbox ready")
             Libbox.checkConfig(content)
@@ -209,17 +225,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
             }
             SingBoxLog.append(this, "start: command server ready")
-            SingBoxLog.append(this, "start: startOrReloadService begin")
-            server.startOrReloadService(content, OverrideOptions())
-            SingBoxLog.append(this, "start: startOrReloadService returned")
-            if (!startAttempts.isLive(attempt)) {
-                SingBoxLog.append(this, "start: attempt retired in flight; tearing down")
-                stopBox()
-                return
+            if (decision == SingBoxStagedStart.Decision.STAGED) {
+                runStagedStart(server, content, attempt)
+            } else {
+                startFull(server, content, attempt)
             }
-            SingBoxStatus.write(this, SingBoxStatus.State.RUNNING, "")
-            SingBoxLog.append(this, "start: running")
-            GlobalState.log("sing-box service started")
         } catch (error: Throwable) {
             GlobalState.log("sing-box start failed: $error")
             if (startAttempts.isLive(attempt)) {
@@ -231,9 +241,113 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     }
 
     private fun failStart(message: String) {
+        clearAttempt()
         SingBoxLog.append(this, "start failed: $message")
         SingBoxStatus.write(this, SingBoxStatus.State.FAILED, message)
         stopSelf()
+    }
+
+    private fun startFull(server: CommandServer, content: String, attempt: Long) {
+        markAttempt(SingBoxStagedStart.NORMAL_LEVEL, "")
+        SingBoxLog.append(this, "start: startOrReloadService begin")
+        if (startOnce(server, content, attempt)) settleRunning()
+    }
+
+    private fun runStagedStart(server: CommandServer, content: String, attempt: Long) {
+        val plan = runCatching {
+            SingBoxStagedStart.levels(SingBoxStagedStart.factsOf(JSONObject(content)))
+        }.getOrNull()
+        if (plan == null) {
+            startFull(server, content, attempt)
+            return
+        }
+        for (level in plan) {
+            val levelContent = if (level.last) {
+                content
+            } else {
+                val built = runCatching { SingBoxStagedStart.build(content, level) }
+                    .getOrNull()
+                    ?.takeIf { runCatching { Libbox.checkConfig(it) }.isSuccess }
+                if (built == null) {
+                    SingBoxLog.append(
+                        this,
+                        "staged: L${level.index} trim rejected; falling back to full start",
+                    )
+                    startFull(server, content, attempt)
+                    return
+                }
+                built
+            }
+            markAttempt(level.index, level.name)
+            SingBoxLog.append(this, "staged: L${level.index} (${level.name}) begin")
+            SingBoxLog.append(this, "start: startOrReloadService begin")
+            if (!startOnce(server, levelContent, attempt)) return
+            SingBoxLog.append(this, "staged: L${level.index} (${level.name}) returned")
+        }
+        settleRunning()
+    }
+
+    private fun startOnce(server: CommandServer, content: String, attempt: Long): Boolean {
+        server.startOrReloadService(content, OverrideOptions())
+        SingBoxLog.append(this, "start: startOrReloadService returned")
+        if (!startAttempts.isLive(attempt)) {
+            SingBoxLog.append(this, "start: attempt retired in flight; tearing down")
+            stopBox()
+            return false
+        }
+        return true
+    }
+
+    private fun settleRunning() {
+        SingBoxStatus.write(this, SingBoxStatus.State.RUNNING, "")
+        clearAttempt()
+        SingBoxLog.append(this, "start: running")
+        GlobalState.log("sing-box service started")
+    }
+
+    private fun markAttempt(level: Int, levelName: String) {
+        // The ledger exists to survive this process dying mid-start: commit.
+        preferences().edit()
+            .putBoolean(PREF_ATTEMPT_OPEN, true)
+            .putInt(PREF_ATTEMPT_LEVEL, level)
+            .putString(PREF_ATTEMPT_LEVEL_NAME, levelName)
+            .putLong(PREF_ATTEMPT_SINCE, System.currentTimeMillis())
+            .commit()
+    }
+
+    private fun clearAttempt() {
+        preferences().edit()
+            .putBoolean(PREF_ATTEMPT_OPEN, false)
+            .putInt(PREF_ATTEMPT_LEVEL, SingBoxStagedStart.NORMAL_LEVEL)
+            .commit()
+    }
+
+    private fun startDecision(): Triple<SingBoxStagedStart.Decision, Int, String> {
+        val prefs = preferences()
+        val exit = SingBoxExitInfo.latest(this)
+        val level = prefs.getInt(PREF_ATTEMPT_LEVEL, SingBoxStagedStart.NORMAL_LEVEL)
+        val decision = SingBoxStagedStart.decide(
+            attemptOpen = prefs.getBoolean(PREF_ATTEMPT_OPEN, false),
+            attemptLevel = level,
+            exitReason = exit?.reason,
+            exitAt = exit?.timestamp ?: 0L,
+            attemptSince = prefs.getLong(PREF_ATTEMPT_SINCE, 0L),
+        )
+        val name = prefs.getString(PREF_ATTEMPT_LEVEL_NAME, "") ?: ""
+        return Triple(decision, level, name)
+    }
+
+    private fun isolateCacheIfDue() {
+        val exit = SingBoxExitInfo.latest(this) ?: return
+        if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) return
+        val prefs = preferences()
+        if (exit.timestamp <= prefs.getLong(PREF_CACHE_ISOLATED_FOR, 0L)) return
+        val size = SingBoxCacheGuard.isolate(File(filesDir, "singbox")) ?: return
+        prefs.edit().putLong(PREF_CACHE_ISOLATED_FOR, exit.timestamp).apply()
+        SingBoxLog.append(
+            this,
+            "stale cache isolated: cache.db ($size bytes) renamed after native crash",
+        )
     }
 
     private fun stopBox() {
@@ -633,6 +747,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         private const val PREF_CONFIG_PATH = "config_path"
         private const val PREF_EXIT_SURFACED = "exit_surfaced_at"
         private const val PREF_CRASH_SURFACED = "crash_surfaced_at"
+        private const val PREF_ATTEMPT_OPEN = "attempt_open"
+        private const val PREF_ATTEMPT_LEVEL = "attempt_level"
+        private const val PREF_ATTEMPT_LEVEL_NAME = "attempt_level_name"
+        private const val PREF_ATTEMPT_SINCE = "attempt_since"
+        private const val PREF_CACHE_ISOLATED_FOR = "cache_isolated_for"
         private const val PREFS_NAME = "singbox_service"
 
         // An explicit stop drops the saved path: no later resurrection on it.

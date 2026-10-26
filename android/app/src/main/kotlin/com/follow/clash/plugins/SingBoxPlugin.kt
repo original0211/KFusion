@@ -108,7 +108,10 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                                 if (exit == null) {
                                     "sing-box 进程在启动中退出"
                                 } else {
-                                    "sing-box 进程在启动中退出；${SingBoxExitInfo.summaryLine(exit)}"
+                                    val base = "sing-box 进程在启动中退出；" +
+                                        SingBoxExitInfo.summaryLine(exit)
+                                    val signal = SingBoxExitInfo.latestSignalLine(context)
+                                    if (signal == null) base else "$base；$signal"
                                 }
                             } else {
                                 snapshot?.message?.ifEmpty { null }

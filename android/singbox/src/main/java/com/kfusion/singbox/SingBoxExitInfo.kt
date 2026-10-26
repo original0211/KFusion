@@ -69,6 +69,27 @@ object SingBoxExitInfo {
         }.getOrNull()?.ifBlank { null }
     }
 
+    private val signalPattern = Regex("""^signal \d+ \(SIG[A-Z0-9]+\).*$""")
+
+    fun signalLine(trace: String?): String? {
+        if (trace.isNullOrBlank()) return null
+        return trace.lineSequence()
+            .map { it.trim() }
+            .firstOrNull { signalPattern.matches(it) }
+            ?.take(200)
+    }
+
+    fun latestSignalLine(context: Context): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        val exit = latestExitInfo(context) ?: return null
+        if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) return null
+        val stream = runCatching { exit.traceInputStream }.getOrNull() ?: return null
+        val text = runCatching {
+            stream.bufferedReader().use { reader -> reader.readText() }
+        }.getOrNull() ?: return null
+        return signalLine(text)
+    }
+
     private fun latestExitInfo(context: Context): ApplicationExitInfo? {
         val manager = context.getSystemService(ActivityManager::class.java) ?: return null
         val records =

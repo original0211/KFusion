@@ -53,6 +53,33 @@ class SingBoxExitInfoTest {
     }
 
     @Test
+    fun signalLineExtractsTheTombstoneSignal() {
+        val tombstone = """
+            Build fingerprint: 'google/pixel/pixel:14/UP1A/1:user/release-keys'
+            pid: 12345, tid: 12399, name: singbox  >>> com.follow.clash:singbox <<<
+            signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000
+                #00 pc 0000000000123456  /data/app/libbox.so
+        """.trimIndent()
+        assertEquals(
+            "signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000",
+            SingBoxExitInfo.signalLine(tombstone),
+        )
+    }
+
+    @Test
+    fun signalLineCoversBusErrorsAndMissingTraces() {
+        assertEquals(
+            "signal 7 (SIGBUS), code 2 (BUS_ADRERR), fault addr 0x0000007a1b2c3000",
+            SingBoxExitInfo.signalLine(
+                "signal 7 (SIGBUS), code 2 (BUS_ADRERR), fault addr 0x0000007a1b2c3000",
+            ),
+        )
+        assertNull(SingBoxExitInfo.signalLine("no signal recorded here"))
+        assertNull(SingBoxExitInfo.signalLine(null))
+        assertNull(SingBoxExitInfo.signalLine(""))
+    }
+
+    @Test
     fun crashReportTailKeepsOnlyTheLastNonBlankLines() {
         val working = folder.newFolder("singbox")
         val body = (1..50).joinToString("\n") { "line $it" } + "\n\n"
