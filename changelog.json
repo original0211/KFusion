@@ -2,6 +2,69 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.18",
+      "tag": "v0.2.18",
+      "date": "2026-10-27",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "c2e4147",
+              "scope": "ui",
+              "text": "The core switch card takes the cabin panel shadow. The general settings page's core switch card already sat on the cabin card corner with the rim, but it lay flat where its dashboard sibling is lifted by the panel shadow; it takes the same shadow now, from the same surface definition, so the two presentations of the one switch read as one card. Nothing inside the card moved — title, status sentence, failure detail, the binary area, the two core rows and every callback are byte-identical."
+            },
+            {
+              "id": "e875d97",
+              "scope": "ui",
+              "text": "The profile editor's core selector reads like the switch card. The editor used to pick a profile's core kind from a bare dropdown while the general page presents the same choice as two rows on the switch card; the editor now presents the two cores as card rows in that language — the core disc mark, the shared display name (sing-box keeps its hyphen), the running state and the selection check on the chosen row, which is inert, while the other row makes the same one call the dropdown made. The two platform captions keep their wording and their conditions and move inside the card."
+            },
+            {
+              "id": "d8a7047",
+              "scope": "ui",
+              "text": "The disclaimer body takes a cabin panel. The disclaimer text used to read flat on the page; it now sits in a raised cabin panel — card corner, rim and panel shadow — with its wording unchanged. The consent bar below it is untouched."
+            },
+            {
+              "id": "1a96aed",
+              "scope": "ui",
+              "text": "The about page's marks settle into the cabin language. The logo well gains the cabin rim, and the version pill — a solid primary fill — now reads as a marker chip: a raised surface carrying primary text, the way markers read everywhere else in the cabin, instead of a lone filled badge."
+            },
+            {
+              "id": "a84c2c0",
+              "scope": "ui",
+              "text": "Dialog and menu shapes take the cabin rim at the theme base. Dialogs, popup menus and menus already shared the floating corner; their theme shapes now carry the cabin rim side as well, defined in the one place all three shapes live, so every overlay the bases present is rimmed and there is no second definition anywhere to drift from it."
+            },
+            {
+              "id": "f996856",
+              "scope": "ui",
+              "text": "The popup card takes the floating corner and a rim on its plain fill. The morphing popup card sat on a corner one step under the floating tier the other overlays settled on; it takes the floating corner now, its rows concentric inside it, and its plain fill — the non-glass reading — gains the cabin rim. The glass path is unchanged."
+            },
+            {
+              "id": "dd79fcf",
+              "scope": "ui",
+              "text": "Sheet top corners settle on the floating corner. A sheet's crown sat one tier rounder than the dialogs and menus it appears beside; the snap sheet, the paged sheet and the theme's bottom-sheet shape now all take the floating corner, so every floating surface in the app crowns at the same radius."
+            },
+            {
+              "id": "7a14c26",
+              "scope": "ui",
+              "text": "The segmented control's chosen face takes the ink variant. The selected segment used to fill with the accent; it now fills with ink and its label takes the page step — the quieter reading the cabin reserves for a mode choice — at the two places the control serves: the theme page's mode strip and the palette's core segments. No other surface takes the variant."
+            },
+            {
+              "id": "095e7cc",
+              "scope": "ui",
+              "text": "Error faces settle to plan B: red stays on the glyph and the words. The error banner's container was the error fill; it now sits on a neutral raised surface with the cabin rim, its icon and text carrying the error color. The error illustration's body returns to the neutral surface steps, red surviving only in the central glyph. The fatal start-up error screen keeps its full red face by design — plan B grades the everyday error faces, not the fatal one."
+            },
+            {
+              "id": "8269cfa",
+              "scope": "core",
+              "text": "A concurrent delete that reaches the same end state is no longer an error. Deleting a file checked that it existed and then deleted it, so two callers clearing the same cache file at once raced: the loser was handed a file-not-found exception for an absence that was exactly what it had asked for, and the spurious failure once reddened a release build's test run after the test itself had already completed. Deletion now treats 'already gone' as the contract fulfilled; every other failure still propagates."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.17",
       "tag": "v0.2.17",
       "date": "2026-10-27",
