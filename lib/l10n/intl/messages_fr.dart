@@ -1171,6 +1171,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Indicateurs"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Organisation"),
+    "ipProbeNotice": MessageLookupByLibrary.simpleMessage(
+      "Les marques de type proviennent de la détection de l\'IP de sortie réelle de chaque nœud ; elles se remplissent progressivement lors de la première visite.",
+    ),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Impossible de déterminer le type de l’IP",
     ),
@@ -1195,6 +1198,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipTypeBusiness": MessageLookupByLibrary.simpleMessage("Entreprise"),
     "ipTypeHosting": MessageLookupByLibrary.simpleMessage("Centre de données"),
     "ipTypeMobile": MessageLookupByLibrary.simpleMessage("Réseau mobile"),
+    "ipTypeProbing": MessageLookupByLibrary.simpleMessage("Détection…"),
     "ipTypeResidential": MessageLookupByLibrary.simpleMessage("Résidentielle"),
     "ipTypeUnknown": MessageLookupByLibrary.simpleMessage("Type inconnu"),
     "ipVersion": MessageLookupByLibrary.simpleMessage("Version d’IP"),
@@ -1486,6 +1490,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage(
       "Phrase secrète de la clé privée",
     ),
+    "probeNodeIpType": MessageLookupByLibrary.simpleMessage(
+      "Détection du type d\'IP des nœuds",
+    ),
+    "probeNodeIpTypeDesc": MessageLookupByLibrary.simpleMessage(
+      "Détecte le type (résidentiel, centre de données…) à partir de l\'IP de sortie réelle de chaque nœud, affiché sur les lignes de la page des proxys",
+    ),
     "process": MessageLookupByLibrary.simpleMessage("Processus"),
     "profile": MessageLookupByLibrary.simpleMessage("Profil"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1566,6 +1576,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("Type d’enregistrement"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Port Redir"),
     "redo": MessageLookupByLibrary.simpleMessage("Rétablir"),
+    "refreshIpTypes": MessageLookupByLibrary.simpleMessage(
+      "Actualiser les types d\'IP",
+    ),
     "regex": MessageLookupByLibrary.simpleMessage("Regex"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("Libérer la mémoire"),
     "releaseMemoryFailed": MessageLookupByLibrary.simpleMessage(

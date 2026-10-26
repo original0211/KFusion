@@ -380,7 +380,7 @@ void main() {
           )
           .first,
     );
-    expect(card.radius, AppCorner.xl);
+    expect(card.radius, AppCorner.lg);
   });
 
   testWidgets('the plain group icon keeps the neutral mark colour', (

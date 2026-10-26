@@ -1,7 +1,10 @@
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/models/models.dart';
+import 'package:kfusion/providers/node_ip.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/ui/icons/icons.dart';
+import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/proxies/list.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,11 +26,14 @@ class ProxiesView extends ConsumerStatefulWidget {
 
 class _ProxiesViewState extends ConsumerState<ProxiesView> {
   final GlobalKey<ProxiesTabViewState> _proxiesTabKey = GlobalKey();
+  late final NodeIpSweeper _sweeper;
 
   // The same instance on every build, so the bar changing with the current
   // group or its delay test leaves the page alone.
   late final _tabView = ProxiesTabView(key: _proxiesTabKey);
   bool _isTab = false;
+  List<Group>? _pendingSweep;
+  bool _sweepScheduled = false;
 
   List<CommonPopupMenuItem> _buildMenuItems(BuildContext context) {
     final appLocalizations = context.appLocalizations;
@@ -72,6 +78,7 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   @override
   void initState() {
     super.initState();
+    _sweeper = ref.read(nodeIpSweeperProvider.notifier);
     ref.listenManual(
       proxiesStyleSettingProvider.select(
         (state) => state.type == ProxiesType.tab,
@@ -85,6 +92,30 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       },
       fireImmediately: true,
     );
+    ref.listenManual(groupsProvider, (_, groups) {
+      _pendingSweep = groups;
+      if (_sweepScheduled) return;
+      _sweepScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sweepScheduled = false;
+        final pending = _pendingSweep;
+        _pendingSweep = null;
+        if (!mounted || pending == null) return;
+        _sweeper.sweep([
+          for (final group in pending)
+            for (final proxy in group.all)
+              if (!GroupType.values.any((type) => type.name == proxy.type) &&
+                  proxy.name != 'REJECT')
+                proxy.name,
+        ]);
+      });
+    }, fireImmediately: true);
+  }
+
+  @override
+  void dispose() {
+    _sweeper.cancelSweep();
+    super.dispose();
   }
 
   @override
@@ -113,10 +144,86 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       menuItems: picker ? const [] : _buildMenuItems(context),
       title: context.appLocalizations.proxies,
       searchState: AppBarSearchState(onSearch: _onSearch),
-      body: switch (proxiesType) {
-        ProxiesType.tab => _tabView,
-        ProxiesType.list => const ProxiesListView(),
-      },
+      body: Column(
+        children: [
+          if (!picker) const _IpProbeNotice(),
+          Expanded(
+            child: switch (proxiesType) {
+              ProxiesType.tab => _tabView,
+              ProxiesType.list => const ProxiesListView(),
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One-time note under the bar: the type marks come from probing each
+/// node's real exit IP, so they fill in gradually on the first visit.
+class _IpProbeNotice extends ConsumerStatefulWidget {
+  const _IpProbeNotice();
+
+  @override
+  ConsumerState<_IpProbeNotice> createState() => _IpProbeNoticeState();
+}
+
+class _IpProbeNoticeState extends ConsumerState<_IpProbeNotice> {
+  bool _loaded = false;
+  bool _seen = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Preferences().getNodeIpNoticeSeen().then((seen) {
+      if (!mounted) return;
+      setState(() {
+        _loaded = true;
+        _seen = seen;
+      });
+    });
+  }
+
+  void _dismiss() {
+    setState(() => _seen = true);
+    Preferences().setNodeIpNoticeSeen();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = ref.watch(
+      appSettingProvider.select((state) => state.probeNodeIpType),
+    );
+    if (!_loaded || _seen || !enabled) return const SizedBox.shrink();
+    final colorScheme = context.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          color: context.raisedSurfaceLevel.colorOf(colorScheme),
+          shape: AppShape.lg.copyWith(side: colorScheme.cabinRimSide),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+                child: Text(
+                  context.appLocalizations.ipProbeNotice,
+                  style: AppTextStyle.caption1
+                      .of(context)
+                      .copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: context.appLocalizations.close,
+              onPressed: _dismiss,
+              icon: const GlyphIcon(AppGlyphs.close, size: 16),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -206,8 +206,9 @@ double chipLabelWidth(BuildContext context, String label) =>
 
 class MetaChip extends StatelessWidget {
   final String label;
+  final Color? color;
 
-  const MetaChip({super.key, required this.label});
+  const MetaChip({super.key, required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +226,7 @@ class MetaChip extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTextStyle.caption2
               .of(context, emphasized: true)
-              .copyWith(color: colorScheme.onSurfaceVariant),
+              .copyWith(color: color ?? colorScheme.onSurfaceVariant),
         ),
       ),
     );

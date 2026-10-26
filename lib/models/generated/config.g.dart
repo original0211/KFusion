@@ -62,6 +62,7 @@ _AppSettingProps _$AppSettingPropsFromJson(
           .toList() ??
       defaultFilters,
   hideIp: json['hideIp'] as bool? ?? false,
+  probeNodeIpType: json['probeNodeIpType'] as bool? ?? true,
   editorLineWrap: json['editorLineWrap'] as bool? ?? false,
   editorFontSize:
       $enumDecodeNullable(_$EditorFontSizeEnumMap, json['editorFontSize']) ??
@@ -117,6 +118,7 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
       'userAgents': instance.userAgents,
       'filters': instance.filters,
       'hideIp': instance.hideIp,
+      'probeNodeIpType': instance.probeNodeIpType,
       'editorLineWrap': instance.editorLineWrap,
       'editorFontSize': _$EditorFontSizeEnumMap[instance.editorFontSize]!,
       'serviceOrder': instance.serviceOrder,

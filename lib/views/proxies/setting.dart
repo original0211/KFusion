@@ -2,6 +2,8 @@ import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/config.dart';
+import 'package:kfusion/providers/node_ip.dart';
+import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,6 +118,17 @@ class ProxiesSetting extends ConsumerWidget {
                 onChanged: _writer(
                   (state, value) => state.copyWith(hideTimeoutProxies: value),
                 ),
+              ),
+            ],
+          ),
+          generateSection(
+            items: [
+              ListItem(
+                leading: const GlyphIcon(AppGlyphs.refresh),
+                title: Text(appLocalizations.refreshIpTypes),
+                onTap: () {
+                  ref.read(nodeIpSweeperProvider.notifier).refreshAll();
+                },
               ),
             ],
           ),

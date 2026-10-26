@@ -945,6 +945,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("検出"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("組織"),
+    "ipProbeNotice": MessageLookupByLibrary.simpleMessage(
+      "ノード行のタイプ表示は各ノードの実際の出口 IP の検出結果です。初回表示時に順次埋まります。",
+    ),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "IP タイプを判定できませんでした",
     ),
@@ -965,6 +968,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipTypeBusiness": MessageLookupByLibrary.simpleMessage("ビジネス"),
     "ipTypeHosting": MessageLookupByLibrary.simpleMessage("データセンター"),
     "ipTypeMobile": MessageLookupByLibrary.simpleMessage("モバイル回線"),
+    "ipTypeProbing": MessageLookupByLibrary.simpleMessage("検出中"),
     "ipTypeResidential": MessageLookupByLibrary.simpleMessage("住宅"),
     "ipTypeUnknown": MessageLookupByLibrary.simpleMessage("タイプ不明"),
     "ipVersion": MessageLookupByLibrary.simpleMessage("IP バージョン"),
@@ -1192,6 +1196,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "previousMatch": MessageLookupByLibrary.simpleMessage("前の一致"),
     "privateKey": MessageLookupByLibrary.simpleMessage("秘密鍵"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("秘密鍵のパスフレーズ"),
+    "probeNodeIpType": MessageLookupByLibrary.simpleMessage("ノード IP タイプ検出"),
+    "probeNodeIpTypeDesc": MessageLookupByLibrary.simpleMessage(
+      "各ノードの実際の出口 IP から住宅 / データセンターなどのタイプを検出し、プロキシ画面のノード行に表示します",
+    ),
     "process": MessageLookupByLibrary.simpleMessage("プロセス"),
     "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1258,6 +1266,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("レコードタイプ"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redirポート"),
     "redo": MessageLookupByLibrary.simpleMessage("やり直す"),
+    "refreshIpTypes": MessageLookupByLibrary.simpleMessage("IP タイプを更新"),
     "regex": MessageLookupByLibrary.simpleMessage("正規表現"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("メモリを解放"),
     "releaseMemoryFailed": MessageLookupByLibrary.simpleMessage(

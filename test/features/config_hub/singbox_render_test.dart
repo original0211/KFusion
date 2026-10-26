@@ -142,9 +142,11 @@ void main() {
     expect(byTag.containsKey('block'), isFalse);
     final route = config['route'] as Map;
     final rules = route['rules'] as List;
-    expect(rules.length, 7);
-    expect((rules.first as Map)['protocol'], 'dns');
-    expect((rules.first as Map)['action'], 'hijack-dns');
+    expect(rules.length, 8);
+    expect((rules.first as Map)['inbound'], ['probe-in']);
+    expect((rules.first as Map)['outbound'], 'probe');
+    expect((rules[1] as Map)['protocol'], 'dns');
+    expect((rules[1] as Map)['action'], 'hijack-dns');
     expect(route['final'], 'PROXY');
     final geoRules = [
       for (final entry in rules.skip(1))

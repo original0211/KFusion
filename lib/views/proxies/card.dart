@@ -8,6 +8,8 @@ import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'ip_type_mark.dart';
+
 void selectGroupProxy(
   WidgetRef ref, {
   required String groupName,
@@ -50,7 +52,8 @@ class ProxyCard extends ConsumerWidget {
 
   Measure get measure => globalState.measure;
 
-  Widget _buildProxyNameText(BuildContext context) {
+  Widget _buildProxyNameText(BuildContext context, {required bool inUse}) {
+    final style = AppTextStyle.subheadline.of(context, emphasized: inUse);
     if (type == ProxyCardType.compact) {
       return SizedBox(
         height: measure.textHeight(AppTextStyle.subheadline) * 1,
@@ -58,7 +61,7 @@ class ProxyCard extends ConsumerWidget {
           proxy.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.subheadline.of(context),
+          style: style,
         ),
       );
     } else {
@@ -68,7 +71,7 @@ class ProxyCard extends ConsumerWidget {
           proxy.name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.subheadline.of(context),
+          style: style,
         ),
       );
     }
@@ -83,7 +86,6 @@ class ProxyCard extends ConsumerWidget {
       testUrl: testUrl,
       alignment: isLoose ? Alignment.centerLeft : Alignment.centerRight,
     );
-    final proxyNameText = _buildProxyNameText(context);
     final typeStyle = AppTextStyle.footnote
         .of(context)
         .copyWith(
@@ -96,7 +98,14 @@ class ProxyCard extends ConsumerWidget {
             children: [
               SizedBox(
                 height: measure.textHeight(AppTextStyle.footnote),
-                child: _ProxyDesc(proxy: proxy, style: typeStyle),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: _ProxyDesc(proxy: proxy, style: typeStyle),
+                    ),
+                    NodeIpTypeSlot(proxy: proxy),
+                  ],
+                ),
               ),
               const SizedBox(height: 6),
               delayText,
@@ -114,6 +123,7 @@ class ProxyCard extends ConsumerWidget {
                     text: Text(proxy.type, maxLines: 1, style: typeStyle),
                   ),
                 ),
+                NodeIpTypeSlot(proxy: proxy),
                 delayText,
               ],
             ),
@@ -130,8 +140,8 @@ class ProxyCard extends ConsumerWidget {
             ref.watch(
               proxyNameProvider(groupName).select((name) => name == proxy.name),
             );
-        return CommonCard(
-          radius: AppCorner.xl,
+        final card = CommonCard(
+          radius: AppCorner.lg,
           enterActionsOnRight: true,
           key: key,
           onPressed: () {
@@ -154,7 +164,18 @@ class ProxyCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 4,
                   children: [
-                    Expanded(child: proxyNameText),
+                    if (inUse)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: DecoratedBox(
+                          decoration: ShapeDecoration(
+                            color: context.colorScheme.primary,
+                            shape: AppShape.full,
+                          ),
+                          child: const SizedBox(width: 7, height: 7),
+                        ),
+                      ),
+                    Expanded(child: _buildProxyNameText(context, inUse: inUse)),
                     if (pinned)
                       SelectionBadge.preferred(inUse: inUse)
                     else if (inUse)
@@ -166,6 +187,15 @@ class ProxyCard extends ConsumerWidget {
               ],
             ),
           ),
+        );
+        if (!inUse) return card;
+        return Container(
+          foregroundDecoration: ShapeDecoration(
+            shape: AppShape.lg.copyWith(
+              side: BorderSide(color: context.colorScheme.primary, width: 1.5),
+            ),
+          ),
+          child: card,
         );
       },
     );

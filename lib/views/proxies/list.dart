@@ -776,7 +776,7 @@ class _GroupSummary extends StatelessWidget {
           groupName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.callout.of(context, emphasized: true),
+          style: AppTextStyle.subheadline.of(context, emphasized: true),
         ),
         const SizedBox(height: 2),
         Flexible(flex: 1, child: _SelectedProxyName(groupName: groupName)),
@@ -850,11 +850,9 @@ class _GroupActions extends StatelessWidget {
               ],
             )
           else
-            Text(
-              groupType,
-              style: AppTextStyle.caption1
-                  .of(context, emphasized: true)
-                  .toLight,
+            MetaChip(
+              label: groupType,
+              color: Theme.of(context).colorScheme.primary,
             ),
           const SizedBox(width: 6),
           ElasticPress(

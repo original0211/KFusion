@@ -932,6 +932,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("플래그"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("조직"),
+    "ipProbeNotice": MessageLookupByLibrary.simpleMessage(
+      "노드 행의 유형 표시는 각 노드의 실제 출구 IP를 탐지한 결과이며, 처음 방문하면 점차 채워집니다.",
+    ),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "IP 유형을 확인할 수 없습니다",
     ),
@@ -950,6 +953,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipTypeBusiness": MessageLookupByLibrary.simpleMessage("기업용"),
     "ipTypeHosting": MessageLookupByLibrary.simpleMessage("데이터 센터"),
     "ipTypeMobile": MessageLookupByLibrary.simpleMessage("모바일 네트워크"),
+    "ipTypeProbing": MessageLookupByLibrary.simpleMessage("탐지 중"),
     "ipTypeResidential": MessageLookupByLibrary.simpleMessage("가정용"),
     "ipTypeUnknown": MessageLookupByLibrary.simpleMessage("알 수 없는 유형"),
     "ipVersion": MessageLookupByLibrary.simpleMessage("IP 버전"),
@@ -1173,6 +1177,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "previousMatch": MessageLookupByLibrary.simpleMessage("이전 결과"),
     "privateKey": MessageLookupByLibrary.simpleMessage("개인 키"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("개인 키 암호"),
+    "probeNodeIpType": MessageLookupByLibrary.simpleMessage("노드 IP 유형 탐지"),
+    "probeNodeIpTypeDesc": MessageLookupByLibrary.simpleMessage(
+      "각 노드의 실제 출구 IP로 주거용 / 데이터센터 등의 유형을 탐지해 프록시 페이지 노드 행에 표시합니다",
+    ),
     "process": MessageLookupByLibrary.simpleMessage("프로세스"),
     "profile": MessageLookupByLibrary.simpleMessage("프로필"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1237,6 +1245,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("레코드 유형"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir 포트"),
     "redo": MessageLookupByLibrary.simpleMessage("다시 실행"),
+    "refreshIpTypes": MessageLookupByLibrary.simpleMessage("IP 유형 새로고침"),
     "regex": MessageLookupByLibrary.simpleMessage("정규식"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("메모리 해제"),
     "releaseMemoryFailed": MessageLookupByLibrary.simpleMessage(

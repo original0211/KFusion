@@ -1138,6 +1138,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Метки"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Организация"),
+    "ipProbeNotice": MessageLookupByLibrary.simpleMessage(
+      "Метки типов берутся из проверки реального выходного IP каждого узла; при первом посещении страницы они заполняются постепенно.",
+    ),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось определить тип IP",
     ),
@@ -1160,6 +1163,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipTypeBusiness": MessageLookupByLibrary.simpleMessage("Бизнес"),
     "ipTypeHosting": MessageLookupByLibrary.simpleMessage("Дата-центр"),
     "ipTypeMobile": MessageLookupByLibrary.simpleMessage("Мобильная сеть"),
+    "ipTypeProbing": MessageLookupByLibrary.simpleMessage("Определение"),
     "ipTypeResidential": MessageLookupByLibrary.simpleMessage("Домашний"),
     "ipTypeUnknown": MessageLookupByLibrary.simpleMessage("Тип неизвестен"),
     "ipVersion": MessageLookupByLibrary.simpleMessage("Версия IP"),
@@ -1451,6 +1455,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage(
       "Пароль закрытого ключа",
     ),
+    "probeNodeIpType": MessageLookupByLibrary.simpleMessage(
+      "Определение типа IP узлов",
+    ),
+    "probeNodeIpTypeDesc": MessageLookupByLibrary.simpleMessage(
+      "Определяет тип (домашний, дата-центр…) по реальному выходному IP каждого узла и показывает его в строках узлов на странице прокси",
+    ),
     "process": MessageLookupByLibrary.simpleMessage("Процесс"),
     "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1521,6 +1531,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("Тип записи"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Порт Redir"),
     "redo": MessageLookupByLibrary.simpleMessage("Повторить"),
+    "refreshIpTypes": MessageLookupByLibrary.simpleMessage("Обновить типы IP"),
     "regex": MessageLookupByLibrary.simpleMessage("Регулярное выражение"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("Освободить память"),
     "releaseMemoryFailed": MessageLookupByLibrary.simpleMessage(

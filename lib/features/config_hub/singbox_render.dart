@@ -10,6 +10,11 @@ class SingBoxRenderResult {
   final List<String> unsupported;
 }
 
+// Additive only: the probe channel never joins a user group.
+const singBoxProbeSelectorTag = 'probe';
+const singBoxProbeInboundTag = 'probe-in';
+const singBoxProbePort = 17909;
+
 Map<String, Object?> _asMap(Object? value) {
   if (value is Map) {
     return {
@@ -443,6 +448,8 @@ SingBoxRenderResult renderSingBoxFromClash(
   bool tunEnabled = false,
   int clashApiPort = 9091,
   int mixedPort = 7890,
+  bool probeEnabled = true,
+  int probePort = singBoxProbePort,
 }) {
   return renderSingBox(
     _irFromClashMap(clash),
@@ -450,6 +457,8 @@ SingBoxRenderResult renderSingBoxFromClash(
     tunEnabled: tunEnabled,
     clashApiPort: clashApiPort,
     mixedPort: mixedPort,
+    probeEnabled: probeEnabled,
+    probePort: probePort,
   );
 }
 
@@ -459,6 +468,8 @@ SingBoxRenderResult renderSingBox(
   bool tunEnabled = false,
   int clashApiPort = 9091,
   int mixedPort = 7890,
+  bool probeEnabled = true,
+  int probePort = singBoxProbePort,
 }) {
   final unsupported = <String>[];
   final outbounds = <Map<String, Object?>>[];
@@ -542,6 +553,15 @@ SingBoxRenderResult renderSingBox(
       'stack': 'system',
     });
   }
+  if (probeEnabled) {
+    _injectProbeChannel(
+      inbounds: inbounds,
+      outbounds: outbounds,
+      endpoints: endpoints,
+      rules: rules,
+      probePort: probePort,
+    );
+  }
   final config = <String, Object?>{
     'log': {'level': 'info', 'timestamp': true},
     'dns': {
@@ -594,4 +614,45 @@ SingBoxRenderResult renderSingBox(
     },
   };
   return SingBoxRenderResult(config: config, unsupported: unsupported);
+}
+
+// A probe-tag collision or no leaf outbound skips the injection whole.
+void _injectProbeChannel({
+  required List<Map<String, Object?>> inbounds,
+  required List<Map<String, Object?>> outbounds,
+  required List<Map<String, Object?>> endpoints,
+  required List<Map<String, Object?>> rules,
+  required int probePort,
+}) {
+  final taken = <String>{
+    for (final outbound in outbounds) _asString(outbound['tag']),
+    for (final endpoint in endpoints) _asString(endpoint['tag']),
+    for (final inbound in inbounds) _asString(inbound['tag']),
+  };
+  if (taken.contains(singBoxProbeSelectorTag) ||
+      taken.contains(singBoxProbeInboundTag)) {
+    return;
+  }
+  final leaves = <String>[
+    for (final outbound in outbounds)
+      if (outbound['type'] != 'selector' && outbound['type'] != 'urltest')
+        _asString(outbound['tag']),
+    for (final endpoint in endpoints) _asString(endpoint['tag']),
+  ];
+  if (leaves.isEmpty) return;
+  outbounds.add({
+    'type': 'selector',
+    'tag': singBoxProbeSelectorTag,
+    'outbounds': leaves,
+  });
+  inbounds.add({
+    'type': 'mixed',
+    'tag': singBoxProbeInboundTag,
+    'listen': '127.0.0.1',
+    'listen_port': probePort,
+  });
+  rules.insert(0, {
+    'inbound': [singBoxProbeInboundTag],
+    'outbound': singBoxProbeSelectorTag,
+  });
 }
