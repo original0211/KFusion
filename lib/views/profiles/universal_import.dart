@@ -178,13 +178,16 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             onTap: _busy ? null : _loadFromUrl,
           ),
           DecorationListItem(
-            title: TextField(
-              controller: _urlController,
-              keyboardType: TextInputType.url,
-              autocorrect: false,
-              decoration: const InputDecoration.collapsed(
-                border: NoInputBorder(),
-                hintText: 'https://…',
+            title: _PayloadWell(
+              level: SurfaceLevel.inset,
+              child: TextField(
+                controller: _urlController,
+                keyboardType: TextInputType.url,
+                autocorrect: false,
+                decoration: const InputDecoration.collapsed(
+                  border: NoInputBorder(),
+                  hintText: 'https://…',
+                ),
               ),
             ),
           ),
@@ -219,14 +222,17 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
             onTap: _busy ? null : () => _showPreview(_pasteController.text),
           ),
           DecorationListItem(
-            title: TextField(
-              controller: _pasteController,
-              minLines: 4,
-              maxLines: null,
-              autocorrect: false,
-              decoration: const InputDecoration.collapsed(
-                border: NoInputBorder(),
-                hintText: '粘贴配置文本…',
+            title: _PayloadWell(
+              level: SurfaceLevel.inset,
+              child: TextField(
+                controller: _pasteController,
+                minLines: 4,
+                maxLines: null,
+                autocorrect: false,
+                decoration: const InputDecoration.collapsed(
+                  border: NoInputBorder(),
+                  hintText: '粘贴配置文本…',
+                ),
               ),
             ),
           ),
@@ -266,7 +272,12 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
               ? 'Android 由 sing-box VPN 运行时接管（真机待验）。'
               : null,
           items: [
-            DecorationListItem(title: Text(_previewText(preview))),
+            DecorationListItem(
+              title: _PayloadWell(
+                level: SurfaceLevel.block,
+                child: Text(_previewText(preview)),
+              ),
+            ),
             if (_exportMessage != null)
               DecorationListItem(title: Text(_exportMessage!)),
           ],
@@ -326,6 +337,29 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
           ErrorBanner(message: _error),
           ...sections.separated(const SizedBox(height: 24)),
         ],
+      ),
+    );
+  }
+}
+
+class _PayloadWell extends StatelessWidget {
+  const _PayloadWell({required this.level, required this.child});
+
+  final SurfaceLevel level;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: level.colorOf(colorScheme),
+        borderRadius: BorderRadius.circular(AppCorner.md),
+        border: Border.all(color: colorScheme.cabinRim),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: child,
       ),
     );
   }
