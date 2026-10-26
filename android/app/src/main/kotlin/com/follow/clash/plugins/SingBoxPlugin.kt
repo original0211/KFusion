@@ -12,6 +12,7 @@ import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
 import com.kfusion.singbox.SingBoxExitInfo
 import com.kfusion.singbox.SingBoxLog
+import com.kfusion.singbox.SingBoxStagedStart
 import com.kfusion.singbox.SingBoxStatus
 import com.kfusion.singbox.SingBoxVpnService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -104,15 +105,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                         }
                         SingBoxStartGate.Verdict.FAILED -> {
                             message = if (snapshot?.state == SingBoxStatus.State.STARTING) {
-                                val exit = SingBoxExitInfo.latest(context)
-                                if (exit == null) {
-                                    "sing-box 进程在启动中退出"
-                                } else {
-                                    val base = "sing-box 进程在启动中退出；" +
-                                        SingBoxExitInfo.summaryLine(exit)
-                                    val signal = SingBoxExitInfo.latestSignalLine(context)
-                                    if (signal == null) base else "$base；$signal"
-                                }
+                                deathMessage(context, epoch)
                             } else {
                                 snapshot?.message?.ifEmpty { null }
                                     ?: "sing-box 启动失败"
@@ -129,6 +122,25 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 mainHandler.post { result.success(message) }
             }
         }
+    }
+
+    // An exit record is quoted only when the mirrored ledger ties it to this poll's attempt.
+    private fun deathMessage(context: Context, epoch: Long): String {
+        val generic = "sing-box 进程在启动中退出"
+        val exit = SingBoxExitInfo.latest(context) ?: return generic
+        val attempt = SingBoxStatus.readAttempt(context) ?: return generic
+        if (attempt.since < epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS) return generic
+        if (!SingBoxStagedStart.isAttemptDeath(true, exit.timestamp, attempt.since)) {
+            return generic
+        }
+        val base = "$generic；" + SingBoxExitInfo.attemptDeathLine(
+            attempt.seq,
+            attempt.level,
+            attempt.levelName,
+            exit,
+        )
+        val signal = SingBoxExitInfo.latestSignalLine(context)
+        return if (signal == null) base else "$base；$signal"
     }
 
     private fun stopInFlightStart(context: Context) {

@@ -42,6 +42,25 @@ class SingBoxExitInfoTest {
     }
 
     @Test
+    fun attemptDeathLineNamesANormalAttempt() {
+        val record = SingBoxExitInfo.Record(3, 1_761_000_000_000L, "", 100)
+        val line = SingBoxExitInfo.attemptDeathLine(2, -1, "", record)
+        assertTrue(line.startsWith("attempt #2 died: LOW_MEMORY(3) at "))
+    }
+
+    @Test
+    fun attemptDeathLineNamesAStagedLevel() {
+        val record = SingBoxExitInfo.Record(5, 1_761_000_000_000L, "crash", 100)
+        val line = SingBoxExitInfo.attemptDeathLine(5, 1, "outbounds and dns", record)
+        assertTrue(
+            line.startsWith(
+                "attempt #5 died at L1 (outbounds and dns): CRASH_NATIVE(5) at ",
+            ),
+        )
+        assertTrue(line.endsWith(" - crash"))
+    }
+
+    @Test
     fun crashReportIsUnreadUntilItChanges() {
         val working = folder.newFolder("singbox")
         assertNull(SingBoxCrashReport.unreadLines(working, 0L))

@@ -23,6 +23,14 @@ object SingBoxStatus {
         val message: String,
     )
 
+    // The service's open start attempt, mirrored for the app process; presence is the open flag.
+    data class Attempt(
+        val seq: Long,
+        val level: Int,
+        val levelName: String,
+        val since: Long,
+    )
+
     private fun directory(context: Context) = File(context.filesDir, "singbox")
 
     private fun file(context: Context) = File(directory(context), "status.json")
@@ -97,5 +105,47 @@ object SingBoxStatus {
                 message = json.optString("message"),
             )
         }.getOrNull()
+    }
+
+    fun attemptFileIn(directory: File) = File(directory, "attempt.txt")
+
+    fun writeAttempt(context: Context, attempt: Attempt) =
+        writeAttemptTo(directory(context), attempt)
+
+    fun readAttempt(context: Context): Attempt? = readAttemptFrom(directory(context))
+
+    fun clearAttemptMirror(context: Context) = clearAttemptIn(directory(context))
+
+    fun writeAttemptTo(directory: File, attempt: Attempt) {
+        val payload = buildString {
+            append("seq=").append(attempt.seq).append('\n')
+            append("level=").append(attempt.level).append('\n')
+            append("name=").append(attempt.levelName).append('\n')
+            append("since=").append(attempt.since).append('\n')
+        }
+        writeFile(attemptFileIn(directory), payload)
+    }
+
+    fun readAttemptFrom(directory: File): Attempt? {
+        val target = attemptFileIn(directory)
+        if (!target.isFile) return null
+        return runCatching {
+            val fields = target.readLines()
+                .mapNotNull { line ->
+                    val split = line.indexOf('=')
+                    if (split <= 0) null else line.substring(0, split) to line.substring(split + 1)
+                }
+                .toMap()
+            Attempt(
+                seq = fields.getValue("seq").toLong(),
+                level = fields.getValue("level").toInt(),
+                levelName = fields["name"] ?: "",
+                since = fields.getValue("since").toLong(),
+            )
+        }.getOrNull()
+    }
+
+    fun clearAttemptIn(directory: File) {
+        attemptFileIn(directory).delete()
     }
 }

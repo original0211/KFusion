@@ -7,7 +7,8 @@ import org.json.JSONObject
 object SingBoxStagedStart {
     const val NORMAL_LEVEL = -1
 
-    private const val TIMESTAMP_SLACK_MS = 60_000L
+    // A death an attempt owns cannot predate its mark (same wall clock); 5s still separates taps 46s apart.
+    const val ASSOCIATION_SLACK_MS = 5_000L
 
     enum class Decision { NORMAL, STAGED, REPORT }
 
@@ -26,6 +27,9 @@ object SingBoxStagedStart {
         val hasExperimental: Boolean,
     )
 
+    fun isAttemptDeath(attemptOpen: Boolean, exitAt: Long, attemptSince: Long): Boolean =
+        attemptOpen && exitAt >= attemptSince - ASSOCIATION_SLACK_MS
+
     fun decide(
         attemptOpen: Boolean,
         attemptLevel: Int,
@@ -33,9 +37,12 @@ object SingBoxStagedStart {
         exitAt: Long,
         attemptSince: Long,
     ): Decision {
-        if (!attemptOpen) return Decision.NORMAL
-        if (exitReason != ApplicationExitInfo.REASON_CRASH_NATIVE) return Decision.NORMAL
-        if (exitAt < attemptSince - TIMESTAMP_SLACK_MS) return Decision.NORMAL
+        if (!isAttemptDeath(attemptOpen, exitAt, attemptSince)) return Decision.NORMAL
+        if (exitReason != ApplicationExitInfo.REASON_CRASH_NATIVE &&
+            exitReason != ApplicationExitInfo.REASON_LOW_MEMORY
+        ) {
+            return Decision.NORMAL
+        }
         return if (attemptLevel >= 0) Decision.REPORT else Decision.STAGED
     }
 
@@ -58,12 +65,19 @@ object SingBoxStagedStart {
             Stage.FULL -> "full config"
         }
 
-    fun verdict(index: Int, name: String): String =
-        if (name.isBlank()) {
-            "staged start: crashed at L$index"
+    fun verdict(exitReason: Int?, index: Int, name: String): String {
+        val action =
+            if (exitReason == ApplicationExitInfo.REASON_LOW_MEMORY) {
+                "low-memory killed"
+            } else {
+                "crashed"
+            }
+        return if (name.isBlank()) {
+            "staged start: $action at L$index"
         } else {
-            "staged start: crashed at L$index ($name)"
+            "staged start: $action at L$index ($name)"
         }
+    }
 
     fun factsOf(full: JSONObject): Facts {
         val route = full.optJSONObject("route")

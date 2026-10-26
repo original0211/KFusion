@@ -52,7 +52,19 @@ class SingBoxStagedStartTest {
     }
 
     @Test
-    fun decideIgnoresNonNativeDeaths() {
+    fun decideIgnoresDeathsThatAreNeitherNativeNorLowMemory() {
+        val decision = SingBoxStagedStart.decide(
+            attemptOpen = true,
+            attemptLevel = SingBoxStagedStart.NORMAL_LEVEL,
+            exitReason = 2,
+            exitAt = since + 90,
+            attemptSince = since,
+        )
+        assertEquals(SingBoxStagedStart.Decision.NORMAL, decision)
+    }
+
+    @Test
+    fun decideArmsStagedAfterALowMemoryDeathInANormalStart() {
         val decision = SingBoxStagedStart.decide(
             attemptOpen = true,
             attemptLevel = SingBoxStagedStart.NORMAL_LEVEL,
@@ -60,7 +72,52 @@ class SingBoxStagedStartTest {
             exitAt = since + 90,
             attemptSince = since,
         )
+        assertEquals(SingBoxStagedStart.Decision.STAGED, decision)
+    }
+
+    @Test
+    fun decideReportsAfterALowMemoryDeathInsideAStagedLevel() {
+        val decision = SingBoxStagedStart.decide(
+            attemptOpen = true,
+            attemptLevel = 2,
+            exitReason = 3,
+            exitAt = since + 90,
+            attemptSince = since,
+        )
+        assertEquals(SingBoxStagedStart.Decision.REPORT, decision)
+    }
+
+    @Test
+    fun decideIgnoresLowMemoryDeathsWithoutAnOpenAttempt() {
+        val decision = SingBoxStagedStart.decide(
+            attemptOpen = false,
+            attemptLevel = SingBoxStagedStart.NORMAL_LEVEL,
+            exitReason = 3,
+            exitAt = since + 90,
+            attemptSince = since,
+        )
         assertEquals(SingBoxStagedStart.Decision.NORMAL, decision)
+    }
+
+    @Test
+    fun decideIgnoresLowMemoryDeathsOlderThanTheAttempt() {
+        val decision = SingBoxStagedStart.decide(
+            attemptOpen = true,
+            attemptLevel = SingBoxStagedStart.NORMAL_LEVEL,
+            exitReason = 3,
+            exitAt = since - 120_000,
+            attemptSince = since,
+        )
+        assertEquals(SingBoxStagedStart.Decision.NORMAL, decision)
+    }
+
+    @Test
+    fun attemptDeathAssociationEndsAtTheSlackBoundary() {
+        val slack = SingBoxStagedStart.ASSOCIATION_SLACK_MS
+        assertTrue(SingBoxStagedStart.isAttemptDeath(true, since - slack, since))
+        assertTrue(!SingBoxStagedStart.isAttemptDeath(true, since - slack - 1, since))
+        assertTrue(SingBoxStagedStart.isAttemptDeath(true, since + 90, since))
+        assertTrue(!SingBoxStagedStart.isAttemptDeath(false, since + 90, since))
     }
 
     @Test
@@ -137,11 +194,23 @@ class SingBoxStagedStartTest {
     fun verdictNamesTheCrashedLevel() {
         assertEquals(
             "staged start: crashed at L2 (rule sets)",
-            SingBoxStagedStart.verdict(2, "rule sets"),
+            SingBoxStagedStart.verdict(5, 2, "rule sets"),
         )
         assertEquals(
             "staged start: crashed at L0",
-            SingBoxStagedStart.verdict(0, ""),
+            SingBoxStagedStart.verdict(5, 0, ""),
+        )
+    }
+
+    @Test
+    fun verdictNamesTheLowMemoryKilledLevel() {
+        assertEquals(
+            "staged start: low-memory killed at L4 (full config)",
+            SingBoxStagedStart.verdict(3, 4, "full config"),
+        )
+        assertEquals(
+            "staged start: low-memory killed at L0",
+            SingBoxStagedStart.verdict(3, 0, ""),
         )
     }
 

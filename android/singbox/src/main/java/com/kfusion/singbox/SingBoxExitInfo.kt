@@ -40,10 +40,21 @@ object SingBoxExitInfo {
             else -> "UNRECOGNIZED"
         }
 
-    fun summaryLine(record: Record): String {
+    fun summaryLine(record: Record): String = "process exit: ${exitTail(record)}"
+
+    fun attemptDeathLine(seq: Long, level: Int, levelName: String, record: Record): String {
+        val where = if (level >= 0) {
+            if (levelName.isBlank()) " at L$level" else " at L$level ($levelName)"
+        } else {
+            ""
+        }
+        return "attempt #$seq died$where: ${exitTail(record)}"
+    }
+
+    private fun exitTail(record: Record): String {
         val stamp =
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(record.timestamp))
-        val base = "process exit: ${reasonLabel(record.reason)}(${record.reason}) at $stamp"
+        val base = "${reasonLabel(record.reason)}(${record.reason}) at $stamp"
         return if (record.description.isBlank()) base else "$base - ${record.description}"
     }
 

@@ -1,5 +1,6 @@
 package com.kfusion.singbox
 
+import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.app.NotificationManager
 import android.content.Context
@@ -13,6 +14,7 @@ import android.net.NetworkCapabilities
 import android.net.ProxyInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Debug
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.Settings
@@ -133,7 +135,17 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         val exit = SingBoxExitInfo.latest(this)
         if (exit != null && exit.timestamp > prefs.getLong(PREF_EXIT_SURFACED, 0L)) {
             prefs.edit().putLong(PREF_EXIT_SURFACED, exit.timestamp).apply()
-            SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit))
+            val attemptNote = if (SingBoxStagedStart.isAttemptDeath(
+                    prefs.getBoolean(PREF_ATTEMPT_OPEN, false),
+                    exit.timestamp,
+                    prefs.getLong(PREF_ATTEMPT_SINCE, 0L),
+                )
+            ) {
+                " · attempt #${prefs.getLong(PREF_ATTEMPT_SEQ, 0L)}"
+            } else {
+                ""
+            }
+            SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit) + attemptNote)
             if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
                 SingBoxExitInfo.latestSignalLine(this)?.let { line ->
                     SingBoxLog.append(this, "exit signal: $line")
@@ -206,9 +218,13 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             val configFile = File(configPath)
             check(configFile.isFile) { "sing-box 配置文件不存在：$configPath" }
             val content = configFile.readText()
-            val (decision, crashedLevel, crashedName) = startDecision()
-            if (decision == SingBoxStagedStart.Decision.REPORT) {
-                val verdict = SingBoxStagedStart.verdict(crashedLevel, crashedName)
+            val decision = startDecision()
+            if (decision.kind == SingBoxStagedStart.Decision.REPORT) {
+                val verdict = SingBoxStagedStart.verdict(
+                    decision.exitReason,
+                    decision.level,
+                    decision.levelName,
+                )
                 SingBoxLog.append(this, verdict)
                 failStart(verdict)
                 return
@@ -225,7 +241,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
             }
             SingBoxLog.append(this, "start: command server ready")
-            if (decision == SingBoxStagedStart.Decision.STAGED) {
+            if (decision.kind == SingBoxStagedStart.Decision.STAGED) {
                 runStagedStart(server, content, attempt)
             } else {
                 startFull(server, content, attempt)
@@ -249,8 +265,15 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     private fun startFull(server: CommandServer, content: String, attempt: Long) {
         markAttempt(SingBoxStagedStart.NORMAL_LEVEL, "")
+        SingBoxLog.append(this, memorySnapshotLine())
         SingBoxLog.append(this, "start: startOrReloadService begin")
         if (startOnce(server, content, attempt)) settleRunning()
+    }
+
+    private fun memorySnapshotLine(): String {
+        val info = ActivityManager.MemoryInfo()
+        getSystemService<ActivityManager>()?.getMemoryInfo(info)
+        return SingBoxMemory.snapshotLine(Debug.getPss(), info.availMem / 1024, info.lowMemory)
     }
 
     private fun runStagedStart(server: CommandServer, content: String, attempt: Long) {
@@ -279,7 +302,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 built
             }
             markAttempt(level.index, level.name)
-            SingBoxLog.append(this, "staged: L${level.index} (${level.name}) begin")
+            SingBoxLog.append(
+                this,
+                "staged: L${level.index} (${level.name}) begin; " +
+                    SingBoxMemory.pssFragment(Debug.getPss()),
+            )
             SingBoxLog.append(this, "start: startOrReloadService begin")
             if (!startOnce(server, levelContent, attempt)) return
             SingBoxLog.append(this, "staged: L${level.index} (${level.name}) returned")
@@ -307,12 +334,20 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     private fun markAttempt(level: Int, levelName: String) {
         // The ledger exists to survive this process dying mid-start: commit.
-        preferences().edit()
+        val prefs = preferences()
+        val seq = prefs.getLong(PREF_ATTEMPT_SEQ, 0L) + 1
+        val since = System.currentTimeMillis()
+        prefs.edit()
             .putBoolean(PREF_ATTEMPT_OPEN, true)
             .putInt(PREF_ATTEMPT_LEVEL, level)
             .putString(PREF_ATTEMPT_LEVEL_NAME, levelName)
-            .putLong(PREF_ATTEMPT_SINCE, System.currentTimeMillis())
+            .putLong(PREF_ATTEMPT_SINCE, since)
+            .putLong(PREF_ATTEMPT_SEQ, seq)
             .commit()
+        SingBoxStatus.writeAttempt(
+            this,
+            SingBoxStatus.Attempt(seq, level, levelName, since),
+        )
     }
 
     private fun clearAttempt() {
@@ -320,13 +355,21 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             .putBoolean(PREF_ATTEMPT_OPEN, false)
             .putInt(PREF_ATTEMPT_LEVEL, SingBoxStagedStart.NORMAL_LEVEL)
             .commit()
+        SingBoxStatus.clearAttemptMirror(this)
     }
 
-    private fun startDecision(): Triple<SingBoxStagedStart.Decision, Int, String> {
+    private data class StartDecision(
+        val kind: SingBoxStagedStart.Decision,
+        val level: Int,
+        val levelName: String,
+        val exitReason: Int?,
+    )
+
+    private fun startDecision(): StartDecision {
         val prefs = preferences()
         val exit = SingBoxExitInfo.latest(this)
         val level = prefs.getInt(PREF_ATTEMPT_LEVEL, SingBoxStagedStart.NORMAL_LEVEL)
-        val decision = SingBoxStagedStart.decide(
+        val kind = SingBoxStagedStart.decide(
             attemptOpen = prefs.getBoolean(PREF_ATTEMPT_OPEN, false),
             attemptLevel = level,
             exitReason = exit?.reason,
@@ -334,13 +377,19 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             attemptSince = prefs.getLong(PREF_ATTEMPT_SINCE, 0L),
         )
         val name = prefs.getString(PREF_ATTEMPT_LEVEL_NAME, "") ?: ""
-        return Triple(decision, level, name)
+        return StartDecision(kind, level, name, exit?.reason)
     }
 
     private fun isolateCacheIfDue() {
         val exit = SingBoxExitInfo.latest(this) ?: return
         if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) return
         val prefs = preferences()
+        val attemptDeath = SingBoxStagedStart.isAttemptDeath(
+            prefs.getBoolean(PREF_ATTEMPT_OPEN, false),
+            exit.timestamp,
+            prefs.getLong(PREF_ATTEMPT_SINCE, 0L),
+        )
+        if (!attemptDeath) return
         if (exit.timestamp <= prefs.getLong(PREF_CACHE_ISOLATED_FOR, 0L)) return
         val size = SingBoxCacheGuard.isolate(File(filesDir, "singbox")) ?: return
         prefs.edit().putLong(PREF_CACHE_ISOLATED_FOR, exit.timestamp).apply()
@@ -751,6 +800,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         private const val PREF_ATTEMPT_LEVEL = "attempt_level"
         private const val PREF_ATTEMPT_LEVEL_NAME = "attempt_level_name"
         private const val PREF_ATTEMPT_SINCE = "attempt_since"
+        private const val PREF_ATTEMPT_SEQ = "attempt_seq"
         private const val PREF_CACHE_ISOLATED_FOR = "cache_isolated_for"
         private const val PREFS_NAME = "singbox_service"
 
