@@ -121,7 +121,9 @@ class _AboutHero extends StatelessWidget {
             child: DecoratedBox(
               decoration: ShapeDecoration(
                 color: context.raisedSurfaceLevel.colorOf(colorScheme),
-                shape: AppShape.all(AppCorner.fit(_logoSize)),
+                shape: AppShape.all(
+                  AppCorner.fit(_logoSize),
+                ).copyWith(side: colorScheme.cabinRimSide),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(_logoInset),
@@ -146,8 +148,8 @@ class _AboutHero extends StatelessWidget {
             children: [
               _Pill(
                 label: 'v${globalState.packageInfo.version}',
-                color: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
+                color: context.raisedSurfaceLevel.colorOf(colorScheme),
+                foregroundColor: colorScheme.primary,
               ),
               _Pill(
                 label: 'GPL-3.0',
