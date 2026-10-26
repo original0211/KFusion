@@ -14,6 +14,7 @@ import 'package:kfusion/providers/core.dart';
 import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
+import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -438,45 +439,109 @@ class _CoreKindField extends ConsumerWidget {
 
   final int profileId;
 
+  Widget _coreRow(
+    BuildContext context,
+    WidgetRef ref,
+    CoreKind kind,
+    CoreKind current,
+  ) {
+    final selected = kind == current;
+    final colorScheme = context.colorScheme;
+    const shape = AppShape.md;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: context.raisedSurfaceLevel.colorOf(colorScheme),
+        shape: shape,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          customBorder: shape,
+          onTap: selected
+              ? null
+              : () => ref
+                    .read(coreKindsProvider.notifier)
+                    .setKind(profileId, kind),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                DashboardDiscMotif(
+                  size: 20,
+                  color: selected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    coreKindDisplayName(kind),
+                    style: context.listTitleStyle,
+                  ),
+                ),
+                if (selected) const SelectionCheck(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final kind = ref.watch(coreKindsProvider).value?[profileId];
     final current = kind ?? CoreKind.mihomo;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FormRow(
-          title: '运行核心',
-          trailing: DropdownButton<CoreKind>(
-            value: current,
-            items: [
-              for (final option in CoreKind.values)
-                DropdownMenuItem(value: option, child: Text(option.value)),
+    final position = ItemPositionProvider.of(context)?.position;
+    final isStart =
+        position == ItemPosition.start || position == ItemPosition.startAndEnd;
+    final isEnd =
+        position == ItemPosition.end || position == ItemPosition.startAndEnd;
+    final borderRadius = AppRadius.vertical(
+      top: isStart ? AppCorner.xl : AppCorner.none,
+      bottom: isEnd ? AppCorner.xl : AppCorner.none,
+    );
+    return CommonCard(
+      shape: AppShape.of(borderRadius),
+      padding: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text('运行核心', style: context.listTitleStyle),
+            const SizedBox(height: 12),
+            _coreRow(context, ref, CoreKind.mihomo, current),
+            const SizedBox(height: 8),
+            _coreRow(context, ref, CoreKind.singbox, current),
+            if (current == CoreKind.singbox && system.isAndroid) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Android 由 sing-box VPN 运行时接管（真机待验）。',
+                style: context.listCaptionStyle,
+              ),
             ],
-            onChanged: (value) {
-              if (value != null) {
-                ref.read(coreKindsProvider.notifier).setKind(profileId, value);
-              }
-            },
-          ),
+            if (current == CoreKind.singbox && system.isWindows) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Windows 下由 sing-box 子进程运行，需先放好二进制。',
+                style: context.listCaptionStyle,
+              ),
+            ],
+            const SizedBox(height: 12),
+            if (!isEnd)
+              Divider(
+                height: 1,
+                indent: 0,
+                endIndent: 14,
+                color:
+                    DividerTheme.of(context).color ??
+                    context.colorScheme.outlineVariant,
+              ),
+          ],
         ),
-        if (current == CoreKind.singbox && system.isAndroid)
-          Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 8),
-            child: Text(
-              'Android 由 sing-box VPN 运行时接管（真机待验）。',
-              style: context.listCaptionStyle,
-            ),
-          ),
-        if (current == CoreKind.singbox && system.isWindows)
-          Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 8),
-            child: Text(
-              'Windows 下由 sing-box 子进程运行，需先放好二进制。',
-              style: context.listCaptionStyle,
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
