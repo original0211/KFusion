@@ -8,8 +8,6 @@ import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'ip_type_mark.dart';
-
 void selectGroupProxy(
   WidgetRef ref, {
   required String groupName,
@@ -103,7 +101,6 @@ class ProxyCard extends ConsumerWidget {
                     Flexible(
                       child: _ProxyDesc(proxy: proxy, style: typeStyle),
                     ),
-                    NodeIpTypeSlot(proxy: proxy),
                   ],
                 ),
               ),
@@ -123,7 +120,6 @@ class ProxyCard extends ConsumerWidget {
                     text: Text(proxy.type, maxLines: 1, style: typeStyle),
                   ),
                 ),
-                NodeIpTypeSlot(proxy: proxy),
                 delayText,
               ],
             ),

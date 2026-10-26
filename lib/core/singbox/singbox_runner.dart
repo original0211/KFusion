@@ -150,31 +150,7 @@ class SingBoxClashApi {
     }
   }
 
-  Future<void> _put(String path, Map<String, Object?> body) async {
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 2);
-    try {
-      final request = await client.putUrl(_uri(path));
-      request.headers.set('Authorization', 'Bearer $secret');
-      request.headers.contentType = ContentType.json;
-      request.write(json.encode(body));
-      final response = await request.close();
-      await response.drain<void>();
-      if (response.statusCode != 200 && response.statusCode != 204) {
-        throw HttpException(
-          'sing-box clash_api $path -> ${response.statusCode}',
-        );
-      }
-    } finally {
-      client.close();
-    }
-  }
-
   Future<Map<String, Object?>> getProxies() => _get('/proxies');
-
-  Future<void> selectProxy(String group, String name) {
-    return _put('/proxies/${Uri.encodeComponent(group)}', {'name': name});
-  }
 
   Future<int> delay(String proxyName, String url) async {
     final data = await _get(

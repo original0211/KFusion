@@ -254,7 +254,6 @@ abstract class AppSettingProps with _$AppSettingProps {
     List<String> userAgents,
     @Default(defaultFilters) List<Filter> filters,
     @Default(false) bool hideIp,
-    @Default(true) bool probeNodeIpType,
     @Default(false) bool editorLineWrap,
     @Default(EditorFontSize.standard) EditorFontSize editorFontSize,
     @Default([]) List<String> serviceOrder,

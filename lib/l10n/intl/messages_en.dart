@@ -1103,9 +1103,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Flags"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Organization"),
-    "ipProbeNotice": MessageLookupByLibrary.simpleMessage(
-      "Type marks on node rows come from probing each node\'s real exit IP; they fill in gradually on the first visit.",
-    ),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Couldn\'t determine the IP type",
     ),
@@ -1126,7 +1123,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipTypeBusiness": MessageLookupByLibrary.simpleMessage("Business"),
     "ipTypeHosting": MessageLookupByLibrary.simpleMessage("Data center"),
     "ipTypeMobile": MessageLookupByLibrary.simpleMessage("Mobile network"),
-    "ipTypeProbing": MessageLookupByLibrary.simpleMessage("Probing"),
     "ipTypeResidential": MessageLookupByLibrary.simpleMessage("Residential"),
     "ipTypeUnknown": MessageLookupByLibrary.simpleMessage("Unknown type"),
     "ipVersion": MessageLookupByLibrary.simpleMessage("IP version"),
@@ -1394,12 +1390,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage(
       "Private key passphrase",
     ),
-    "probeNodeIpType": MessageLookupByLibrary.simpleMessage(
-      "Probe node IP types",
-    ),
-    "probeNodeIpTypeDesc": MessageLookupByLibrary.simpleMessage(
-      "Detects residential / data-center types from each node\'s real exit IP, shown on node rows in the proxies page",
-    ),
     "process": MessageLookupByLibrary.simpleMessage("Process"),
     "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1472,7 +1462,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("Record type"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir port"),
     "redo": MessageLookupByLibrary.simpleMessage("Redo"),
-    "refreshIpTypes": MessageLookupByLibrary.simpleMessage("Refresh IP types"),
     "regex": MessageLookupByLibrary.simpleMessage("Regex"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("Release memory"),
     "releaseMemoryFailed": MessageLookupByLibrary.simpleMessage(

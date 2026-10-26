@@ -35,7 +35,6 @@ class ThemeView extends StatelessWidget {
           _NavigationBarItem(),
           SizedBox(height: 16),
           _CabinCoreCompactItem(),
-          _ProbeNodeIpTypeItem(),
           _TabAnimationItem(),
           SizedBox(height: 16),
           _LiquidGlassItem(),
@@ -691,36 +690,6 @@ class _CabinCoreCompactItem extends ConsumerWidget {
               ref
                   .read(appSettingProvider.notifier)
                   .update((state) => state.copyWith(cabinCoreCompact: value));
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProbeNodeIpTypeItem extends ConsumerWidget {
-  const _ProbeNodeIpTypeItem();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final enabled = ref.watch(
-      appSettingProvider.select((state) => state.probeNodeIpType),
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: generateSection(
-        items: [
-          ListItem.toggle(
-            leading: const GlyphIcon(AppGlyphs.proxies),
-            title: Text(appLocalizations.probeNodeIpType),
-            subtitle: Text(appLocalizations.probeNodeIpTypeDesc),
-            value: enabled,
-            onChanged: (value) {
-              ref
-                  .read(appSettingProvider.notifier)
-                  .update((state) => state.copyWith(probeNodeIpType: value));
             },
           ),
         ],

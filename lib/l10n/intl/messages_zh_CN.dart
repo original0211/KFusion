@@ -865,9 +865,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("命中标记"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("组织"),
-    "ipProbeNotice": MessageLookupByLibrary.simpleMessage(
-      "节点行上的类型标记来自对每个节点真实出口 IP 的探测，首次进入本页时会逐步补齐。",
-    ),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage("类型查询失败"),
     "ipQualityGood": MessageLookupByLibrary.simpleMessage("优"),
     "ipQualityLevel": MessageLookupByLibrary.simpleMessage("等级"),
@@ -884,7 +881,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipTypeBusiness": MessageLookupByLibrary.simpleMessage("商业"),
     "ipTypeHosting": MessageLookupByLibrary.simpleMessage("机房"),
     "ipTypeMobile": MessageLookupByLibrary.simpleMessage("移动网络"),
-    "ipTypeProbing": MessageLookupByLibrary.simpleMessage("探测中"),
     "ipTypeResidential": MessageLookupByLibrary.simpleMessage("住宅"),
     "ipTypeUnknown": MessageLookupByLibrary.simpleMessage("类型未知"),
     "ipVersion": MessageLookupByLibrary.simpleMessage("IP 版本"),
@@ -1090,10 +1086,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "previousMatch": MessageLookupByLibrary.simpleMessage("上一个匹配"),
     "privateKey": MessageLookupByLibrary.simpleMessage("私钥"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("私钥密码"),
-    "probeNodeIpType": MessageLookupByLibrary.simpleMessage("节点 IP 类型探测"),
-    "probeNodeIpTypeDesc": MessageLookupByLibrary.simpleMessage(
-      "按每个节点的真实出口 IP 探测住宅 / 机房等类型，显示在代理页的节点行上",
-    ),
     "process": MessageLookupByLibrary.simpleMessage("进程"),
     "profile": MessageLookupByLibrary.simpleMessage("配置"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1158,7 +1150,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("记录类型"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir端口"),
     "redo": MessageLookupByLibrary.simpleMessage("重做"),
-    "refreshIpTypes": MessageLookupByLibrary.simpleMessage("刷新 IP 类型"),
     "regex": MessageLookupByLibrary.simpleMessage("正则"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("释放内存"),
     "releaseMemoryFailed": MessageLookupByLibrary.simpleMessage("释放内存失败"),

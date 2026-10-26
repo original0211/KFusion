@@ -61,38 +61,6 @@ class Preferences {
     );
   }
 
-  // Carries the sweeper's node-IP map document; its schema lives there.
-  Future<Map<String, Object?>> getNodeIpMap() async {
-    final preferences = await _store.value;
-    final raw = preferences?.getString('nodeIpMap');
-    if (raw == null) return {};
-    try {
-      final decoded = json.decode(raw);
-      if (decoded is! Map) return {};
-      return {
-        for (final MapEntry(:key, :value) in decoded.entries)
-          key.toString(): value,
-      };
-    } catch (_) {
-      return {};
-    }
-  }
-
-  Future<void> setNodeIpMap(Map<String, Object?> map) async {
-    final preferences = await _store.value;
-    await preferences?.setString('nodeIpMap', json.encode(map));
-  }
-
-  Future<bool> getNodeIpNoticeSeen() async {
-    final preferences = await _store.value;
-    return preferences?.getBool('nodeIpNoticeSeen') ?? false;
-  }
-
-  Future<void> setNodeIpNoticeSeen() async {
-    final preferences = await _store.value;
-    await preferences?.setBool('nodeIpNoticeSeen', true);
-  }
-
   Future<String> getActiveCoreKind() async {
     final preferences = await _store.value;
     return preferences?.getString('activeCoreKind') ?? 'mihomo';

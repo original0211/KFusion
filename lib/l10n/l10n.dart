@@ -6148,51 +6148,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Probe node IP types`
-  String get probeNodeIpType {
-    return Intl.message(
-      'Probe node IP types',
-      name: 'probeNodeIpType',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Detects residential / data-center types from each node's real exit IP, shown on node rows in the proxies page`
-  String get probeNodeIpTypeDesc {
-    return Intl.message(
-      'Detects residential / data-center types from each node\'s real exit IP, shown on node rows in the proxies page',
-      name: 'probeNodeIpTypeDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Probing`
-  String get ipTypeProbing {
-    return Intl.message('Probing', name: 'ipTypeProbing', desc: '', args: []);
-  }
-
-  /// `Type marks on node rows come from probing each node's real exit IP; they fill in gradually on the first visit.`
-  String get ipProbeNotice {
-    return Intl.message(
-      'Type marks on node rows come from probing each node\'s real exit IP; they fill in gradually on the first visit.',
-      name: 'ipProbeNotice',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Refresh IP types`
-  String get refreshIpTypes {
-    return Intl.message(
-      'Refresh IP types',
-      name: 'refreshIpTypes',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Flags`
   String get ipFlags {
     return Intl.message('Flags', name: 'ipFlags', desc: '', args: []);
