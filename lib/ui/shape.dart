@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ClipOp, lerpDouble;
 
+import 'package:kfusion/ui/surface.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Corner radii. A surface takes one of the main tiers — [xl] for a card,
@@ -266,7 +267,9 @@ class AppInputBorder extends InputBorder {
 extension AppShapeThemeExt on ThemeData {
   ThemeData get withAppShapes => copyWith(
     cardTheme: cardTheme.copyWith(shape: AppShape.xl),
-    dialogTheme: dialogTheme.copyWith(shape: AppShape.floating),
+    dialogTheme: dialogTheme.copyWith(
+      shape: AppShape.floating.copyWith(side: colorScheme.cabinRimSide),
+    ),
     bottomSheetTheme: bottomSheetTheme.copyWith(
       shape: AppShape.top(AppCorner.xxl),
     ),
@@ -282,10 +285,14 @@ extension AppShapeThemeExt on ThemeData {
       ),
     ),
     chipTheme: chipTheme.copyWith(shape: AppShape.sm),
-    popupMenuTheme: popupMenuTheme.copyWith(shape: AppShape.floating),
+    popupMenuTheme: popupMenuTheme.copyWith(
+      shape: AppShape.floating.copyWith(side: colorScheme.cabinRimSide),
+    ),
     menuTheme: MenuThemeData(
       style: (menuTheme.style ?? const MenuStyle()).copyWith(
-        shape: const WidgetStatePropertyAll(AppShape.floating),
+        shape: WidgetStatePropertyAll(
+          AppShape.floating.copyWith(side: colorScheme.cabinRimSide),
+        ),
       ),
     ),
     inputDecorationTheme: inputDecorationTheme.copyWith(border: AppShape.input),
