@@ -43,9 +43,9 @@ double recordListExtentEstimation(int? index, double crossAxisExtent) {
 }
 
 /// The card row of a record list — requests, connections, DNS queries,
-/// resources: one record per card at the xl corner, never a ruled table
-/// row. A layout wide enough to read across columns takes `RecordTable`
-/// over the same [RecordTextStyles] instead.
+/// resources: one record per row card at the lg corner with the cabin rim,
+/// never a ruled table row. A layout wide enough to read across columns
+/// takes `RecordTable` over the same [RecordTextStyles] instead.
 class RecordListItem extends StatelessWidget {
   final Widget header;
   final Widget body;
@@ -60,7 +60,7 @@ class RecordListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const shape = AppShape.xl;
+    final shape = AppShape.lg.copyWith(side: context.colorScheme.cabinRimSide);
     final level = context.raisedSurfaceLevel;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
