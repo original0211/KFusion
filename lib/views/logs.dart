@@ -209,7 +209,33 @@ class LogItem extends StatelessWidget {
           ),
         ],
       ),
-      body: _LogBody(payload: payload, errorColor: tone.accentColor(context)),
+      body: _LogWell(
+        child: _LogBody(
+          payload: payload,
+          errorColor: tone.accentColor(context),
+        ),
+      ),
+    );
+  }
+}
+
+class _LogWell extends StatelessWidget {
+  const _LogWell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: SurfaceLevel.inset.colorOf(colorScheme),
+        shape: AppShape.md.copyWith(side: colorScheme.cabinRimSide),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: child,
+      ),
     );
   }
 }
