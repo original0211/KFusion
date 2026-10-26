@@ -48,7 +48,8 @@ object SingBoxStagedStart {
     ): Decision {
         if (!isAttemptDeath(attemptOpen, exitAt, attemptSince)) return Decision.NORMAL
         if (exitReason != ApplicationExitInfo.REASON_CRASH_NATIVE &&
-            exitReason != ApplicationExitInfo.REASON_LOW_MEMORY
+            exitReason != ApplicationExitInfo.REASON_LOW_MEMORY &&
+            exitReason != ApplicationExitInfo.REASON_SIGNALED
         ) {
             return Decision.NORMAL
         }

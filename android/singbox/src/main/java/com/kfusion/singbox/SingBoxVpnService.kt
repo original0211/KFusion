@@ -396,7 +396,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     private fun isolateCacheIfDue() {
         val exit = SingBoxExitInfo.latest(this) ?: return
-        if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) return
+        if (!SingBoxCacheGuard.isolationDue(exit.reason)) return
         val prefs = preferences()
         val attemptDeath = SingBoxStagedStart.isAttemptDeath(
             prefs.getBoolean(PREF_ATTEMPT_OPEN, false),
@@ -407,9 +407,15 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         if (exit.timestamp <= prefs.getLong(PREF_CACHE_ISOLATED_FOR, 0L)) return
         val size = SingBoxCacheGuard.isolate(File(filesDir, "singbox")) ?: return
         prefs.edit().putLong(PREF_CACHE_ISOLATED_FOR, exit.timestamp).apply()
+        val cause =
+            if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
+                "native crash"
+            } else {
+                "signaled death"
+            }
         SingBoxLog.append(
             this,
-            "stale cache isolated: cache.db ($size bytes) renamed after native crash",
+            "stale cache isolated: cache.db ($size bytes) renamed after $cause",
         )
     }
 

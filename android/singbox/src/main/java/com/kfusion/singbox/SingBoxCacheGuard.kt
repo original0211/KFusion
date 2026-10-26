@@ -1,5 +1,6 @@
 package com.kfusion.singbox
 
+import android.app.ApplicationExitInfo
 import java.io.File
 
 object SingBoxCacheGuard {
@@ -20,6 +21,10 @@ object SingBoxCacheGuard {
         }
         return removed
     }
+
+    fun isolationDue(reason: Int): Boolean =
+        reason == ApplicationExitInfo.REASON_CRASH_NATIVE ||
+            reason == ApplicationExitInfo.REASON_SIGNALED
 
     fun isolate(workingDir: File): Long? {
         val cache = cacheFileIn(workingDir)
