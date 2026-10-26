@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.14 (2026-10-26)
+
+**Bug Fixes**
+
+- **core** A sing-box process death is now charged to the start attempt that owned it: every attempt carries a sequence number, written with its ledger entry and mirrored where the main process can read it, and an exit record is only quoted when it falls inside the attempt's own five-second association window — a verdict that belongs to this tap reads 'attempt #<n> died: LOW_MEMORY(3) at …', the matching line in the service log gains the same attempt suffix, and an earlier death, an idle-time reclaim or a record that has not landed yet is never presented as this tap's failure again (886ceeb)
+- **core** The staged start ladder is now armed for low-memory kills as well as native crashes: an attempt death the system records as LOW_MEMORY inside its window sends the next start down the same trimmed levels, and the verdict names the cause as well as the level — 'staged start: low-memory killed at L<k> (<name>)' — with the full-config level stating plainly that the whole start's peak is in question; deaths that are neither a native crash nor a low-memory kill still leave the ladder unarmed (886ceeb)
+- **core** Every real start now leaves a memory snapshot in the service log immediately before it runs — 'start: memory snapshot: pss <x> MB, avail <y> MB, lowMemory=<bool>' — and each staged level's begin line carries that level's own PSS, so the level whose start first inflates memory is visible in the numbers next to the moment it happened, and the system's free-memory and low-memory readings at the time stand as the pressure evidence beside any kill (886ceeb)
+
 ## v0.2.13 (2026-10-26)
 
 **Bug Fixes**
