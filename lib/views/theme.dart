@@ -325,7 +325,7 @@ class _ColorSwatches extends ConsumerWidget {
       padding: const EdgeInsets.all(_inset),
       decoration: ShapeDecoration(
         color: level.colorOf(colorScheme),
-        shape: AppShape.xl,
+        shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
       ),
       child: SurfaceScope(
         level: level,
@@ -443,7 +443,7 @@ class _ColorSwatchState extends State<_ColorSwatch> {
                     decoration: ShapeDecoration(
                       shape: AppShape.circle.copyWith(
                         side: BorderSide(
-                          color: selected ? fill : context.colorScheme.primary,
+                          color: context.colorScheme.primary,
                           width: _ColorSwatch._ring,
                         ),
                       ),
@@ -873,11 +873,12 @@ class _FontFamilyItem extends ConsumerWidget {
       ),
     );
     final cardColor = context.raisedSurfaceLevel.colorOf(colorScheme);
+    final cardShape = AppShape.xl.copyWith(side: colorScheme.cabinRimSide);
     Widget card(VoidCallback onTap) => Material(
       color: cardColor,
-      shape: AppShape.xl,
+      shape: cardShape,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(customBorder: AppShape.xl, onTap: onTap, child: preview),
+      child: InkWell(customBorder: cardShape, onTap: onTap, child: preview),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -974,7 +975,7 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 decoration: ShapeDecoration(
                   color: level.colorOf(colorScheme),
-                  shape: AppShape.xl,
+                  shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1220,7 +1221,7 @@ class _CustomColorPreview extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: ShapeDecoration(
         color: level.colorOf(context.colorScheme),
-        shape: AppShape.xl,
+        shape: AppShape.xl.copyWith(side: context.colorScheme.cabinRimSide),
       ),
       child: SurfaceScope(
         level: level,
