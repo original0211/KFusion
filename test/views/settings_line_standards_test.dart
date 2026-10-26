@@ -221,7 +221,10 @@ void main() {
         of: find.text('Aa').first,
         matching: find.byType(Material),
       );
-      expect(tester.widget<Material>(fontCard.first).shape, AppShape.xl);
+      final fontShape =
+          tester.widget<Material>(fontCard.first).shape
+              as RoundedSuperellipseBorder;
+      expect(fontShape.borderRadius, AppRadius.xl);
     });
   });
 }

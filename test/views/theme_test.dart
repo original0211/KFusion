@@ -356,7 +356,7 @@ void main() {
         matching: find.byType(type),
       );
       int selected() =>
-          tester.widget<MiniScreen>(inPreview(MiniScreen)).selected;
+          tester.widgetList<MiniScreen>(inPreview(MiniScreen)).first.selected;
 
       for (final destination in [2, 1]) {
         await tester.tap(inPreview(GestureDetector).at(destination));

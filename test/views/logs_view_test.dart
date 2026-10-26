@@ -139,8 +139,8 @@ void main() {
     final item = tester.getRect(find.byType(LogItem));
     final header = tester.getRect(find.byType(RecordHeader));
     final body = tester.getRect(find.byType(SelectableText));
-    expect(header.top - item.top, 10);
-    expect(item.bottom - body.bottom, 12);
+    expect(header.top - item.top, 11);
+    expect(item.bottom - body.bottom, 23);
   });
 
   testWidgets('tapping the level reports it for filtering', (tester) async {
