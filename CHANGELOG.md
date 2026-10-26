@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.12 (2026-10-26)
+
+**Bug Fixes**
+
+- **core** A failed sing-box start now names the recorded cause of the process death instead of only reporting that the process exited: on every service start the newest system process exit record for the sing-box process is read, and its reason — a native crash, low memory, a signal and the rest of the platform set — is written to the service log and folded into the switch card's failure detail, so the next failure reads its exit reason on the card itself (b45c1eb)
+- **core** The Go crash report the core's error output is redirected to is now read back instead of sitting unread in the working directory: its last forty lines join the service log once per change alongside the exit record, so a fatal crash inside the core leaves its stack where the failure detail and the next diagnosis can reach it (b45c1eb)
+- **core** Errors escaping the sing-box start and profile check paths are no longer silent: both catches are widened from exceptions to all throwables, so an escaping error now fails the attempt in writing — a failed state and a log line — instead of the start thread vanishing without a trace and leaving only a timeout or a dead-process verdict behind, and the service's reload entry gains begin, returned and failed markers with the same treatment (b45c1eb)
+- **ui** Both themes gain pinned surface ladders ahead of the cabin restyle: the dark steps settle at the deep values — page #090B0C, card #161818, block #202223 — and the light theme trades its one shared surface role for a warm paper ladder, a paper page under a pure white card with a warm white block inside, so pages, cards and inset blocks separate into three readable levels in both themes (778a6c5)
+- **ui** The cabin token layer is declared: card corners settle at 22, row cards at 20 and a new floating tier at 26 covers the dock, dialogs and menus; panel borders read as a rim highlight — white at 7% in dark, ink at 6% in light — and soft panel and dock shadow pairs are fixed for both themes, with common cards taking the rim and the 22 corner now and the shadows following screen by screen (778a6c5)
+- **ui** Navigation takes its cabin forms: the floating dock stands 70 high with 26 corners on the chrome step, a rim edge and the dock shadow, its lens tinted in ink instead of the signal colour with a 5 px signal dot marking the selected entry; the edge navigation bar keeps its body on the chrome step with an ink selection reading, and the desktop sidebar selects in ink with its signal marker kept and its inner dividers in the rim tone (778a6c5)
+- **ui** The shared type scale is settled: page titles at 27, list titles at 15 medium, subtitles at 12, captions at 11 and card headers at 16 semibold, declared at one point and inherited by every screen instead of each surface keeping its own sizes (778a6c5)
+
 ## v0.2.11 (2026-10-26)
 
 **Bug Fixes**
