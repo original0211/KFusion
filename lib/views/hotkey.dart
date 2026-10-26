@@ -136,7 +136,7 @@ class _HotKeyIntro extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: ShapeDecoration(
         color: context.raisedSurfaceLevel.colorOf(colorScheme),
-        shape: AppShape.xl,
+        shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
       ),
       child: Row(
         spacing: 14,
