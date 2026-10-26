@@ -2,6 +2,49 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.16",
+      "tag": "v0.2.16",
+      "date": "2026-10-27",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "84b6244",
+              "scope": "ui",
+              "text": "The configuration list's current profile takes the cabin reading the dashboard set: the card grows the disc watermark at its top end — the same motif, at the same size and faintness, as the dashboard's current-profile card — and the in-use mark moves out of the generic selection badge into a dedicated metadata chip, accent text on the block step, while expiry and the other identity chips stay on their neutral ground. Selection, pressing and the card's data flow are untouched, and the add-profile page rides along unchanged on the shared card language."
+            },
+            {
+              "id": "084979f",
+              "scope": "ui",
+              "text": "The universal import page sits its payloads in wells built from the cabin surface steps: the URL field and the pasted-text field recess into inset wells behind the rim border, and the parsed result rises into a block-step well inside the card, so an imported payload reads as set into the page rather than typed over it. The guide head — disc motif and a status-style title — and the single primary confirm button were already the signed-off reading and stay; controllers, parsing and every callback are untouched."
+            },
+            {
+              "id": "b3e8186",
+              "scope": "ui",
+              "text": "A geometry correction rides with the import wells: their decoration now draws the project's superellipse border — the rounded-superellipse shape the cards and the Dock already use — instead of a plain circular-arc box, so the wells' corners sit on the one corner geometry the interface allows itself. Radius, rim color, step color and padding are unchanged; only the corner curve moved."
+            },
+            {
+              "id": "5dc04e1",
+              "scope": "ui",
+              "text": "The node exit-IP type probing added with the proxies cabin batch is removed end to end, on the strength of the device verdict: on the profiles it served — OpenVPN home-broadband nodes — the per-node probes timed out in bulk and the rows sat on the probing placeholder with the type never landing. The proxies rows lose the type mark, the probing placeholder and the first-visit note; the page-entry sweep, the delay-test piggyback probes and the per-profile node-to-IP disk map are gone, and the settings switch and the long-press re-probe go with them. The page keeps its cabin form — row-card radius, the selected card's cyan rim and dot, the group metadata chips — and the dashboard's current-exit panel, which predates the module and reads only the connection in use, is not touched."
+            },
+            {
+              "id": "5dc04e1",
+              "scope": "core",
+              "text": "The sing-box renderer likewise gives back the probe channel it had injected for the removed module: renders no longer add the probe selector over all leaf outbounds, the loopback mixed inbound on port 17909, or the binding rule that rode at the head of the route, so the rendered config is again exactly the pre-probe one, its route rules back to seven — and a guard test now sweeps every rendered tag and the encoded text for any probe remnant. The probe client that switched the injected group is deleted with it."
+            },
+            {
+              "id": "d1e1d9c",
+              "scope": "core",
+              "text": "The sing-box death card no longer loses its own verdict to a race: a crash's exit record is published by the system only after the process has died, and the card used to read it exactly once — too early, it found only the previous attempt's record, failed the attempt association and fell back to the bare generic line, so the signal headline and the attempt line never reached the card. The plugin now waits a bounded grace — thirteen probes over about three seconds — for a record that belongs to this attempt, and only silence still settles for the generic line; a failure card can arrive those three seconds later, carrying strictly more. The same commit stops the service log from printing the crash-report tail header over an empty tail: header and lines now appear only when there is a tail to show."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.15",
       "tag": "v0.2.15",
       "date": "2026-10-26",
