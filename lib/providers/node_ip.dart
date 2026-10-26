@@ -60,6 +60,7 @@ class NodeIpSweeper extends _$NodeIpSweeper {
   final _watched = <String, int>{};
   final _sweepHeld = <String>{};
   final _probeWatched = <String>{};
+  final _probeHeld = <String>{};
   final _classifying = <String>{};
   final _sbQueue = <String>[];
   var _sbRunning = false;
@@ -130,12 +131,12 @@ class NodeIpSweeper extends _$NodeIpSweeper {
     }
   }
 
-  /// Stops page-driven background work; rows keep their own watches.
+  // Leaving a page stops the background fill. Probe entries stay cached:
+  // releasing them synchronously from a dispose would reach into the core
+  // transport, and they are invalidated with route and profile changes.
   void cancelSweep() {
-    for (final name in _sweepHeld.toList()) {
-      _sweepHeld.remove(name);
-      if (!_watched.containsKey(name)) _release(name);
-    }
+    _sweepHeld.clear();
+    _sbQueue.clear();
   }
 
   /// Manual re-probe of one node, ignoring its persisted answer.
@@ -144,7 +145,7 @@ class NodeIpSweeper extends _$NodeIpSweeper {
     _disk = {..._disk}..remove(name);
     _writeDisk();
     _set(name, const NodeIpReading());
-    if (_isMihomo && _probeWatched.contains(name)) {
+    if (_isMihomo && _probeHeld.contains(name)) {
       ref.read(outboundIpProbeProvider.notifier).refresh([name]);
       _set(name, const NodeIpReading(phase: ProbePhase.probing));
     } else {
@@ -162,9 +163,7 @@ class NodeIpSweeper extends _$NodeIpSweeper {
       _set(name, const NodeIpReading());
     }
     if (_isMihomo) {
-      ref
-          .read(outboundIpProbeProvider.notifier)
-          .refresh(_probeWatched.toList());
+      ref.read(outboundIpProbeProvider.notifier).refresh(_probeHeld.toList());
     }
     for (final name in names) {
       _ensure(name, front: true);
@@ -183,7 +182,8 @@ class NodeIpSweeper extends _$NodeIpSweeper {
       return;
     }
     if (_isMihomo) {
-      if (_probeWatched.add(name)) {
+      _probeWatched.add(name);
+      if (_probeHeld.add(name)) {
         ref.read(outboundIpProbeProvider.notifier).watch(name);
       }
       _set(
@@ -199,19 +199,20 @@ class NodeIpSweeper extends _$NodeIpSweeper {
     }
   }
 
+  // The routed probe keeps its own entries; unwatching from here could be
+  // its last consumer and reach into the core transport mid-teardown. The
+  // reset paths release the watches when the core or profile moves on.
   void _release(String name) {
-    final held = _probeWatched.remove(name);
+    _probeWatched.remove(name);
     _sbQueue.remove(name);
-    if (held && _alive) {
-      ref.read(outboundIpProbeProvider.notifier).unwatch(name);
-    }
   }
 
   void _reset({required bool dropWatches}) {
     _generation++;
-    for (final name in _probeWatched.toList()) {
+    for (final name in _probeHeld.toList()) {
       ref.read(outboundIpProbeProvider.notifier).unwatch(name);
     }
+    _probeHeld.clear();
     _probeWatched.clear();
     _sbQueue.clear();
     _sweepHeld.clear();
@@ -304,8 +305,9 @@ class NodeIpSweeper extends _$NodeIpSweeper {
     final generation = _generation;
     try {
       while (_sbQueue.isNotEmpty) {
-        if (generation != _generation || !_alive || !_enabled || _isMihomo)
+        if (generation != _generation || !_alive || !_enabled || _isMihomo) {
           return;
+        }
         final name = _sbQueue.removeAt(0);
         if (!_watched.containsKey(name) && !_sweepHeld.contains(name)) {
           continue;

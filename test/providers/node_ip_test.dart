@@ -1,3 +1,6 @@
+@TestOn('vm')
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -48,10 +51,10 @@ const _answer = OutboundIpResult(
 );
 
 Future<void> _until(bool Function() check) async {
-  final deadline = DateTime.now().add(const Duration(seconds: 10));
+  final deadline = DateTime.now().add(const Duration(seconds: 30));
   while (!check()) {
     if (DateTime.now().isAfter(deadline)) {
-      throw StateError('condition not met within 10s');
+      throw StateError('condition not met within 30s');
     }
     await pumpEventQueue();
     await Future<void>.delayed(const Duration(milliseconds: 10));

@@ -144,15 +144,21 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       menuItems: picker ? const [] : _buildMenuItems(context),
       title: context.appLocalizations.proxies,
       searchState: AppBarSearchState(onSearch: _onSearch),
-      body: Column(
+      body: Stack(
         children: [
-          if (!picker) const _IpProbeNotice(),
-          Expanded(
+          Positioned.fill(
             child: switch (proxiesType) {
               ProxiesType.tab => _tabView,
               ProxiesType.list => const ProxiesListView(),
             },
           ),
+          if (!picker)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _IpProbeNotice(),
+            ),
         ],
       ),
     );
