@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
+import com.kfusion.singbox.SingBoxExitInfo
 import com.kfusion.singbox.SingBoxLog
 import com.kfusion.singbox.SingBoxStatus
 import com.kfusion.singbox.SingBoxVpnService
@@ -103,7 +104,12 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                         }
                         SingBoxStartGate.Verdict.FAILED -> {
                             message = if (snapshot?.state == SingBoxStatus.State.STARTING) {
-                                "sing-box 进程在启动中退出"
+                                val exit = SingBoxExitInfo.latest(context)
+                                if (exit == null) {
+                                    "sing-box 进程在启动中退出"
+                                } else {
+                                    "sing-box 进程在启动中退出；${SingBoxExitInfo.summaryLine(exit)}"
+                                }
                             } else {
                                 snapshot?.message?.ifEmpty { null }
                                     ?: "sing-box 启动失败"

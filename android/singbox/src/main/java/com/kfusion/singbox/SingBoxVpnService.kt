@@ -80,6 +80,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 .setOngoing(true)
                 .build(),
         )
+        surfaceLastDeath()
         when (intent?.action) {
             ACTION_CHECK_CONFIG -> {
                 val requestId = intent.getLongExtra(EXTRA_REQUEST_ID, 0)
@@ -124,6 +125,31 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         return START_NOT_STICKY
     }
 
+    private fun surfaceLastDeath() {
+        val prefs = preferences()
+        val exit = SingBoxExitInfo.latest(this)
+        if (exit != null && exit.timestamp > prefs.getLong(PREF_EXIT_SURFACED, 0L)) {
+            prefs.edit().putLong(PREF_EXIT_SURFACED, exit.timestamp).apply()
+            SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit))
+            SingBoxExitInfo.traceExcerpt(this)?.let { trace ->
+                SingBoxLog.append(this, "exit trace excerpt:")
+                trace.lineSequence().take(12).forEach { line ->
+                    SingBoxLog.append(this, line.take(300))
+                }
+            }
+        }
+        val crash =
+            SingBoxCrashReport.unreadLines(
+                File(filesDir, "singbox"),
+                prefs.getLong(PREF_CRASH_SURFACED, 0L),
+            )
+        if (crash != null) {
+            prefs.edit().putLong(PREF_CRASH_SURFACED, crash.first).apply()
+            SingBoxLog.append(this, "go crash report tail:")
+            crash.second.forEach { line -> SingBoxLog.append(this, line.take(300)) }
+        }
+    }
+
     private fun runCheck(configPath: String?, requestId: Long) {
         try {
             val configFile = File(configPath ?: "")
@@ -132,7 +158,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             setupLibbox()
             Libbox.checkConfig(content)
             SingBoxStatus.writeCheckResult(this, requestId, true, "")
-        } catch (error: Exception) {
+        } catch (error: Throwable) {
             SingBoxLog.append(this, "check failed: ${error.message ?: error}")
             SingBoxStatus.writeCheckResult(
                 this,
@@ -194,7 +220,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             SingBoxStatus.write(this, SingBoxStatus.State.RUNNING, "")
             SingBoxLog.append(this, "start: running")
             GlobalState.log("sing-box service started")
-        } catch (error: Exception) {
+        } catch (error: Throwable) {
             GlobalState.log("sing-box start failed: $error")
             if (startAttempts.isLive(attempt)) {
                 failStart(error.message ?: error.toString())
@@ -229,7 +255,14 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         val configPath = preferences().getString(PREF_CONFIG_PATH, null)
             ?: error("sing-box config path is missing")
         val server = commandServer ?: error("sing-box command server is not running")
-        server.startOrReloadService(File(configPath).readText(), OverrideOptions())
+        SingBoxLog.append(this, "reload: startOrReloadService begin")
+        try {
+            server.startOrReloadService(File(configPath).readText(), OverrideOptions())
+            SingBoxLog.append(this, "reload: startOrReloadService returned")
+        } catch (error: Throwable) {
+            SingBoxLog.append(this, "reload: startOrReloadService failed: ${error.message ?: error}")
+            throw error
+        }
     }
 
     override fun getSystemProxyStatus(): SystemProxyStatus {
@@ -598,6 +631,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         const val ACTION_STOP = "com.kfusion.singbox.action.STOP"
         const val ACTION_CHECK_CONFIG = "com.kfusion.singbox.action.CHECK_CONFIG"
         private const val PREF_CONFIG_PATH = "config_path"
+        private const val PREF_EXIT_SURFACED = "exit_surfaced_at"
+        private const val PREF_CRASH_SURFACED = "crash_surfaced_at"
         private const val PREFS_NAME = "singbox_service"
 
         // An explicit stop drops the saved path: no later resurrection on it.
