@@ -123,8 +123,8 @@ class ErrorBanner extends StatelessWidget {
           : _Banner(
               glyph: AppGlyphs.error,
               message: message,
-              color: colorScheme.errorContainer,
-              foregroundColor: colorScheme.onErrorContainer,
+              color: context.raisedSurfaceLevel.colorOf(colorScheme),
+              foregroundColor: colorScheme.error,
             ),
     );
   }
@@ -149,7 +149,10 @@ class _Banner extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(color: color, shape: AppShape.xl),
+      decoration: ShapeDecoration(
+        color: color,
+        shape: AppShape.xl.copyWith(side: context.colorScheme.cabinRimSide),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8,

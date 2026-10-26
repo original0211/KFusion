@@ -469,11 +469,11 @@ class _IllustrationPalette {
       accentContainer = colorScheme.tertiaryContainer;
 
   _IllustrationPalette.error(ColorScheme colorScheme)
-    : shape = colorScheme.errorContainer,
-      ink = colorScheme.onErrorContainer,
-      highlight = colorScheme.error,
-      accent = colorScheme.error,
-      accentContainer = colorScheme.errorContainer;
+    : shape = colorScheme.surfaceContainerHigh,
+      ink = colorScheme.error,
+      highlight = colorScheme.onSurfaceVariant,
+      accent = colorScheme.onSurfaceVariant,
+      accentContainer = colorScheme.surfaceContainer;
 
   @override
   bool operator ==(Object other) =>
