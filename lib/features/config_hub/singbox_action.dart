@@ -77,7 +77,8 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
   static const _stopTimeout = Duration(seconds: 20);
   // Above the plugin's 40s poll, so Dart acts on the service's own verdict.
   static const _startTimeout = Duration(seconds: 45);
-  static const _checkTimeout = Duration(seconds: 35);
+  // Covers the plugin's two 30s check attempts plus intent overhead.
+  static const _checkTimeout = Duration(seconds: 75);
   static const _applyTimeout = Duration(seconds: 30);
 
   @override
@@ -250,11 +251,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           final checkError = await singBoxService!
               .checkConfig(configPath)
               .timeout(_checkTimeout);
-          if (checkError.isNotEmpty) {
-            return CoreSwitchStepResult(
-              failure: CoreSwitchFailure.profileNotRenderable,
-              detail: checkError,
-            );
+          final outcome = singBoxCheckOutcome(checkError);
+          if (outcome.failure != null) {
+            return outcome;
           }
         } catch (_) {
           return const CoreSwitchStepResult(

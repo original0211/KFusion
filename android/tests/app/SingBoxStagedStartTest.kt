@@ -154,10 +154,18 @@ class SingBoxStagedStartTest {
             ),
         )
         assertEquals(
-            listOf("bare direct", "outbounds and dns", "rule sets", "inbounds", "full config"),
+            listOf(
+                "cache redirect",
+                "near-empty config",
+                "bare direct",
+                "outbounds and dns",
+                "rule sets",
+                "inbounds",
+                "full config",
+            ),
             levels.map { it.name },
         )
-        assertEquals(listOf(0, 1, 2, 3, 4), levels.map { it.index })
+        assertEquals(listOf(5, 6, 0, 1, 2, 3, 4), levels.map { it.index })
         assertTrue(levels.last().last)
         assertTrue(levels.dropLast(1).none { it.last })
     }
@@ -172,9 +180,56 @@ class SingBoxStagedStartTest {
             ),
         )
         assertEquals(
-            listOf("bare direct", "outbounds and dns", "inbounds", "full config"),
+            listOf(
+                "cache redirect",
+                "near-empty config",
+                "bare direct",
+                "outbounds and dns",
+                "inbounds",
+                "full config",
+            ),
             levels.map { it.name },
         )
+    }
+
+    @Test
+    fun labelsNameBothTheProbeLevelsAndTheClassicOnes() {
+        assertEquals("L0", SingBoxStagedStart.labelForIndex(0))
+        assertEquals("L1", SingBoxStagedStart.labelForIndex(1))
+        assertEquals("L2", SingBoxStagedStart.labelForIndex(2))
+        assertEquals("L3", SingBoxStagedStart.labelForIndex(3))
+        assertEquals("L4", SingBoxStagedStart.labelForIndex(4))
+        assertEquals("L-1", SingBoxStagedStart.labelForIndex(5))
+        assertEquals("L-2", SingBoxStagedStart.labelForIndex(6))
+    }
+
+    @Test
+    fun verdictNamesTheProbeLevels() {
+        assertEquals(
+            "staged start: crashed at L-1 (cache redirect)",
+            SingBoxStagedStart.verdict(5, 5, "cache redirect"),
+        )
+        assertEquals(
+            "staged start: crashed at L-2 (near-empty config)",
+            SingBoxStagedStart.verdict(5, 6, "near-empty config"),
+        )
+        assertEquals(
+            "staged start: low-memory killed at L-1 (cache redirect)",
+            SingBoxStagedStart.verdict(3, 5, "cache redirect"),
+        )
+    }
+
+    @Test
+    fun nearEmptyContentIsTheLiteralFloor() {
+        val content = SingBoxStagedStart.NEAR_EMPTY_CONTENT
+        assertEquals(
+            """{"log":{"level":"info"},"outbounds":[{"type":"direct","tag":"direct"}]}""",
+            content,
+        )
+        assertTrue(!content.contains("route"))
+        assertTrue(!content.contains("dns"))
+        assertTrue(!content.contains("inbounds"))
+        assertTrue(!content.contains("experimental"))
     }
 
     @Test
@@ -225,5 +280,25 @@ class SingBoxStagedStartTest {
         SingBoxCacheGuard.cacheFileIn(working).writeText("second cache")
         assertEquals(12L, SingBoxCacheGuard.isolate(working))
         assertEquals("second cache", SingBoxCacheGuard.staleFileIn(working).readText())
+    }
+
+    @Test
+    fun probeCacheNamesCarryTheNonceAndNeverCollideWithTheDefault() {
+        assertEquals("cache-probe-7.db", SingBoxCacheGuard.probeCacheName(7))
+        assertTrue(SingBoxCacheGuard.probeCacheName(7) != "cache.db")
+        assertTrue(SingBoxCacheGuard.probeCacheName(7) != SingBoxCacheGuard.probeCacheName(8))
+    }
+
+    @Test
+    fun sweepRemovesOnlyProbeCaches() {
+        val working = folder.newFolder("singbox")
+        SingBoxCacheGuard.cacheFileIn(working).writeText("real cache")
+        SingBoxCacheGuard.staleFileIn(working).writeText("stale cache")
+        java.io.File(working, SingBoxCacheGuard.probeCacheName(3)).writeText("probe 3")
+        java.io.File(working, SingBoxCacheGuard.probeCacheName(4)).writeText("probe 4")
+        assertEquals(2, SingBoxCacheGuard.sweepProbeCaches(working))
+        assertTrue(SingBoxCacheGuard.cacheFileIn(working).isFile)
+        assertTrue(SingBoxCacheGuard.staleFileIn(working).isFile)
+        assertEquals(0, SingBoxCacheGuard.sweepProbeCaches(working))
     }
 }

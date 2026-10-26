@@ -99,6 +99,74 @@ class SingBoxExitInfoTest {
     }
 
     @Test
+    fun attemptDeathLineNamesAProbeLevel() {
+        val record = SingBoxExitInfo.Record(5, 1_761_000_000_000L, "crash", 100)
+        val line = SingBoxExitInfo.attemptDeathLine(9, 5, "cache redirect", record)
+        assertTrue(
+            line.startsWith("attempt #9 died at L-1 (cache redirect): CRASH_NATIVE(5) at "),
+        )
+        val nearEmpty = SingBoxExitInfo.attemptDeathLine(10, 6, "near-empty config", record)
+        assertTrue(
+            nearEmpty.startsWith("attempt #10 died at L-2 (near-empty config): "),
+        )
+    }
+
+    @Test
+    fun firstBacktraceFrameSkipsRegisterDumps() {
+        val tombstone = """
+            signal 7 (SIGBUS), code 2 (BUS_ADRERR), fault addr 0x0000007a1b2c3000
+            r0 0000000000000000 r1 0000000000000000 r2 0000000000000000
+                #00 pc 0000000000abcdef  /data/app/libbox.so (runtime.heapBitsSetType+12)
+                #01 pc 0000000000123456  /data/app/libbox.so
+        """.trimIndent()
+        val frame = SingBoxExitInfo.firstBacktraceFrame(tombstone)
+        assertEquals(
+            "#00 pc 0000000000abcdef  /data/app/libbox.so (runtime.heapBitsSetType+12)",
+            frame,
+        )
+        assertNull(SingBoxExitInfo.firstBacktraceFrame("r0 0000 r1 0000"))
+        assertNull(SingBoxExitInfo.firstBacktraceFrame(null))
+    }
+
+    @Test
+    fun signalClassNotesClassifyTheThreeSignals() {
+        assertTrue(
+            SingBoxExitInfo.signalClassNote("signal 7 (SIGBUS), code 2")!!
+                .startsWith("SIGBUS"),
+        )
+        assertTrue(
+            SingBoxExitInfo.signalClassNote("signal 11 (SIGSEGV), code 1")!!
+                .startsWith("SIGSEGV"),
+        )
+        assertTrue(
+            SingBoxExitInfo.signalClassNote("signal 6 (SIGABRT), code 0")!!
+                .startsWith("SIGABRT"),
+        )
+        assertNull(SingBoxExitInfo.signalClassNote("signal 9 (SIGKILL), code 0"))
+        assertNull(SingBoxExitInfo.signalClassNote(null))
+    }
+
+    @Test
+    fun crashHeadlineLeadsWithSignalNoteAndFirstFrame() {
+        val tombstone = """
+            pid: 12345, tid: 12399, name: singbox  >>> com.follow.clash:singbox <<<
+            signal 7 (SIGBUS), code 2 (BUS_ADRERR), fault addr 0x0000007a1b2c3000
+            r7 0000007a1b2c3000 r8 0000000000000001
+                #00 pc 0000000000abcdef  /data/app/libbox.so
+        """.trimIndent()
+        val headline = SingBoxExitInfo.crashHeadline(tombstone)!!
+        assertTrue(
+            headline.startsWith(
+                "signal 7 (SIGBUS), code 2 (BUS_ADRERR), fault addr 0x0000007a1b2c3000（SIGBUS",
+            ),
+        )
+        assertTrue(headline.endsWith(" · #00 pc 0000000000abcdef  /data/app/libbox.so"))
+        assertTrue(!headline.contains("r7"))
+        assertNull(SingBoxExitInfo.crashHeadline("no signal recorded here"))
+        assertNull(SingBoxExitInfo.crashHeadline(null))
+    }
+
+    @Test
     fun crashReportTailKeepsOnlyTheLastNonBlankLines() {
         val working = folder.newFolder("singbox")
         val body = (1..50).joinToString("\n") { "line $it" } + "\n\n"

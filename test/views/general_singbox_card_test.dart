@@ -396,6 +396,16 @@ void main() {
       );
     });
 
+    test('an unresponsive check does not blame the profile', () {
+      expect(
+        coreSwitchFailureText(
+          l10n,
+          failed(CoreSwitchFailure.checkUnresponsive, failedStage: null),
+        ),
+        'sing-box 服务未响应配置校验，切换已取消。这不代表配置无效，请稍候重试。',
+      );
+    });
+
     test('a restored start failure names both cores', () {
       expect(
         coreSwitchFailureText(l10n, failed(CoreSwitchFailure.startFailed)),

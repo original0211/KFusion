@@ -962,6 +962,7 @@
   "coreSwitchNoProfile": "プロファイルが選択されていません。プロファイル画面でプロファイルを選んでから、コアを切り替えてください。",
   "coreSwitchProfileUnreadable": "現在のプロファイルが空か、読み取れません。プロファイルを確認してから再試行してください。",
   "coreSwitchNotRenderable": "現在のプロファイルは {core} 用に変換できないため、切り替えを中止しました。プロファイルを調整してから再試行してください。",
+  "coreSwitchCheckUnresponsive": "sing-box サービスが設定チェックに応答しなかったため、切り替えを中止しました。設定が無効という意味ではありません。しばらくしてから再試行してください。",
   "coreSwitchStopFailed": "現在のコアを停止できなかったため、切り替えを中止しました。しばらくしてから再試行するか、ダッシュボードで先にコアを手動で停止してください。",
   "coreSwitchStartFailed": "{core} の起動に失敗しました。ログを確認してから再試行してください。",
   "coreSwitchStartFailedRestored": "{core} の起動に失敗したため、{restored} を再び実行しています。しばらくしてから再試行してください。",

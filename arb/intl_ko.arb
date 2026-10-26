@@ -962,6 +962,7 @@
   "coreSwitchNoProfile": "선택된 프로필이 없습니다. 프로필 페이지에서 먼저 프로필을 선택한 뒤 코어를 전환하세요.",
   "coreSwitchProfileUnreadable": "현재 프로필이 비어 있거나 읽을 수 없습니다. 프로필을 확인한 뒤 다시 시도하세요.",
   "coreSwitchNotRenderable": "현재 프로필을 {core}용으로 변환할 수 없어 전환이 취소되었습니다. 프로필을 조정한 뒤 다시 시도하세요.",
+  "coreSwitchCheckUnresponsive": "sing-box 서비스가 설정 검사에 응답하지 않아 전환이 취소되었습니다. 프로필이 잘못되었다는 뜻은 아닙니다. 잠시 후 다시 시도하세요.",
   "coreSwitchStopFailed": "현재 코어를 중지할 수 없어 전환이 취소되었습니다. 잠시 후 다시 시도하거나, 대시보드에서 먼저 코어를 수동으로 중지하세요.",
   "coreSwitchStartFailed": "{core}을(를) 시작하지 못했습니다. 로그를 확인한 뒤 다시 시도하세요.",
   "coreSwitchStartFailedRestored": "{core}을(를) 시작하지 못해 {restored}이(가) 다시 실행 중입니다. 잠시 후 다시 시도하세요.",

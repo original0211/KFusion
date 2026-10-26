@@ -198,4 +198,31 @@ void main() {
       expect(outcome.detail, 'checkConfig: legacy block outbound');
     });
   });
+
+  group('singBoxCheckOutcome', () {
+    test('an empty answer means the profile passed', () {
+      expect(singBoxCheckOutcome('').failure, isNull);
+    });
+
+    test(
+      'the timeout sentinel is unresponsiveness, not an invalid profile',
+      () {
+        final outcome = singBoxCheckOutcome(singBoxCheckTimeoutSentinel);
+        expect(outcome.failure, CoreSwitchFailure.checkUnresponsive);
+        expect(outcome.detail, isEmpty);
+      },
+    );
+
+    test('a real check error still means the profile is not renderable', () {
+      final outcome = singBoxCheckOutcome('unknown outbound type: block');
+      expect(outcome.failure, CoreSwitchFailure.profileNotRenderable);
+      expect(outcome.detail, 'unknown outbound type: block');
+    });
+
+    test('the pre-plugin-retry timeout wording is just an error string', () {
+      final outcome = singBoxCheckOutcome('sing-box 配置校验超时');
+      expect(outcome.failure, CoreSwitchFailure.profileNotRenderable);
+      expect(outcome.detail, 'sing-box 配置校验超时');
+    });
+  });
 }

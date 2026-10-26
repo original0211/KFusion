@@ -473,6 +473,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreSwitchChannelUnavailable": MessageLookupByLibrary.simpleMessage(
       "sing-box サービスチャネルを利用できないため、切り替えを中止しました。アプリを再起動してから再試行してください。",
     ),
+    "coreSwitchCheckUnresponsive": MessageLookupByLibrary.simpleMessage(
+      "sing-box サービスが設定チェックに応答しなかったため、切り替えを中止しました。設定が無効という意味ではありません。しばらくしてから再試行してください。",
+    ),
     "coreSwitchFailed": MessageLookupByLibrary.simpleMessage(
       "切り替えに失敗しました。元のコアには影響ありません。しばらくしてから再試行してください。",
     ),

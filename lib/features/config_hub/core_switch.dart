@@ -7,6 +7,7 @@ enum CoreSwitchFailure {
   noProfile,
   profileUnreadable,
   profileNotRenderable,
+  checkUnresponsive,
   stopFailed,
   startFailed,
   applyFailed,
@@ -44,6 +45,25 @@ class CoreSwitchStepResult {
 
   final CoreSwitchFailure? failure;
   final String detail;
+}
+
+/// What the Android plugin returns when both native check attempts timed
+/// out; mirrors SingBoxCheckGate.TIMEOUT_SENTINEL on the Kotlin side.
+const singBoxCheckTimeoutSentinel = 'sing-box-check-timeout';
+
+/// Maps a native checkConfig answer to a preflight outcome: silence after
+/// the plugin's own retry is not a verdict on the profile itself.
+CoreSwitchStepResult singBoxCheckOutcome(String checkError) {
+  if (checkError.isEmpty) return const CoreSwitchStepResult.ok();
+  if (checkError == singBoxCheckTimeoutSentinel) {
+    return const CoreSwitchStepResult(
+      failure: CoreSwitchFailure.checkUnresponsive,
+    );
+  }
+  return CoreSwitchStepResult(
+    failure: CoreSwitchFailure.profileNotRenderable,
+    detail: checkError,
+  );
 }
 
 typedef CoreSwitchStep = Future<CoreSwitchStepResult> Function();

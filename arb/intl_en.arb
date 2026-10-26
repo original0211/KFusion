@@ -962,6 +962,7 @@
   "coreSwitchNoProfile": "No profile is selected. Pick a profile on the Profiles page first, then switch the core.",
   "coreSwitchProfileUnreadable": "The current profile is empty or cannot be read. Check the profile, then try again.",
   "coreSwitchNotRenderable": "The current profile cannot be converted for {core}, so the switch was cancelled. Adjust the profile, then try again.",
+  "coreSwitchCheckUnresponsive": "The sing-box service did not answer the configuration check, so the switch was cancelled. This does not mean the profile is invalid; wait a moment, then try again.",
   "coreSwitchStopFailed": "The current core could not be stopped, so the switch was cancelled. Try again in a moment, or stop the core on the dashboard first.",
   "coreSwitchStartFailed": "{core} failed to start. Check the logs, then try again.",
   "coreSwitchStartFailedRestored": "{core} failed to start, so {restored} is running again. Try again in a moment.",

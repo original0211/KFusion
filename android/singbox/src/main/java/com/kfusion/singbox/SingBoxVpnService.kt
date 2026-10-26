@@ -147,14 +147,14 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             }
             SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit) + attemptNote)
             if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
-                SingBoxExitInfo.latestSignalLine(this)?.let { line ->
+                SingBoxExitInfo.latestCrashHeadline(this)?.let { line ->
                     SingBoxLog.append(this, "exit signal: $line")
                 }
             }
             SingBoxExitInfo.traceExcerpt(this)?.let { trace ->
                 SingBoxLog.append(this, "exit trace excerpt:")
                 trace.lineSequence().take(12).forEach { line ->
-                    SingBoxLog.append(this, line.take(300))
+                    SingBoxLog.append(this, "exit trace: " + line.take(300))
                 }
             }
         }
@@ -284,17 +284,24 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             startFull(server, content, attempt)
             return
         }
+        val swept = SingBoxCacheGuard.sweepProbeCaches(File(filesDir, "singbox"))
+        if (swept > 0) {
+            SingBoxLog.append(this, "staged: swept $swept stale probe cache files")
+        }
         for (level in plan) {
+            val label = SingBoxStagedStart.labelForIndex(level.index)
             val levelContent = if (level.last) {
                 content
             } else {
-                val built = runCatching { SingBoxStagedStart.build(content, level) }
+                val built = runCatching {
+                    SingBoxStagedStart.build(content, level, nextAttemptSeq())
+                }
                     .getOrNull()
                     ?.takeIf { runCatching { Libbox.checkConfig(it) }.isSuccess }
                 if (built == null) {
                     SingBoxLog.append(
                         this,
-                        "staged: L${level.index} trim rejected; falling back to full start",
+                        "staged: $label trim rejected; falling back to full start",
                     )
                     startFull(server, content, attempt)
                     return
@@ -304,15 +311,19 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             markAttempt(level.index, level.name)
             SingBoxLog.append(
                 this,
-                "staged: L${level.index} (${level.name}) begin; " +
+                "staged: $label (${level.name}) begin; " +
                     SingBoxMemory.pssFragment(Debug.getPss()),
             )
             SingBoxLog.append(this, "start: startOrReloadService begin")
             if (!startOnce(server, levelContent, attempt)) return
-            SingBoxLog.append(this, "staged: L${level.index} (${level.name}) returned")
+            SingBoxLog.append(this, "staged: $label (${level.name}) returned")
         }
         settleRunning()
     }
+
+    // The sequence markAttempt is about to assign; probe cache names key on it.
+    private fun nextAttemptSeq(): Long =
+        preferences().getLong(PREF_ATTEMPT_SEQ, 0L) + 1
 
     private fun startOnce(server: CommandServer, content: String, attempt: Long): Boolean {
         server.startOrReloadService(content, OverrideOptions())

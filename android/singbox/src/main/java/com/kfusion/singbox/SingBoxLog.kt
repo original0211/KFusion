@@ -23,6 +23,18 @@ object SingBoxLog {
     fun tail(context: Context, maxLines: Int): String =
         tailFrom(directory(context), maxLines)
 
+    // Card surfaces skip raw tombstone dumps; the full lines stay in the log file.
+    fun cardTail(context: Context, maxLines: Int): String =
+        cardTailFrom(directory(context), maxLines)
+
+    fun cardTailFrom(directory: File, maxLines: Int): String {
+        val lines = readLines(directory).filter { !isTraceDumpLine(it) }
+        return joinTail(lines, maxLines)
+    }
+
+    private fun isTraceDumpLine(line: String): Boolean =
+        line.contains(" exit trace: ") || line.contains(" exit trace excerpt:")
+
     fun appendTo(directory: File, message: String) {
         synchronized(lock) {
             runCatching {
@@ -39,13 +51,18 @@ object SingBoxLog {
         }
     }
 
-    fun tailFrom(directory: File, maxLines: Int): String {
+    fun tailFrom(directory: File, maxLines: Int): String =
+        joinTail(readLines(directory), maxLines)
+
+    private fun readLines(directory: File): List<String> {
         val target = File(directory, "service.log")
-        if (!target.isFile) return ""
-        val lines = runCatching { target.readLines() }.getOrDefault(emptyList())
+        if (!target.isFile) return emptyList()
+        return runCatching { target.readLines() }.getOrDefault(emptyList())
             .filter { it.isNotBlank() }
-            .takeLast(maxLines)
-        var joined = lines.joinToString("\n")
+    }
+
+    private fun joinTail(lines: List<String>, maxLines: Int): String {
+        var joined = lines.takeLast(maxLines).joinToString("\n")
         while (joined.length > MAX_TAIL_CHARS && joined.contains('\n')) {
             joined = joined.substringAfter('\n')
         }

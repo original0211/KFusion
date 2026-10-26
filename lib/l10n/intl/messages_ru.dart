@@ -577,6 +577,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreSwitchChannelUnavailable": MessageLookupByLibrary.simpleMessage(
       "Канал службы sing-box недоступен, поэтому переключение отменено. Перезапустите приложение и повторите попытку.",
     ),
+    "coreSwitchCheckUnresponsive": MessageLookupByLibrary.simpleMessage(
+      "Служба sing-box не ответила на проверку конфигурации, поэтому переключение отменено. Это не означает, что профиль недопустим. Повторите попытку через некоторое время.",
+    ),
     "coreSwitchFailed": MessageLookupByLibrary.simpleMessage(
       "Переключение не удалось. Прежнее ядро не затронуто; повторите попытку позже.",
     ),

@@ -89,6 +89,7 @@ String coreSwitchFailureText(AppLocalizations l10n, SingBoxStatus status) {
     CoreSwitchFailure.profileNotRenderable => l10n.coreSwitchNotRenderable(
       target,
     ),
+    CoreSwitchFailure.checkUnresponsive => l10n.coreSwitchCheckUnresponsive,
     CoreSwitchFailure.stopFailed => l10n.coreSwitchStopFailed,
     CoreSwitchFailure.startFailed =>
       status.restored && from != null

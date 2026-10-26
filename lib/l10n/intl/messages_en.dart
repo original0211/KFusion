@@ -556,6 +556,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreSwitchChannelUnavailable": MessageLookupByLibrary.simpleMessage(
       "The sing-box service channel is unavailable, so the switch was cancelled. Restart the app, then try again.",
     ),
+    "coreSwitchCheckUnresponsive": MessageLookupByLibrary.simpleMessage(
+      "The sing-box service did not answer the configuration check, so the switch was cancelled. This does not mean the profile is invalid; wait a moment, then try again.",
+    ),
     "coreSwitchFailed": MessageLookupByLibrary.simpleMessage(
       "The switch failed. The previous core is unchanged; try again in a moment.",
     ),

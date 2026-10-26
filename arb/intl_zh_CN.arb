@@ -962,6 +962,7 @@
   "coreSwitchNoProfile": "没有选中的配置。请先到配置页选择一个配置，再切换核心。",
   "coreSwitchProfileUnreadable": "当前配置内容为空或无法读取。请检查配置后重试。",
   "coreSwitchNotRenderable": "当前配置无法转换为 {core} 可用的配置，切换已取消。请调整配置后重试。",
+  "coreSwitchCheckUnresponsive": "sing-box 服务未响应配置校验，切换已取消。这不代表配置无效，请稍候重试。",
   "coreSwitchStopFailed": "当前核心未能停止，切换已取消。请稍后重试，或先在仪表盘手动停止核心后再切换。",
   "coreSwitchStartFailed": "{core} 启动失败。请查看日志后重试。",
   "coreSwitchStartFailedRestored": "{core} 启动失败，已恢复使用 {restored}。请稍后重试。",

@@ -12,7 +12,16 @@ object SingBoxStagedStart {
 
     enum class Decision { NORMAL, STAGED, REPORT }
 
-    enum class Stage { BARE, OUTBOUNDS, RULE_SETS, INBOUNDS, FULL }
+    // Codes are persisted in the attempt ledger, so they name stages, not plan positions.
+    enum class Stage(val code: Int) {
+        BARE(0),
+        OUTBOUNDS(1),
+        RULE_SETS(2),
+        INBOUNDS(3),
+        FULL(4),
+        CACHE_REDIRECT(5),
+        NEAR_EMPTY(6),
+    }
 
     data class Level(
         val index: Int,
@@ -47,12 +56,13 @@ object SingBoxStagedStart {
     }
 
     fun levels(facts: Facts): List<Level> {
-        val stages = mutableListOf(Stage.BARE, Stage.OUTBOUNDS)
+        val stages =
+            mutableListOf(Stage.CACHE_REDIRECT, Stage.NEAR_EMPTY, Stage.BARE, Stage.OUTBOUNDS)
         if (facts.hasRuleSets) stages += Stage.RULE_SETS
         if (facts.hasInbounds) stages += Stage.INBOUNDS
         if (facts.hasExperimental) stages += Stage.FULL
-        return stages.mapIndexed { index, stage ->
-            Level(index, stage, stageName(stage), index == stages.lastIndex)
+        return stages.mapIndexed { position, stage ->
+            Level(stage.code, stage, stageName(stage), position == stages.lastIndex)
         }
     }
 
@@ -63,6 +73,15 @@ object SingBoxStagedStart {
             Stage.RULE_SETS -> "rule sets"
             Stage.INBOUNDS -> "inbounds"
             Stage.FULL -> "full config"
+            Stage.CACHE_REDIRECT -> "cache redirect"
+            Stage.NEAR_EMPTY -> "near-empty config"
+        }
+
+    fun labelForIndex(index: Int): String =
+        when (index) {
+            Stage.CACHE_REDIRECT.code -> "L-1"
+            Stage.NEAR_EMPTY.code -> "L-2"
+            else -> "L$index"
         }
 
     fun verdict(exitReason: Int?, index: Int, name: String): String {
@@ -72,10 +91,11 @@ object SingBoxStagedStart {
             } else {
                 "crashed"
             }
+        val label = labelForIndex(index)
         return if (name.isBlank()) {
-            "staged start: $action at L$index"
+            "staged start: $action at $label"
         } else {
-            "staged start: $action at L$index ($name)"
+            "staged start: $action at $label ($name)"
         }
     }
 
@@ -90,16 +110,24 @@ object SingBoxStagedStart {
         )
     }
 
-    fun build(content: String, level: Level): String {
+    const val NEAR_EMPTY_CONTENT =
+        """{"log":{"level":"info"},"outbounds":[{"type":"direct","tag":"direct"}]}"""
+
+    fun build(content: String, level: Level, probeNonce: Long = 0L): String {
         if (level.last) return content
+        if (level.stage == Stage.NEAR_EMPTY) return NEAR_EMPTY_CONTENT
         val full = JSONObject(content)
         val out = JSONObject()
         full.optJSONObject("log")?.let { out.put("log", it) }
         when (level.stage) {
-            Stage.BARE -> {
-                val direct = JSONObject().put("type", "direct").put("tag", "direct")
-                out.put("outbounds", JSONArray().put(direct))
-                out.put("route", JSONObject().put("final", "direct"))
+            Stage.BARE -> putBareShape(out)
+            Stage.CACHE_REDIRECT -> {
+                putBareShape(out)
+                // Same bare instance, but its cache lands on a file nothing has ever opened.
+                val cacheFile = JSONObject()
+                    .put("enabled", true)
+                    .put("path", SingBoxCacheGuard.probeCacheName(probeNonce))
+                out.put("experimental", JSONObject().put("cache_file", cacheFile))
             }
             Stage.OUTBOUNDS -> {
                 putBody(full, out, fullDns = false)
@@ -117,6 +145,12 @@ object SingBoxStagedStart {
             Stage.FULL -> return content
         }
         return out.toString()
+    }
+
+    private fun putBareShape(out: JSONObject) {
+        val direct = JSONObject().put("type", "direct").put("tag", "direct")
+        out.put("outbounds", JSONArray().put(direct))
+        out.put("route", JSONObject().put("final", "direct"))
     }
 
     private fun putBody(full: JSONObject, out: JSONObject, fullDns: Boolean) {

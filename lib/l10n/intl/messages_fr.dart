@@ -596,6 +596,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreSwitchChannelUnavailable": MessageLookupByLibrary.simpleMessage(
       "Le canal du service sing-box est indisponible ; le changement a donc été annulé. Redémarrez l\'application, puis réessayez.",
     ),
+    "coreSwitchCheckUnresponsive": MessageLookupByLibrary.simpleMessage(
+      "Le service sing-box n\'a pas répondu à la vérification de la configuration, donc le changement a été annulé. Cela ne signifie pas que le profil est invalide. Réessayez dans un instant.",
+    ),
     "coreSwitchFailed": MessageLookupByLibrary.simpleMessage(
       "Le changement a échoué. Le noyau précédent n\'est pas affecté ; réessayez dans un instant.",
     ),

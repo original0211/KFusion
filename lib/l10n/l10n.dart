@@ -8043,6 +8043,16 @@ class AppLocalizations {
     );
   }
 
+  /// `The sing-box service did not answer the configuration check, so the switch was cancelled. This does not mean the profile is invalid; wait a moment, then try again.`
+  String get coreSwitchCheckUnresponsive {
+    return Intl.message(
+      'The sing-box service did not answer the configuration check, so the switch was cancelled. This does not mean the profile is invalid; wait a moment, then try again.',
+      name: 'coreSwitchCheckUnresponsive',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `The current core could not be stopped, so the switch was cancelled. Try again in a moment, or stop the core on the dashboard first.`
   String get coreSwitchStopFailed {
     return Intl.message(

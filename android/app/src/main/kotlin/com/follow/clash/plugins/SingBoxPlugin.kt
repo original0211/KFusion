@@ -133,14 +133,15 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         if (!SingBoxStagedStart.isAttemptDeath(true, exit.timestamp, attempt.since)) {
             return generic
         }
-        val base = "$generic；" + SingBoxExitInfo.attemptDeathLine(
+        val parts = mutableListOf(generic)
+        SingBoxExitInfo.latestCrashHeadline(context)?.let { parts += it }
+        parts += SingBoxExitInfo.attemptDeathLine(
             attempt.seq,
             attempt.level,
             attempt.levelName,
             exit,
         )
-        val signal = SingBoxExitInfo.latestSignalLine(context)
-        return if (signal == null) base else "$base；$signal"
+        return parts.joinToString("；")
     }
 
     private fun stopInFlightStart(context: Context) {
@@ -155,7 +156,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     }
 
     private fun withLogTail(context: Context, message: String): String {
-        val tail = SingBoxLog.tail(context, LOG_TAIL_LINES)
+        val tail = SingBoxLog.cardTail(context, LOG_TAIL_LINES)
         return if (tail.isEmpty()) message else "$message\n$tail"
     }
 
@@ -165,7 +166,18 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
             return
         }
         val context = GlobalState.application
-        val requestId = System.currentTimeMillis()
+        thread(name = "singbox-check-wait") {
+            val message = SingBoxCheckGate.awaitResult(CHECK_ATTEMPTS) {
+                runCheckAttempt(context, configPath)
+            } ?: SingBoxCheckGate.TIMEOUT_SENTINEL
+            mainHandler.post { result.success(message) }
+        }
+    }
+
+    // One check round-trip; null means the round timed out unanswered. Reissuing
+    // the intent also restarts the service process when it died mid-check.
+    private fun runCheckAttempt(context: Context, configPath: String): String? {
+        val requestId = System.nanoTime()
         val intent = Intent(context, SingBoxVpnService::class.java)
             .setAction(SingBoxVpnService.ACTION_CHECK_CONFIG)
             .putExtra(SingBoxVpnService.EXTRA_CONFIG_PATH, configPath)
@@ -173,22 +185,17 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         try {
             ContextCompat.startForegroundService(context, intent)
         } catch (error: Exception) {
-            result.success("sing-box 配置校验不可用：${error.message}")
-            return
+            return "sing-box 配置校验不可用：${error.message}"
         }
-        thread(name = "singbox-check-wait") {
-            val deadline = System.currentTimeMillis() + CHECK_TIMEOUT_MS
-            var message = "sing-box 配置校验超时"
-            while (System.currentTimeMillis() < deadline) {
-                val check = SingBoxStatus.readCheckResult(context)
-                if (check != null && check.requestId == requestId) {
-                    message = if (check.ok) "" else check.message.ifEmpty { "sing-box 配置校验失败" }
-                    break
-                }
-                Thread.sleep(POLL_INTERVAL_MS)
+        val deadline = System.currentTimeMillis() + CHECK_TIMEOUT_MS
+        while (System.currentTimeMillis() < deadline) {
+            val check = SingBoxStatus.readCheckResult(context)
+            if (check != null && check.requestId == requestId) {
+                return if (check.ok) "" else check.message.ifEmpty { "sing-box 配置校验失败" }
             }
-            mainHandler.post { result.success(message) }
+            Thread.sleep(POLL_INTERVAL_MS)
         }
+        return null
     }
 
     private fun stop(result: MethodChannel.Result) {
@@ -233,6 +240,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         // Under the Dart channel budget (45s): the verdict stays the service's.
         const val START_TIMEOUT_MS = 40_000L
         const val CHECK_TIMEOUT_MS = 30_000L
+        const val CHECK_ATTEMPTS = 2
         const val STOP_TIMEOUT_MS = 5_000L
         const val POLL_INTERVAL_MS = 200L
         const val LOG_TAIL_LINES = 6

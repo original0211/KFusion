@@ -435,6 +435,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "coreSwitchChannelUnavailable": MessageLookupByLibrary.simpleMessage(
       "sing-box 服务通道不可用，切换已取消。请重启应用后重试。",
     ),
+    "coreSwitchCheckUnresponsive": MessageLookupByLibrary.simpleMessage(
+      "sing-box 服务未响应配置校验，切换已取消。这不代表配置无效，请稍候重试。",
+    ),
     "coreSwitchFailed": MessageLookupByLibrary.simpleMessage(
       "切换失败，原核心未受影响。请稍后重试。",
     ),

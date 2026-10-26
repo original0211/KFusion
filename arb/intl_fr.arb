@@ -962,6 +962,7 @@
   "coreSwitchNoProfile": "Aucun profil n'est sélectionné. Choisissez d'abord un profil sur la page Profils, puis changez de noyau.",
   "coreSwitchProfileUnreadable": "Le profil actuel est vide ou illisible. Vérifiez le profil, puis réessayez.",
   "coreSwitchNotRenderable": "Le profil actuel ne peut pas être converti pour {core} ; le changement a donc été annulé. Ajustez le profil, puis réessayez.",
+  "coreSwitchCheckUnresponsive": "Le service sing-box n'a pas répondu à la vérification de la configuration, donc le changement a été annulé. Cela ne signifie pas que le profil est invalide. Réessayez dans un instant.",
   "coreSwitchStopFailed": "Le noyau actuel n'a pas pu être arrêté ; le changement a donc été annulé. Réessayez dans un instant, ou arrêtez d'abord le noyau manuellement depuis le tableau de bord.",
   "coreSwitchStartFailed": "Échec du démarrage de {core}. Consultez les journaux, puis réessayez.",
   "coreSwitchStartFailedRestored": "Échec du démarrage de {core} ; {restored} fonctionne de nouveau. Réessayez dans un instant.",

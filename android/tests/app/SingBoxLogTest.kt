@@ -28,6 +28,22 @@ class SingBoxLogTest {
     }
 
     @Test
+    fun cardTailSkipsTraceDumpLinesThatThePlainTailKeeps() {
+        SingBoxLog.appendTo(folder.root, "process exit: CRASH_NATIVE(5)")
+        SingBoxLog.appendTo(folder.root, "exit trace excerpt:")
+        SingBoxLog.appendTo(folder.root, "exit trace: r7 0000007a r8 00000001")
+        SingBoxLog.appendTo(folder.root, "exit trace: #00 pc 00000000 libbox.so")
+        SingBoxLog.appendTo(folder.root, "staged: crashed at L0 (bare direct)")
+        val plain = SingBoxLog.tailFrom(folder.root, 10)
+        assertTrue(plain.contains("r7 0000007a"))
+        val card = SingBoxLog.cardTailFrom(folder.root, 10)
+        assertTrue(!card.contains("r7 0000007a"))
+        assertTrue(!card.contains("exit trace"))
+        assertTrue(card.contains("process exit: CRASH_NATIVE(5)"))
+        assertTrue(card.contains("staged: crashed at L0 (bare direct)"))
+    }
+
+    @Test
     fun appendingBeyondTheCapRotatesThePreviousLog() {
         val line = "x".repeat(64 * 1024)
         repeat(5) { SingBoxLog.appendTo(folder.root, line) }

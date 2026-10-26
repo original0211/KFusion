@@ -43,8 +43,9 @@ object SingBoxExitInfo {
     fun summaryLine(record: Record): String = "process exit: ${exitTail(record)}"
 
     fun attemptDeathLine(seq: Long, level: Int, levelName: String, record: Record): String {
+        val label = SingBoxStagedStart.labelForIndex(level)
         val where = if (level >= 0) {
-            if (levelName.isBlank()) " at L$level" else " at L$level ($levelName)"
+            if (levelName.isBlank()) " at $label" else " at $label ($levelName)"
         } else {
             ""
         }
@@ -99,6 +100,44 @@ object SingBoxExitInfo {
             stream.bufferedReader().use { reader -> reader.readText() }
         }.getOrNull() ?: return null
         return signalLine(text)
+    }
+
+    private val framePattern = Regex("""^#\d+ pc [0-9a-fA-F]+ .*$""")
+
+    fun firstBacktraceFrame(trace: String?): String? {
+        if (trace.isNullOrBlank()) return null
+        return trace.lineSequence()
+            .map { it.trim() }
+            .firstOrNull { framePattern.matches(it) }
+            ?.take(200)
+    }
+
+    fun signalClassNote(signalLine: String?): String? =
+        when {
+            signalLine == null -> null
+            signalLine.contains("(SIGBUS)") -> "SIGBUS 多指向内存映射文件（如缓存文件）损坏"
+            signalLine.contains("(SIGSEGV)") -> "SIGSEGV 为原生代码非法内存访问"
+            signalLine.contains("(SIGABRT)") -> "SIGABRT 为程序主动中止，多见于 Go 运行时致命错误"
+            else -> null
+        }
+
+    // The card leads with the signal evidence; register dumps stay in the service log.
+    fun crashHeadline(trace: String?): String? {
+        val signal = signalLine(trace) ?: return null
+        val noted = signalClassNote(signal)?.let { "$signal（$it）" } ?: signal
+        val frame = firstBacktraceFrame(trace)
+        return if (frame == null) noted else "$noted · $frame"
+    }
+
+    fun latestCrashHeadline(context: Context): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        val exit = latestExitInfo(context) ?: return null
+        if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) return null
+        val stream = runCatching { exit.traceInputStream }.getOrNull() ?: return null
+        val text = runCatching {
+            stream.bufferedReader().use { reader -> reader.readText() }
+        }.getOrNull() ?: return null
+        return crashHeadline(text)
     }
 
     private fun latestExitInfo(context: Context): ApplicationExitInfo? {
