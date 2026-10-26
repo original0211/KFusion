@@ -1,6 +1,7 @@
 package com.follow.clash.plugins
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.VpnService
 import android.os.Handler
@@ -9,6 +10,7 @@ import androidx.core.content.ContextCompat
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
+import com.kfusion.singbox.SingBoxLog
 import com.kfusion.singbox.SingBoxStatus
 import com.kfusion.singbox.SingBoxVpnService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -90,25 +92,50 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
             thread(name = "singbox-start-wait") {
                 val deadline = System.currentTimeMillis() + START_TIMEOUT_MS
                 var message = "sing-box 服务启动超时"
+                var settled = false
                 while (System.currentTimeMillis() < deadline) {
                     val snapshot = SingBoxStatus.read(context)
                     when (SingBoxStartGate.verdict(snapshot, epoch, SingBoxStatus::isPidAlive)) {
                         SingBoxStartGate.Verdict.RUNNING -> {
                             message = ""
+                            settled = true
                             break
                         }
                         SingBoxStartGate.Verdict.FAILED -> {
-                            message = snapshot?.message?.ifEmpty { null }
-                                ?: "sing-box 启动失败"
+                            message = if (snapshot?.state == SingBoxStatus.State.STARTING) {
+                                "sing-box 进程在启动中退出"
+                            } else {
+                                snapshot?.message?.ifEmpty { null }
+                                    ?: "sing-box 启动失败"
+                            }
+                            settled = true
                             break
                         }
                         SingBoxStartGate.Verdict.PENDING -> Unit
                     }
                     Thread.sleep(POLL_INTERVAL_MS)
                 }
+                if (!settled) stopInFlightStart(context)
+                if (message.isNotEmpty()) message = withLogTail(context, message)
                 mainHandler.post { result.success(message) }
             }
         }
+    }
+
+    private fun stopInFlightStart(context: Context) {
+        val intent = Intent(context, SingBoxVpnService::class.java)
+            .setAction(SingBoxVpnService.ACTION_STOP)
+        runCatching { context.startService(intent) }
+            .onFailure {
+                runCatching {
+                    context.stopService(Intent(context, SingBoxVpnService::class.java))
+                }
+            }
+    }
+
+    private fun withLogTail(context: Context, message: String): String {
+        val tail = SingBoxLog.tail(context, LOG_TAIL_LINES)
+        return if (tail.isEmpty()) message else "$message\n$tail"
     }
 
     private fun checkConfig(configPath: String?, result: MethodChannel.Result) {
@@ -187,5 +214,6 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         const val CHECK_TIMEOUT_MS = 30_000L
         const val STOP_TIMEOUT_MS = 5_000L
         const val POLL_INTERVAL_MS = 200L
+        const val LOG_TAIL_LINES = 6
     }
 }

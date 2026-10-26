@@ -59,6 +59,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private var commandServer: CommandServer? = null
     private val serverLock = Any()
     private val startGate = AtomicBoolean(false)
+    private val startAttempts = SingBoxStartAttempts()
     private var tunDescriptor: ParcelFileDescriptor? = null
     private var myInterfaceName: String? = null
     private var interfaceListener: InterfaceUpdateListener? = null
@@ -87,6 +88,9 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 return START_NOT_STICKY
             }
             ACTION_STOP -> {
+                startAttempts.invalidate()
+                startGate.set(false)
+                SingBoxLog.append(this, "stop received; in-flight start retired")
                 clearSavedConfigPath(this)
                 stopBox()
                 SingBoxStatus.write(this, SingBoxStatus.State.STOPPED, "")
@@ -104,13 +108,17 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         SingBoxStatus.write(this, SingBoxStatus.State.STARTING, "")
         if (!startGate.compareAndSet(false, true)) {
             GlobalState.log("sing-box start ignored: another start is in flight")
+            SingBoxLog.append(this, "start ignored: another start is in flight")
             return START_NOT_STICKY
         }
+        val attempt = startAttempts.begin()
         thread(name = "singbox-start") {
             try {
-                startBox(configPath)
+                startBox(configPath, attempt)
             } finally {
-                startGate.set(false)
+                if (startAttempts.ownsGate(attempt)) {
+                    startGate.set(false)
+                }
             }
         }
         return START_NOT_STICKY
@@ -125,6 +133,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             Libbox.checkConfig(content)
             SingBoxStatus.writeCheckResult(this, requestId, true, "")
         } catch (error: Exception) {
+            SingBoxLog.append(this, "check failed: ${error.message ?: error}")
             SingBoxStatus.writeCheckResult(
                 this,
                 requestId,
@@ -145,6 +154,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     }
 
     override fun onDestroy() {
+        startAttempts.invalidate()
         stopBox()
         if (SingBoxStatus.read(this)?.state == SingBoxStatus.State.RUNNING) {
             SingBoxStatus.write(this, SingBoxStatus.State.STOPPED, "")
@@ -156,29 +166,46 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private fun preferences() =
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
-    private fun startBox(configPath: String) {
+    private fun startBox(configPath: String, attempt: Long) {
         try {
+            SingBoxLog.append(this, "start: begin")
             val configFile = File(configPath)
             check(configFile.isFile) { "sing-box 配置文件不存在：$configPath" }
             val content = configFile.readText()
             setupLibbox()
+            SingBoxLog.append(this, "start: libbox ready")
             Libbox.checkConfig(content)
+            SingBoxLog.append(this, "start: config checked")
             val server = synchronized(serverLock) {
                 commandServer ?: CommandServer(this, this).also {
                     it.start()
                     commandServer = it
                 }
             }
+            SingBoxLog.append(this, "start: command server ready")
+            SingBoxLog.append(this, "start: startOrReloadService begin")
             server.startOrReloadService(content, OverrideOptions())
+            SingBoxLog.append(this, "start: startOrReloadService returned")
+            if (!startAttempts.isLive(attempt)) {
+                SingBoxLog.append(this, "start: attempt retired in flight; tearing down")
+                stopBox()
+                return
+            }
             SingBoxStatus.write(this, SingBoxStatus.State.RUNNING, "")
+            SingBoxLog.append(this, "start: running")
             GlobalState.log("sing-box service started")
         } catch (error: Exception) {
             GlobalState.log("sing-box start failed: $error")
-            failStart(error.message ?: error.toString())
+            if (startAttempts.isLive(attempt)) {
+                failStart(error.message ?: error.toString())
+            } else {
+                SingBoxLog.append(this, "start: failed after retire: ${error.message ?: error}")
+            }
         }
     }
 
     private fun failStart(message: String) {
+        SingBoxLog.append(this, "start failed: $message")
         SingBoxStatus.write(this, SingBoxStatus.State.FAILED, message)
         stopSelf()
     }
@@ -222,6 +249,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     override fun writeDebugMessage(message: String?) {
         GlobalState.log("sing-box: $message")
+        SingBoxLog.append(this, "sing-box: $message")
     }
 
     override fun connectSSHAgent(): Int = -1
@@ -235,6 +263,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             options.tempPath = cacheDir.absolutePath
             options.fixAndroidStack = true
             options.logMaxLines = 1024
+            // Without this, box log lines die in the daemon's ring buffer.
+            options.debug = true
             Libbox.setup(options)
             setupDone = true
         }
@@ -249,6 +279,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     }
 
     override fun openTun(options: TunOptions): Int {
+        SingBoxLog.append(this, "tun: openTun begin")
         if (prepare(this) != null) error("android: missing vpn permission")
         val builder = Builder()
             .setSession("sing-box")

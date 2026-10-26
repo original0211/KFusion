@@ -14,7 +14,12 @@ internal object SingBoxStartGate {
         if (snapshot == null) return Verdict.PENDING
         if (snapshot.updatedAt < epochMs) return Verdict.PENDING
         return when (snapshot.state) {
-            SingBoxStatus.State.STARTING -> Verdict.PENDING
+            SingBoxStatus.State.STARTING ->
+                if (snapshot.pid > 0 && !pidAlive(snapshot.pid)) {
+                    Verdict.FAILED
+                } else {
+                    Verdict.PENDING
+                }
             SingBoxStatus.State.RUNNING ->
                 if (pidAlive(snapshot.pid)) Verdict.RUNNING else Verdict.FAILED
             SingBoxStatus.State.FAILED -> Verdict.FAILED

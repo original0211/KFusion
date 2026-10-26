@@ -48,6 +48,28 @@ class SingBoxStartGateTest {
     }
 
     @Test
+    fun thisAttemptsStartingWithADeadPidFails() {
+        val starting = snapshot(SingBoxStatus.State.STARTING, updatedAt = epoch)
+        assertEquals(
+            SingBoxStartGate.Verdict.FAILED,
+            verdict(starting, alive = { false }),
+        )
+    }
+
+    @Test
+    fun thisAttemptsStartingWithAnUnknownPidIsPending() {
+        val starting = snapshot(
+            SingBoxStatus.State.STARTING,
+            updatedAt = epoch,
+            pid = -1,
+        )
+        assertEquals(
+            SingBoxStartGate.Verdict.PENDING,
+            verdict(starting, alive = { false }),
+        )
+    }
+
+    @Test
     fun thisAttemptsRunningWithALivePidPasses() {
         val running = snapshot(SingBoxStatus.State.RUNNING, updatedAt = epoch + 5)
         assertEquals(SingBoxStartGate.Verdict.RUNNING, verdict(running))
