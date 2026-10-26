@@ -59,9 +59,27 @@ class DisclaimerView extends StatelessWidget {
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _maxContentWidth),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
+            child: Builder(
+              builder: (context) {
+                final colorScheme = context.colorScheme;
+                return DecoratedBox(
+                  decoration: ShapeDecoration(
+                    color: context.raisedSurfaceLevel.colorOf(colorScheme),
+                    shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
+                    shadows: colorScheme.cabinPanelShadows,
+                  ),
+                  child: SurfaceScope(
+                    level: SurfaceLevel.card,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: children,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
