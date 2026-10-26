@@ -255,12 +255,19 @@ void main() {
       await pumpView(tester);
       final context = tester.element(find.byType(UniversalImportView));
       final scheme = Theme.of(context).colorScheme;
-      List<BoxDecoration> wells() => tester
+      List<ShapeDecoration> wells() => tester
           .widgetList<DecoratedBox>(find.byType(DecoratedBox))
           .map((box) => box.decoration)
-          .whereType<BoxDecoration>()
-          .where((decoration) => decoration.border != null)
+          .whereType<ShapeDecoration>()
+          .where(
+            (decoration) =>
+                decoration.shape is RoundedSuperellipseBorder &&
+                (decoration.shape as RoundedSuperellipseBorder).side !=
+                    BorderSide.none,
+          )
           .toList();
+      Color rimColor(ShapeDecoration decoration) =>
+          (decoration.shape as RoundedSuperellipseBorder).side.color;
       final insetWells = wells()
           .where(
             (decoration) =>
@@ -269,7 +276,7 @@ void main() {
           .toList();
       expect(insetWells, hasLength(2));
       for (final decoration in insetWells) {
-        expect(decoration.border?.top.color, scheme.cabinRim);
+        expect(rimColor(decoration), scheme.cabinRim);
       }
       await tester.enterText(
         find.byType(TextField).at(1),
@@ -290,7 +297,7 @@ void main() {
           )
           .toList();
       expect(blockWells, hasLength(1));
-      expect(blockWells.single.border?.top.color, scheme.cabinRim);
+      expect(rimColor(blockWells.single), scheme.cabinRim);
     });
   });
 }

@@ -352,10 +352,9 @@ class _PayloadWell extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: level.colorOf(colorScheme),
-        borderRadius: BorderRadius.circular(AppCorner.md),
-        border: Border.all(color: colorScheme.cabinRim),
+        shape: AppShape.md.copyWith(side: colorScheme.cabinRimSide),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
