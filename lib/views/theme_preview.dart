@@ -167,15 +167,8 @@ class _ThemeLivePreviewState extends ConsumerState<ThemeLivePreview>
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(
-      themeSettingProvider.select((state) => state.themeMode),
-    );
-    final brightness = switch (themeMode) {
-      ThemeMode.light => Brightness.light,
-      ThemeMode.dark => Brightness.dark,
-      ThemeMode.system => MediaQuery.platformBrightnessOf(context),
-    };
-    final colorScheme = ref.watch(genColorSchemeProvider(brightness));
+    final lightScheme = ref.watch(genColorSchemeProvider(Brightness.light));
+    final darkScheme = ref.watch(genColorSchemeProvider(Brightness.dark));
     final floatingBar = ref.watch(
       appSettingProvider.select((state) => state.floatingNavigationBar),
     );
@@ -187,44 +180,50 @@ class _ThemeLivePreviewState extends ConsumerState<ThemeLivePreview>
         (state) => state.liquidGlass != LiquidGlassMode.none,
       ),
     );
-    final corner = AppCorner.fit(_phoneWidth);
+    Widget phone(ColorScheme scheme, double width) => SizedBox(
+      width: width,
+      child: AspectRatio(
+        aspectRatio: 9 / 17,
+        child: ClipRSuperellipse(
+          borderRadius: AppRadius.all(AppCorner.fit(width)),
+          child: TweenAnimationBuilder<ColorScheme>(
+            tween: _ColorSchemeTween(end: scheme),
+            duration: _duration,
+            builder: (_, colorScheme, _) => AnimatedBuilder(
+              animation: _slideCurve,
+              builder: (_, _) => MiniScreen(
+                key: ValueKey((floatingBar, liquidGlass)),
+                colorScheme: colorScheme,
+                floatingBar: floatingBar,
+                liquidGlass: liquidGlass,
+                selected: _selected,
+                previous: _previous,
+                progress: _previous == null ? 1 : _slideCurve.value,
+                tabAnimation: tabAnimation,
+                onSelect: _select,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 24),
       alignment: Alignment.center,
       decoration: ShapeDecoration(
         color: context.raisedSurfaceLevel.colorOf(context.colorScheme),
-        shape: AppShape.xxl,
+        shape: AppShape.xxl.copyWith(side: context.colorScheme.cabinRimSide),
       ),
-      child: SizedBox(
-        width: _phoneWidth,
-        child: AspectRatio(
-          aspectRatio: 9 / 17,
-          child: ClipRSuperellipse(
-            borderRadius: AppRadius.all(corner),
-            child: TweenAnimationBuilder<ColorScheme>(
-              tween: _ColorSchemeTween(end: colorScheme),
-              duration: _duration,
-              builder: (_, colorScheme, _) => AnimatedSwitcher(
-                duration: _duration,
-                child: AnimatedBuilder(
-                  key: ValueKey((floatingBar, liquidGlass)),
-                  animation: _slideCurve,
-                  builder: (_, _) => MiniScreen(
-                    colorScheme: colorScheme,
-                    floatingBar: floatingBar,
-                    liquidGlass: liquidGlass,
-                    selected: _selected,
-                    previous: _previous,
-                    progress: _previous == null ? 1 : _slideCurve.value,
-                    tabAnimation: tabAnimation,
-                    onSelect: _select,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+      child: LayoutBuilder(
+        builder: (_, constraints) {
+          final width = math.min(_phoneWidth, (constraints.maxWidth - 12) / 2);
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 12,
+            children: [phone(lightScheme, width), phone(darkScheme, width)],
+          );
+        },
       ),
     );
   }
