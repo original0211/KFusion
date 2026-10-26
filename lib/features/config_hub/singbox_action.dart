@@ -223,7 +223,10 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       try {
         final clashMap = _asMap(loadPlainYaml(yamlText));
         if (clashMap.isEmpty) {
-          return notRenderable;
+          return const CoreSwitchStepResult(
+            failure: CoreSwitchFailure.profileNotRenderable,
+            detail: '配置内容为空或不是可识别的 Clash 配置',
+          );
         }
         final secret = generateSingBoxSecret();
         final rendered = renderSingBoxFromClash(
@@ -234,10 +237,20 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           mixedPort: singBoxMixedPort,
         );
         if (!_hasUsableOutbound(rendered)) {
-          return notRenderable;
+          return CoreSwitchStepResult(
+            failure: CoreSwitchFailure.profileNotRenderable,
+            detail: singBoxNoUsableOutboundDetail(rendered.unsupported),
+          );
         }
         prepared = (rendered: rendered, secret: secret);
-      } catch (_) {
+      } catch (error) {
+        // An unexpected throw is not a verdict on the profile; its text is
+        // not a stable user-facing reason, so the card stays bare and the
+        // error lands in the log instead.
+        commonPrint.log(
+          'sing-box render failed during preflight: $error',
+          logLevel: LogLevel.error,
+        );
         return notRenderable;
       }
       if (system.isAndroid) {

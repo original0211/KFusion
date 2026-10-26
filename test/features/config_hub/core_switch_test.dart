@@ -225,4 +225,45 @@ void main() {
       expect(outcome.detail, 'sing-box 配置校验超时');
     });
   });
+
+  group('singBoxNoUsableOutboundDetail', () {
+    test('skipped node protocols are named and counted', () {
+      final detail = singBoxNoUsableOutboundDetail(const [
+        'proxy type "openvpn" (JP-家宽-01)',
+        'proxy type "openvpn" (JP-家宽-02)',
+        'proxy type "tuic" (SG-01)',
+      ]);
+      expect(detail, isNotEmpty);
+      expect(detail, contains('openvpn'));
+      expect(detail, contains('openvpn ×2'));
+      expect(detail, contains('tuic ×1'));
+    });
+
+    test('dead groups and untranslated rules ride along', () {
+      final detail = singBoxNoUsableOutboundDetail(const [
+        'proxy type "openvpn" (KR-家宽-01)',
+        'proxy-group "家宽自动" has no usable member',
+        'rule "DOMAIN-SUFFIX,example.com,家宽自动"',
+        'rule "MATCH,家宽自动"',
+      ]);
+      expect(detail, startsWith('没有可用的代理出站；'));
+      expect(detail, contains('分组无可用成员 ×1'));
+      expect(detail, contains('规则未翻译 ×2'));
+    });
+
+    test('a drop list without node skips stays honest', () {
+      final detail = singBoxNoUsableOutboundDetail(const [
+        'rule "MATCH,DIRECT"',
+      ]);
+      expect(detail, contains('规则未翻译 ×1'));
+      expect(detail, isNot(contains('节点协议')));
+    });
+
+    test('an empty drop list blames the profile itself', () {
+      expect(
+        singBoxNoUsableOutboundDetail(const []),
+        '没有可供 sing-box 使用的代理出站，配置中仅有 direct/block 出站',
+      );
+    });
+  });
 }

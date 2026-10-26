@@ -66,6 +66,59 @@ CoreSwitchStepResult singBoxCheckOutcome(String checkError) {
   );
 }
 
+/// The failure detail for a render that left sing-box no usable outbound:
+/// what the renderer dropped, in its own terms (empty list = nothing dropped).
+String singBoxNoUsableOutboundDetail(List<String> unsupported) {
+  if (unsupported.isEmpty) {
+    return '没有可供 sing-box 使用的代理出站，配置中仅有 direct/block 出站';
+  }
+  return '没有可用的代理出站；${_singBoxDropSummary(unsupported)}';
+}
+
+String _singBoxDropSummary(List<String> unsupported) {
+  final nodePattern = RegExp(r'^proxy type "([^"]+)"');
+  final protocols = <String, int>{};
+  var unusableNodes = 0;
+  var deadGroups = 0;
+  var groupTypes = 0;
+  var rejectMembers = 0;
+  var rules = 0;
+  var others = 0;
+  for (final entry in unsupported) {
+    final node = nodePattern.firstMatch(entry);
+    if (node != null) {
+      final type = node.group(1)!;
+      protocols[type] = (protocols[type] ?? 0) + 1;
+    } else if (entry.startsWith('wireguard node')) {
+      unusableNodes++;
+    } else if (entry.contains('has no usable member')) {
+      deadGroups++;
+    } else if (entry.startsWith('proxy-group type')) {
+      groupTypes++;
+    } else if (entry.startsWith('REJECT in proxy-group')) {
+      rejectMembers++;
+    } else if (entry.startsWith('rule ')) {
+      rules++;
+    } else {
+      others++;
+    }
+  }
+  final parts = <String>[];
+  if (protocols.isNotEmpty) {
+    final skipped = protocols.entries
+        .map((entry) => '${entry.key} ×${entry.value}')
+        .join('、');
+    parts.add('节点协议不受 sing-box 支持：$skipped');
+  }
+  if (unusableNodes > 0) parts.add('节点不可用 ×$unusableNodes');
+  if (deadGroups > 0) parts.add('分组无可用成员 ×$deadGroups');
+  if (groupTypes > 0) parts.add('分组类型不受支持 ×$groupTypes');
+  if (rejectMembers > 0) parts.add('REJECT 成员被跳过 ×$rejectMembers');
+  if (rules > 0) parts.add('规则未翻译 ×$rules');
+  if (others > 0) parts.add('其他未翻译项 ×$others');
+  return parts.join('；');
+}
+
 typedef CoreSwitchStep = Future<CoreSwitchStepResult> Function();
 
 /// Runs a core switch in stage order, restoring the original core after any failure past preflight.
