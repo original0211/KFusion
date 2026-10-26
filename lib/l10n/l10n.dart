@@ -1360,6 +1360,11 @@ class AppLocalizations {
     return Intl.message('Intranet IP', name: 'intranetIP', desc: '', args: []);
   }
 
+  /// `In use`
+  String get inUse {
+    return Intl.message('In use', name: 'inUse', desc: '', args: []);
+  }
+
   /// `View`
   String get view {
     return Intl.message('View', name: 'view', desc: '', args: []);

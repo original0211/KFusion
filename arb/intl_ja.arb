@@ -173,6 +173,7 @@
   "liveConnections": "リアルタイム接続",
   "inbound": "インバウンド",
   "intranetIP": "イントラネットIP",
+  "inUse": "使用中",
   "view": "表示",
   "cut": "切り取り",
   "copy": "コピー",

@@ -848,6 +848,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "importFile": MessageLookupByLibrary.simpleMessage("파일에서 가져오기"),
     "importFromLink": MessageLookupByLibrary.simpleMessage("링크에서 가져오기"),
     "importUrl": MessageLookupByLibrary.simpleMessage("URL에서 가져오기"),
+    "inUse": MessageLookupByLibrary.simpleMessage("사용 중"),
     "inbound": MessageLookupByLibrary.simpleMessage("인바운드"),
     "includeInterface": MessageLookupByLibrary.simpleMessage("포함할 인터페이스"),
     "includeInterfaceDesc": MessageLookupByLibrary.simpleMessage(

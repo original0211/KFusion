@@ -482,6 +482,7 @@ class ProfileItem extends ConsumerWidget {
     final isUpdating = ref.watch(isUpdatingProvider(profile.updatingKey));
     final subscriptionInfo = _subscriptionInfo;
     final isSelected = profile.id == groupValue;
+    final colorScheme = context.colorScheme;
     return ContextMenuRegion(
       menuItems: isUpdating ? null : _menuItems(context, ref),
       child: CommonCard(
@@ -491,26 +492,48 @@ class ProfileItem extends ConsumerWidget {
         onPressed: () {
           onChanged(profile.id);
         },
-        child: ListItem(
-          key: Key(profile.id.toString()),
-          minTileHeight: _profileItemHeight,
-          minVerticalPadding: listRowVerticalPadding,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 8,
-            children: [
-              if (profile.type == ProfileType.custom)
-                _GroupsCountChip(profileId: profile.id)
-              else
-                _buildTrailing(context, isUpdating: isUpdating),
-              if (isSelected) const SelectionBadge(size: 24),
-            ],
-          ),
-          title: _ProfileCardTitle(
-            profile: profile,
-            expire: subscriptionInfo?.expireDate,
-            subtitle: _subtitle(context),
-          ),
+        child: Stack(
+          children: [
+            if (isSelected)
+              PositionedDirectional(
+                end: -46,
+                top: -58,
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: 0.045,
+                    child: DashboardDiscMotif(
+                      size: 128,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+            ListItem(
+              key: Key(profile.id.toString()),
+              minTileHeight: _profileItemHeight,
+              minVerticalPadding: listRowVerticalPadding,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 8,
+                children: [
+                  if (profile.type == ProfileType.custom)
+                    _GroupsCountChip(profileId: profile.id)
+                  else
+                    _buildTrailing(context, isUpdating: isUpdating),
+                  if (isSelected)
+                    MetaChip(
+                      label: context.appLocalizations.inUse,
+                      color: colorScheme.primary,
+                    ),
+                ],
+              ),
+              title: _ProfileCardTitle(
+                profile: profile,
+                expire: subscriptionInfo?.expireDate,
+                subtitle: _subtitle(context),
+              ),
+            ),
+          ],
         ),
       ),
     );

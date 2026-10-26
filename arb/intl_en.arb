@@ -173,6 +173,7 @@
   "liveConnections": "Live connections",
   "inbound": "Inbound",
   "intranetIP": "Intranet IP",
+  "inUse": "In use",
   "view": "View",
   "cut": "Cut",
   "copy": "Copy",

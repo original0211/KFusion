@@ -1070,6 +1070,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "importUrl": MessageLookupByLibrary.simpleMessage(
       "Importer depuis une URL",
     ),
+    "inUse": MessageLookupByLibrary.simpleMessage("En utilisation"),
     "inbound": MessageLookupByLibrary.simpleMessage("Entrant"),
     "includeInterface": MessageLookupByLibrary.simpleMessage(
       "Interfaces incluses",

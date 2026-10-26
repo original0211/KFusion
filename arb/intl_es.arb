@@ -173,6 +173,7 @@
   "liveConnections": "Conexiones activas",
   "inbound": "Entrada",
   "intranetIP": "IP de intranet",
+  "inUse": "En uso",
   "view": "Ver",
   "cut": "Cortar",
   "copy": "Copiar",

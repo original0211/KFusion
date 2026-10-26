@@ -783,6 +783,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "importFile": MessageLookupByLibrary.simpleMessage("通过文件导入"),
     "importFromLink": MessageLookupByLibrary.simpleMessage("从链接导入"),
     "importUrl": MessageLookupByLibrary.simpleMessage("通过URL导入"),
+    "inUse": MessageLookupByLibrary.simpleMessage("使用中"),
     "inbound": MessageLookupByLibrary.simpleMessage("入站"),
     "includeInterface": MessageLookupByLibrary.simpleMessage("包含网卡"),
     "includeInterfaceDesc": MessageLookupByLibrary.simpleMessage(

@@ -173,6 +173,7 @@
   "liveConnections": "Connexions en direct",
   "inbound": "Entrant",
   "intranetIP": "IP du réseau local",
+  "inUse": "En utilisation",
   "view": "Afficher",
   "cut": "Couper",
   "copy": "Copier",
