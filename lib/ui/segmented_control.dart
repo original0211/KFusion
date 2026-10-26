@@ -46,7 +46,7 @@ class SegmentedControl<T> extends StatelessWidget {
                 heightFactor: 1,
                 child: DecoratedBox(
                   decoration: ShapeDecoration(
-                    color: colorScheme.primary,
+                    color: colorScheme.onSurface,
                     shape: AppShape.full,
                   ),
                 ),
@@ -85,7 +85,7 @@ class SegmentedControl<T> extends StatelessWidget {
                                   .of(context, emphasized: option == value)
                                   .copyWith(
                                     color: option == value
-                                        ? colorScheme.onPrimary
+                                        ? SurfaceLevel.page.colorOf(colorScheme)
                                         : colorScheme.onSurfaceVariant,
                                   ),
                               child: Text(
