@@ -253,14 +253,17 @@ void main() {
     tester,
   ) async {
     const row = Key('row');
+    // At rest the row carries the cabin rim; only a key-moved focus
+    // trades it for the ring.
+    final rim = _theme.colorScheme.cabinRimSide;
     await pumpRow(tester, remote: false);
 
     await tester.tap(find.byKey(const Key('field')));
     await tester.pumpAndSettle();
-    expect(_buttonSide(tester, row).style, BorderStyle.none);
+    expect(_buttonSide(tester, row), rim);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pumpAndSettle();
-    expect(_buttonSide(tester, row).style, BorderStyle.none);
+    expect(_buttonSide(tester, row), rim);
 
     await tester.tap(find.byKey(const Key('before')));
     await tester.pumpAndSettle();
@@ -270,7 +273,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('field')));
     await tester.pumpAndSettle();
-    expect(_buttonSide(tester, row).style, BorderStyle.none);
+    expect(_buttonSide(tester, row), rim);
   });
 
   testWidgets('a row rings any focus while a remote drives it', (tester) async {

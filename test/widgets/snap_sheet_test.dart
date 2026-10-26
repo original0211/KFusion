@@ -852,10 +852,16 @@ void main() {
       (plain, plain.elevated),
       (plain.toPureBlack(true), plain),
     ]) {
+      // The elevated sheet takes its page's card step. Over a pure-black
+      // page the plain sheet instead keeps the ladder's first step; the
+      // two agreed only by a spacing accident of the old Material ladder.
       expect(
         sheet.surface.tone,
-        closeTo(SurfaceLevel.card.colorOf(page).tone, 0.5),
+        page.surface == Colors.black
+            ? closeTo(plain.surface.tone, 0.5)
+            : closeTo(SurfaceLevel.card.colorOf(page).tone, 0.5),
       );
+      expect(sheet.surface.tone, greaterThan(page.surface.tone));
       final theme = ThemeData(
         colorScheme: page,
         extensions: [ElevatedColorScheme(sheet)],

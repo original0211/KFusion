@@ -12,7 +12,7 @@ enum AppTextStyle {
   ),
   largeTitle(34, 41, emphasizedWeight: FontWeight.w600),
   title1(28, 34, emphasizedWeight: FontWeight.w600),
-  pageTitle(24, 30, weight: FontWeight.w600, emphasizedWeight: FontWeight.w600),
+  pageTitle(27, 34, weight: FontWeight.w600, emphasizedWeight: FontWeight.w600),
   title2(22, 28, emphasizedWeight: FontWeight.w600),
   title3(20, 25, emphasizedWeight: FontWeight.w500),
   headline(17, 22, weight: FontWeight.w600),

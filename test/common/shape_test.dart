@@ -10,10 +10,13 @@ ShapeBorder? _shapeOf(WidgetTester tester, Finder button) => tester
 
 void main() {
   test('the declared main corner tiers keep their values', () {
-    expect(AppCorner.xl, 24, reason: 'card');
+    expect(AppCorner.xl, 22, reason: 'card');
+    expect(AppCorner.lg, 20, reason: 'row card');
+    expect(AppCorner.floating, 26, reason: 'dock, dialog and menu');
     expect(AppCorner.md, 16, reason: 'block');
     expect(AppCorner.sm, 8, reason: 'small mark or chip');
     expect(AppShape.xl.borderRadius, AppRadius.xl);
+    expect(AppShape.floating.borderRadius, AppRadius.floating);
     expect(AppShape.md.borderRadius, AppRadius.md);
     expect(AppShape.sm.borderRadius, AppRadius.sm);
   });

@@ -153,9 +153,7 @@ void main() {
       expect(sidebarSurface.color, isNot(sidebarContainer.color));
       expect(
         (sidebarSurface.shape! as BorderDirectional).end,
-        Divider.createBorderSide(
-          tester.element(find.byType(NavigationSidebar)),
-        ),
+        colorScheme.cabinRimSide,
       );
 
       await tester.tap(find.text('count: 0'));

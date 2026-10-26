@@ -14,13 +14,15 @@ it sits on, which `SurfaceScope` passes down the tree.
 |---------|---------------------------|---------------------------|---------------------------------------------------------|
 | `page`  | `surfaceContainer`        | `surface`                 | scaffold body, sheets                                   |
 | `card`  | `surfaceBright`           | `surfaceContainer`        | cards, grouped runs of rows, light-mode floats          |
-| `block` | `surfaceContainer`        | `surfaceContainerHigh`    | unselected segments, tiles and wells in a card          |
+| `block` | `surfaceContainerLow`     | `surfaceContainerHigh`    | unselected segments, tiles and wells in a card          |
 | `inset` | `surfaceContainerHighest` | `surfaceContainerHighest` | small marks inside a block: glyph wells, badges, tracks |
 
-Light mode alternates gray and paper: a near-white card on a gray page, a gray block in the card. The card is tone 98,
-not pure white, and the page tone 94: pure white beside a tinted gray made the white glare and the gray look soiled. Dark mode only
-lightens, because a darker step inside a lighter surface reads as a hole rather than a layer. `inset` is the floor;
-nothing nests below it, so a design that needs a fifth level needs fewer containers instead.
+Both ladders are pinned in `seededColorScheme` (REDESIGN_CABIN_SPEC.md §1.2). Light mode is the cabin paper: a
+pure-white card (tone 100) on a warm paper page (tone 95.2, hue ~105, chroma ~3 — the warmth is pinned, not
+seed-following, except under the tinted style, which keeps its seed wash and takes only the tones), a near-white
+block (tone 98.25) in the card. Dark mode only lightens, because a darker step inside a lighter surface reads as
+a hole rather than a layer. `inset` is the floor; nothing nests below it, so a design that needs a fifth level
+needs fewer containers instead.
 
 - A widget never picks its level at the call site. `CommonCard` and the other shared surfaces read
   `context.raisedSurfaceLevel` and wrap their child in `SurfaceScope`, so the same row is white on a page and gray

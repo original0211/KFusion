@@ -138,7 +138,9 @@ class CommonCard extends StatelessWidget {
     required bool ringed,
   }) {
     if (!ringed || !states.contains(WidgetState.focused)) {
-      return BorderSide.none;
+      return isError || _filled
+          ? BorderSide.none
+          : context.colorScheme.cabinRimSide;
     }
     final colorScheme = context.colorScheme;
     final side = focusRingSide(colorScheme);
@@ -192,7 +194,7 @@ class CommonCard extends StatelessWidget {
         style:
             FilledButton.styleFrom(
               padding: padding ?? EdgeInsets.zero,
-              shape: shape ?? AppShape.all(radius ?? AppCorner.md),
+              shape: shape ?? AppShape.all(radius ?? AppCorner.xl),
               iconSize: commonCardIconSize,
               iconColor: iconColor,
               foregroundColor: foregroundColor,

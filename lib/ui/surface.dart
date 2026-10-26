@@ -1,4 +1,5 @@
 import 'package:kfusion/ui/color.dart';
+import 'package:kfusion/ui/typography.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// `.agents/surfaces.md` explains the levels and why dark mode never steps
@@ -24,7 +25,9 @@ enum SurfaceLevel {
       page => dark ? colorScheme.surface : colorScheme.surfaceContainer,
       card => dark ? colorScheme.surfaceContainer : colorScheme.surfaceBright,
       block =>
-        dark ? colorScheme.surfaceContainerHigh : colorScheme.surfaceContainer,
+        dark
+            ? colorScheme.surfaceContainerHigh
+            : colorScheme.surfaceContainerLow,
       inset => colorScheme.surfaceContainerHighest,
     };
   }
@@ -66,6 +69,36 @@ extension ChromeSurfaceExt on ColorScheme {
   Color get chromeSurface => brightness == Brightness.dark
       ? surfaceContainerLow
       : surfaceContainerHighest;
+}
+
+/// The cabin panel kit of REDESIGN_CABIN_SPEC.md §1.2/§1.4: a rim
+/// highlight edge and a soft shadow over the ladder steps.
+extension CabinSurfaceExt on ColorScheme {
+  Color get cabinRim => brightness == Brightness.dark
+      ? Colors.white.withValues(alpha: 0.07)
+      : const Color(0xFF181818).withValues(alpha: 0.06);
+
+  BorderSide get cabinRimSide => BorderSide(color: cabinRim);
+
+  List<BoxShadow> get cabinPanelShadows => [
+    BoxShadow(
+      color: brightness == Brightness.dark
+          ? Colors.black.withValues(alpha: 0.4)
+          : const Color(0xFF3C341E).withValues(alpha: 0.08),
+      blurRadius: brightness == Brightness.dark ? 18 : 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  List<BoxShadow> get cabinDockShadows => [
+    BoxShadow(
+      color: brightness == Brightness.dark
+          ? Colors.black.withValues(alpha: 0.45)
+          : const Color(0xFF3C341E).withValues(alpha: 0.13),
+      blurRadius: 30,
+      offset: const Offset(0, 16),
+    ),
+  ];
 }
 
 extension ElevatedSurfaceExt on ColorScheme {
@@ -165,16 +198,30 @@ extension AppSurfaceThemeExt on ThemeData {
         ),
       ),
       navigationBarTheme: navigationBarTheme.copyWith(
-        backgroundColor: floating,
-        indicatorColor: floatingLevel.next.colorOf(colorScheme),
+        backgroundColor: colorScheme.chromeSurface,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: Colors.transparent,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             size: 24,
             color: states.contains(WidgetState.selected)
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
+                ? colorScheme.onSurface
+                : colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
           ),
         ),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: AppTextStyle.caption1.size,
+            height: AppTextStyle.caption1.leading / AppTextStyle.caption1.size,
+            color: selected
+                ? colorScheme.onSurface
+                : colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          );
+        }),
       ),
       bottomSheetTheme: bottomSheetTheme.copyWith(
         backgroundColor: page,

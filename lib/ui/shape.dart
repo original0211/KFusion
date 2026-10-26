@@ -4,17 +4,18 @@ import 'dart:ui' show ClipOp, lerpDouble;
 import 'package:material_ui/material_ui.dart';
 
 /// Corner radii. A surface takes one of the main tiers — [xl] for a card,
-/// [md] for a block inside one, [sm] for a small mark or chip, [full] for a
-/// pill — rather than a step in between; [xs], [lg] and [xxl] serve the
-/// steps of [AppCorner.fit], sheets and other named shapes, and [alert] is
-/// a dialog's own.
+/// [lg] for a row card, [floating] for the dock, dialogs and menus, [md]
+/// for a block inside a card, [sm] for a small mark or chip, [full] for a
+/// pill — rather than a step in between; [xs] and [xxl] serve the steps of
+/// [AppCorner.fit] and sheets, and [alert] is a dialog's own.
 abstract final class AppCorner {
   static const double none = 0;
   static const double xs = 4;
   static const double sm = 8;
   static const double md = 16;
   static const double lg = 20;
-  static const double xl = 24;
+  static const double xl = 22;
+  static const double floating = 26;
   static const double xxl = 28;
 
   /// UIAlertController's corner on iOS 27, rounder than a sheet's.
@@ -24,6 +25,7 @@ abstract final class AppCorner {
   static double fit(double shortestSide) {
     final limit = shortestSide / 3;
     if (limit >= xxl) return xxl;
+    if (limit >= floating) return floating;
     if (limit >= xl) return xl;
     if (limit >= lg) return lg;
     if (limit >= md) return md;
@@ -49,6 +51,9 @@ abstract final class AppRadius {
   );
   static const BorderRadius xl = BorderRadius.all(
     Radius.circular(AppCorner.xl),
+  );
+  static const BorderRadius floating = BorderRadius.all(
+    Radius.circular(AppCorner.floating),
   );
   static const BorderRadius xxl = BorderRadius.all(
     Radius.circular(AppCorner.xxl),
@@ -87,6 +92,9 @@ abstract final class AppShape {
   );
   static const RoundedSuperellipseBorder xl = RoundedSuperellipseBorder(
     borderRadius: AppRadius.xl,
+  );
+  static const RoundedSuperellipseBorder floating = RoundedSuperellipseBorder(
+    borderRadius: AppRadius.floating,
   );
   static const RoundedSuperellipseBorder xxl = RoundedSuperellipseBorder(
     borderRadius: AppRadius.xxl,
@@ -257,8 +265,8 @@ class AppInputBorder extends InputBorder {
 
 extension AppShapeThemeExt on ThemeData {
   ThemeData get withAppShapes => copyWith(
-    cardTheme: cardTheme.copyWith(shape: AppShape.md),
-    dialogTheme: dialogTheme.copyWith(shape: AppShape.all(AppCorner.alert)),
+    cardTheme: cardTheme.copyWith(shape: AppShape.xl),
+    dialogTheme: dialogTheme.copyWith(shape: AppShape.floating),
     bottomSheetTheme: bottomSheetTheme.copyWith(
       shape: AppShape.top(AppCorner.xxl),
     ),
@@ -274,10 +282,10 @@ extension AppShapeThemeExt on ThemeData {
       ),
     ),
     chipTheme: chipTheme.copyWith(shape: AppShape.sm),
-    popupMenuTheme: popupMenuTheme.copyWith(shape: AppShape.md),
+    popupMenuTheme: popupMenuTheme.copyWith(shape: AppShape.floating),
     menuTheme: MenuThemeData(
       style: (menuTheme.style ?? const MenuStyle()).copyWith(
-        shape: const WidgetStatePropertyAll(AppShape.md),
+        shape: const WidgetStatePropertyAll(AppShape.floating),
       ),
     ),
     inputDecorationTheme: inputDecorationTheme.copyWith(border: AppShape.input),

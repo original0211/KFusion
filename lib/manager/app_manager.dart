@@ -239,7 +239,7 @@ class AppSidebarContainer extends ConsumerWidget {
               color: blur
                   ? chrome.withValues(alpha: kSidebarBlurOpacity)
                   : chrome,
-              shape: BorderDirectional(end: Divider.createBorderSide(context)),
+              shape: BorderDirectional(end: context.colorScheme.cabinRimSide),
               child: MediaQuery.removePadding(
                 context: context,
                 removeLeft: !isLtr,

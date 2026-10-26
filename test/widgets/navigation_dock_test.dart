@@ -514,10 +514,10 @@ void main() {
 
     final four = await pumpBar(4);
     expect(four.center.dx, size.width / 2);
-    expect(four.width, lessThan(size.width - 42));
+    expect(four.width, lessThan(size.width - 40));
     final five = await pumpBar(5);
-    expect(five.left, 21);
-    expect(five.right, size.width - 21);
+    expect(five.left, 20);
+    expect(five.right, size.width - 20);
   });
 
   testWidgets('a long label shrinks to fit, then ellipsizes behind a tooltip', (
@@ -565,7 +565,7 @@ void main() {
 
     var labels = await pumpLabels('Profile');
     final shrunk = labels.first.style!.fontSize!;
-    expect(shrunk, lessThan(10));
+    expect(shrunk, lessThan(11));
     expect(shrunk, greaterThan(9));
     expect(labels.map((text) => text.style!.fontSize).toSet(), {shrunk});
     expect(tooltips, findsNothing);

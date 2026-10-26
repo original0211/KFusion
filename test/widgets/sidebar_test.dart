@@ -300,10 +300,7 @@ void main() {
       final colorScheme = Theme.of(tester.element(_sidebarFinder)).colorScheme;
       final pane = tester.widget<Material>(_paneFinder);
       expect(pane.color, colorScheme.chromeSurface);
-      expect(
-        (pane.shape! as BorderDirectional).end,
-        Divider.createBorderSide(tester.element(_sidebarFinder)),
-      );
+      expect((pane.shape! as BorderDirectional).end, colorScheme.cabinRimSide);
 
       await tester.tap(find.byTooltip('Collapse'));
       await tester.pumpAndSettle();

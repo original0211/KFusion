@@ -17,19 +17,20 @@ import 'package:material_ui/material_ui.dart';
 
 import 'liquid_glass.dart';
 
-const double _barHeight = 62;
+const double _barHeight = 70;
 const double _barPadding = 4;
-const double _edgeMargin = 21;
+const double _edgeMargin = 20;
+const double _bottomMargin = 16;
 const double _shadowRoom = 8;
 const double _hitSlop = 8;
 const double _maxItemExtent = 86;
 const double _minLensWidth = 84;
 const _fullWidthCount = 5;
-const double _iconSize = 28;
+const double _iconSize = 24;
 const double _labelGap = 2;
 const double _labelInset = 2;
-const double _labelSize = 10;
-const double _labelLeading = 14.5;
+const double _labelSize = 11;
+const double _labelLeading = 15.5;
 const double _minLabelSize = 9;
 const double _pressGrowth = 1 / 8;
 const double _maxPressGrowth = 16;
@@ -216,22 +217,9 @@ class _Spring extends ChangeNotifier implements ValueListenable<double> {
   }
 }
 
-// A soft, wide drop in the manner of iOS rather than a Material elevation.
-List<BoxShadow> dockShadows(ColorScheme colorScheme) {
-  final strength = colorScheme.brightness == Brightness.dark ? 3.0 : 1.0;
-  return [
-    BoxShadow(
-      color: colorScheme.shadow.withValues(alpha: 0.08 * strength),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-    BoxShadow(
-      color: colorScheme.shadow.withValues(alpha: 0.04 * strength),
-      blurRadius: 3,
-      offset: const Offset(0, 1),
-    ),
-  ];
-}
+// The cabin dock shadow of REDESIGN_CABIN_SPEC.md §1.4.
+List<BoxShadow> dockShadows(ColorScheme colorScheme) =>
+    colorScheme.cabinDockShadows;
 
 // iOS 27 shades its glass bars only below, faintly, and no darker in dark mode.
 List<BoxShadow> dockGlassShadows(ColorScheme colorScheme) => [
@@ -275,7 +263,7 @@ class _DockSurface extends StatelessWidget {
     }
     return DecoratedBox(
       decoration: ShapeDecoration(
-        shape: AppShape.full,
+        shape: AppShape.floating,
         shadows: dockShadows(colorScheme),
       ),
       child: child,
@@ -325,7 +313,7 @@ class NavigationDock extends StatelessWidget {
   }
 
   static double _bottomMarginOf(BuildContext context) =>
-      math.max(_edgeMargin, MediaQuery.paddingOf(context).bottom);
+      math.max(_bottomMargin, MediaQuery.paddingOf(context).bottom);
 
   /// The room content scrolling under the dock leaves at its foot.
   static double insetOf(BuildContext context) =>
@@ -1155,10 +1143,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       shadows: ultra ? dockGlassShadows(colorScheme) : const [],
       glow: _touchGlow,
       child: Material(
-        color: glass
-            ? Colors.transparent
-            : SurfaceLevel.floatingOf(colorScheme).colorOf(colorScheme),
-        shape: AppShape.full,
+        color: glass ? Colors.transparent : colorScheme.chromeSurface,
+        shape: AppShape.floating.copyWith(side: colorScheme.cabinRimSide),
         // Raw pointers rather than recognizers: a drag has nothing to win the
         // arena from, and a tap waiting on one lifts the lens late.
         child: Listener(
@@ -1234,6 +1220,13 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
                               rect: lensRect(),
                               lift: _lift.value,
                               glass: glass,
+                              iconCenterY:
+                                  (constraints.maxHeight -
+                                          (_iconSize +
+                                              _labelGap +
+                                              lineHeight)) /
+                                      2 +
+                                  _iconSize / 2,
                             ),
                           ),
                         if (widget.destinations.isNotEmpty)
@@ -1325,7 +1318,12 @@ class _HoverHighlight extends StatelessWidget {
 }
 
 class _Lens extends StatelessWidget {
-  const _Lens({required this.rect, required this.lift, required this.glass});
+  const _Lens({
+    required this.rect,
+    required this.lift,
+    required this.glass,
+    required this.iconCenterY,
+  });
 
   final Rect rect;
   final double lift;
@@ -1334,6 +1332,10 @@ class _Lens extends StatelessWidget {
   /// mode as iOS's tab bar marks its selection, and clears as it lifts into
   /// the [_GlassLens].
   final bool glass;
+
+  /// The bar-space height of the destination's icon centre; the selection
+  /// dot rides beside it, painted here to keep its accent colour.
+  final double iconCenterY;
 
   @override
   Widget build(BuildContext context) {
@@ -1347,21 +1349,44 @@ class _Lens extends StatelessWidget {
       top: rect.top,
       width: rect.width,
       height: rect.height,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: glass
-              ? platter.withValues(alpha: platter.a * (1 - lifted))
-              : Color.alphaBlend(
-                  colorScheme.onSurface.withValues(alpha: 0.08 * lifted),
-                  SurfaceLevel.floatingOf(
-                    colorScheme,
-                  ).next.colorOf(colorScheme),
-                ),
-          shape: AppShape.full,
+      child: CustomPaint(
+        foregroundPainter: _SelectionDotPainter(
+          center: Offset(
+            rect.width / 2 + _iconSize / 2 + 5,
+            iconCenterY - rect.top,
+          ),
+          color: colorScheme.primary,
+        ),
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: glass
+                ? platter.withValues(alpha: platter.a * (1 - lifted))
+                : Color.alphaBlend(
+                    colorScheme.onSurface.withValues(alpha: 0.08 * lifted),
+                    colorScheme.chromeSurface,
+                  ),
+            shape: AppShape.full,
+          ),
         ),
       ),
     );
   }
+}
+
+class _SelectionDotPainter extends CustomPainter {
+  const _SelectionDotPainter({required this.center, required this.color});
+
+  final Offset center;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawCircle(center, 2.5, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_SelectionDotPainter oldDelegate) =>
+      center != oldDelegate.center || color != oldDelegate.color;
 }
 
 /// The clear lens a lifted selection becomes on glass. The destinations stand
@@ -1544,8 +1569,8 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    final color = colorScheme.onSurfaceVariant;
-    var tint = colorScheme.primary;
+    final color = colorScheme.onSurfaceVariant.withValues(alpha: 0.72);
+    var tint = colorScheme.onSurface;
     if (widget.part == _LensPart.inside &&
         LiquidGlassScope.qualityOf(context) == LiquidGlassQuality.standard) {
       // Without a pane of its own the copy takes the light that one adds.
@@ -1587,7 +1612,12 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
                   maxLines: 1,
                   softWrap: false,
                   overflow: TextOverflow.ellipsis,
-                  style: widget.labelStyle?.copyWith(color: color),
+                  style: widget.labelStyle?.copyWith(
+                    color: color,
+                    fontWeight: widget.selected
+                        ? FontWeight.w600
+                        : FontWeight.w500,
+                  ),
                 ),
               ),
             ),

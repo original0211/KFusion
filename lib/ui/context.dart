@@ -43,18 +43,19 @@ extension BuildContextExtension on BuildContext {
   Duration motionDuration(Duration duration) =>
       disableAnimations ? Duration.zero : duration;
 
-  TextStyle get listTitleStyle =>
-      AppTextStyle.body.of(this).copyWith(color: colorScheme.onSurface);
+  TextStyle get listTitleStyle => AppTextStyle.subheadline
+      .of(this)
+      .copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w500);
 
-  TextStyle get listSubtitleStyle => AppTextStyle.subheadline
+  TextStyle get listSubtitleStyle => AppTextStyle.caption1
       .of(this)
       .copyWith(color: colorScheme.onSurfaceVariant);
 
-  TextStyle get listCaptionStyle => AppTextStyle.footnote
+  TextStyle get listCaptionStyle => AppTextStyle.caption2
       .of(this)
       .copyWith(color: colorScheme.onSurfaceVariant);
 
-  TextStyle get cardHeaderStyle => AppTextStyle.headline
-      .of(this)
+  TextStyle get cardHeaderStyle => AppTextStyle.callout
+      .of(this, emphasized: true)
       .copyWith(color: colorScheme.onSurfaceVariant.opacity80);
 }

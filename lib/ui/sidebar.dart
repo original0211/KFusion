@@ -210,9 +210,7 @@ class _SidebarOverlay extends StatelessWidget {
                 autofocus: true,
                 child: Material(
                   color: colorScheme.chromeSurface,
-                  shape: BorderDirectional(
-                    end: Divider.createBorderSide(context),
-                  ),
+                  shape: BorderDirectional(end: colorScheme.cabinRimSide),
                   elevation: 8,
                   shadowColor: colorScheme.shadow,
                   child: AnimatedBuilder(
@@ -232,8 +230,9 @@ class _SidebarOverlay extends StatelessWidget {
 class _SidebarColors {
   _SidebarColors(ColorScheme scheme)
     : selectedFill = scheme.onSurface.withValues(alpha: 0.08),
-      label = scheme.onSurface,
-      icon = scheme.onSurfaceVariant,
+      label = scheme.onSurfaceVariant.withValues(alpha: 0.72),
+      icon = scheme.onSurfaceVariant.withValues(alpha: 0.72),
+      iconSelected = scheme.onSurface,
       indicator = scheme.primary,
       overlay = WidgetStateProperty.fromMap({
         WidgetState.pressed: scheme.onSurface.withValues(alpha: 0.06),
@@ -245,6 +244,7 @@ class _SidebarColors {
   final Color selectedFill;
   final Color label;
   final Color icon;
+  final Color iconSelected;
   final Color indicator;
   final WidgetStateProperty<Color> overlay;
 }
@@ -410,7 +410,10 @@ class _SidebarButton extends StatelessWidget {
                 message: tooltip,
                 excludeFromSemantics: !tooltipIsLabel,
                 child: IconTheme.merge(
-                  data: IconThemeData(size: _iconSize, color: colors.icon),
+                  data: IconThemeData(
+                    size: _iconSize,
+                    color: selected == true ? colors.iconSelected : colors.icon,
+                  ),
                   child: SizedBox(height: height, child: child),
                 ),
               ),
@@ -480,7 +483,12 @@ class _DestinationRow extends StatelessWidget {
                   maxLines: 1,
                   softWrap: false,
                   overflow: TextOverflow.ellipsis,
-                  style: style,
+                  style: selected
+                      ? style?.copyWith(
+                          color: context.colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        )
+                      : style,
                 ),
               ),
             ),

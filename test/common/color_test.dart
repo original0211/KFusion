@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:kfusion/ui/color.dart';
+import 'package:kfusion/ui/surface.dart';
 import 'package:material_color_utilities/hct/hct.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,13 +72,14 @@ void main() {
           };
           for (final MapEntry(key: ours, value: theirs) in surfaces.entries) {
             if (gray) {
-              expect(_hct(ours).chroma, _grayish(theirs, 3.1), reason: reason);
+              // Surface tones answer to the pinned ladder tests below;
+              // the light paper also pins its chroma, capped here.
+              expect(
+                _hct(ours).chroma,
+                dark ? _grayish(theirs, 3.1) : lessThanOrEqualTo(4.6),
+                reason: reason,
+              );
             }
-            expect(
-              _hct(ours).tone,
-              closeTo(_hct(theirs).tone, 0.6),
-              reason: reason,
-            );
           }
           final papers = {
             scheme.surface: material.surface,
@@ -87,7 +89,7 @@ void main() {
             if (gray) {
               expect(
                 _hct(ours).chroma,
-                _grayish(theirs, dark ? 3.1 : 1.6),
+                dark ? _grayish(theirs, 3.1) : lessThanOrEqualTo(4.6),
                 reason: reason,
               );
             }
@@ -225,5 +227,99 @@ void main() {
     expect(rose.delayColor(120), rose.success);
     expect(rose.delayColor(800), rose.warning);
     expect(rose.delayColor(-1), rose.error);
+  });
+
+  test('the dark surface ladder is pinned to the design tones', () {
+    final roles = <(Color Function(ColorScheme), double)>[
+      ((scheme) => scheme.surface, 3.0),
+      ((scheme) => scheme.surfaceDim, 3.0),
+      ((scheme) => scheme.surfaceBright, 19.9),
+      ((scheme) => scheme.surfaceContainerLowest, 1.0),
+      ((scheme) => scheme.surfaceContainerLow, 6.2),
+      ((scheme) => scheme.surfaceContainer, 7.85),
+      ((scheme) => scheme.surfaceContainerHigh, 12.93),
+      ((scheme) => scheme.surfaceContainerHighest, 17.9),
+    ];
+    for (final seed in const [
+      Color(0xFF00B4D8),
+      Color(0xFFE91E63),
+      Color(0xFF808080),
+    ]) {
+      for (final style in ColorStyle.values) {
+        final scheme = seededColorScheme(
+          seedColor: seed,
+          brightness: Brightness.dark,
+          style: style,
+        );
+        final reason = '$seed $style';
+        for (final (pick, tone) in roles) {
+          expect(_hct(pick(scheme)).tone, closeTo(tone, 0.6), reason: reason);
+        }
+        for (final leveled in [scheme, scheme.toPureBlack(true)]) {
+          final steps = [
+            for (final level in SurfaceLevel.values)
+              _hct(level.colorOf(leveled)).tone,
+          ];
+          for (var i = 1; i < steps.length; i++) {
+            expect(steps[i] - steps[i - 1], greaterThan(4.5), reason: reason);
+          }
+        }
+      }
+    }
+  });
+
+  test('the light paper ladder is pinned to the cabin paper', () {
+    final roles = <(Color Function(ColorScheme), (double, double, double))>[
+      ((scheme) => scheme.surface, (105, 2.8, 98.25)),
+      ((scheme) => scheme.surfaceDim, (105, 4, 88)),
+      ((scheme) => scheme.surfaceBright, (105, 0, 100)),
+      ((scheme) => scheme.surfaceContainerLowest, (105, 1.5, 100)),
+      ((scheme) => scheme.surfaceContainerLow, (105, 2.8, 98.25)),
+      ((scheme) => scheme.surfaceContainer, (105, 3.3, 95.2)),
+      ((scheme) => scheme.surfaceContainerHigh, (105, 3.6, 93.2)),
+      ((scheme) => scheme.surfaceContainerHighest, (105, 4.5, 90.5)),
+    ];
+    for (final seed in const [
+      Color(0xFF00B4D8),
+      Color(0xFFE91E63),
+      Color(0xFF808080),
+    ]) {
+      for (final style in ColorStyle.values) {
+        final scheme = seededColorScheme(
+          seedColor: seed,
+          brightness: Brightness.light,
+          style: style,
+        );
+        final reason = '$seed $style';
+        for (final (pick, pin) in roles) {
+          final hct = _hct(pick(scheme));
+          expect(hct.tone, closeTo(pin.$3, 0.6), reason: reason);
+          if (style != ColorStyle.tinted) {
+            if (pin.$3 < 100) {
+              expect(hct.chroma, closeTo(pin.$2, 0.6), reason: reason);
+              if (pin.$2 > 0) {
+                // Hue readback drifts several degrees at paper chroma.
+                expect(hct.hue, closeTo(pin.$1, 5), reason: reason);
+              }
+            }
+          }
+        }
+        final steps = [
+          for (final level in SurfaceLevel.values)
+            _hct(level.colorOf(scheme)).tone,
+        ];
+        // page < card, page < block, inset below page: the paper ladder.
+        expect(steps[1] - steps[0], greaterThan(2.5), reason: reason);
+        expect(steps[2] - steps[0], greaterThan(1.5), reason: reason);
+        expect(steps[0] - steps[3], greaterThan(2.5), reason: reason);
+      }
+    }
+    final paper = seededColorScheme(
+      seedColor: const Color(0xFF00B4D8),
+      brightness: Brightness.light,
+    );
+    expect(paper.surfaceContainer, const Color(0xFFF5F1E9));
+    expect(paper.surfaceBright, const Color(0xFFFFFFFF));
+    expect(paper.surfaceContainerLow, const Color(0xFFFEF9F3));
   });
 }

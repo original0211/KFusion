@@ -47,11 +47,22 @@ ColorScheme seededColorScheme({
       : null;
   Color neutral(DynamicColor role, double maxChroma) {
     final palette = role.palette(scheme);
+    final paper = _lightPaperPin(role, dark);
+    if (paper != null) {
+      final tinted = style == ColorStyle.tinted;
+      return Color(
+        Hct.from(
+          tinted ? palette.hue : paper.$1,
+          tinted ? (tint ?? min(palette.chroma, maxChroma)) : paper.$2,
+          paper.$3,
+        ).toInt(),
+      );
+    }
     return Color(
       Hct.from(
         palette.hue,
         tint ?? min(palette.chroma, maxChroma),
-        role.getTone(scheme),
+        _darkSurfaceTone(role, dark) ?? role.getTone(scheme),
       ).toInt(),
     );
   }
@@ -131,6 +142,55 @@ ColorScheme seededColorScheme({
     outlineVariant: neutral(MaterialDynamicColors.outlineVariant, 4),
   );
 }
+
+// The dark ladder is pinned to the design targets in UI_REDESIGN.md.
+double? _darkSurfaceTone(DynamicColor role, bool dark) {
+  if (!dark) {
+    return null;
+  }
+  for (final (candidate, tone) in _darkSurfaceTones) {
+    if (identical(role, candidate)) {
+      return tone;
+    }
+  }
+  return null;
+}
+
+final _darkSurfaceTones = <(DynamicColor, double)>[
+  (MaterialDynamicColors.surface, 3.0),
+  (MaterialDynamicColors.surfaceDim, 3.0),
+  (MaterialDynamicColors.surfaceBright, 19.9),
+  (MaterialDynamicColors.surfaceContainerLowest, 1.0),
+  (MaterialDynamicColors.surfaceContainerLow, 6.2),
+  (MaterialDynamicColors.surfaceContainer, 7.85),
+  (MaterialDynamicColors.surfaceContainerHigh, 12.93),
+  (MaterialDynamicColors.surfaceContainerHighest, 17.9),
+];
+
+// The light ladder is the cabin paper of REDESIGN_CABIN_SPEC.md §1.2 (hue, chroma, tone):
+// hue and chroma are pinned with the tone, or a cool seed greys the paper's warmth.
+(double, double, double)? _lightPaperPin(DynamicColor role, bool dark) {
+  if (dark) {
+    return null;
+  }
+  for (final (candidate, pin) in _lightPaperPins) {
+    if (identical(role, candidate)) {
+      return pin;
+    }
+  }
+  return null;
+}
+
+final _lightPaperPins = <(DynamicColor, (double, double, double))>[
+  (MaterialDynamicColors.surface, (105, 2.8, 98.25)),
+  (MaterialDynamicColors.surfaceDim, (105, 4, 88)),
+  (MaterialDynamicColors.surfaceBright, (105, 0, 100)),
+  (MaterialDynamicColors.surfaceContainerLowest, (105, 1.5, 100)),
+  (MaterialDynamicColors.surfaceContainerLow, (105, 2.8, 98.25)),
+  (MaterialDynamicColors.surfaceContainer, (105, 3.3, 95.2)),
+  (MaterialDynamicColors.surfaceContainerHigh, (105, 3.6, 93.2)),
+  (MaterialDynamicColors.surfaceContainerHighest, (105, 4.5, 90.5)),
+];
 
 const _surfaceChroma = 3.0;
 
