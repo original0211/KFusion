@@ -195,7 +195,6 @@ class SingBoxExitInfoTest {
         val record = SingBoxExitInfo.Record(2, 1_761_000_000_000L, "", 100)
         val line = SingBoxExitInfo.summaryLine(record)
         assertTrue(line.startsWith("process exit: SIGNALED(2) at "))
-        assertTrue(!line.contains("SIG"))
     }
 
     @Test
