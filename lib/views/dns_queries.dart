@@ -109,9 +109,8 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
           return NullStatusSwitcher(
             isEmpty: dnsQueries.isEmpty,
             isSearching: state.isSearching,
-            nullStatus: NullStatus(
+            nullStatus: NullStatus.brand(
               label: appLocalizations.nullTip(appLocalizations.dnsQueries),
-              illustration: NullStatusIllustration.dns,
             ),
             child: RecordTableFrame<DnsQuery>(
               tableId: 'dns',
