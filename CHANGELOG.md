@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.11 (2026-10-26)
+
+**Bug Fixes**
+
+- **core** A sing-box start whose service process dies mid-start is now called as what it is within one polling cycle instead of pending for the whole 40 seconds: the start gate checks the starting snapshot's process id, and a dead process fails the attempt at once with a detail that says the process exited during start, while an unknown process id still reads as pending (4a73e26)
+- **core** When a sing-box start times out, the attempt is now stopped and invalidated instead of being left to finish unwatched: the plugin sends an explicit stop, the service voids the attempt and frees the start gate, and a start that completes late tears itself down without writing a stale running or failed state over the next attempt, so one hung start can no longer poison every retry until the process is killed (4a73e26)
+- **core** The sing-box service's own log is now persisted and reaches the failure message: the box log is forwarded and written with stage markers to a rolling 256 KB service log on disk, and a failed start appends its last six lines to the detail under the plain-language sentence, so a start failure finally shows where the core stopped instead of only reporting a timeout (4a73e26)
+- **ui** The rest of the profiles line joins the settled card and form standards: an empty profile list shows the brand disc mark, the expiry and group count chips read neutral with red kept only for an expiry that has already passed, and the universal import page gathers its import methods and its name and template fields into section cards under a disc header, with errors in the standard banner and the parse result in a titled section (85bfcf1)
+- **ui** The logs page payload now reads in the monospace type scale end to end — message, tag, destination, error, rule, arrow and source — and the routed proxy name drops the signal colour for a neutral emphasis, matching how record rows mark chain names; the requests, connections, DNS and resources screens were audited onto the same record row standards (6ea092f)
+- **ui** The theme page's font and text-scale cards take the card corner tier and its sidebar blur row sits in a section card, and the hotkey page reads an unbound row in the variant tone instead of the outline tone, warns on a recording conflict in the warning tone, keeps its intro glyph neutral, and sets key caps in tabular figures (7b2b922)
+- **ui** Value-level marks in the rule and filter forms drop the tertiary colour, which sits outside the settled semantic palette: neutral rule outcomes such as PASS, GLOBAL and MATCH, the filter regex caption, the rule preset subtitle and the custom profile status now read in the neutral variant or surface tone, while DIRECT keeps success, the REJECT family keeps warning and an invalid value keeps error (8bf9233)
+- **ui** Member type chips in the custom group editor sit on the neutral raised step with variant text, matching the settled tonal chip, instead of the secondary and tertiary container colours; only an exclude member keeps the error container reading (8bf9233)
+
 ## v0.2.10 (2026-10-26)
 
 **Bug Fixes**
