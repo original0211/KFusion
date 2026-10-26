@@ -36,9 +36,9 @@ const _avoidGap = 8.0;
 
 const _cardInset = 8.0;
 
-const _itemRadius = AppCorner.md;
+const _cardRadius = AppCorner.floating;
 
-const _cardRadius = _itemRadius + _cardInset;
+const _itemRadius = _cardRadius - _cardInset;
 
 const _itemIconSize = 20.0;
 const _submenuArrowSize = 16.0;
@@ -373,6 +373,7 @@ class CommonPopupRoute<T> extends PopupRoute<T> {
               platter: _platter,
               sourceColor: sourceColor,
               sourceImage: sourceImage,
+              rimColor: colorScheme.cabinRim,
               surfaceColor: SurfaceLevel.floatingOf(
                 colorScheme,
               ).colorOf(colorScheme),
@@ -453,6 +454,7 @@ class _PopupMorph extends SingleChildRenderObjectWidget {
     required this.platter,
     required this.sourceColor,
     required this.sourceImage,
+    required this.rimColor,
     required this.surfaceColor,
     required this.shadows,
     required this.glass,
@@ -468,6 +470,7 @@ class _PopupMorph extends SingleChildRenderObjectWidget {
   final ValueListenable<bool> platter;
   final Color sourceColor;
   final ValueListenable<ui.Image?>? sourceImage;
+  final Color rimColor;
   final Color surfaceColor;
   final List<BoxShadow> shadows;
 
@@ -487,6 +490,7 @@ class _PopupMorph extends SingleChildRenderObjectWidget {
       platter: platter,
       sourceColor: sourceColor,
       sourceImage: sourceImage,
+      rimColor: rimColor,
       surfaceColor: surfaceColor,
       shadows: shadows,
       glass: glass,
@@ -508,6 +512,7 @@ class _PopupMorph extends SingleChildRenderObjectWidget {
       ..platter = platter
       ..sourceColor = sourceColor
       ..sourceImage = sourceImage
+      ..rimColor = rimColor
       ..surfaceColor = surfaceColor
       ..shadows = shadows
       ..glass = glass;
@@ -539,6 +544,7 @@ class _RenderPopupMorph extends RenderProxyBox {
     required ValueListenable<bool> platter,
     required Color sourceColor,
     required ValueListenable<ui.Image?>? sourceImage,
+    required Color rimColor,
     required Color surfaceColor,
     required List<BoxShadow> shadows,
     required _PlatterGlass? glass,
@@ -547,6 +553,7 @@ class _RenderPopupMorph extends RenderProxyBox {
        _platter = platter,
        _sourceColor = sourceColor,
        _sourceImage = sourceImage,
+       _rimColor = rimColor,
        _surfaceColor = surfaceColor,
        _shadows = shadows,
        _glass = glass;
@@ -646,6 +653,16 @@ class _RenderPopupMorph extends RenderProxyBox {
       value?.addListener(markNeedsPaint);
     }
     _sourceImage = value;
+    markNeedsPaint();
+  }
+
+  Color _rimColor;
+
+  set rimColor(Color value) {
+    if (value == _rimColor) {
+      return;
+    }
+    _rimColor = value;
     markNeedsPaint();
   }
 
@@ -869,6 +886,15 @@ class _RenderPopupMorph extends RenderProxyBox {
       fill = _sourceColor.withValues(alpha: _sourceColor.a * (1 - settled));
     }
     canvas.drawPath(path, Paint()..color = fill);
+    if (glass == null) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = _rimColor.withValues(alpha: _rimColor.a * settled * platter)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
     rim?.paintLine(context.canvas, rect.shift(offset), math.max(0.0, radius));
     final glyph = 1 - reveal;
     if (image != null && glyph > 0) {
@@ -2239,6 +2265,7 @@ class _CommonPopupMenuState extends State<CommonPopupMenu>
                   rim: step == null
                       ? rim
                       : rim?.scale(_glassSpan.transform(unfold)),
+                  rimColor: colorScheme.cabinRim,
                   bare: _platter?.value ?? false,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
@@ -2446,6 +2473,7 @@ class PopupMenuCard extends SingleChildRenderObjectWidget {
     required this.dim,
     required this.glass,
     this.rim,
+    required this.rimColor,
     required this.bare,
     super.child,
   });
@@ -2465,6 +2493,9 @@ class PopupMenuCard extends SingleChildRenderObjectWidget {
   final LiquidGlassStyle? glass;
   final LiquidGlassRim? rim;
 
+  /// The cabin rim for the plain fill; the glass takes [rim] instead.
+  final Color rimColor;
+
   /// Leaves the glass out while the popup's platter bends the backdrop.
   final bool bare;
 
@@ -2478,6 +2509,7 @@ class PopupMenuCard extends SingleChildRenderObjectWidget {
       dim: dim,
       glass: glass,
       rim: rim,
+      rimColor: rimColor,
       bare: bare,
     );
   }
@@ -2492,6 +2524,7 @@ class PopupMenuCard extends SingleChildRenderObjectWidget {
       ..dim = dim
       ..glass = glass
       ..rim = rim
+      ..rimColor = rimColor
       ..bare = bare;
   }
 }
@@ -2505,6 +2538,7 @@ class _RenderPopupMenuCard extends RenderProxyBox {
     required Color dim,
     required LiquidGlassStyle? glass,
     required LiquidGlassRim? rim,
+    required Color rimColor,
     required bool bare,
   }) : _grow = grow,
        _origin = origin,
@@ -2513,6 +2547,7 @@ class _RenderPopupMenuCard extends RenderProxyBox {
        _dim = dim,
        _glass = glass,
        _rim = rim,
+       _rimColor = rimColor,
        _bare = bare;
 
   late final _pane = LiquidGlassPane(markNeedsPaint);
@@ -2581,6 +2616,15 @@ class _RenderPopupMenuCard extends RenderProxyBox {
       return;
     }
     _rim = value;
+    markNeedsPaint();
+  }
+
+  Color _rimColor;
+  set rimColor(Color value) {
+    if (value == _rimColor) {
+      return;
+    }
+    _rimColor = value;
     markNeedsPaint();
   }
 
@@ -2656,6 +2700,13 @@ class _RenderPopupMenuCard extends RenderProxyBox {
         );
       }
       canvas.drawPath(surface, Paint()..color = _fill);
+      canvas.drawPath(
+        surface,
+        Paint()
+          ..color = _rimColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
     } else if (_bare) {
       _pane.clear();
     } else {
