@@ -127,12 +127,16 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     // An exit record is quoted only when the mirrored ledger ties it to this poll's attempt.
     private fun deathMessage(context: Context, epoch: Long): String {
         val generic = "sing-box 进程在启动中退出"
-        val exit = SingBoxExitInfo.latest(context) ?: return generic
         val attempt = SingBoxStatus.readAttempt(context) ?: return generic
         if (attempt.since < epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS) return generic
-        if (!SingBoxStagedStart.isAttemptDeath(true, exit.timestamp, attempt.since)) {
-            return generic
-        }
+        val exit = SingBoxDeathGate.awaitRecord(
+            DEATH_RECORD_ATTEMPTS,
+            { Thread.sleep(DEATH_RECORD_POLL_MS) },
+        ) {
+            SingBoxExitInfo.latest(context)?.takeIf {
+                SingBoxStagedStart.isAttemptDeath(true, it.timestamp, attempt.since)
+            }
+        } ?: return generic
         val parts = mutableListOf(generic)
         SingBoxExitInfo.latestCrashHeadline(context)?.let { parts += it }
         parts += SingBoxExitInfo.attemptDeathLine(
@@ -244,5 +248,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         const val STOP_TIMEOUT_MS = 5_000L
         const val POLL_INTERVAL_MS = 200L
         const val LOG_TAIL_LINES = 6
+        const val DEATH_RECORD_ATTEMPTS = 13
+        const val DEATH_RECORD_POLL_MS = 250L
     }
 }

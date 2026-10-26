@@ -165,8 +165,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             )
         if (crash != null) {
             prefs.edit().putLong(PREF_CRASH_SURFACED, crash.first).apply()
-            SingBoxLog.append(this, "go crash report tail:")
-            crash.second.forEach { line -> SingBoxLog.append(this, line.take(300)) }
+            // A bare mtime bump from this process's own setup rotation has no lines.
+            if (crash.second.isNotEmpty()) {
+                SingBoxLog.append(this, "go crash report tail:")
+                crash.second.forEach { line -> SingBoxLog.append(this, line.take(300)) }
+            }
         }
     }
 
