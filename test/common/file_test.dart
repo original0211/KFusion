@@ -41,6 +41,17 @@ void main() {
     test('accepts a path that is already gone', () async {
       await expectLater(safeDeletePath(join(root.path, 'missing')), completes);
     });
+
+    test('concurrent deletes of one file all complete', () async {
+      final path = join(root.path, 'provider.mrs');
+      File(path).writeAsStringSync('compiled');
+
+      await expectLater(
+        Future.wait([for (var i = 0; i < 16; i++) safeDeletePath(path)]),
+        completes,
+      );
+      expect(File(path).existsSync(), isFalse);
+    });
   });
 
   group('writeAsStringAtomically', () {
