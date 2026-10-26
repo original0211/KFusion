@@ -2,6 +2,39 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.13",
+      "tag": "v0.2.13",
+      "date": "2026-10-26",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "7f63e2c",
+              "scope": "core",
+              "text": "A sing-box working cache left behind by a native crash no longer poisons every later start: before any start that follows a recorded native-crash exit, the cache file in the core's working directory is renamed aside exactly once, keeping one rolled-aside copy, so a cache torn by a process killed mid-write cannot crash the next start the same way; starts after any other kind of exit, and every healthy start, never touch the cache"
+            },
+            {
+              "id": "7f63e2c",
+              "scope": "core",
+              "text": "A native crash during a full sing-box start is now bisected instead of repeated blindly: the crashed attempt is remembered in a ledger written synchronously, so it survives the dying process, and the next start walks trimmed-down configurations built from the same rendered config — bare direct, then outbounds and DNS, then rule sets, then inbounds, then the untouched full config — each level pre-checked before it runs, narrowing the crash to the stage whose component set first brings it back"
+            },
+            {
+              "id": "7f63e2c",
+              "scope": "core",
+              "text": "When a staged level crashes, the tap after it starts nothing: it fails in writing with the crashed level named — 'staged start: crashed at L<k> (<name>)' — in the switch card and the service log, and the attempt after that returns to the normal full start; a level that merely returns an error stays an ordinary failure, never a crash verdict, and a trimmed config that fails its check quietly falls back to the full start"
+            },
+            {
+              "id": "7f63e2c",
+              "scope": "core",
+              "text": "The process-death verdict now carries the tombstone's signal line when the system provides one: the first signal line — signal number and name, code and fault address — is extracted and appended to the exit summary in the service log and the switch card's failure detail, so a crash reports whether it was a bus error at a mapped page, a segmentation fault or an abort; when no trace is available, the summary stands on its own as before"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.12",
       "tag": "v0.2.12",
       "date": "2026-10-26",
