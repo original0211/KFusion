@@ -271,7 +271,7 @@ extension AppShapeThemeExt on ThemeData {
       shape: AppShape.floating.copyWith(side: colorScheme.cabinRimSide),
     ),
     bottomSheetTheme: bottomSheetTheme.copyWith(
-      shape: AppShape.top(AppCorner.xxl),
+      shape: AppShape.top(AppCorner.floating),
     ),
     snackBarTheme: snackBarTheme.copyWith(shape: AppShape.xs),
     tooltipTheme: tooltipTheme.copyWith(
