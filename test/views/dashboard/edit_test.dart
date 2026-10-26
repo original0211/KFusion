@@ -102,10 +102,10 @@ void main() {
       DashboardWidget.proxyGroups,
       DashboardWidget.networkSpeed,
     ]);
-    await pumpEditor(tester);
+    await pumpEditor(tester, size: const Size(412, 1900));
 
     expect(find.byType(DashboardEditor), findsOneWidget);
-    final current = top(tester, find.byType(CurrentOutboundCard));
+    final current = top(tester, find.byType(CabinCoreCard));
     final groups = top(tester, find.byType(ProxyGroupsCard));
     final speed = top(tester, find.byType(NetworkSpeedCard));
     expect(top(tester, find.text('Available to add')), lessThan(current));
@@ -148,7 +148,7 @@ void main() {
       DashboardWidget.networkSpeed,
       DashboardWidget.profiles,
     ]);
-    await pumpEditor(tester);
+    await pumpEditor(tester, size: const Size(412, 1900));
     final profiles = top(tester, find.byType(ProfilesCard));
     final gap = profiles - top(tester, find.byType(NetworkSpeedCard));
 
@@ -263,7 +263,7 @@ void main() {
       DashboardWidget.networkSpeed,
       DashboardWidget.memoryInfo,
     ]);
-    await pumpEditor(tester);
+    await pumpEditor(tester, size: const Size(412, 1900));
     final memory = tester.state(find.byType(MemoryInfo));
     final card = find.byType(MemoryInfo);
     final rise =
@@ -390,7 +390,7 @@ void main() {
 
     expect(find.byType(DashboardEditor), findsOneWidget);
     expect(find.byTooltip('Add VPN'), findsNothing);
-    final current = find.byType(CurrentOutboundCard);
+    final current = find.byType(CabinCoreCard);
     expect(tester.getSize(current).width, 560);
     expect(tester.getCenter(current).dx, closeTo(310, 0.01));
 

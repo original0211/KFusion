@@ -415,6 +415,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "With Bypass private addresses on, LAN, loopback and multicast addresses skip TUN.",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage(
+      "Compact cabin core",
+    ),
     "cache": MessageLookupByLibrary.simpleMessage("Cache"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage("Cache algorithm"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage(
@@ -506,6 +509,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("Connected"),
     "connecting": MessageLookupByLibrary.simpleMessage("Connecting…"),
     "connection": MessageLookupByLibrary.simpleMessage("Connection"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage(
+      "Connection failed",
+    ),
     "connectionStats": MessageLookupByLibrary.simpleMessage("Connection stats"),
     "connectionStatsDesc": MessageLookupByLibrary.simpleMessage(
       "Live connections, recent requests and DNS queries",
@@ -772,6 +778,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "No warranty",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Disconnected"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("Disconnecting…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "New version found",
     ),
@@ -1085,6 +1092,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP address"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("Exit"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("Abuse history"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("Proxy"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1843,6 +1851,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Tap the icon to retry",
     ),
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage("Tap to authorize"),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage("Tap to connect"),
     "target": MessageLookupByLibrary.simpleMessage("Target"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("TCP concurrent"),
     "testInterval": MessageLookupByLibrary.simpleMessage("Test interval"),

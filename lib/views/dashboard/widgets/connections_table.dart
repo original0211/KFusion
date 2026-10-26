@@ -18,7 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'card.dart';
-import 'current_outbound.dart';
+import 'cabin_core.dart';
 
 /// Enough to fill the tallest card several times over; the full feed is a
 /// tap away.
@@ -34,9 +34,11 @@ double _tabHeightOf(DashboardDensity density) => density.isCompact ? 32 : 36;
 
 double _rowHeightOf(DashboardDensity density) => density.isCompact ? 32 : 34;
 
-/// Keeps the pill tabs concentric with the card's corners.
+/// The pill tabs' inset, pinned to the table's own geometry: it was
+/// derived from the card corner while that corner stood at 32/34, and the
+/// grid's measured layout follows the inset, not the corner.
 double _tabInsetOf(DashboardDensity density) =>
-    dashboardCardRadius(density) - _tabHeightOf(density) / 2;
+    density.isDesktop && !density.isCompact ? 14.0 : 16.0;
 
 double connectionsTableTop(DashboardDensity density, double scale) =>
     _tabInsetOf(density) + _tabHeightOf(density) * scale + _tableGap;

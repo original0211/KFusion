@@ -118,7 +118,7 @@ void main() {
       'under the exit', (tester) async {
     await pumpDashboard(tester, const Size(1220, 824));
 
-    final current = rectOf(tester, CurrentOutboundCard);
+    final current = rectOf(tester, CabinCoreCard);
     final upload = rectOf(tester, SpeedCard);
     final mode = rectOf(tester, OutboundModeBar);
     final systemProxy = tester.getRect(find.byType(NetworkTakeoverTile).first);
@@ -217,7 +217,7 @@ void main() {
       ),
     );
 
-    expect(rectOf(tester, CurrentOutboundCard).height, 208);
+    expect(rectOf(tester, CabinCoreCard).height, 208);
     expect(find.byType(ConnectionsTableCard), findsOneWidget);
     expect(tester.takeException(), isNull);
 
@@ -229,7 +229,7 @@ void main() {
   ) async {
     await pumpDashboard(tester, const Size(1220, 720));
 
-    expect(rectOf(tester, CurrentOutboundCard).height, 176);
+    expect(rectOf(tester, CabinCoreCard).height, 176);
     expect(rectOf(tester, OutboundModeBar).height, 56);
     expect(rectOf(tester, IntranetIpCard).height, 152);
     expect(scrollExtentOf(tester), 0);
@@ -243,7 +243,7 @@ void main() {
     seedGroups(12);
     await pumpDashboard(tester, const Size(1000, 660));
 
-    final current = rectOf(tester, CurrentOutboundCard);
+    final current = rectOf(tester, CabinCoreCard);
     final stats = rectOf(tester, ConnectionStatsCard);
     final groups = rectOf(tester, ProxyGroupsSummaryCard);
     expect(find.byType(ConnectionsTableCard), findsNothing);
@@ -294,7 +294,7 @@ void main() {
     seedWidgets(const [...defaultDashboardWidgets, DashboardWidget.memoryInfo]);
     await pumpDashboard(tester, const Size(2560, 1440));
 
-    final current = rectOf(tester, CurrentOutboundCard);
+    final current = rectOf(tester, CabinCoreCard);
     final memory = rectOf(tester, MemoryInfo);
     expect(rectOf(tester, SpeedCard).width, 440);
     expect(current.left - 16, closeTo(2560 - 24 - memory.right, 0.01));
@@ -364,11 +364,11 @@ void main() {
     seedWidgets(const [...defaultDashboardWidgets, DashboardWidget.memoryInfo]);
     await pumpDashboard(tester, const Size(800, 900));
     final gap = cardSpacingOf(
-      tester.element(find.byType(CurrentOutboundCard)),
+      tester.element(find.byType(CabinCoreCard)),
       ViewMode.laptop,
     );
 
-    final current = rectOf(tester, CurrentOutboundCard);
+    final current = rectOf(tester, CabinCoreCard);
     final upload = rectOf(tester, SpeedCard);
     final mode = rectOf(tester, OutboundModeBar);
     final tun = tester.getRect(find.byType(NetworkTakeoverTile).last);
@@ -409,14 +409,11 @@ void main() {
     tester,
   ) async {
     await pumpDashboard(tester, const Size(1400, 1000), textScale: 1.2);
-    expect(
-      rectOf(tester, CurrentOutboundCard).height,
-      closeTo(208 * 1.2, 0.01),
-    );
+    expect(rectOf(tester, CabinCoreCard).height, closeTo(208 * 1.2, 0.01));
     expect(tester.takeException(), isNull);
 
     await pumpDashboard(tester, const Size(1000, 1000), textScale: 1.2);
-    final current = rectOf(tester, CurrentOutboundCard);
+    final current = rectOf(tester, CabinCoreCard);
     expect(current.width, 1000 - 16 - 24);
     expect(current.height, closeTo(208 * 1.2, 0.01));
     expect(tester.takeException(), isNull);
@@ -424,7 +421,7 @@ void main() {
     await pumpDashboard(tester, const Size(760, 1000), textScale: 1.2);
     expect(find.byType(ConnectionsTableCard), findsNothing);
     expect(find.byType(OutboundModeBar), findsNothing);
-    expect(rectOf(tester, CurrentOutboundCard).width, 560);
+    expect(rectOf(tester, CabinCoreCard).width, 560);
 
     await teardown(tester);
   });
@@ -433,7 +430,7 @@ void main() {
       'column, takeover in place of the VPN', (tester) async {
     await pumpDashboard(tester, const Size(620, 700));
 
-    final card = rectOf(tester, CurrentOutboundCard);
+    final card = rectOf(tester, CabinCoreCard);
     expect(card.width, 560);
     expect(card.center.dx, closeTo(310, 0.01));
     expect(find.byType(NetworkTakeoverCard), findsOneWidget);
@@ -451,7 +448,7 @@ void main() {
       platform: SupportPlatform.Android,
     );
 
-    final card = rectOf(tester, CurrentOutboundCard);
+    final card = rectOf(tester, CabinCoreCard);
     expect(card.left, 16);
     expect(card.right, 400 - 16);
     expect(find.byType(VpnCard), findsOneWidget);
@@ -470,7 +467,7 @@ void main() {
       expect(vpn.width, closeTo(mode.width, 0.01));
       expect(vpn.height, mode.height);
       expect(find.byType(NetworkTakeoverTile), findsNothing);
-      expect(find.byType(CurrentOutboundCard), findsOneWidget);
+      expect(find.byType(CabinCoreCard), findsOneWidget);
       expect(find.byType(NetworkSpeedCard), findsNothing);
       expect(tester.takeException(), isNull);
     }
@@ -482,7 +479,7 @@ void main() {
     tester,
   ) async {
     await pumpDashboard(tester, const Size(1280, 960));
-    final before = rectOf(tester, CurrentOutboundCard);
+    final before = rectOf(tester, CabinCoreCard);
     expect(before.width, lessThan(1280 - 16 - 24));
 
     seedWidgets(const [
@@ -497,7 +494,7 @@ void main() {
     ]);
     await tester.pump();
 
-    final after = rectOf(tester, CurrentOutboundCard);
+    final after = rectOf(tester, CabinCoreCard);
     expect(find.byType(SpeedCard), findsNothing);
     expect(after.width, greaterThan(before.width));
     expect(after.width, closeTo(1280 - 16 - 24, 0.01));
@@ -549,7 +546,7 @@ void main() {
 
     expect(find.byType(OutboundModeBar), findsNothing);
     expect(find.byType(NetworkTakeoverTile), findsNothing);
-    final current = rectOf(tester, CurrentOutboundCard);
+    final current = rectOf(tester, CabinCoreCard);
     final intranet = rectOf(tester, IntranetIpCard);
     expect(intranet.top, current.bottom + 16);
     expect(tester.takeException(), isNull);

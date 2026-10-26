@@ -106,7 +106,7 @@ void main() {
       DashboardWidget.networkSpeed,
       DashboardWidget.memoryInfo,
     ]);
-    await pumpEditor(tester, size: const Size(1280, 1400));
+    await pumpEditor(tester, size: const Size(1280, 1900));
 
     expect(find.byTooltip('Remove Status'), findsNothing);
     expect(find.byTooltip('Remove Network speed'), findsOneWidget);
@@ -123,7 +123,7 @@ void main() {
       DashboardWidget.networkSpeed,
       DashboardWidget.memoryInfo,
     ]);
-    await pumpEditor(tester, size: const Size(1280, 1400));
+    await pumpEditor(tester, size: const Size(1280, 1900));
 
     await tester.tap(find.byTooltip('Remove Memory info'));
     await tester.pump();
@@ -171,10 +171,7 @@ void main() {
     final rect = tester.getRect(add);
     expect(rect.top, greaterThanOrEqualTo(0));
     expect(rect.bottom, lessThanOrEqualTo(960));
-    expect(
-      rect.bottom,
-      lessThan(top(tester, find.byType(CurrentOutboundCard))),
-    );
+    expect(rect.bottom, lessThan(top(tester, find.byType(CabinCoreCard))));
     expect(tester.takeException(), isNull);
 
     await teardown(tester);
@@ -230,7 +227,7 @@ void main() {
       DashboardWidget.networkTakeover,
       DashboardWidget.profiles,
     ]);
-    await pumpEditor(tester, size: const Size(1280, 1400));
+    await pumpEditor(tester, size: const Size(1280, 1900));
 
     final card = find.byType(ProfilesCard);
     final rise =

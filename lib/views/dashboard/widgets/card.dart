@@ -36,6 +36,7 @@ class DashboardCard extends StatelessWidget {
     this.onTap,
     this.semanticLabel,
     this.clipBehavior = Clip.none,
+    this.background,
     required this.child,
   });
 
@@ -46,16 +47,36 @@ class DashboardCard extends StatelessWidget {
   /// Off by default so a control swelling under an [ElasticPress] can paint
   /// past the card's edge; only a card whose own content bleeds clips.
   final Clip clipBehavior;
+
+  /// Painted across the card's whole face under the content: the profile card's disc watermark rides here.
+  final Widget? background;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final density = DashboardDensityScope.of(context);
     final shape = AppShape.all(dashboardCardRadius(density));
-    final content = Padding(
+    final background = this.background;
+    final padded = Padding(
       padding: padding ?? dashboardCardPadding(density),
       child: child,
     );
+    final content = background == null
+        ? padded
+        : Stack(
+            children: [
+              Positioned.fill(
+                child: ClipPath(
+                  clipper: ShapeBorderClipper(
+                    shape: shape,
+                    textDirection: Directionality.of(context),
+                  ),
+                  child: background,
+                ),
+              ),
+              padded,
+            ],
+          );
     return Semantics(
       container: true,
       label: semanticLabel,
@@ -64,7 +85,10 @@ class DashboardCard extends StatelessWidget {
         decoration: ShapeDecoration(
           color: DashboardColors.of(context).card,
           shape: shape,
-          shadows: DashboardShadows.e1(context),
+          shadows: context.colorScheme.cabinPanelShadows,
+        ),
+        foregroundDecoration: ShapeDecoration(
+          shape: shape.copyWith(side: context.colorScheme.cabinRimSide),
         ),
         child: Material(
           type: MaterialType.transparency,
@@ -361,6 +385,7 @@ class DashboardConnectedButton extends StatelessWidget {
     required this.onTap,
     required this.semanticLabel,
     required this.builder,
+    this.inkSelected = false,
   });
 
   final bool selected;
@@ -369,6 +394,8 @@ class DashboardConnectedButton extends StatelessWidget {
   final double outer;
   final double inner;
   final Color background;
+
+  final bool inkSelected;
   final VoidCallback onTap;
   final String semanticLabel;
   final Widget Function(Color foreground) builder;
@@ -399,13 +426,16 @@ class DashboardConnectedButton extends StatelessWidget {
                 right: Radius.circular(rtl ? start : end),
               ),
             );
+            final selectedFill = inkSelected
+                ? colorScheme.onSurface
+                : colorScheme.primary;
             return FocusRing(
               shape: shape,
               standsOff: selected,
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: ShapeDecoration(
-                  color: Color.lerp(background, colorScheme.primary, amount),
+                  color: Color.lerp(background, selectedFill, amount),
                   shape: shape,
                 ),
                 child: Material(
@@ -422,7 +452,11 @@ class DashboardConnectedButton extends StatelessWidget {
             );
           },
           child: builder(
-            selected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+            selected
+                ? inkSelected
+                      ? SurfaceLevel.page.colorOf(colorScheme)
+                      : colorScheme.onPrimary
+                : colorScheme.onSurfaceVariant,
           ),
         ),
       ),

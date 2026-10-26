@@ -4030,6 +4030,51 @@ class AppLocalizations {
     return Intl.message('Connecting…', name: 'connecting', desc: '', args: []);
   }
 
+  /// `Disconnecting…`
+  String get disconnecting {
+    return Intl.message(
+      'Disconnecting…',
+      name: 'disconnecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection failed`
+  String get connectionFailed {
+    return Intl.message(
+      'Connection failed',
+      name: 'connectionFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap to connect`
+  String get tapToConnect {
+    return Intl.message(
+      'Tap to connect',
+      name: 'tapToConnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exit`
+  String get ipExit {
+    return Intl.message('Exit', name: 'ipExit', desc: '', args: []);
+  }
+
+  /// `Compact cabin core`
+  String get cabinCoreCompact {
+    return Intl.message(
+      'Compact cabin core',
+      name: 'cabinCoreCompact',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Are you sure you want to restart the core?`
   String get restartCoreTip {
     return Intl.message(

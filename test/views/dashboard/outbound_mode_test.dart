@@ -93,15 +93,15 @@ void main() {
     final colorScheme = Theme.of(
       tester.element(find.byType(OutboundModeCard)),
     ).colorScheme;
-    expect(decorationOf(tester, Mode.rule).color, colorScheme.primary);
+    expect(decorationOf(tester, Mode.rule).color, colorScheme.onSurface);
     final innerRadius = startRadiusOf(tester, Mode.direct);
 
     await tester.tap(buttonOf(Mode.direct));
     await tester.pumpAndSettle();
 
     expect(container.read(patchClashConfigProvider).mode, Mode.direct);
-    expect(decorationOf(tester, Mode.direct).color, colorScheme.primary);
-    expect(decorationOf(tester, Mode.rule).color, isNot(colorScheme.primary));
+    expect(decorationOf(tester, Mode.direct).color, colorScheme.onSurface);
+    expect(decorationOf(tester, Mode.rule).color, isNot(colorScheme.onSurface));
     expect(startRadiusOf(tester, Mode.direct), greaterThan(innerRadius));
   });
 
@@ -115,7 +115,7 @@ void main() {
     ).colorScheme;
 
     expect(find.byType(LiquidGlass), findsNothing);
-    expect(decorationOf(tester, Mode.rule).color, colorScheme.primary);
+    expect(decorationOf(tester, Mode.rule).color, colorScheme.onSurface);
   });
 
   testWidgets('a pressed mode swells alone, over its neighbours', (
@@ -150,7 +150,7 @@ void main() {
       paints
         ..rsuperellipse()
         ..rsuperellipse()
-        ..rsuperellipse(color: colorScheme.primary),
+        ..rsuperellipse(color: colorScheme.onSurface),
     );
 
     await gesture.up();

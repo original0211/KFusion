@@ -441,6 +441,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "Avec « Contourner les adresses privées » activé, les adresses LAN, de bouclage et multicast ne passent pas par TUN.",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage(
+      "Noyau de cabine compact",
+    ),
     "cache": MessageLookupByLibrary.simpleMessage("Cache"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage(
       "Algorithme de cache",
@@ -544,6 +547,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("Connecté"),
     "connecting": MessageLookupByLibrary.simpleMessage("Connexion…"),
     "connection": MessageLookupByLibrary.simpleMessage("Connexion"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage(
+      "Échec de la connexion",
+    ),
     "connectionStats": MessageLookupByLibrary.simpleMessage(
       "Statistiques de connexion",
     ),
@@ -818,6 +824,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Absence de garantie",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Déconnecté"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("Déconnexion…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "Nouvelle version disponible",
     ),
@@ -1157,6 +1164,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("Adresse IP"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("Sortie"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("Antécédents d’abus"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("Proxy"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1982,6 +1990,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage(
       "Appuyez pour autoriser",
+    ),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage(
+      "Toucher pour se connecter",
     ),
     "target": MessageLookupByLibrary.simpleMessage("Cible"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("TCP simultané"),

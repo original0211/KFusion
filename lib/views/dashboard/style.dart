@@ -62,58 +62,17 @@ class DashboardColors {
   final Color onWarnContainer;
 }
 
-/// Values are the design's CSS shadows. A CSS blur is twice its sigma while
-/// Flutter turns a blur radius r into a sigma of 0.577 r + 0.5, so each one
-/// goes through [_blur] or it renders a third heavier.
-abstract final class DashboardShadows {
-  static List<BoxShadow> e1(BuildContext context) =>
-      context.colorScheme.brightness == Brightness.dark ? _e1Dark : _e1Light;
-
-  static List<BoxShadow> e2(BuildContext context) =>
-      context.colorScheme.brightness == Brightness.dark ? _e2Dark : _e2Light;
-
-  static BoxShadow _shadow(
-    int alpha,
-    double y,
-    double cssBlur, [
-    double spread = 0,
-  ]) => BoxShadow(
-    color: Color.fromARGB(alpha, 0, 0, 0),
-    offset: Offset(0, y),
-    blurRadius: _blur(cssBlur),
-    spreadRadius: spread,
-  );
-
-  static double _blur(double cssBlur) =>
-      cssBlur <= 1 ? 0 : (cssBlur / 2 - 0.5) / 0.57735;
-
-  static final _e1Light = [
-    _shadow(0x0D, 0.5, 1),
-    _shadow(0x0A, 2, 6),
-    _shadow(0x17, 12, 32, -6),
-  ];
-
-  static final _e1Dark = [_shadow(0x80, 1, 2), _shadow(0x8C, 10, 28, -6)];
-
-  static final _e2Light = [
-    _shadow(0x0F, 1, 3),
-    _shadow(0x14, 10, 24),
-    _shadow(0x38, 32, 64, -12),
-  ];
-
-  static final _e2Dark = [_shadow(0x80, 2, 6), _shadow(0xB3, 32, 64, -12)];
-}
-
-/// Off the [AppCorner] scale: a dashboard card is taller than any other
-/// surface in the app and keeps a larger corner than a sheet.
+/// The cabin corner tiers (REDESIGN_CABIN_SPEC.md §1.2) under the names the
+/// dashboard already uses; a table header keeps its own step, which the
+/// tier scale has no rung for.
 abstract final class DashboardCorner {
-  static const desktopCard = 32.0;
-  static const mobileCard = 34.0;
-  static const block = 20.0;
-  static const mobileBlock = 22.0;
+  static const desktopCard = AppCorner.xl;
+  static const mobileCard = AppCorner.xl;
+  static const block = AppCorner.lg;
+  static const mobileBlock = AppCorner.xl;
   static const tab = 16.0;
   static const tableHeader = 12.0;
-  static const badge = 14.0;
+  static const badge = AppCorner.md;
 }
 
 final _groupedFormat = NumberFormat.decimalPattern('en');

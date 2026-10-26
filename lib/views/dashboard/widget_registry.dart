@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 
 extension DashboardWidgetView on DashboardWidget {
   Widget get card => switch (this) {
-    DashboardWidget.currentOutbound => const CurrentOutboundCard(),
+    DashboardWidget.currentOutbound => const CabinCoreCard(),
     DashboardWidget.networkSpeed => const NetworkSpeedCard(),
     DashboardWidget.outboundMode => const OutboundModeCard(),
     DashboardWidget.vpnButton => const VpnCard(),

@@ -52,7 +52,7 @@ void main() {
       'while there is no profile', (tester) async {
     await pumpHome(tester);
 
-    expect(find.byType(CurrentOutboundCard), findsOneWidget);
+    expect(find.byType(CabinCoreCard), findsOneWidget);
     expect(find.byType(NetworkSpeedCard), findsOneWidget);
     expect(find.byType(ProfilesCard), findsOneWidget);
     expect(find.byType(OutboundModeCard), findsOneWidget);
@@ -72,7 +72,7 @@ void main() {
       profiles: const [Profile(id: 1, autoUpdateDuration: Duration.zero)],
     );
 
-    expect(find.byType(CurrentOutboundCard), findsOneWidget);
+    expect(find.byType(CabinCoreCard), findsOneWidget);
     expect(find.text('万能导入'), findsNothing);
     expect(tester.takeException(), isNull);
 

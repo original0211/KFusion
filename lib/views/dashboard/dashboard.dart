@@ -290,7 +290,7 @@ class _DesktopGrid extends StatelessWidget {
 
         final topCells = <(int, Widget)>[
           if (shown.contains(DashboardWidget.currentOutbound))
-            (2, const CurrentOutboundCard()),
+            (2, const CabinCoreCard()),
           if (shown.contains(DashboardWidget.networkSpeed)) ...[
             (1, const SpeedCard(direction: TrafficDirection.upload)),
             (1, const SpeedCard(direction: TrafficDirection.download)),
@@ -396,7 +396,7 @@ class _DesktopGrid extends StatelessWidget {
   }
 }
 
-class _MobileDashboard extends ConsumerWidget {
+class _MobileDashboard extends ConsumerStatefulWidget {
   const _MobileDashboard({
     required this.platform,
     required this.gap,
@@ -412,59 +412,192 @@ class _MobileDashboard extends ConsumerWidget {
   final VoidCallback onDone;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_MobileDashboard> createState() => _MobileDashboardState();
+}
+
+class _MobileDashboardState extends ConsumerState<_MobileDashboard> {
+  late final ScrollController _scrollController;
+
+  /// The cabin core's zone height under the scroll, full disc to folded bar.
+  final _coreExtent = ValueNotifier<double>(cabinCoreFullExtent);
+  var _overlay = false;
+  var _compactAllowed = false;
+  var _preferCompact = false;
+
+  /// A bar tap asks for the full disc until the scroll re-travels the fold range.
+  var _forceFull = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = sheetScrollController(context);
+    _scrollController.addListener(_followScroll);
+  }
+
+  @override
+  void didUpdateWidget(_MobileDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.editing && !widget.editing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _followScroll();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _coreExtent.dispose();
+    super.dispose();
+  }
+
+  // The spacer gives back what the scroll takes, so the cards hold still while the disc folds.
+  void _followScroll() {
+    if (!_overlay || !_scrollController.hasClients) return;
+    var height = cabinCoreFullExtent;
+    if (_compactAllowed) {
+      final offset = _scrollController.offset;
+      if (offset >= cabinCoreFullExtent - cabinCoreBarExtent) {
+        _forceFull = false;
+      }
+      final base = _preferCompact && !_forceFull
+          ? cabinCoreBarExtent
+          : cabinCoreFullExtent;
+      if (offset > 0 || base != cabinCoreFullExtent) {
+        height = (base - offset).clamp(cabinCoreBarExtent, cabinCoreFullExtent);
+      }
+    }
+    if (height != _coreExtent.value) _coreExtent.value = height;
+  }
+
+  void _setCompactAllowed(bool allowed) {
+    if (_compactAllowed == allowed) return;
+    _compactAllowed = allowed;
+    _followScroll();
+  }
+
+  void _unfold() {
+    _forceFull = true;
+    _followScroll();
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: context.motionDuration(commonDuration),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final preferCompact = ref.watch(
+      appSettingProvider.select((state) => state.cabinCoreCompact),
+    );
+    if (_preferCompact != preferCompact) {
+      _preferCompact = preferCompact;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _followScroll();
+      });
+    }
     final saved = ref.watch(
       dashboardStateProvider.select((state) => state.dashboardWidgets),
     );
+    final widgets = [
+      for (final item in saved)
+        if (item.platforms.contains(widget.platform)) item,
+    ];
+    final top = MediaQuery.paddingOf(context).top + 4;
+    final bottom = 16 + BottomInsetScope.of(context);
+    final editing = widget.editing;
     final noProfiles = ref.watch(
       profilesProvider.select((state) => state.isEmpty),
     );
-    final top = MediaQuery.paddingOf(context).top + 4;
-    final bottom = 16 + BottomInsetScope.of(context);
-    return CustomScrollView(
-      // A viewport per card lays them all out and holds the scroll end still.
-      scrollCacheExtent: editing
-          ? ScrollCacheExtent.viewport(DashboardWidget.values.length.toDouble())
-          : null,
-      slivers: [
-        SliverLayoutBuilder(
-          builder: (context, constraints) {
-            final side = dashboardMobileSideOf(constraints.crossAxisExtent);
-            final widgets = [
-              for (final widget in saved)
-                if (widget.platforms.contains(platform)) widget,
-            ];
-            if (editing) {
-              return DashboardEditor(
-                platform: platform,
-                widgets: widgets,
-                cardKeyOf: cardKeyOf,
-                padding: EdgeInsets.fromLTRB(side, top, side, bottom),
-                gap: gap,
-                onDone: onDone,
-              );
-            }
-            return SliverPadding(
-              padding: EdgeInsets.fromLTRB(side, top, side, bottom),
-              // A lazy list estimates the cards it has not laid out from the
-              // ones it has; cards this uneven move the scroll end as it goes.
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  spacing: gap,
-                  children: [
-                    for (final widget in widgets)
-                      RepaintBoundary(
-                        key: cardKeyOf(widget),
-                        child: widget.card,
+    // The core rides over the scroll only while it leads the saved list.
+    final overlay =
+        !editing &&
+        widgets.isNotEmpty &&
+        widgets.first == DashboardWidget.currentOutbound;
+    _overlay = overlay;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final side = dashboardMobileSideOf(constraints.maxWidth);
+        return Stack(
+          children: [
+            CustomScrollView(
+              controller: _scrollController,
+              // A viewport per card lays them all out while editing.
+              scrollCacheExtent: editing
+                  ? ScrollCacheExtent.viewport(
+                      DashboardWidget.values.length.toDouble(),
+                    )
+                  : null,
+              slivers: [
+                SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    if (editing) {
+                      return DashboardEditor(
+                        platform: widget.platform,
+                        widgets: widgets,
+                        cardKeyOf: widget.cardKeyOf,
+                        padding: EdgeInsets.fromLTRB(side, top, side, bottom),
+                        gap: widget.gap,
+                        onDone: widget.onDone,
+                      );
+                    }
+                    return SliverPadding(
+                      padding: EdgeInsets.fromLTRB(side, top, side, bottom),
+                      sliver: SliverMainAxisGroup(
+                        slivers: [
+                          if (overlay)
+                            SliverToBoxAdapter(
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: _coreExtent,
+                                builder: (context, height, _) =>
+                                    SizedBox(height: height + widget.gap),
+                              ),
+                            ),
+                          // Cards this uneven move the scroll end as a lazy list estimates them.
+                          SliverToBoxAdapter(
+                            child: Column(
+                              spacing: widget.gap,
+                              children: [
+                                for (final item in widgets)
+                                  if (overlay &&
+                                      item == DashboardWidget.currentOutbound)
+                                    const CabinExitPanel()
+                                  else
+                                    RepaintBoundary(
+                                      key: widget.cardKeyOf(item),
+                                      child: item.card,
+                                    ),
+                                if (noProfiles) const _ImportCard(),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    if (noProfiles) const _ImportCard(),
-                  ],
+                    );
+                  },
+                ),
+              ],
+            ),
+            if (overlay)
+              Positioned(
+                top: top,
+                left: side,
+                right: side,
+                child: RepaintBoundary(
+                  key: widget.cardKeyOf(DashboardWidget.currentOutbound),
+                  child: CabinCoreCard(
+                    extent: _coreExtent,
+                    onBarTap: _unfold,
+                    onCompactAllowed: _setCompactAllowed,
+                  ),
                 ),
               ),
-            );
-          },
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

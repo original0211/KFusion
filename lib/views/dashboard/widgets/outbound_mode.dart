@@ -53,6 +53,7 @@ class OutboundModeCard extends ConsumerWidget {
                     outer: _outer,
                     inner: 12,
                     background: tone,
+                    inkSelected: true,
                     semanticLabel: item.label,
                     onTap: () => _changeMode(ref, item),
                     builder: (foreground) => SizedBox(
@@ -140,6 +141,7 @@ class OutboundModeBar extends ConsumerWidget {
                         outer: outer,
                         inner: 10,
                         background: DashboardColors.of(context).tone,
+                        inkSelected: true,
                         semanticLabel: item.label,
                         onTap: () => _changeMode(ref, item),
                         builder: (foreground) => Row(

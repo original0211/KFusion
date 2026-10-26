@@ -349,6 +349,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "사설 주소 우회를 켜면 LAN, 루프백, 멀티캐스트 주소는 TUN을 거치지 않습니다.",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage("캐빈 코어 컴팩트 모드"),
     "cache": MessageLookupByLibrary.simpleMessage("캐시"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage("캐시 알고리즘"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage(
@@ -418,6 +419,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("연결됨"),
     "connecting": MessageLookupByLibrary.simpleMessage("연결 중…"),
     "connection": MessageLookupByLibrary.simpleMessage("연결"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage("연결 실패"),
     "connectionStats": MessageLookupByLibrary.simpleMessage("연결 통계"),
     "connectionStatsDesc": MessageLookupByLibrary.simpleMessage(
       "실시간 연결, 최근 요청, DNS 쿼리",
@@ -656,6 +658,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "disclaimerWarrantyTitle": MessageLookupByLibrary.simpleMessage("보증 부인"),
     "disconnected": MessageLookupByLibrary.simpleMessage("연결 끊김"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("연결 해제 중…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage("새 버전 발견"),
     "dnsHijackDesc": MessageLookupByLibrary.simpleMessage(
       "추가하지 않으면 53번 포트로 가는 모든 DNS 쿼리를 하이재킹합니다(any:53).",
@@ -922,6 +925,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP 주소"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("출구"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("악용 이력"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("프록시"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1558,6 +1562,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tabAnimation": MessageLookupByLibrary.simpleMessage("탭 애니메이션"),
     "tapIconToRetry": MessageLookupByLibrary.simpleMessage("아이콘을 눌러 다시 시도"),
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage("눌러서 허용"),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage("탭하여 연결"),
     "target": MessageLookupByLibrary.simpleMessage("대상"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("TCP 동시 연결"),
     "testInterval": MessageLookupByLibrary.simpleMessage("테스트 간격"),

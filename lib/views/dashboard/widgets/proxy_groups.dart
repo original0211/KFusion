@@ -13,7 +13,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'card.dart';
 import 'connections_table.dart';
-import 'current_outbound.dart';
+import 'cabin_core.dart';
 
 const _stackedIcons = 4;
 

@@ -99,6 +99,25 @@ extension CabinSurfaceExt on ColorScheme {
       offset: const Offset(0, 16),
     ),
   ];
+
+  /// The cabin core's halo and inner ring (REDESIGN_CABIN_SPEC.md §1.3); the halo drops out in pure black.
+  Color get cabinHalo => brightness == Brightness.dark
+      ? (surface == Colors.black ? Colors.transparent : const Color(0xFF131516))
+      : const Color(0xFFE7E2D4);
+
+  Color get cabinRing => brightness == Brightness.dark
+      ? const Color(0xFF2A2D2E)
+      : const Color(0xFFE1DCCE);
+
+  List<BoxShadow> get cabinDiscShadows => [
+    BoxShadow(
+      color: brightness == Brightness.dark
+          ? Colors.black.withValues(alpha: 0.5)
+          : const Color(0xFF3C341E).withValues(alpha: 0.14),
+      blurRadius: 50,
+      offset: Offset(0, brightness == Brightness.dark ? 24 : 14),
+    ),
+  ];
 }
 
 extension ElevatedSurfaceExt on ColorScheme {

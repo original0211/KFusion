@@ -34,6 +34,7 @@ class ThemeView extends StatelessWidget {
           SizedBox(height: 16),
           _NavigationBarItem(),
           SizedBox(height: 16),
+          _CabinCoreCompactItem(),
           _TabAnimationItem(),
           SizedBox(height: 16),
           _LiquidGlassItem(),
@@ -664,6 +665,35 @@ class _NavigationBarItem extends ConsumerWidget {
             .read(appSettingProvider.notifier)
             .update((state) => state.copyWith(floatingNavigationBar: value));
       },
+    );
+  }
+}
+
+class _CabinCoreCompactItem extends ConsumerWidget {
+  const _CabinCoreCompactItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appLocalizations = context.appLocalizations;
+    final compact = ref.watch(
+      appSettingProvider.select((state) => state.cabinCoreCompact),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: generateSection(
+        items: [
+          ListItem.toggle(
+            leading: const GlyphIcon(AppGlyphs.status),
+            title: Text(appLocalizations.cabinCoreCompact),
+            value: compact,
+            onChanged: (value) {
+              ref
+                  .read(appSettingProvider.notifier)
+                  .update((state) => state.copyWith(cabinCoreCompact: value));
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -11,22 +11,23 @@ import 'package:kfusion/providers/ip_quality.dart';
 import 'package:kfusion/providers/outbound_ip.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/providers/routed_probe.dart';
-import 'package:kfusion/state.dart';
+import 'package:kfusion/ui/ui.dart';
+import 'package:kfusion/views/dashboard/dashboard.dart';
 import 'package:kfusion/views/dashboard/layout.dart';
 import 'package:kfusion/views/dashboard/widgets/card.dart';
-import 'package:kfusion/views/dashboard/widgets/current_outbound.dart';
+import 'package:kfusion/views/dashboard/widgets/cabin_core.dart';
 import 'package:kfusion/widgets/widgets.dart';
 
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/glyph_finders.dart';
+import '../../helpers/preferences.dart';
 import '../../helpers/test_app.dart';
 
 const _ip = '203.0.113.9';
@@ -77,7 +78,21 @@ OutboundIpResult _address({int coreEpoch = 1}) => OutboundIpResult(
   picksVersion: 1,
 );
 
-Widget _card({DashboardDensity density = DashboardDensity.standard}) =>
+Widget _panel() => const Scaffold(
+  body: Align(
+    alignment: Alignment.topLeft,
+    child: SizedBox(
+      width: 380,
+      child: DashboardDensityScope(
+        density: DashboardDensity.mobile,
+        scale: 1,
+        child: CabinExitPanel(),
+      ),
+    ),
+  ),
+);
+
+Widget _core({DashboardDensity density = DashboardDensity.standard}) =>
     Scaffold(
       body: Align(
         alignment: Alignment.topLeft,
@@ -87,16 +102,13 @@ Widget _card({DashboardDensity density = DashboardDensity.standard}) =>
           child: DashboardDensityScope(
             density: density,
             scale: 1,
-            child: const CurrentOutboundCard(),
+            child: const CabinCoreCard(),
           ),
         ),
       ),
     );
 
-Widget _app(
-  Future<IpQuality> Function(Ref ref, String ip) quality, {
-  DashboardDensity density = DashboardDensity.standard,
-}) {
+Widget _app(Future<IpQuality> Function(Ref ref, String ip) quality) {
   return TestApp(
     locale: const Locale('en'),
     overrides: [
@@ -112,7 +124,7 @@ Widget _app(
       ),
       ipQualityProvider.overrideWith(quality),
     ],
-    child: _card(density: density),
+    child: _panel(),
   );
 }
 
@@ -137,7 +149,7 @@ Widget _probingApp(
       coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
       ipQualityProvider.overrideWith(quality ?? (_, _) async => _residential),
     ],
-    child: _card(),
+    child: _panel(),
   );
 }
 
@@ -235,7 +247,7 @@ void main() {
             outboundIpProbeProvider.overrideWith(_Ips.new),
             ipQualityProvider.overrideWith((_, _) => quality.future),
           ],
-          child: _card(),
+          child: _panel(),
         ),
       );
       await tester.pump();
@@ -291,17 +303,6 @@ void main() {
       await tester.pump();
 
       expect(find.text('AS64500'), findsOneWidget);
-    });
-
-    testWidgets('fits a phone', (tester) async {
-      await tester.pumpWidget(
-        _app((_, _) async => _residential, density: DashboardDensity.mobile),
-      );
-      await tester.pump();
-
-      expect(find.text(_ip), findsOneWidget);
-      expect(find.text('Residential'), findsOneWidget);
-      expect(tester.takeException(), isNull);
     });
 
     testWidgets('opens its details from the address, not the card', (
@@ -385,15 +386,13 @@ void main() {
       expect(find.text(_ip), findsNothing);
       expect(find.text('*****'), findsNWidgets(2));
       final container = ProviderScope.containerOf(
-        tester.element(find.byType(CurrentOutboundCard)),
+        tester.element(find.byType(CabinExitPanel)),
       );
       expect(container.read(appSettingProvider).hideIp, isTrue);
     });
 
     ProviderContainer containerOf(WidgetTester tester) =>
-        ProviderScope.containerOf(
-          tester.element(find.byType(CurrentOutboundCard)),
-        );
+        ProviderScope.containerOf(tester.element(find.byType(CabinExitPanel)));
 
     void start(WidgetTester tester) {
       containerOf(tester).read(runTimeProvider.notifier).value = 1;
@@ -413,7 +412,7 @@ void main() {
       await tester.pump(commonDuration);
 
       final directLabel = find.descendant(
-        of: find.byType(CurrentOutboundCard),
+        of: find.byType(CabinExitPanel),
         matching: find.text('Status · Direct'),
       );
       expect(directLabel, findsOneWidget);
@@ -425,7 +424,7 @@ void main() {
       expect(directLabel, findsNothing);
       expect(
         find.descendant(
-          of: find.byType(CurrentOutboundCard),
+          of: find.byType(CabinExitPanel),
           matching: find.text('Status'),
         ),
         findsOneWidget,
@@ -502,124 +501,324 @@ void main() {
     });
   });
 
-  group('the start button', () {
-    late ProviderContainer container;
-
-    ProviderContainer containerWith({
-      List<Profile> profiles = const [_profile],
-      bool suspended = false,
-    }) => ProviderContainer(
-      overrides: [
-        initProvider.overrideWithBuild((_, _) => true),
-        profilesProvider.overrideWithValue(profiles),
-        outboundIpProbeProvider.overrideWith(_Ips.new),
-        ipQualityProvider.overrideWith((_, _) async => _residential),
-        setupActionProvider.overrideWith(_RecordingSetupAction.new),
-        suspendProvider.overrideWithValue(suspended),
-      ],
-    );
-
-    tearDown(() => container.dispose());
-
-    Future<void> pumpCard(
-      WidgetTester tester, {
+  group('the cabin core toggle', () {
+    Widget app({
       DashboardDensity density = DashboardDensity.standard,
-      bool glass = false,
-    }) async {
-      globalState.container = container;
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: TestApp(
-            child: LiquidGlassScope(
-              enabled: glass,
-              child: _card(density: density),
-            ),
+      bool suspended = false,
+      bool withProfile = true,
+    }) {
+      return TestApp(
+        locale: const Locale('en'),
+        overrides: [
+          profilesProvider.overrideWithValue(
+            withProfile ? const [_profile] : const [],
           ),
-        ),
+          setupActionProvider.overrideWith(_RecordingSetupAction.new),
+          suspendProvider.overrideWithValue(suspended),
+          outboundIpProbeProvider.overrideWithBuild(
+            (_, _) => const RoutedProbeState({
+              routedOutbound: ProbeEntry(
+                phase: ProbePhase.fresh,
+                value: IpInfo(ip: _ip, countryCode: 'GB'),
+              ),
+            }),
+          ),
+          ipQualityProvider.overrideWith((_, _) async => _residential),
+        ],
+        child: _core(density: density),
       );
-      await tester.pump();
     }
 
-    Finder startButton() => find
-        .byWidgetPredicate((widget) => widget.runtimeType == InkResponse)
+    Finder disc() => find
+        .descendant(
+          of: find.byType(CabinCoreCard),
+          matching: find.byWidgetPredicate(
+            (widget) => widget.runtimeType == InkResponse,
+          ),
+        )
         .last;
 
-    testWidgets('dispatches each toggle through the shared running state', (
-      tester,
-    ) async {
-      container = containerWith();
-      container.read(runTimeProvider.notifier).value = 1;
-      await pumpCard(tester);
-      final action =
-          container.read(setupActionProvider.notifier) as _RecordingSetupAction;
+    _RecordingSetupAction actionOf(WidgetTester tester) =>
+        ProviderScope.containerOf(
+              tester.element(find.byType(CabinCoreCard)),
+            ).read(setupActionProvider.notifier)
+            as _RecordingSetupAction;
 
-      await tester.tap(startButton());
-      expect(action.requests, [false]);
-      expect(container.read(isStartProvider), isFalse);
-      await tester.pumpAndSettle();
+    testWidgets('is on when running and toggles on tap', (tester) async {
+      await tester.pumpWidget(app());
+      await tester.pump();
       expect(find.byTooltip('Start'), findsOneWidget);
 
-      await tester.tap(startButton());
-      expect(action.requests, [false, true]);
-      expect(container.read(isStartProvider), isTrue);
-      await tester.pumpAndSettle();
+      await tester.tap(disc());
+      await tester.pump();
+      expect(actionOf(tester).requests, [true]);
+      await tester.pump(commonDuration);
       expect(find.byTooltip('Stop'), findsOneWidget);
+
+      await tester.tap(disc());
+      await tester.pump();
+      expect(actionOf(tester).requests, [true, false]);
+      await tester.pump(commonDuration);
+      expect(find.byTooltip('Start'), findsOneWidget);
     });
 
-    testWidgets('a suspended tunnel swaps in the Wi-Fi off glyph and says so', (
+    testWidgets('is off without a profile', (tester) async {
+      await tester.pumpWidget(app(withProfile: false));
+      await tester.pump();
+
+      expect(find.text('Disconnected'), findsOneWidget);
+      final discInk = tester.widget<InkResponse>(
+        find.descendant(
+          of: find.byTooltip('Start'),
+          matching: find.byType(InkResponse),
+        ),
+      );
+      expect(discInk.onTap, isNull);
+    });
+
+    testWidgets('reads as suspended when the core cannot start', (
       tester,
     ) async {
-      container = containerWith(suspended: true);
-      container.read(runTimeProvider.notifier).value = 1;
-      await pumpCard(tester);
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        app(density: DashboardDensity.mobile, suspended: true),
+      );
+      await tester.pump();
+      ProviderScope.containerOf(
+        tester.element(find.byType(CabinCoreCard)),
+      ).read(runTimeProvider.notifier).value = 1;
+      await tester.pump();
+      await tester.pump(commonDuration);
 
-      final context = tester.element(find.byType(CurrentOutboundCard));
+      final context = tester.element(find.byType(CabinCoreCard));
       expect(
         find.byTooltip(context.appLocalizations.suspended),
         findsOneWidget,
       );
-      expect(find.text(context.appLocalizations.suspended), findsOneWidget);
-      expect(find.byGlyph(AppGlyphs.wifiOff), findsOneWidget);
+      expect(find.text(context.appLocalizations.suspended), findsNWidgets(2));
+      expect(tester.widget<InkResponse>(disc()).onTap, isNotNull);
     });
+  });
 
-    testWidgets('swells under a press and on glass bends within its shape', (
+  group('the cabin core states', () {
+    Widget statesApp() {
+      return TestApp(
+        locale: const Locale('en'),
+        overrides: [
+          profilesProvider.overrideWithValue(const [_profile]),
+          suspendProvider.overrideWithValue(false),
+          outboundIpProbeProvider.overrideWithBuild(
+            (_, _) => const RoutedProbeState({
+              routedOutbound: ProbeEntry(
+                phase: ProbePhase.fresh,
+                value: IpInfo(ip: _ip, countryCode: 'GB'),
+                stamp: RouteStamp(
+                  coreEpoch: 1,
+                  picksVersion: 1,
+                  hostEpoch: 1,
+                  proxied: true,
+                  chains: ['HK 03 · IEPL'],
+                ),
+              ),
+            }),
+          ),
+          ipQualityProvider.overrideWith((_, _) async => _residential),
+        ],
+        child: _core(density: DashboardDensity.mobile),
+      );
+    }
+
+    ProviderContainer containerOf(WidgetTester tester) =>
+        ProviderScope.containerOf(tester.element(find.byType(CabinCoreCard)));
+
+    testWidgets('the full disc names its state and invites a tap', (
       tester,
     ) async {
-      container = containerWith();
-      container.read(runTimeProvider.notifier).value = 1;
-      await pumpCard(tester, glass: true);
-      await tester.pumpAndSettle();
-      final glass = tester.widget<LiquidGlass>(
-        find.descendant(of: startButton(), matching: find.byType(LiquidGlass)),
-      );
-      expect(glass.clipper, isNotNull);
-
-      final press = find.descendant(
-        of: startButton(),
-        matching: find.byType(ElasticPress),
-      );
-      final gesture = await tester.startGesture(
-        tester.getCenter(startButton()),
-      );
+      _useTallView(tester);
+      await tester.pumpWidget(statesApp());
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Disconnected'), findsOneWidget);
+      expect(find.text('Tap to connect'), findsOneWidget);
       expect(
-        tester.renderObject<RenderProxyBox>(press).child!.debugLayer,
-        isA<TransformLayer>(),
+        tester
+            .widgetList<DashboardDiscMotif>(find.byType(DashboardDiscMotif))
+            .map((motif) => motif.size),
+        contains(74),
       );
-      await gesture.cancel();
-      await tester.pumpAndSettle();
+
+      containerOf(tester).read(runTimeProvider.notifier).value = 1;
+      await tester.pump();
+      await tester.pump(commonDuration);
+
+      expect(find.text('Connected'), findsOneWidget);
+      expect(find.text('HK 03 · IEPL'), findsWidgets);
+      expect(find.text('Exit GB'), findsOneWidget);
     });
 
-    testWidgets('is off without a profile', (tester) async {
-      container = containerWith(profiles: const []);
-      await pumpCard(tester, density: DashboardDensity.mobile);
+    testWidgets('the compact preference starts the core as a bar', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      await tester.pumpWidget(statesApp());
+      await tester.pump();
+      containerOf(tester).read(runTimeProvider.notifier).value = 1;
+      await tester.pump();
+      await tester.pump(commonDuration);
 
-      final toggle = tester.widget<InkResponse>(startButton());
-      expect(toggle.onTap, isNull);
-      expect(tester.takeException(), isNull);
+      containerOf(tester)
+          .read(appSettingProvider.notifier)
+          .update((state) => state.copyWith(cabinCoreCompact: true));
+      await tester.pumpAndSettle();
+
+      final sizes = tester
+          .widgetList<DashboardDiscMotif>(find.byType(DashboardDiscMotif))
+          .map((motif) => motif.size)
+          .toList();
+      expect(sizes, contains(40));
+      expect(sizes, isNot(contains(74)));
+      expect(find.byType(CabinExitPanel), findsOneWidget);
+    });
+
+    testWidgets('the compact preference stays full while disconnected', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      await tester.pumpWidget(statesApp());
+      await tester.pump();
+      containerOf(tester)
+          .read(appSettingProvider.notifier)
+          .update((state) => state.copyWith(cabinCoreCompact: true));
+      await tester.pumpAndSettle();
+
+      final sizes = tester
+          .widgetList<DashboardDiscMotif>(find.byType(DashboardDiscMotif))
+          .map((motif) => motif.size)
+          .toList();
+      expect(sizes, contains(74));
+      expect(sizes, isNot(contains(40)));
+    });
+  });
+
+  group('the dashboard scroll fold', () {
+    testWidgets('the compact preference starts folded and the bar reopens', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(412, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await mockPreferences();
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            profilesProvider.overrideWithValue(const [_profile]),
+            outboundIpProbeProvider.overrideWithBuild(
+              (_, _) => const RoutedProbeState({
+                routedOutbound: ProbeEntry(
+                  phase: ProbePhase.fresh,
+                  value: IpInfo(ip: _ip, countryCode: 'GB'),
+                  stamp: RouteStamp(
+                    coreEpoch: 1,
+                    picksVersion: 1,
+                    hostEpoch: 1,
+                    proxied: true,
+                    chains: ['HK 03 · IEPL'],
+                  ),
+                ),
+              }),
+            ),
+            ipQualityProvider.overrideWith((_, _) async => _residential),
+          ],
+          child: const DashboardView(),
+        ),
+      );
+      await tester.pump();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DashboardView)),
+      );
+      container.read(runTimeProvider.notifier).value = 1;
+      container
+          .read(appSettingProvider.notifier)
+          .update((state) => state.copyWith(cabinCoreCompact: true));
+      await tester.pump();
+      await tester.pump(commonDuration);
+
+      expect(tester.getSize(find.byType(CabinCoreCard)).height, 76);
+
+      await tester.tap(find.byType(CabinCoreCard));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(tester.getSize(find.byType(CabinCoreCard)).height, 300);
+
+      await tester.drag(find.byType(CabinExitPanel), const Offset(0, -240));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.getSize(find.byType(CabinCoreCard)).height, 76);
+    });
+
+    testWidgets('scrolling folds the core into its bar and the bar reopens', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(412, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await mockPreferences();
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            profilesProvider.overrideWithValue(const [_profile]),
+            outboundIpProbeProvider.overrideWithBuild(
+              (_, _) => const RoutedProbeState({
+                routedOutbound: ProbeEntry(
+                  phase: ProbePhase.fresh,
+                  value: IpInfo(ip: _ip, countryCode: 'GB'),
+                  stamp: RouteStamp(
+                    coreEpoch: 1,
+                    picksVersion: 1,
+                    hostEpoch: 1,
+                    proxied: true,
+                    chains: ['HK 03 · IEPL'],
+                  ),
+                ),
+              }),
+            ),
+            ipQualityProvider.overrideWith((_, _) async => _residential),
+          ],
+          child: const DashboardView(),
+        ),
+      );
+      await tester.pump();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DashboardView)),
+      );
+      container.read(runTimeProvider.notifier).value = 1;
+      await tester.pump();
+      await tester.pump(commonDuration);
+
+      expect(tester.getSize(find.byType(CabinCoreCard)).height, 300);
+
+      await tester.drag(find.byType(CabinExitPanel), const Offset(0, -240));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(tester.getSize(find.byType(CabinCoreCard)).height, 76);
+      expect(
+        tester
+            .widgetList<DashboardDiscMotif>(find.byType(DashboardDiscMotif))
+            .map((motif) => motif.size),
+        contains(40),
+      );
+
+      await tester.tap(find.byType(CabinCoreCard));
+      // The run-time readout ticks every second, so the dashboard never
+      // settles; pump past the unfold animation instead.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      expect(tester.getSize(find.byType(CabinCoreCard)).height, 300);
     });
   });
 }

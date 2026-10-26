@@ -444,6 +444,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "Con Omitir direcciones privadas activado, las direcciones de LAN, loopback y multidifusión no pasan por TUN.",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage(
+      "Núcleo de cabina compacto",
+    ),
     "cache": MessageLookupByLibrary.simpleMessage("Caché"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage(
       "Algoritmo de caché",
@@ -543,6 +546,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("Conectado"),
     "connecting": MessageLookupByLibrary.simpleMessage("Conectando…"),
     "connection": MessageLookupByLibrary.simpleMessage("Conexión"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage(
+      "Error de conexión",
+    ),
     "connectionStats": MessageLookupByLibrary.simpleMessage(
       "Estadísticas de conexión",
     ),
@@ -813,6 +819,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sin garantía",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Desconectado"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("Desconectando…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "Nueva versión disponible",
     ),
@@ -1152,6 +1159,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("Dirección IP"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("Salida"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("Historial de abusos"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("Proxy"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1978,6 +1986,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage(
       "Toca para autorizar",
     ),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage("Toca para conectar"),
     "target": MessageLookupByLibrary.simpleMessage("Destino"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("TCP concurrente"),
     "testInterval": MessageLookupByLibrary.simpleMessage("Intervalo de prueba"),

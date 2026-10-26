@@ -37,6 +37,7 @@ _AppSettingProps _$AppSettingPropsFromJson(
       ) ??
       TabAnimation.slide,
   floatingNavigationBar: json['floatingNavigationBar'] as bool? ?? true,
+  cabinCoreCompact: json['cabinCoreCompact'] as bool? ?? false,
   autoCheckUpdate: json['autoCheckUpdate'] as bool? ?? true,
   sidebarExpanded:
       _readSidebarExpanded(json, 'sidebarExpanded') as bool? ?? true,
@@ -103,6 +104,7 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
       'testUrl': instance.testUrl,
       'tabAnimation': _$TabAnimationEnumMap[instance.tabAnimation]!,
       'floatingNavigationBar': instance.floatingNavigationBar,
+      'cabinCoreCompact': instance.cabinCoreCompact,
       'autoCheckUpdate': instance.autoCheckUpdate,
       'sidebarExpanded': instance.sidebarExpanded,
       'acceptedDisclaimerVersion': instance.acceptedDisclaimerVersion,

@@ -432,6 +432,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "При обходе частных адресов адреса LAN, loopback и multicast идут в обход TUN.",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage(
+      "Компактное ядро кабины",
+    ),
     "cache": MessageLookupByLibrary.simpleMessage("Кэш"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage("Алгоритм кэша"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage(
@@ -525,6 +528,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("Подключено"),
     "connecting": MessageLookupByLibrary.simpleMessage("Подключение…"),
     "connection": MessageLookupByLibrary.simpleMessage("Соединение"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось подключиться",
+    ),
     "connectionStats": MessageLookupByLibrary.simpleMessage(
       "Статистика подключений",
     ),
@@ -801,6 +807,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Отсутствие гарантий",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Отключено"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("Отключение…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "Доступна новая версия",
     ),
@@ -1124,6 +1131,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP-адрес"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("Выход"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("Злоупотребления"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("Прокси"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1927,6 +1935,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage(
       "Нажмите, чтобы разрешить",
+    ),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage(
+      "Нажмите, чтобы подключиться",
     ),
     "target": MessageLookupByLibrary.simpleMessage("Цель"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("Параллельный TCP"),

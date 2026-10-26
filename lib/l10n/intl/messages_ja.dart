@@ -358,6 +358,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "プライベートアドレスをバイパスすると、LAN・ループバック・マルチキャストのアドレスは TUN を通りません。",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage("キャビンコアをコンパクトに"),
     "cache": MessageLookupByLibrary.simpleMessage("キャッシュ"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage("キャッシュアルゴリズム"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage(
@@ -431,6 +432,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("接続済み"),
     "connecting": MessageLookupByLibrary.simpleMessage("接続中…"),
     "connection": MessageLookupByLibrary.simpleMessage("接続"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage("接続に失敗しました"),
     "connectionStats": MessageLookupByLibrary.simpleMessage("接続統計"),
     "connectionStatsDesc": MessageLookupByLibrary.simpleMessage(
       "ライブ接続、最近のリクエスト、DNS クエリ",
@@ -665,6 +667,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "disclaimerWarrantyTitle": MessageLookupByLibrary.simpleMessage("無保証"),
     "disconnected": MessageLookupByLibrary.simpleMessage("切断済み"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("切断中…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "新しいバージョンが見つかりました",
     ),
@@ -935,6 +938,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP アドレス"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("出口"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("不正利用の履歴"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("プロキシ"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1585,6 +1589,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tabAnimation": MessageLookupByLibrary.simpleMessage("タブアニメーション"),
     "tapIconToRetry": MessageLookupByLibrary.simpleMessage("アイコンをタップして再試行"),
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage("タップして許可"),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage("タップして接続"),
     "target": MessageLookupByLibrary.simpleMessage("宛先"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("TCP同時接続"),
     "testInterval": MessageLookupByLibrary.simpleMessage("テスト間隔"),

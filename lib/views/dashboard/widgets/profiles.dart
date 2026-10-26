@@ -137,6 +137,21 @@ class ProfilesCard extends ConsumerWidget {
       onTap: mobile || profile == null
           ? () => _openProfile(context, profile)
           : null,
+      background: Stack(
+        children: [
+          PositionedDirectional(
+            end: -46,
+            top: -58,
+            child: Opacity(
+              opacity: 0.045,
+              child: DashboardDiscMotif(
+                size: 128,
+                color: context.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,

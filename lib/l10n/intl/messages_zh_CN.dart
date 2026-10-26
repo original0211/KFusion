@@ -336,6 +336,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
       "开启绕过私有路由地址后，局域网、回环和组播地址不经过虚拟网卡。",
     ),
+    "cabinCoreCompact": MessageLookupByLibrary.simpleMessage("舱核紧凑模式"),
     "cache": MessageLookupByLibrary.simpleMessage("缓存"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage("缓存算法"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage("缓存已损坏，是否清空？"),
@@ -397,6 +398,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "connected": MessageLookupByLibrary.simpleMessage("已连接"),
     "connecting": MessageLookupByLibrary.simpleMessage("连接中…"),
     "connection": MessageLookupByLibrary.simpleMessage("连接"),
+    "connectionFailed": MessageLookupByLibrary.simpleMessage("连接失败"),
     "connectionStats": MessageLookupByLibrary.simpleMessage("连接统计"),
     "connectionStatsDesc": MessageLookupByLibrary.simpleMessage(
       "实时连接、最近请求、DNS查询",
@@ -605,6 +607,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "disclaimerWarrantyTitle": MessageLookupByLibrary.simpleMessage("无担保声明"),
     "disconnected": MessageLookupByLibrary.simpleMessage("已断开"),
+    "disconnecting": MessageLookupByLibrary.simpleMessage("断开中…"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage("发现新版本"),
     "dnsHijackDesc": MessageLookupByLibrary.simpleMessage(
       "未添加时劫持所有发往 53 端口的 DNS 请求（any:53）。",
@@ -851,6 +854,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP 地址"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipExit": MessageLookupByLibrary.simpleMessage("出口"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("滥用记录"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("代理"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
@@ -1429,6 +1433,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tabAnimation": MessageLookupByLibrary.simpleMessage("选项卡动画"),
     "tapIconToRetry": MessageLookupByLibrary.simpleMessage("点击图标重试"),
     "tapToAuthorize": MessageLookupByLibrary.simpleMessage("点击授权"),
+    "tapToConnect": MessageLookupByLibrary.simpleMessage("点按连接"),
     "target": MessageLookupByLibrary.simpleMessage("目标"),
     "tcpConcurrent": MessageLookupByLibrary.simpleMessage("TCP并发"),
     "testInterval": MessageLookupByLibrary.simpleMessage("测试间隔"),

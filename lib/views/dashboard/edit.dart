@@ -503,7 +503,7 @@ class _LiftedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shadows = DashboardShadows.e2(context);
+    final shadows = context.colorScheme.cabinDockShadows;
     final shape = AppShape.all(DashboardCorner.mobileCard);
     return AnimatedBuilder(
       animation: animation,
