@@ -17,6 +17,8 @@ object SingBoxExitInfo {
         val timestamp: Long,
         val description: String,
         val importance: Int,
+        // For a SIGNALED death the platform status is the signal number; 0 = not captured.
+        val status: Int = 0,
     )
 
     fun reasonLabel(reason: Int): String =
@@ -52,10 +54,26 @@ object SingBoxExitInfo {
         return "attempt #$seq died$where: ${exitTail(record)}"
     }
 
+    fun signalLabel(status: Int): String =
+        when (status) {
+            4 -> "SIGILL(4)"
+            6 -> "SIGABRT(6)"
+            7 -> "SIGBUS(7)"
+            9 -> "SIGKILL(9)"
+            11 -> "SIGSEGV(11)"
+            else -> "signal($status)"
+        }
+
     private fun exitTail(record: Record): String {
         val stamp =
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(record.timestamp))
-        val base = "${reasonLabel(record.reason)}(${record.reason}) at $stamp"
+        val signal =
+            if (record.reason == ApplicationExitInfo.REASON_SIGNALED && record.status > 0) {
+                " ${signalLabel(record.status)}"
+            } else {
+                ""
+            }
+        val base = "${reasonLabel(record.reason)}(${record.reason})$signal at $stamp"
         return if (record.description.isBlank()) base else "$base - ${record.description}"
     }
 
@@ -67,6 +85,7 @@ object SingBoxExitInfo {
             timestamp = exit.timestamp,
             description = exit.description.orEmpty(),
             importance = exit.importance,
+            status = exit.status,
         )
     }
 
@@ -129,16 +148,35 @@ object SingBoxExitInfo {
         return if (frame == null) noted else "$noted · $frame"
     }
 
-    fun latestCrashHeadline(context: Context): String? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
-        val exit = latestExitInfo(context) ?: return null
-        if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) return null
-        val stream = runCatching { exit.traceInputStream }.getOrNull() ?: return null
+    // Why a native crash produced no headline, named so a caller can log the branch.
+    enum class HeadlineMiss { STREAM_UNAVAILABLE, TRACE_UNREADABLE, NO_SIGNAL_LINE }
+
+    class HeadlineProbe(val headline: String?, val miss: HeadlineMiss?)
+
+    fun headlineMissLine(miss: HeadlineMiss): String =
+        when (miss) {
+            HeadlineMiss.STREAM_UNAVAILABLE -> "exit headline: trace stream unavailable"
+            HeadlineMiss.TRACE_UNREADABLE -> "exit headline: trace unreadable"
+            HeadlineMiss.NO_SIGNAL_LINE -> "exit headline: no signal line in trace"
+        }
+
+    fun probeCrashHeadline(context: Context): HeadlineProbe {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return HeadlineProbe(null, null)
+        val exit = latestExitInfo(context) ?: return HeadlineProbe(null, null)
+        if (exit.reason != ApplicationExitInfo.REASON_CRASH_NATIVE) {
+            return HeadlineProbe(null, null)
+        }
+        val stream = runCatching { exit.traceInputStream }.getOrNull()
+            ?: return HeadlineProbe(null, HeadlineMiss.STREAM_UNAVAILABLE)
         val text = runCatching {
             stream.bufferedReader().use { reader -> reader.readText() }
-        }.getOrNull() ?: return null
-        return crashHeadline(text)
+        }.getOrNull() ?: return HeadlineProbe(null, HeadlineMiss.TRACE_UNREADABLE)
+        val headline = crashHeadline(text)
+            ?: return HeadlineProbe(null, HeadlineMiss.NO_SIGNAL_LINE)
+        return HeadlineProbe(headline, null)
     }
+
+    fun latestCrashHeadline(context: Context): String? = probeCrashHeadline(context).headline
 
     private fun latestExitInfo(context: Context): ApplicationExitInfo? {
         val manager = context.getSystemService(ActivityManager::class.java) ?: return null

@@ -147,8 +147,13 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             }
             SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit) + attemptNote)
             if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
-                SingBoxExitInfo.latestCrashHeadline(this)?.let { line ->
-                    SingBoxLog.append(this, "exit signal: $line")
+                val probe = SingBoxExitInfo.probeCrashHeadline(this)
+                if (probe.headline != null) {
+                    SingBoxLog.append(this, "exit signal: ${probe.headline}")
+                } else {
+                    probe.miss?.let { miss ->
+                        SingBoxLog.append(this, SingBoxExitInfo.headlineMissLine(miss))
+                    }
                 }
             }
             SingBoxExitInfo.traceExcerpt(this)?.let { trace ->

@@ -167,6 +167,46 @@ class SingBoxExitInfoTest {
     }
 
     @Test
+    fun signalLabelsNameTheDecisiveSignalsAndKeepUnknownNumbers() {
+        assertEquals("SIGILL(4)", SingBoxExitInfo.signalLabel(4))
+        assertEquals("SIGABRT(6)", SingBoxExitInfo.signalLabel(6))
+        assertEquals("SIGBUS(7)", SingBoxExitInfo.signalLabel(7))
+        assertEquals("SIGKILL(9)", SingBoxExitInfo.signalLabel(9))
+        assertEquals("SIGSEGV(11)", SingBoxExitInfo.signalLabel(11))
+        assertEquals("signal(17)", SingBoxExitInfo.signalLabel(17))
+    }
+
+    @Test
+    fun summaryLineNamesTheSignalBehindASignaledDeath() {
+        val record = SingBoxExitInfo.Record(2, 1_761_000_000_000L, "", 100, status = 11)
+        val line = SingBoxExitInfo.summaryLine(record)
+        assertTrue(line.startsWith("process exit: SIGNALED(2) SIGSEGV(11) at "))
+    }
+
+    @Test
+    fun attemptDeathLineNamesAnExternalKill() {
+        val record = SingBoxExitInfo.Record(2, 1_761_000_000_000L, "", 100, status = 9)
+        val line = SingBoxExitInfo.attemptDeathLine(7, -1, "", record)
+        assertTrue(line.startsWith("attempt #7 died: SIGNALED(2) SIGKILL(9) at "))
+    }
+
+    @Test
+    fun aRecordWithoutStatusStaysUnnamed() {
+        val record = SingBoxExitInfo.Record(2, 1_761_000_000_000L, "", 100)
+        val line = SingBoxExitInfo.summaryLine(record)
+        assertTrue(line.startsWith("process exit: SIGNALED(2) at "))
+        assertTrue(!line.contains("SIG"))
+    }
+
+    @Test
+    fun statusStaysOutOfNonSignaledLines() {
+        val record = SingBoxExitInfo.Record(5, 1_761_000_000_000L, "crash", 100, status = 11)
+        val line = SingBoxExitInfo.summaryLine(record)
+        assertTrue(line.startsWith("process exit: CRASH_NATIVE(5) at "))
+        assertTrue(!line.contains("SIGSEGV"))
+    }
+
+    @Test
     fun crashReportTailKeepsOnlyTheLastNonBlankLines() {
         val working = folder.newFolder("singbox")
         val body = (1..50).joinToString("\n") { "line $it" } + "\n\n"
