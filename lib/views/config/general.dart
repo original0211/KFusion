@@ -424,7 +424,7 @@ class CoreSwitchCard extends StatelessWidget {
       top: isStart ? AppCorner.xl : AppCorner.none,
       bottom: isEnd ? AppCorner.xl : AppCorner.none,
     );
-    return CommonCard(
+    final card = CommonCard(
       shape: AppShape.of(borderRadius),
       padding: EdgeInsets.zero,
       child: Padding(
@@ -475,6 +475,13 @@ class CoreSwitchCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: AppShape.of(borderRadius),
+        shadows: context.colorScheme.cabinPanelShadows,
+      ),
+      child: card,
     );
   }
 }
