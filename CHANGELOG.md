@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.19 (2026-10-27)
+
+**Bug Fixes**
+
+- **core** The sing-box default-interface monitor now delivers the way the reference client delivers. Interface callbacks used to report from whichever system thread delivered them, straight into the core, while a start was still setting up; updates now pass through one serialized lane owned by the service — the system callbacks only post, link properties are read on the lane, and the core hears about the tracked network in arrival order, replayed to a listener that attaches late. Registration itself sits at the service layer, happens once per service lifetime ahead of the start, and is tiered by platform level the way the reference client tiers it; a report always carries the unmetered, unconstrained reading. (6a08d3e)
+- **core** The interface monitor seeds before it registers. The monitor's initial state used to be queued after the system callback was registered, so the system's first update could land ahead of the seed and then be overwritten by the older snapshot; the seed is queued first now, and the first system update always lands on top of it. (62ef097)
+- **core** A native death's crash report now shows its head as well as its tail. The service log carried only the report's last lines — the end of a goroutine stack — while the line that names the failure sits at the top of the file; when a death leaves a report tail, the head's first forty lines now land in the log ahead of it under a crash head prefix, and a report that cannot be read leaves a one-line note saying so instead of silence. (b90f118)
+- **core** The stage-marker trail joins the crash report in the service log. The instrumented core writes a line at each start stage it reaches; when a native death leaves a crash tail, the last thirty marker lines now land in the log behind it under a stage mark prefix, so the stage the start had reached when it died reads off the log directly. A death that left no markers leaves no marker lines. (3015fbb)
+- **core** The sing-box core is bound with the stage-marker patches applied. The bind that builds the core library from its pinned source now applies four small patches after the source sync — a marker writer, marks at the daemon's and the box's start boundaries and across the interface monitor's update path, and the marker file's path set during setup — and asserts every landing spot before the build proceeds, so an upstream change that moves a context line fails the build loudly instead of shipping an uninstrumented core. The patches live in the repository; the core source and the built library never do. (95e9d7e)
+
 ## v0.2.18 (2026-10-27)
 
 **Bug Fixes**
