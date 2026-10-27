@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.21 (2026-10-27)
+
+**Bug Fixes**
+
+- **core** The sing-box core no longer panics on a cellular interface's link-local IPv6 address. Interface prefixes handed to the core were built straight from the platform's address string, and a link-local address carries its zone along — fe80::…%rmnet_data1/64 — which the core's prefix parser rejects outright: IPv6 zones cannot be present in a prefix, raised as a panic inside the interface refresh that every monitor update runs, so the first update whose enumeration included the cellular interface killed the start. Interface prefixes are now rebuilt from the address's raw bytes before they are handed over, which strips the zone while keeping the address and its prefix length intact — the shape the reference client has always used. IPv4 prefixes are unchanged. (ca501eb)
+
 ## v0.2.20 (2026-10-27)
 
 **Bug Fixes**
