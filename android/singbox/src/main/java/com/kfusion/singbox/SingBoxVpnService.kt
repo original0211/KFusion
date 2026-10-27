@@ -238,9 +238,12 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     private fun appendStageMarks(workingDir: File): Boolean {
         if (!SingBoxStageMarkers.fileIn(workingDir).isFile) return false
-        val marks = SingBoxStageMarkers.tailLines(workingDir)
+        val since = preferences().getLong(PREF_ATTEMPT_SINCE, 0L)
+        val marks = SingBoxStageMarkers.tailLinesInWindow(workingDir, since)
         if (marks == null) {
             SingBoxLog.append(this, "stage mark: markers unreadable")
+        } else if (marks.isEmpty()) {
+            SingBoxLog.append(this, "stage mark: no marks this attempt")
         } else {
             marks.forEach { line ->
                 SingBoxLog.append(this, "stage mark: " + line.take(300))

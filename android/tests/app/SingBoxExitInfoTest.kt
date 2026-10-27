@@ -332,15 +332,64 @@ class SingBoxExitInfoTest {
         val working = folder.newFolder("singbox")
         val body = (1..5).joinToString("\n") { "mark $it" }
         SingBoxStageMarkers.fileIn(working).writeText(body)
-        assertEquals("stage mark: mark 5", SingBoxStageMarkers.tailLine(working))
+        assertEquals("stage mark: mark 5", SingBoxStageMarkers.tailLineInWindow(working, 0L))
     }
 
     @Test
     fun stageMarkTailLineIsAnExplicitAbsenceWithoutMarks() {
         val working = folder.newFolder("singbox")
-        assertEquals("stage mark: no marks recorded", SingBoxStageMarkers.tailLine(working))
+        assertEquals("stage mark: no marks recorded", SingBoxStageMarkers.tailLineInWindow(working, 0L))
         SingBoxStageMarkers.fileIn(working).writeText("\n\n")
-        assertEquals("stage mark: no marks recorded", SingBoxStageMarkers.tailLine(working))
+        assertEquals("stage mark: no marks this attempt", SingBoxStageMarkers.tailLineInWindow(working, 0L))
+    }
+
+    @Test
+    fun stageMarkWindowStartsAfterTheLastAttemptBegin() {
+        val working = folder.newFolder("singbox")
+        val body =
+            listOf(
+                "daemon.new-instance.begin +1ms",
+                "old attempt mark +2s",
+                "daemon.new-instance.begin +3ms",
+                "this attempt mark +4s",
+            ).joinToString("\n")
+        SingBoxStageMarkers.fileIn(working).writeText(body)
+        assertEquals(
+            "stage mark: this attempt mark +4s",
+            SingBoxStageMarkers.tailLineInWindow(working, 0L),
+        )
+        assertEquals(
+            listOf("this attempt mark +4s"),
+            SingBoxStageMarkers.tailLinesInWindow(working, 0L),
+        )
+    }
+
+    @Test
+    fun stageMarkWindowIsEmptyWhenTheAttemptMarkedNothingYet() {
+        val working = folder.newFolder("singbox")
+        val body =
+            listOf(
+                "daemon.new-instance.begin +1ms",
+                "old attempt mark +2s",
+                "daemon.new-instance.begin +3ms",
+            ).joinToString("\n")
+        SingBoxStageMarkers.fileIn(working).writeText(body)
+        assertEquals(
+            "stage mark: no marks this attempt",
+            SingBoxStageMarkers.tailLineInWindow(working, 0L),
+        )
+    }
+
+    @Test
+    fun stageMarkWindowRejectsAFileOlderThanTheAttempt() {
+        val working = folder.newFolder("singbox")
+        val file = SingBoxStageMarkers.fileIn(working)
+        file.writeText("daemon.new-instance.begin +1ms\nmark +2s")
+        assertTrue(file.setLastModified(1_000L))
+        assertEquals(
+            "stage mark: no marks this attempt",
+            SingBoxStageMarkers.tailLineInWindow(working, 2_000L),
+        )
     }
 
     @Test

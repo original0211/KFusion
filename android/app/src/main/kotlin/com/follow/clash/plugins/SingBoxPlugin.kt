@@ -162,7 +162,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 )
             }
         }
-        parts += diagnosticsLines(context, epoch, settled?.record, attempt?.seq)
+        parts += diagnosticsLines(context, epoch, settled?.record, attempt)
         return parts.joinToString("；")
     }
 
@@ -172,7 +172,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         context: Context,
         epoch: Long,
         settledRecord: SingBoxExitInfo.Record?,
-        attemptSeq: Long?,
+        attempt: SingBoxStatus.Attempt?,
     ): List<String> {
         val lines = mutableListOf<String>()
         if (settledRecord == null) {
@@ -182,14 +182,14 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
             lines += SingBoxExitInfo.recordLine(fresh)
         }
         val workingDir = File(context.filesDir, "singbox")
-        lines += SingBoxStageMarkers.tailLine(workingDir)
+        lines += SingBoxStageMarkers.tailLineInWindow(workingDir, attempt?.since ?: epoch)
         lines += SingBoxCrashReport.freshReasonLine(
             workingDir,
             epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS,
         )
         SingBoxLog.lastErrorLine(context)?.let { lines += it }
-        if (attemptSeq != null) {
-            SingBoxDeathLetter.lineFor(SingBoxDeathLetter.readFrom(workingDir), attemptSeq)
+        if (attempt != null) {
+            SingBoxDeathLetter.lineFor(SingBoxDeathLetter.readFrom(workingDir), attempt.seq)
                 ?.let { lines += it }
         }
         return lines

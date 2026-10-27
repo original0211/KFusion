@@ -263,6 +263,9 @@ object SingBoxCrashReport {
 object SingBoxStageMarkers {
     const val FILE_NAME = "kfusion-stage-markers.log"
 
+    // The first marker every incarnation writes; marks after its last occurrence are the newest attempt's.
+    const val ATTEMPT_BEGIN_STAGE = "daemon.new-instance.begin"
+
     fun fileIn(workingDir: File): File = File(workingDir, FILE_NAME)
 
     // Null when no marker file exists; a present file that fails to read also
@@ -277,10 +280,37 @@ object SingBoxStageMarkers {
         return lines.filter { it.isNotBlank() }.takeLast(maxLines)
     }
 
-    fun tailLine(workingDir: File): String {
+    fun windowLines(
+        lines: List<String>,
+        maxLines: Int = 30,
+    ): List<String> {
+        val begin = lines.indexOfLast { stageOf(it) == ATTEMPT_BEGIN_STAGE }
+        val window = if (begin < 0) lines else lines.drop(begin + 1)
+        return window.takeLast(maxLines)
+    }
+
+    fun tailLinesInWindow(
+        workingDir: File,
+        notBeforeMs: Long,
+        maxLines: Int = 30,
+    ): List<String>? {
+        val file = fileIn(workingDir)
+        if (!file.isFile) return null
+        if (file.lastModified() < notBeforeMs) return emptyList()
+        val lines = runCatching { file.readLines() }.getOrNull() ?: return null
+        return windowLines(lines.filter { it.isNotBlank() }, maxLines)
+    }
+
+    fun tailLineInWindow(
+        workingDir: File,
+        notBeforeMs: Long,
+    ): String {
         if (!fileIn(workingDir).isFile) return "stage mark: no marks recorded"
-        val tail = tailLines(workingDir, 1) ?: return "stage mark: markers unreadable"
-        val last = tail.lastOrNull() ?: return "stage mark: no marks recorded"
+        val tail = tailLinesInWindow(workingDir, notBeforeMs, 1)
+            ?: return "stage mark: markers unreadable"
+        val last = tail.lastOrNull() ?: return "stage mark: no marks this attempt"
         return "stage mark: " + last.take(300)
     }
+
+    private fun stageOf(line: String): String = line.substringBefore(" +")
 }
