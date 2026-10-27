@@ -203,6 +203,37 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         if (goCrash) {
             SingBoxLog.append(this, SingBoxCrashReport.reasonLine(workingDir))
         }
+        harvestDeathLetter(workingDir)
+    }
+
+    // The next start settles the still-open attempt's death from the full record list.
+    private fun harvestDeathLetter(workingDir: File) {
+        val prefs = preferences()
+        if (!prefs.getBoolean(PREF_ATTEMPT_OPEN, false)) return
+        val seq = prefs.getLong(PREF_ATTEMPT_SEQ, 0L)
+        if (seq <= 0L) return
+        if (SingBoxDeathLetter.readFrom(workingDir)?.seq == seq) return
+        val records = SingBoxExitInfo.all(this) ?: return
+        val since = prefs.getLong(PREF_ATTEMPT_SINCE, 0L)
+        val matched =
+            SingBoxDeathLetter.select(
+                records,
+                since,
+                prefs.getLong(PREF_DEATH_LETTER_THROUGH, 0L),
+            )
+        val letter =
+            SingBoxDeathLetter.Letter(
+                seq = seq,
+                since = since,
+                scanned = records.size,
+                record = matched,
+                newestOther = if (matched == null) SingBoxDeathLetter.newestOtherOf(records) else null,
+            )
+        SingBoxDeathLetter.writeTo(workingDir, letter)
+        if (matched != null) {
+            prefs.edit().putLong(PREF_DEATH_LETTER_THROUGH, matched.timestamp).apply()
+        }
+        SingBoxLog.append(this, SingBoxDeathLetter.cardLine(letter))
     }
 
     private fun appendStageMarks(workingDir: File): Boolean {
@@ -856,6 +887,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         private const val PREF_ATTEMPT_SINCE = "attempt_since"
         private const val PREF_ATTEMPT_SEQ = "attempt_seq"
         private const val PREF_CACHE_ISOLATED_FOR = "cache_isolated_for"
+        private const val PREF_DEATH_LETTER_THROUGH = "death_letter_through"
         private const val PREFS_NAME = "singbox_service"
 
         // An explicit stop drops the saved path: no later resurrection on it.

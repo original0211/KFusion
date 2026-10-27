@@ -11,6 +11,7 @@ import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
 import com.kfusion.singbox.SingBoxCrashReport
+import com.kfusion.singbox.SingBoxDeathLetter
 import com.kfusion.singbox.SingBoxExitInfo
 import com.kfusion.singbox.SingBoxLog
 import com.kfusion.singbox.SingBoxStageMarkers
@@ -161,15 +162,17 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 )
             }
         }
-        parts += diagnosticsLines(context, epoch, settled?.record)
+        parts += diagnosticsLines(context, epoch, settled?.record, attempt?.seq)
         return parts.joinToString("；")
     }
 
-    // Epoch-gated throughout: no line here can quote a previous death.
+    // Epoch-gated throughout, except the death letter: seq-gated to this or
+    // the previous attempt, it is the channel for a death already settled.
     private fun diagnosticsLines(
         context: Context,
         epoch: Long,
         settledRecord: SingBoxExitInfo.Record?,
+        attemptSeq: Long?,
     ): List<String> {
         val lines = mutableListOf<String>()
         if (settledRecord == null) {
@@ -185,6 +188,10 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
             epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS,
         )
         SingBoxLog.lastErrorLine(context)?.let { lines += it }
+        if (attemptSeq != null) {
+            SingBoxDeathLetter.lineFor(SingBoxDeathLetter.readFrom(workingDir), attemptSeq)
+                ?.let { lines += it }
+        }
         return lines
     }
 

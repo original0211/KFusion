@@ -19,6 +19,7 @@ object SingBoxExitInfo {
         val importance: Int,
         // For a SIGNALED death the platform status is the signal number; 0 = not captured.
         val status: Int = 0,
+        val processName: String = "",
     )
 
     fun reasonLabel(reason: Int): String =
@@ -71,6 +72,8 @@ object SingBoxExitInfo {
             else -> "signal($status)"
         }
 
+    fun tailOf(record: Record): String = exitTail(record)
+
     private fun exitTail(record: Record): String {
         val stamp =
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(record.timestamp))
@@ -87,14 +90,25 @@ object SingBoxExitInfo {
     fun latest(context: Context): Record? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
         val exit = latestExitInfo(context) ?: return null
-        return Record(
+        return recordOf(exit)
+    }
+
+    // Every record published for this package, newest first; null = the platform cannot answer.
+    fun all(context: Context): List<Record>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        val exits = exitInfos(context, 0) ?: return null
+        return exits.map { recordOf(it) }
+    }
+
+    private fun recordOf(exit: ApplicationExitInfo): Record =
+        Record(
             reason = exit.reason,
             timestamp = exit.timestamp,
             description = exit.description.orEmpty(),
             importance = exit.importance,
             status = exit.status,
+            processName = exit.processName.orEmpty(),
         )
-    }
 
     fun traceExcerpt(
         context: Context,
@@ -186,12 +200,18 @@ object SingBoxExitInfo {
     fun latestCrashHeadline(context: Context): String? = probeCrashHeadline(context).headline
 
     private fun latestExitInfo(context: Context): ApplicationExitInfo? {
-        val manager = context.getSystemService(ActivityManager::class.java) ?: return null
-        val records =
-            runCatching {
-                manager.getHistoricalProcessExitReasons(context.packageName, 0, 8)
-            }.getOrNull() ?: return null
+        val records = exitInfos(context, 8) ?: return null
         return records.firstOrNull { it.processName.endsWith(PROCESS_SUFFIX) }
+    }
+
+    private fun exitInfos(
+        context: Context,
+        maxNum: Int,
+    ): List<ApplicationExitInfo>? {
+        val manager = context.getSystemService(ActivityManager::class.java) ?: return null
+        return runCatching {
+            manager.getHistoricalProcessExitReasons(context.packageName, 0, maxNum)
+        }.getOrNull()
     }
 }
 
