@@ -44,6 +44,7 @@ import io.nekohasekai.libbox.SystemProxyStatus
 import io.nekohasekai.libbox.TunOptions
 import io.nekohasekai.libbox.WIFIState
 import java.io.File
+import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
@@ -705,7 +706,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             boxInterface.mtu = runCatching { systemInterface.mtu }.getOrDefault(0)
             boxInterface.addresses = StringIteratorAdapter(
                 systemInterface.interfaceAddresses.map { address ->
-                    "${address.address.hostAddress}/${address.networkPrefixLength}"
+                    interfacePrefix(address.address, address.networkPrefixLength)
                 },
             )
             boxInterface.dnsServer = StringIteratorAdapter(
@@ -868,3 +869,14 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         }
     }
 }
+
+// Android scopes link-local IPv6 addresses to their interface, so the host
+// address reads "fe80::…%rmnet_data1"; the core feeds interface addresses
+// to netip.MustParsePrefix, which rejects zones and panics. Rebuilding an
+// IPv6 address from its raw bytes drops the scope, as SFA's toPrefix does.
+fun interfacePrefix(address: InetAddress, networkPrefixLength: Short): String =
+    if (address is Inet6Address) {
+        "${InetAddress.getByAddress(address.address).hostAddress}/$networkPrefixLength"
+    } else {
+        "${address.hostAddress}/$networkPrefixLength"
+    }
