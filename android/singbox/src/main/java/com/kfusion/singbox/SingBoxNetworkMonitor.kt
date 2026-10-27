@@ -113,8 +113,8 @@ class SingBoxNetworkMonitor(private val connectivity: ConnectivityManager) {
                 override fun onLost(network: Network) = lane.lost(network)
             }
         callback = systemCallback
-        registerCallback(systemCallback, handler)
         lane.seed(connectivity.activeNetwork)
+        registerCallback(systemCallback, handler)
     }
 
     @Synchronized
