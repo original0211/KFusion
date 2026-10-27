@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.23 (2026-10-27)
+
+**Bug Fixes**
+
+- **core** A startup death now leaves a letter the next service start cannot miss. The card composed in the seconds after a death kept losing its race with the system, which publishes a process exit record asynchronously: three attempts in a row read not published yet, and the death stayed nameless. Every service start now harvests the full exit-record list — no process filter, no count cap — matches the attempt the ledger still holds open against it, earliest matching core record first and skipping records an earlier letter already consumed, and persists the outcome as a death letter, whether the harvest found the death or not. The card quotes the letter for its own attempt or the one before it, so a death that settles late still arrives with its reason, status and time — and a harvest that found nothing says how much it scanned and what the newest record in the list was. (131e4be)
+- **core** Stage marks are now attributed to the attempt that left them. The marker file is one append-only stream shared by every core incarnation, and its offsets tick from each incarnation's own birth, so the card's global last line could quote a previous attempt — one card carried a +20.8s monitor mark that belonged to the attempt before it. The first mark of every incarnation now delimits its attempt: the card and the service log take only the window after the last delimiter, gated by the file's age against the attempt start, and an empty window reads stage mark: no marks this attempt instead of borrowing an older attempt's line. (9e2cb4e)
+- **core** The crash-reason line now names three states with one vocabulary on both paths that produce it. The same death read report unreadable on the service path and no fresh report on the plugin path, because one helper folded a missing report into unreadable and the other folded it into not-fresh. A single helper now serves both: no report when no report file exists, no fresh report when the file predates the attempt window, and report unreadable only when a report inside the window cannot yield a line. (73813d3)
+- **core** The daemon error line is now matched by its level field, not by substring. The line used to be the last log line containing ERROR or FATAL anywhere, so a DEBUG DNS answer spelling NOERROR posed as the daemon's error on the failure cards. Selection now strips the line's ANSI codes and parses the level that follows the sing-box prefix; only ERROR and FATAL levels qualify, whatever the message text says. (2fff69a)
+- **core** The death-letter harvest never letters an attempt this process is still starting. A check or stop intent can surface while a start is in flight in the same process; writing that live attempt an unmatched letter would spend its one letter, and its real death later would be skipped as already harvested. The harvest now bows out while the start gate is held, leaving the live attempt's letter to the first surface after its outcome is known. (3e9f800)
+
 ## v0.2.22 (2026-10-27)
 
 **Bug Fixes**
