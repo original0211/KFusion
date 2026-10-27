@@ -8,8 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.IpPrefix
-import android.net.LinkProperties
-import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.ProxyInfo
 import android.net.wifi.WifiManager
@@ -66,8 +64,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private val startAttempts = SingBoxStartAttempts()
     private var tunDescriptor: ParcelFileDescriptor? = null
     private var myInterfaceName: String? = null
-    private var interfaceListener: InterfaceUpdateListener? = null
-    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var networkMonitor: SingBoxNetworkMonitor? = null
 
     override fun onBind(intent: Intent): IBinder? =
         if (intent.action == SERVICE_INTERFACE) super.onBind(intent) else null
@@ -217,6 +214,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     override fun onDestroy() {
         startAttempts.invalidate()
+        stopNetworkMonitor()
         stopBox()
         if (SingBoxStatus.read(this)?.state == SingBoxStatus.State.RUNNING) {
             SingBoxStatus.write(this, SingBoxStatus.State.STOPPED, "")
@@ -247,6 +245,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             }
             isolateCacheIfDue()
             setupLibbox()
+            ensureNetworkMonitor()
             SingBoxLog.append(this, "start: libbox ready")
             Libbox.checkConfig(content)
             SingBoxLog.append(this, "start: config checked")
@@ -451,6 +450,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         val configPath = preferences().getString(PREF_CONFIG_PATH, null)
             ?: error("sing-box config path is missing")
         val server = commandServer ?: error("sing-box command server is not running")
+        ensureNetworkMonitor()
         SingBoxLog.append(this, "reload: startOrReloadService begin")
         try {
             server.startOrReloadService(File(configPath).readText(), OverrideOptions())
@@ -636,43 +636,29 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         return owner
     }
 
+    // The monitor registers with the service, before any startOrReloadService.
+    @Synchronized
+    private fun ensureNetworkMonitor(): SingBoxNetworkMonitor? {
+        networkMonitor?.let { return it }
+        val manager = connectivity ?: return null
+        val monitor = SingBoxNetworkMonitor(manager)
+        networkMonitor = monitor
+        monitor.start()
+        return monitor
+    }
+
+    @Synchronized
+    private fun stopNetworkMonitor() {
+        networkMonitor?.stop()
+        networkMonitor = null
+    }
+
     override fun startDefaultInterfaceMonitor(listener: InterfaceUpdateListener) {
-        interfaceListener = listener
-        val manager = connectivity ?: return
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) = reportDefaultInterface(network)
-
-            override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) =
-                reportDefaultInterface(network)
-
-            override fun onLost(network: Network) {
-                interfaceListener?.updateDefaultInterface("", -1, false, false)
-            }
-        }
-        networkCallback = callback
-        manager.registerDefaultNetworkCallback(callback)
-        manager.activeNetwork?.let { reportDefaultInterface(it) }
+        ensureNetworkMonitor()?.attachListener(listener)
     }
 
     override fun closeDefaultInterfaceMonitor(listener: InterfaceUpdateListener) {
-        interfaceListener = null
-        val callback = networkCallback
-        networkCallback = null
-        if (callback != null) {
-            runCatching { connectivity?.unregisterNetworkCallback(callback) }
-        }
-    }
-
-    private fun reportDefaultInterface(network: Network) {
-        val listener = interfaceListener ?: return
-        val linkProperties = connectivity?.getLinkProperties(network) ?: return
-        val name = linkProperties.interfaceName ?: return
-        val index = runCatching { NetworkInterface.getByName(name)?.index ?: -1 }.getOrDefault(-1)
-        val capabilities = connectivity?.getNetworkCapabilities(network)
-        val metered = capabilities?.let {
-            !it.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-        } ?: false
-        listener.updateDefaultInterface(name, index, metered, false)
+        networkMonitor?.detachListener()
     }
 
     override fun getInterfaces(): NetworkInterfaceIterator {
