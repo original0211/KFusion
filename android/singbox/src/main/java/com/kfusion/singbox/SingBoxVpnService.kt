@@ -209,6 +209,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     // The next start settles the still-open attempt's death from the full record list.
     private fun harvestDeathLetter(workingDir: File) {
         val prefs = preferences()
+        if (startGate.get()) return
         if (!prefs.getBoolean(PREF_ATTEMPT_OPEN, false)) return
         val seq = prefs.getLong(PREF_ATTEMPT_SEQ, 0L)
         if (seq <= 0L) return
