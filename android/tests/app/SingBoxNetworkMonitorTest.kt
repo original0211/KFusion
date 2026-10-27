@@ -111,6 +111,76 @@ class SingBoxNetworkMonitorTest {
     }
 
     @Test
+    fun primeReplaysTheFreshNetworkInsteadOfTheStaleSeed() {
+        val delivered = mutableListOf<String?>()
+        val updates =
+            SingBoxInterfaceUpdates<String>(
+                lane = { runnable -> runnable.run() },
+                deliver = { delivered.add(it) },
+            )
+        updates.seed("stale")
+        updates.prime("wifi")
+        updates.attach()
+        assertEquals(listOf("wifi", "wifi"), delivered)
+    }
+
+    @Test
+    fun primeWithNoNetworkStillReplaysEmpty() {
+        val delivered = mutableListOf<String?>()
+        val updates =
+            SingBoxInterfaceUpdates<String>(
+                lane = { runnable -> runnable.run() },
+                deliver = { delivered.add(it) },
+            )
+        updates.seed("wifi")
+        updates.prime(null)
+        updates.attach()
+        assertEquals(listOf(null, null), delivered)
+    }
+
+    @Test
+    fun primeStaysSerializedUnderACallbackStorm() {
+        val executor = Executors.newSingleThreadExecutor()
+        try {
+            val inFlight = AtomicInteger(0)
+            val maxInFlight = AtomicInteger(0)
+            val delivered = AtomicInteger(0)
+            val updates =
+                SingBoxInterfaceUpdates<String>(
+                    lane = { runnable -> executor.execute(runnable) },
+                    deliver = {
+                        val now = inFlight.incrementAndGet()
+                        maxInFlight.updateAndGet { peak -> maxOf(peak, now) }
+                        Thread.sleep(1)
+                        delivered.incrementAndGet()
+                        inFlight.decrementAndGet()
+                    },
+                )
+            val threads =
+                (1..8).map { threadIndex ->
+                    Thread {
+                        repeat(25) { index ->
+                            val token = "net-$threadIndex-$index"
+                            updates.prime(token)
+                            updates.available(token)
+                            updates.changed(token)
+                            updates.lost(token)
+                        }
+                    }
+                }
+            threads.forEach { it.start() }
+            threads.forEach { it.join() }
+            executor.shutdown()
+            assertTrue(executor.awaitTermination(30, TimeUnit.SECONDS))
+            assertEquals(1, maxInFlight.get())
+            assertEquals(0, inFlight.get())
+            assertTrue(delivered.get() > 0)
+        } finally {
+            executor.shutdownNow()
+        }
+    }
+
+    @Test
     fun registrationIsClaimedOnceUntilReleased() {
         val registration = SingBoxMonitorRegistration()
         assertTrue(registration.begin())

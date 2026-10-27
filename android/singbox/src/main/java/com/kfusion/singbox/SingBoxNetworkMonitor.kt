@@ -28,6 +28,15 @@ class SingBoxInterfaceUpdates<T : Any>(
         lane(Runnable { deliver(current) })
     }
 
+    fun prime(network: T?) {
+        lane(
+            Runnable {
+                current = network
+                deliver(network)
+            },
+        )
+    }
+
     fun available(network: T) {
         lane(
             Runnable {
@@ -133,7 +142,9 @@ class SingBoxNetworkMonitor(private val connectivity: ConnectivityManager) {
     fun attachListener(next: InterfaceUpdateListener) {
         start()
         listener = next
-        updates?.attach()
+        // Queried at attach, not at registration: a snapshot taken while the
+        // previous core's VPN was still coming down may name a dead network.
+        updates?.prime(connectivity.activeNetwork)
     }
 
     fun detachListener() {
@@ -167,8 +178,13 @@ class SingBoxNetworkMonitor(private val connectivity: ConnectivityManager) {
             target.updateDefaultInterface("", -1, false, false)
             return
         }
-        val linkProperties = connectivity.getLinkProperties(network) ?: return
-        val name = linkProperties.interfaceName ?: return
+        val name = connectivity.getLinkProperties(network)?.interfaceName
+        if (name == null) {
+            // Never drop an update in silence: Go fills its interface list
+            // only when an update arrives, so no default beats nothing.
+            target.updateDefaultInterface("", -1, false, false)
+            return
+        }
         val index =
             runCatching { NetworkInterface.getByName(name)?.index ?: -1 }.getOrDefault(-1)
         // SFA always reports the default interface as not expensive.

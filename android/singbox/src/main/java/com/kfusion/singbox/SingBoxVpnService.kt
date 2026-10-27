@@ -66,6 +66,13 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private var myInterfaceName: String? = null
     private var networkMonitor: SingBoxNetworkMonitor? = null
 
+    override fun onCreate() {
+        super.onCreate()
+        // Registration warms up here so the system's first callback lands
+        // long before a box start asks for the listener.
+        ensureNetworkMonitor()
+    }
+
     override fun onBind(intent: Intent): IBinder? =
         if (intent.action == SERVICE_INTERFACE) super.onBind(intent) else null
 
