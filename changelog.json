@@ -2,6 +2,29 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.22",
+      "tag": "v0.2.22",
+      "date": "2026-10-27",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "ad99657",
+              "scope": "core",
+              "text": "A startup death's card now always names the death's category and stage coordinate. The bare \"exited during startup\" line was all a non-crash death ever showed: the system publishes the process exit record asynchronously, and it routinely missed the few seconds the card waited for it, so the record was filtered away as stale and nothing was appended at all. The card now always closes with diagnostic lines gated to this attempt: the newest exit record's category line — its reason, status or signal, time and description — or an explicit line saying the record is not published yet; the last stage mark the core left behind, whatever the death turns out to be; the first line of a crash report fresh enough to belong to this attempt, or a note that there is none; and the daemon log's last error line, when it has one. The wait for the record is widened to about five seconds, still far inside the start budget."
+            },
+            {
+              "id": "5a96621",
+              "scope": "core",
+              "text": "The service log's death block now quotes the stage-marker trail for any surfaced exit record, not only Go crashes. The marks are how a death gets its stage coordinate — the last phase the core reached before it died — but they were appended inside the crash-gated part of the block, so a death by signal or by the low-memory killer left the service log as bare as the card. Any new exit record being surfaced now carries the marks with it, written once even when a crash block follows."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.21",
       "tag": "v0.2.21",
       "date": "2026-10-27",
