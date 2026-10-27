@@ -160,16 +160,17 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
             }
         }
+        val workingDir = File(filesDir, "singbox")
         val crash =
             SingBoxCrashReport.unreadLines(
-                File(filesDir, "singbox"),
+                workingDir,
                 prefs.getLong(PREF_CRASH_SURFACED, 0L),
             )
         if (crash != null) {
             prefs.edit().putLong(PREF_CRASH_SURFACED, crash.first).apply()
             // A bare mtime bump from this process's own setup rotation has no lines.
             if (crash.second.isNotEmpty()) {
-                val head = SingBoxCrashReport.headLines(File(filesDir, "singbox"))
+                val head = SingBoxCrashReport.headLines(workingDir)
                 if (head.isNullOrEmpty()) {
                     SingBoxLog.append(this, "crash head: report unreadable")
                 } else {
@@ -179,6 +180,16 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
                 SingBoxLog.append(this, "go crash report tail:")
                 crash.second.forEach { line -> SingBoxLog.append(this, line.take(300)) }
+                if (SingBoxStageMarkers.fileIn(workingDir).isFile) {
+                    val marks = SingBoxStageMarkers.tailLines(workingDir)
+                    if (marks == null) {
+                        SingBoxLog.append(this, "stage mark: markers unreadable")
+                    } else {
+                        marks.forEach { line ->
+                            SingBoxLog.append(this, "stage mark: " + line.take(300))
+                        }
+                    }
+                }
             }
         }
     }

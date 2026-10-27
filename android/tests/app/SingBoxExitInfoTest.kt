@@ -2,6 +2,7 @@ package com.follow.clash
 
 import com.kfusion.singbox.SingBoxCrashReport
 import com.kfusion.singbox.SingBoxExitInfo
+import com.kfusion.singbox.SingBoxStageMarkers
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -254,5 +255,32 @@ class SingBoxExitInfoTest {
         val working = folder.newFolder("singbox")
         assertNull(SingBoxCrashReport.latestFileIn(working))
         assertNull(SingBoxCrashReport.headLines(working))
+    }
+
+    @Test
+    fun stageMarkersTailKeepsTheLastNonBlankLines() {
+        val working = folder.newFolder("singbox")
+        val body = "\n" + (1..10).joinToString("\n") { "mark $it" } + "\n"
+        SingBoxStageMarkers.fileIn(working).writeText(body)
+        val tail = SingBoxStageMarkers.tailLines(working, maxLines = 3)
+        assertEquals(listOf("mark 8", "mark 9", "mark 10"), tail)
+    }
+
+    @Test
+    fun stageMarkersTailStopsAtThirtyLinesByDefault() {
+        val working = folder.newFolder("singbox")
+        val body = (1..45).joinToString("\n") { "mark $it" }
+        SingBoxStageMarkers.fileIn(working).writeText(body)
+        val tail = SingBoxStageMarkers.tailLines(working)
+        assertNotNull(tail)
+        assertEquals(30, tail!!.size)
+        assertEquals("mark 16", tail.first())
+        assertEquals("mark 45", tail.last())
+    }
+
+    @Test
+    fun stageMarkersTailIsNullWithoutAMarkerFile() {
+        val working = folder.newFolder("singbox")
+        assertNull(SingBoxStageMarkers.tailLines(working))
     }
 }

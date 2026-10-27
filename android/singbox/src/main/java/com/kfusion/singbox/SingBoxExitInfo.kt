@@ -220,3 +220,21 @@ object SingBoxCrashReport {
         return modified to lines.filter { it.isNotBlank() }.takeLast(maxLines)
     }
 }
+
+object SingBoxStageMarkers {
+    const val FILE_NAME = "kfusion-stage-markers.log"
+
+    fun fileIn(workingDir: File): File = File(workingDir, FILE_NAME)
+
+    // Null when no marker file exists; a present file that fails to read also
+    // yields null, and the caller separates the two via fileIn().isFile.
+    fun tailLines(
+        workingDir: File,
+        maxLines: Int = 30,
+    ): List<String>? {
+        val file = fileIn(workingDir)
+        if (!file.isFile) return null
+        val lines = runCatching { file.readLines() }.getOrNull() ?: return null
+        return lines.filter { it.isNotBlank() }.takeLast(maxLines)
+    }
+}
