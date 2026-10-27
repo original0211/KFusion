@@ -183,9 +183,12 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         }
         val workingDir = File(context.filesDir, "singbox")
         lines += SingBoxStageMarkers.tailLineInWindow(workingDir, attempt?.since ?: epoch)
+        // Freshness is a property of the attempt, not of this poll: anchored
+        // to the poll's epoch, two polls of one attempt reached opposite
+        // verdicts over a single empty report file (field cards, v0.2.23).
         lines += SingBoxCrashReport.reasonLineIn(
             workingDir,
-            epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS,
+            (attempt?.since ?: epoch) - SingBoxStagedStart.ASSOCIATION_SLACK_MS,
         )
         SingBoxLog.lastErrorLine(context)?.let { lines += it }
         if (attempt != null) {

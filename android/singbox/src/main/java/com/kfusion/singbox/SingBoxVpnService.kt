@@ -201,7 +201,10 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         // Last line of the block, so the card's window always shows it even
         // when the tombstone carried no signal line of its own.
         if (goCrash) {
-            SingBoxLog.append(this, SingBoxCrashReport.reasonLineIn(workingDir, null))
+            SingBoxLog.append(
+                this,
+                SingBoxCrashReport.reasonLineIn(workingDir, crashWindowStart()),
+            )
         }
         harvestDeathLetter(workingDir)
     }
@@ -249,6 +252,15 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             prefs.edit().putLong(PREF_DEATH_LETTER_THROUGH, matched.timestamp).apply()
         }
         SingBoxLog.append(this, SingBoxDeathLetter.cardLine(letter))
+    }
+
+    // The same freshness window the card path uses for this attempt, so a
+    // report file earns one three-state verdict wherever it is evaluated.
+    private fun crashWindowStart(): Long? {
+        val prefs = preferences()
+        if (!prefs.getBoolean(PREF_ATTEMPT_OPEN, false)) return null
+        val since = prefs.getLong(PREF_ATTEMPT_SINCE, 0L)
+        return if (since > 0L) since - SingBoxStagedStart.ASSOCIATION_SLACK_MS else null
     }
 
     private fun appendStageMarks(workingDir: File): Boolean {
