@@ -112,8 +112,7 @@ void main() {
     test('the disc bite geometry has exactly one home', () {
       final definitions = libFiles()
           .where(
-            (file) =>
-                file.readAsStringSync().contains('class DiscGeometry'),
+            (file) => file.readAsStringSync().contains('class DiscGeometry'),
           )
           .map((file) => file.path)
           .toList();
