@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/liquid_glass.dart';
-import 'package:kfusion/ui/navigation_dock.dart';
+import 'package:kfusion/ui/elastic.dart';
 import 'package:kfusion/ui/popup.dart';
 import 'package:kfusion/ui/surface.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind, kPressTimeout;

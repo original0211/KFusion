@@ -5,7 +5,7 @@ import 'package:kfusion/ui/context.dart';
 import 'package:kfusion/ui/input.dart';
 import 'package:kfusion/ui/liquid_glass.dart';
 import 'package:kfusion/ui/motion.dart';
-import 'package:kfusion/ui/navigation_dock.dart';
+import 'package:kfusion/ui/elastic.dart';
 import 'package:kfusion/ui/shape.dart';
 import 'package:kfusion/ui/surface.dart';
 import 'package:kfusion/ui/typography.dart';

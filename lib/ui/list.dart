@@ -20,7 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'button.dart';
 import 'card.dart';
-import 'navigation_dock.dart';
+import 'elastic.dart';
 import 'open_container.dart';
 import 'popup.dart';
 import 'scaffold.dart';

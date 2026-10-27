@@ -24,7 +24,7 @@ import 'dialog.dart';
 import 'inherited.dart';
 import 'liquid_glass.dart';
 import 'loading.dart';
-import 'navigation_dock.dart';
+import 'elastic.dart';
 import 'popup.dart';
 import 'search_field.dart';
 import 'sheet.dart';

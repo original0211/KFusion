@@ -19,7 +19,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:material_ui/material_ui.dart';
 
 import 'liquid_glass.dart';
-import 'navigation_dock.dart' show ElasticPress, ElasticPressHandle;
+import 'elastic.dart' show ElasticPress, ElasticPressHandle;
 import 'text.dart';
 
 typedef PopupAnchorResolver = Rect? Function();
