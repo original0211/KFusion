@@ -214,4 +214,44 @@ class SingBoxExitInfoTest {
         assertNotNull(read)
         assertEquals(listOf("line 48", "line 49", "line 50"), read!!.second)
     }
+
+    @Test
+    fun crashReportHeadKeepsTheFirstNonBlankLines() {
+        val working = folder.newFolder("singbox")
+        val body = "\n" + (1..50).joinToString("\n") { "line $it" }
+        SingBoxCrashReport.fileIn(working).writeText(body)
+        val head = SingBoxCrashReport.headLines(working, maxLines = 3)
+        assertEquals(listOf("line 1", "line 2", "line 3"), head)
+    }
+
+    @Test
+    fun crashReportHeadStopsAtFortyLinesByDefault() {
+        val working = folder.newFolder("singbox")
+        val body = (1..50).joinToString("\n") { "line $it" }
+        SingBoxCrashReport.fileIn(working).writeText(body)
+        val head = SingBoxCrashReport.headLines(working)
+        assertNotNull(head)
+        assertEquals(40, head!!.size)
+        assertEquals("line 1", head.first())
+        assertEquals("line 40", head.last())
+    }
+
+    @Test
+    fun crashReportHeadReadsTheNewestReportFile() {
+        val working = folder.newFolder("singbox")
+        val older = SingBoxCrashReport.fileIn(working)
+        older.writeText("fatal error: older\n")
+        val newer = File(working, "CrashReport-Application.log")
+        newer.writeText("fatal error: newer\n")
+        assertTrue(newer.setLastModified(older.lastModified() + 60_000L))
+        assertEquals(newer, SingBoxCrashReport.latestFileIn(working))
+        assertEquals(listOf("fatal error: newer"), SingBoxCrashReport.headLines(working))
+    }
+
+    @Test
+    fun crashReportHeadIsNullWithoutAReport() {
+        val working = folder.newFolder("singbox")
+        assertNull(SingBoxCrashReport.latestFileIn(working))
+        assertNull(SingBoxCrashReport.headLines(working))
+    }
 }

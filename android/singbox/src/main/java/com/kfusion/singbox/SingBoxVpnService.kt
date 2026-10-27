@@ -172,6 +172,14 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             prefs.edit().putLong(PREF_CRASH_SURFACED, crash.first).apply()
             // A bare mtime bump from this process's own setup rotation has no lines.
             if (crash.second.isNotEmpty()) {
+                val head = SingBoxCrashReport.headLines(File(filesDir, "singbox"))
+                if (head.isNullOrEmpty()) {
+                    SingBoxLog.append(this, "crash head: report unreadable")
+                } else {
+                    head.forEach { line ->
+                        SingBoxLog.append(this, "crash head: " + line.take(300))
+                    }
+                }
                 SingBoxLog.append(this, "go crash report tail:")
                 crash.second.forEach { line -> SingBoxLog.append(this, line.take(300)) }
             }

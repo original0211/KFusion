@@ -191,6 +191,22 @@ object SingBoxExitInfo {
 object SingBoxCrashReport {
     fun fileIn(workingDir: File): File = File(workingDir, "CrashReport-.log")
 
+    // Rotated reports move into a subdirectory, so the newest match in the
+    // working directory itself is the live report.
+    fun latestFileIn(workingDir: File): File? =
+        workingDir.listFiles { file ->
+            file.isFile && file.name.startsWith("CrashReport-") && file.name.endsWith(".log")
+        }?.maxWithOrNull(compareBy({ it.lastModified() }, { it.name }))
+
+    fun headLines(
+        workingDir: File,
+        maxLines: Int = 40,
+    ): List<String>? {
+        val file = latestFileIn(workingDir) ?: return null
+        val lines = runCatching { file.readLines() }.getOrNull() ?: return null
+        return lines.filter { it.isNotBlank() }.take(maxLines)
+    }
+
     fun unreadLines(
         workingDir: File,
         seenModified: Long,
