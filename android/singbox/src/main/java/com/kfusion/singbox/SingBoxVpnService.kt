@@ -138,6 +138,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private fun surfaceLastDeath() {
         val prefs = preferences()
         var goCrash = false
+        var marksSurfaced = false
+        val workingDir = File(filesDir, "singbox")
         val exit = SingBoxExitInfo.latest(this)
         if (exit != null && exit.timestamp > prefs.getLong(PREF_EXIT_SURFACED, 0L)) {
             prefs.edit().putLong(PREF_EXIT_SURFACED, exit.timestamp).apply()
@@ -152,6 +154,9 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 ""
             }
             SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit) + attemptNote)
+            // Marks name the stage coordinate for any death category; the
+            // crash block below used to be the only surface that quoted them.
+            marksSurfaced = appendStageMarks(workingDir)
             if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
                 goCrash = true
                 val probe = SingBoxExitInfo.probeCrashHeadline(this)
@@ -170,7 +175,6 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
             }
         }
-        val workingDir = File(filesDir, "singbox")
         val crash =
             SingBoxCrashReport.unreadLines(
                 workingDir,
@@ -191,16 +195,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
                 SingBoxLog.append(this, "go crash report tail:")
                 crash.second.forEach { line -> SingBoxLog.append(this, line.take(300)) }
-                if (SingBoxStageMarkers.fileIn(workingDir).isFile) {
-                    val marks = SingBoxStageMarkers.tailLines(workingDir)
-                    if (marks == null) {
-                        SingBoxLog.append(this, "stage mark: markers unreadable")
-                    } else {
-                        marks.forEach { line ->
-                            SingBoxLog.append(this, "stage mark: " + line.take(300))
-                        }
-                    }
-                }
+                if (!marksSurfaced) appendStageMarks(workingDir)
             }
         }
         // Last line of the block, so the card's window always shows it even
@@ -208,6 +203,19 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         if (goCrash) {
             SingBoxLog.append(this, SingBoxCrashReport.reasonLine(workingDir))
         }
+    }
+
+    private fun appendStageMarks(workingDir: File): Boolean {
+        if (!SingBoxStageMarkers.fileIn(workingDir).isFile) return false
+        val marks = SingBoxStageMarkers.tailLines(workingDir)
+        if (marks == null) {
+            SingBoxLog.append(this, "stage mark: markers unreadable")
+        } else {
+            marks.forEach { line ->
+                SingBoxLog.append(this, "stage mark: " + line.take(300))
+            }
+        }
+        return true
     }
 
     private fun runCheck(configPath: String?, requestId: Long) {
