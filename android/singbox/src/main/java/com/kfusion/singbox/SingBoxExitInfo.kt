@@ -44,6 +44,13 @@ object SingBoxExitInfo {
 
     fun summaryLine(record: Record): String = "process exit: ${exitTail(record)}"
 
+    fun recordLine(record: Record?): String =
+        if (record == null) {
+            "exit record: not published yet"
+        } else {
+            "exit record: ${exitTail(record)}"
+        }
+
     fun attemptDeathLine(seq: Long, level: Int, levelName: String, record: Record): String {
         val label = SingBoxStagedStart.labelForIndex(level)
         val where = if (level >= 0) {
@@ -212,6 +219,13 @@ object SingBoxCrashReport {
         return "crash reason: " + (first?.take(300) ?: "report unreadable")
     }
 
+    // A report older than the attempt's window belongs to an earlier death.
+    fun freshReasonLine(workingDir: File, notBeforeMs: Long): String {
+        val file = latestFileIn(workingDir) ?: return "crash reason: no fresh report"
+        if (file.lastModified() < notBeforeMs) return "crash reason: no fresh report"
+        return reasonLine(workingDir)
+    }
+
     fun unreadLines(
         workingDir: File,
         seenModified: Long,
@@ -241,5 +255,12 @@ object SingBoxStageMarkers {
         if (!file.isFile) return null
         val lines = runCatching { file.readLines() }.getOrNull() ?: return null
         return lines.filter { it.isNotBlank() }.takeLast(maxLines)
+    }
+
+    fun tailLine(workingDir: File): String {
+        if (!fileIn(workingDir).isFile) return "stage mark: no marks recorded"
+        val tail = tailLines(workingDir, 1) ?: return "stage mark: markers unreadable"
+        val last = tail.lastOrNull() ?: return "stage mark: no marks recorded"
+        return "stage mark: " + last.take(300)
     }
 }

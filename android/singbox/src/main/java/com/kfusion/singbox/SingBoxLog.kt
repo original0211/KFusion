@@ -23,6 +23,15 @@ object SingBoxLog {
     fun tail(context: Context, maxLines: Int): String =
         tailFrom(directory(context), maxLines)
 
+    fun lastErrorLine(context: Context): String? =
+        lastErrorLineIn(readLines(directory(context)))
+
+    // Stored lines carry the append timestamp as their first token; the card
+    // line drops it and keeps the daemon's own text.
+    fun lastErrorLineIn(lines: List<String>): String? =
+        lines.lastOrNull { it.contains("ERROR") || it.contains("FATAL") }
+            ?.let { line -> "daemon error: " + line.substringAfter(' ').take(300) }
+
     // Card surfaces skip raw tombstone dumps; the full lines stay in the log file.
     fun cardTail(context: Context, maxLines: Int): String =
         cardTailFrom(directory(context), maxLines)

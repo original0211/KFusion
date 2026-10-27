@@ -2,6 +2,7 @@ package com.follow.clash
 
 import com.kfusion.singbox.SingBoxCrashReport
 import com.kfusion.singbox.SingBoxExitInfo
+import com.kfusion.singbox.SingBoxLog
 import com.kfusion.singbox.SingBoxStageMarkers
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -312,5 +313,86 @@ class SingBoxExitInfoTest {
     fun stageMarkersTailIsNullWithoutAMarkerFile() {
         val working = folder.newFolder("singbox")
         assertNull(SingBoxStageMarkers.tailLines(working))
+    }
+
+    @Test
+    fun recordLineNamesANonNativeDeathCategory() {
+        val record = SingBoxExitInfo.Record(2, 1_761_000_000_000L, "", 100, status = 9)
+        val line = SingBoxExitInfo.recordLine(record)
+        assertTrue(line.startsWith("exit record: SIGNALED(2) SIGKILL(9) at "))
+    }
+
+    @Test
+    fun recordLineIsAnExplicitAbsenceWithoutARecord() {
+        assertEquals("exit record: not published yet", SingBoxExitInfo.recordLine(null))
+    }
+
+    @Test
+    fun stageMarkTailLineTakesTheLastMarkForAnyDeath() {
+        val working = folder.newFolder("singbox")
+        val body = (1..5).joinToString("\n") { "mark $it" }
+        SingBoxStageMarkers.fileIn(working).writeText(body)
+        assertEquals("stage mark: mark 5", SingBoxStageMarkers.tailLine(working))
+    }
+
+    @Test
+    fun stageMarkTailLineIsAnExplicitAbsenceWithoutMarks() {
+        val working = folder.newFolder("singbox")
+        assertEquals("stage mark: no marks recorded", SingBoxStageMarkers.tailLine(working))
+        SingBoxStageMarkers.fileIn(working).writeText("\n\n")
+        assertEquals("stage mark: no marks recorded", SingBoxStageMarkers.tailLine(working))
+    }
+
+    @Test
+    fun freshCrashReasonQuotesAReportInsideTheWindow() {
+        val working = folder.newFolder("singbox")
+        val report = SingBoxCrashReport.fileIn(working)
+        report.writeText("panic: fresh boom\n")
+        assertTrue(report.setLastModified(2_000L))
+        assertEquals(
+            "crash reason: panic: fresh boom",
+            SingBoxCrashReport.freshReasonLine(working, 1_000L),
+        )
+    }
+
+    @Test
+    fun freshCrashReasonRefusesAStaleReportAndAMissingOne() {
+        val working = folder.newFolder("singbox")
+        val report = SingBoxCrashReport.fileIn(working)
+        report.writeText("panic: older boom\n")
+        assertTrue(report.setLastModified(1_000L))
+        assertEquals(
+            "crash reason: no fresh report",
+            SingBoxCrashReport.freshReasonLine(working, 2_000L),
+        )
+        val empty = folder.newFolder("empty")
+        assertEquals(
+            "crash reason: no fresh report",
+            SingBoxCrashReport.freshReasonLine(empty, 0L),
+        )
+    }
+
+    @Test
+    fun daemonErrorLineTakesTheLastErrorOrFatalLine() {
+        val lines = listOf(
+            "18:22:10.000 sing-box: [37mDEBUG[0m[0000] dns: lookup domain",
+            "18:22:11.000 sing-box: [31mERROR[0m[0001] start router: boom",
+            "18:22:12.000 sing-box: [33mWARN[0m[0002] router: slow",
+            "18:22:13.000 sing-box: [31mFATAL[0m[0003] later failure",
+        )
+        assertEquals(
+            "daemon error: sing-box: [31mFATAL[0m[0003] later failure",
+            SingBoxLog.lastErrorLineIn(lines),
+        )
+    }
+
+    @Test
+    fun daemonErrorLineIsAbsentWithoutAnErrorLine() {
+        val lines = listOf(
+            "18:22:10.000 start: begin",
+            "18:22:11.000 sing-box: [33mWARN[0m[0000] router: slow",
+        )
+        assertNull(SingBoxLog.lastErrorLineIn(lines))
+        assertNull(SingBoxLog.lastErrorLineIn(emptyList()))
     }
 }

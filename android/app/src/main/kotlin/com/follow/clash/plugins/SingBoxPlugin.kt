@@ -10,8 +10,10 @@ import androidx.core.content.ContextCompat
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
+import com.kfusion.singbox.SingBoxCrashReport
 import com.kfusion.singbox.SingBoxExitInfo
 import com.kfusion.singbox.SingBoxLog
+import com.kfusion.singbox.SingBoxStageMarkers
 import com.kfusion.singbox.SingBoxStagedStart
 import com.kfusion.singbox.SingBoxStatus
 import com.kfusion.singbox.SingBoxVpnService
@@ -21,6 +23,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
+import java.io.File
 import kotlin.concurrent.thread
 
 class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
@@ -127,31 +130,62 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     // An exit record is quoted only when the mirrored ledger ties it to this poll's attempt.
     private fun deathMessage(context: Context, epoch: Long): String {
         val generic = "sing-box 进程在启动中退出"
-        val attempt = SingBoxStatus.readAttempt(context) ?: return generic
-        if (attempt.since < epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS) return generic
-        val settled = SingBoxDeathGate.awaitSettled(
-            DEATH_RECORD_ATTEMPTS,
-            { Thread.sleep(DEATH_RECORD_POLL_MS) },
-            {
-                SingBoxExitInfo.latest(context)?.takeIf {
-                    SingBoxStagedStart.isAttemptDeath(true, it.timestamp, attempt.since)
+        val parts = mutableListOf(generic)
+        var settled: SingBoxDeathGate.Settled? = null
+        val attempt = SingBoxStatus.readAttempt(context)
+        if (attempt != null &&
+            attempt.since >= epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS
+        ) {
+            settled = SingBoxDeathGate.awaitSettled(
+                DEATH_RECORD_ATTEMPTS,
+                { Thread.sleep(DEATH_RECORD_POLL_MS) },
+                {
+                    SingBoxExitInfo.latest(context)?.takeIf {
+                        SingBoxStagedStart.isAttemptDeath(true, it.timestamp, attempt.since)
+                    }
+                },
+            ) { SingBoxExitInfo.probeCrashHeadline(context) }
+            val found = settled
+            if (found != null) {
+                if (found.headline == null) {
+                    found.miss?.let { miss ->
+                        SingBoxLog.append(context, SingBoxExitInfo.headlineMissLine(miss))
+                    }
                 }
-            },
-        ) { SingBoxExitInfo.probeCrashHeadline(context) } ?: return generic
-        if (settled.headline == null) {
-            settled.miss?.let { miss ->
-                SingBoxLog.append(context, SingBoxExitInfo.headlineMissLine(miss))
+                found.headline?.let { parts += it }
+                parts += SingBoxExitInfo.attemptDeathLine(
+                    attempt.seq,
+                    attempt.level,
+                    attempt.levelName,
+                    found.record,
+                )
             }
         }
-        val parts = mutableListOf(generic)
-        settled.headline?.let { parts += it }
-        parts += SingBoxExitInfo.attemptDeathLine(
-            attempt.seq,
-            attempt.level,
-            attempt.levelName,
-            settled.record,
-        )
+        parts += diagnosticsLines(context, epoch, settled?.record)
         return parts.joinToString("；")
+    }
+
+    // Epoch-gated throughout: no line here can quote a previous death.
+    private fun diagnosticsLines(
+        context: Context,
+        epoch: Long,
+        settledRecord: SingBoxExitInfo.Record?,
+    ): List<String> {
+        val lines = mutableListOf<String>()
+        if (settledRecord == null) {
+            val windowStart = epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS
+            val fresh = SingBoxExitInfo.latest(context)
+                ?.takeIf { it.timestamp >= windowStart }
+            lines += SingBoxExitInfo.recordLine(fresh)
+        }
+        val workingDir = File(context.filesDir, "singbox")
+        lines += SingBoxStageMarkers.tailLine(workingDir)
+        lines += SingBoxCrashReport.freshReasonLine(
+            workingDir,
+            epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS,
+        )
+        SingBoxLog.lastErrorLine(context)?.let { lines += it }
+        return lines
     }
 
     private fun stopInFlightStart(context: Context) {
@@ -254,7 +288,8 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         const val STOP_TIMEOUT_MS = 5_000L
         const val POLL_INTERVAL_MS = 200L
         const val LOG_TAIL_LINES = 6
-        const val DEATH_RECORD_ATTEMPTS = 13
+        // The exit record lags the pid's death; the old ~3s window missed it.
+        const val DEATH_RECORD_ATTEMPTS = 21
         const val DEATH_RECORD_POLL_MS = 250L
     }
 }
