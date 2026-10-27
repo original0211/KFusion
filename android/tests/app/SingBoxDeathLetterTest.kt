@@ -163,4 +163,68 @@ class SingBoxDeathLetterTest {
     fun readFromAMissingFileIsNull() {
         assertNull(SingBoxDeathLetter.readFrom(folder.newFolder("empty")))
     }
+
+    @Test
+    fun theFieldTimelineDeliversThePreviousDeathToTheNextCard() {
+        // v0.2.23, 22:33-22:39 replayed at ledger level: A dies; B is up
+        // within a second, before A's record is published, so B's harvest
+        // writes an unmatched letter for A; B dies and its record lands;
+        // C starts minutes later. C's card must carry B's letter, and A's
+        // stale unmatched letter must not speak on C's card.
+        val working = folder.newFolder("singbox")
+        val aSince = 100_000L
+        val bSince = 160_000L
+        val atBsHarvest = listOf(record("com.follow.clash", 90_000L))
+        val aPicked = SingBoxDeathLetter.select(atBsHarvest, aSince, consumedThrough = 0L)
+        assertNull(aPicked)
+        val aLetter =
+            SingBoxDeathLetter.Letter(
+                seq = 1L,
+                since = aSince,
+                scanned = atBsHarvest.size,
+                record = null,
+                newestOther = SingBoxDeathLetter.newestOtherOf(atBsHarvest),
+            )
+        SingBoxDeathLetter.writeTo(working, aLetter)
+
+        val bDeath = record("com.follow.clash:singbox", 190_000L)
+        val atCsHarvest = listOf(bDeath, record("com.follow.clash", 90_000L))
+        val bPicked = SingBoxDeathLetter.select(atCsHarvest, bSince, consumedThrough = 0L)
+        assertEquals(190_000L, bPicked?.timestamp)
+        val bLetter =
+            SingBoxDeathLetter.Letter(
+                seq = 2L,
+                since = bSince,
+                scanned = atCsHarvest.size,
+                record = bPicked,
+                newestOther = null,
+            )
+        SingBoxDeathLetter.writeTo(working, bLetter)
+
+        val onCsCard = SingBoxDeathLetter.lineFor(SingBoxDeathLetter.readFrom(working), 3L)
+        assertEquals(SingBoxDeathLetter.cardLine(bLetter), onCsCard)
+        assertTrue(onCsCard!!.contains("attempt #2 died:"))
+        assertNull(SingBoxDeathLetter.lineFor(aLetter, 3L))
+    }
+
+    @Test
+    fun aStagedDeathsLetterReachesTheNextCardThroughTheFile() {
+        // A staged start walks several levels under one seq (its level is a
+        // field, not a seq), so the letter it leaves behind is keyed by the
+        // start's single seq and the next attempt quotes it like any other.
+        val working = folder.newFolder("singbox")
+        val letter =
+            SingBoxDeathLetter.Letter(
+                seq = 4L,
+                since = 300_000L,
+                scanned = 2,
+                record = record("com.follow.clash:singbox", 330_000L),
+                newestOther = null,
+            )
+        SingBoxDeathLetter.writeTo(working, letter)
+        val read = SingBoxDeathLetter.readFrom(working)
+        assertEquals(SingBoxDeathLetter.cardLine(letter), SingBoxDeathLetter.lineFor(read, 5L))
+        assertEquals(SingBoxDeathLetter.cardLine(letter), SingBoxDeathLetter.lineFor(read, 4L))
+        assertNull(SingBoxDeathLetter.lineFor(read, 6L))
+    }
 }

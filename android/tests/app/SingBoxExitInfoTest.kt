@@ -4,6 +4,7 @@ import com.kfusion.singbox.SingBoxCrashReport
 import com.kfusion.singbox.SingBoxExitInfo
 import com.kfusion.singbox.SingBoxLog
 import com.kfusion.singbox.SingBoxStageMarkers
+import com.kfusion.singbox.SingBoxStagedStart
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -472,6 +473,38 @@ class SingBoxExitInfoTest {
         assertEquals(
             "daemon error: sing-box: [31mERROR[0m[0001] start router: boom",
             SingBoxLog.lastErrorLineIn(lines),
+        )
+    }
+
+    @Test
+    fun crashReasonWindowAnchoredToTheAttemptAgreesAcrossPolls() {
+        // The v0.2.23 field case: one empty report file, two evaluations of
+        // the same attempt. Both card paths now pass the attempt's window
+        // (attempt start minus the association slack), never a poll epoch,
+        // so every evaluation of one file state returns one verdict.
+        val working = folder.newFolder("singbox")
+        val report = SingBoxCrashReport.fileIn(working)
+        report.writeText("")
+        val attemptSince = 200_000L
+        val window = attemptSince - SingBoxStagedStart.ASSOCIATION_SLACK_MS
+        assertTrue(report.setLastModified(attemptSince - 1_000L))
+        val firstPoll = SingBoxCrashReport.reasonLineIn(working, window)
+        val secondPoll = SingBoxCrashReport.reasonLineIn(working, window)
+        assertEquals("crash reason: report unreadable", firstPoll)
+        assertEquals(firstPoll, secondPoll)
+    }
+
+    @Test
+    fun crashReasonWindowCallsAReportOlderThanTheAttemptStale() {
+        val working = folder.newFolder("singbox")
+        val report = SingBoxCrashReport.fileIn(working)
+        report.writeText("")
+        val attemptSince = 200_000L
+        val window = attemptSince - SingBoxStagedStart.ASSOCIATION_SLACK_MS
+        assertTrue(report.setLastModified(window - 1L))
+        assertEquals(
+            "crash reason: no fresh report",
+            SingBoxCrashReport.reasonLineIn(working, window),
         )
     }
 }
