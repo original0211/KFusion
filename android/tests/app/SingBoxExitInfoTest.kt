@@ -444,4 +444,34 @@ class SingBoxExitInfoTest {
         assertNull(SingBoxLog.lastErrorLineIn(lines))
         assertNull(SingBoxLog.lastErrorLineIn(emptyList()))
     }
+
+    @Test
+    fun daemonErrorLineIgnoresANoerrorDnsAnswer() {
+        val lines = listOf(
+            "20:10:26.494 sing-box: [37mDEBUG[0m[0000] dns: exchanged raw.githubusercontent.com NOERROR 492",
+            "20:10:27.478 sing-box: [32mINFO[0m[0000] network updated",
+        )
+        assertNull(SingBoxLog.lastErrorLineIn(lines))
+    }
+
+    @Test
+    fun daemonErrorLineIgnoresErrorWordsOutsideTheLevelField() {
+        val lines = listOf(
+            "20:10:26.494 sing-box: [32mINFO[0m[0000] router: upstream said ERROR twice",
+            "20:10:27.478 start failed: ERROR while dialing",
+        )
+        assertNull(SingBoxLog.lastErrorLineIn(lines))
+    }
+
+    @Test
+    fun daemonErrorLineIsNotShadowedByALaterNoerrorLine() {
+        val lines = listOf(
+            "20:10:26.494 sing-box: [31mERROR[0m[0001] start router: boom",
+            "20:10:27.478 sing-box: [37mDEBUG[0m[0000] dns: exchanged example.com NOERROR 12",
+        )
+        assertEquals(
+            "daemon error: sing-box: [31mERROR[0m[0001] start router: boom",
+            SingBoxLog.lastErrorLineIn(lines),
+        )
+    }
 }

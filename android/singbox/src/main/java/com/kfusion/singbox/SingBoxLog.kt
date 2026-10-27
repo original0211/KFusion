@@ -13,6 +13,10 @@ object SingBoxLog {
 
     private val lock = Any()
     private val stamp = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+    private val ansiPattern = Regex("(?:\u001B)?\\[[0-9;]*m")
+    private val levelPattern =
+        Regex("""^sing-box:\s*(TRACE|DEBUG|INFO|WARN|ERROR|FATAL)(?=[\[\s:])""")
+    private val errorLevels = setOf("ERROR", "FATAL")
 
     private fun directory(context: Context) = File(context.filesDir, "singbox")
 
@@ -29,8 +33,15 @@ object SingBoxLog {
     // Stored lines carry the append timestamp as their first token; the card
     // line drops it and keeps the daemon's own text.
     fun lastErrorLineIn(lines: List<String>): String? =
-        lines.lastOrNull { it.contains("ERROR") || it.contains("FATAL") }
+        lines.lastOrNull { daemonLevel(it) in errorLevels }
             ?.let { line -> "daemon error: " + line.substringAfter(' ').take(300) }
+
+    // The daemon's level is a field, not a substring: a DEBUG line whose DNS
+    // answer spells NOERROR must not pose as an error line.
+    private fun daemonLevel(line: String): String? {
+        val body = ansiPattern.replace(line, "").substringAfter(' ', "")
+        return levelPattern.find(body)?.groupValues?.get(1)
+    }
 
     // Card surfaces skip raw tombstone dumps; the full lines stay in the log file.
     fun cardTail(context: Context, maxLines: Int): String =
