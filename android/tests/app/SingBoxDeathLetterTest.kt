@@ -3,6 +3,7 @@ package com.follow.clash
 import com.kfusion.singbox.SingBoxDeathLetter
 import com.kfusion.singbox.SingBoxExitInfo
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -226,5 +227,117 @@ class SingBoxDeathLetterTest {
         assertEquals(SingBoxDeathLetter.cardLine(letter), SingBoxDeathLetter.lineFor(read, 5L))
         assertEquals(SingBoxDeathLetter.cardLine(letter), SingBoxDeathLetter.lineFor(read, 4L))
         assertNull(SingBoxDeathLetter.lineFor(read, 6L))
+    }
+
+    @Test
+    fun harvestSkipsSeqLessAndAlreadyLetteredAttempts() {
+        assertFalse(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 0L,
+                letterSeq = null,
+                open = true,
+                bornToken = 0L,
+                closedToken = 0L,
+                currentToken = 9L,
+            ),
+        )
+        assertFalse(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = 7L,
+                open = false,
+                bornToken = 0L,
+                closedToken = 0L,
+                currentToken = 9L,
+            ),
+        )
+    }
+
+    @Test
+    fun harvestSkipsAttemptsTheCurrentIncarnationOwnsOrSettled() {
+        assertFalse(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = null,
+                open = true,
+                bornToken = 9L,
+                closedToken = 0L,
+                currentToken = 9L,
+            ),
+        )
+        assertFalse(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = null,
+                open = false,
+                bornToken = 5L,
+                closedToken = 5L,
+                currentToken = 9L,
+            ),
+        )
+    }
+
+    @Test
+    fun harvestTakesOpenForeignAndClosedUnidentifiedAttempts() {
+        assertTrue(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = null,
+                open = true,
+                bornToken = 5L,
+                closedToken = 0L,
+                currentToken = 9L,
+            ),
+        )
+        assertTrue(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = null,
+                open = false,
+                bornToken = 5L,
+                closedToken = 7L,
+                currentToken = 9L,
+            ),
+        )
+    }
+
+    @Test
+    fun theUpgradeTimelineDeliversAClosedAttemptsLetter() {
+        // C (old per-level seq 7) died and its ledger closed stamp-less (token 0).
+        assertTrue(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = null,
+                open = false,
+                bornToken = 0L,
+                closedToken = 0L,
+                currentToken = 99L,
+            ),
+        )
+        val working = folder.newFolder("singbox")
+        val cDeath = record("com.follow.clash:singbox", 400_000L)
+        val picked = SingBoxDeathLetter.select(listOf(cDeath), 300_000L, consumedThrough = 0L)
+        val letter =
+            SingBoxDeathLetter.Letter(
+                seq = 7L,
+                since = 300_000L,
+                scanned = 1,
+                record = picked,
+                newestOther = null,
+            )
+        SingBoxDeathLetter.writeTo(working, letter)
+        val read = SingBoxDeathLetter.readFrom(working)
+        assertEquals(SingBoxDeathLetter.cardLine(letter), SingBoxDeathLetter.lineFor(read, 8L))
+        assertNull(SingBoxDeathLetter.lineFor(read, 9L))
+        assertFalse(
+            SingBoxDeathLetter.shouldHarvest(
+                seq = 7L,
+                letterSeq = read?.seq,
+                open = false,
+                bornToken = 0L,
+                closedToken = 0L,
+                currentToken = 99L,
+            ),
+        )
     }
 }

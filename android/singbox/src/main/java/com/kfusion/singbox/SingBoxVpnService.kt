@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Debug
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
+import android.os.Process
 import android.provider.Settings
 import android.system.OsConstants
 import androidx.core.app.NotificationCompat
@@ -67,8 +68,14 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private var myInterfaceName: String? = null
     private var networkMonitor: SingBoxNetworkMonitor? = null
 
+    // Ledger stamps name the incarnation that bore or settled an attempt (0 = pre-stamp build).
+    private var incarnationToken: Long = 0L
+
     override fun onCreate() {
         super.onCreate()
+        incarnationToken =
+            (System.currentTimeMillis() shl 20) or (Process.myPid().toLong() and 0xFFFFF)
+        if (incarnationToken == 0L) incarnationToken = 1L
         // Registration warms up here so the system's first callback lands
         // long before a box start asks for the listener.
         ensureNetworkMonitor()
@@ -209,7 +216,6 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         harvestDeathLetter(workingDir)
     }
 
-    // The next start settles the still-open attempt's death from the full record list.
     private fun harvestDeathLetter(workingDir: File) {
         if (startGate.get()) return
         harvestOpenAttempt(workingDir)
@@ -220,10 +226,18 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     // legitimately held by the new start there, so it does not apply.
     private fun harvestOpenAttempt(workingDir: File) {
         val prefs = preferences()
-        if (!prefs.getBoolean(PREF_ATTEMPT_OPEN, false)) return
         val seq = prefs.getLong(PREF_ATTEMPT_SEQ, 0L)
-        if (seq <= 0L) return
-        if (SingBoxDeathLetter.readFrom(workingDir)?.seq == seq) return
+        if (!SingBoxDeathLetter.shouldHarvest(
+                seq = seq,
+                letterSeq = SingBoxDeathLetter.readFrom(workingDir)?.seq,
+                open = prefs.getBoolean(PREF_ATTEMPT_OPEN, false),
+                bornToken = prefs.getLong(PREF_ATTEMPT_BORN, 0L),
+                closedToken = prefs.getLong(PREF_ATTEMPT_CLOSED, 0L),
+                currentToken = incarnationToken,
+            )
+        ) {
+            return
+        }
         val records = SingBoxExitInfo.all(this)
         if (records == null) {
             // Log the miss so a silent platform refusal cannot pass for an
@@ -478,13 +492,17 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         } else {
             System.currentTimeMillis()
         }
-        prefs.edit()
+        val editor = prefs.edit()
             .putBoolean(PREF_ATTEMPT_OPEN, true)
             .putInt(PREF_ATTEMPT_LEVEL, level)
             .putString(PREF_ATTEMPT_LEVEL_NAME, levelName)
             .putLong(PREF_ATTEMPT_SINCE, since)
             .putLong(PREF_ATTEMPT_SEQ, seq)
-            .commit()
+        if (!sameAttempt) {
+            editor.putLong(PREF_ATTEMPT_BORN, incarnationToken)
+            editor.remove(PREF_ATTEMPT_CLOSED)
+        }
+        editor.commit()
         SingBoxStatus.writeAttempt(
             this,
             SingBoxStatus.Attempt(seq, level, levelName, since),
@@ -495,6 +513,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         preferences().edit()
             .putBoolean(PREF_ATTEMPT_OPEN, false)
             .putInt(PREF_ATTEMPT_LEVEL, SingBoxStagedStart.NORMAL_LEVEL)
+            .putLong(PREF_ATTEMPT_CLOSED, incarnationToken)
             .commit()
         SingBoxStatus.clearAttemptMirror(this)
     }
@@ -935,6 +954,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         private const val PREF_ATTEMPT_LEVEL_NAME = "attempt_level_name"
         private const val PREF_ATTEMPT_SINCE = "attempt_since"
         private const val PREF_ATTEMPT_SEQ = "attempt_seq"
+        private const val PREF_ATTEMPT_BORN = "attempt_born_incarnation"
+        private const val PREF_ATTEMPT_CLOSED = "attempt_closed_incarnation"
         private const val PREF_CACHE_ISOLATED_FOR = "cache_isolated_for"
         private const val PREF_DEATH_LETTER_THROUGH = "death_letter_through"
         private const val PREFS_NAME = "singbox_service"

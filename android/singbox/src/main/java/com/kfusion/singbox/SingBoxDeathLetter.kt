@@ -16,6 +16,22 @@ object SingBoxDeathLetter {
 
     fun fileIn(directory: File): File = File(directory, "death-letter.txt")
 
+    // Whether the ledger's latest attempt still owes a letter; the cases live in SingBoxDeathLetterTest.
+    fun shouldHarvest(
+        seq: Long,
+        letterSeq: Long?,
+        open: Boolean,
+        bornToken: Long,
+        closedToken: Long,
+        currentToken: Long,
+    ): Boolean {
+        if (seq <= 0L) return false
+        if (letterSeq == seq) return false
+        if (bornToken != 0L && bornToken == currentToken) return false
+        if (!open && closedToken != 0L && closedToken == bornToken) return false
+        return true
+    }
+
     // The earliest sing-box record at or after the attempt's start is its death.
     fun select(
         records: List<SingBoxExitInfo.Record>,
