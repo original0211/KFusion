@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.20 (2026-10-27)
+
+**Bug Fixes**
+
+- **core** The sing-box interface monitor now warms up before a start and cannot lose a delivery in silence. Registration used to sit inside the start path, a breath ahead of the start itself, and the core could come up before any platform update had ever reached it — its interface list stayed empty and every dial in the rule-set downloads that follow a start reported no available network interface. The monitor registers when the service is created now, so the system's updates collect in the serialized lane ahead of any start; attaching a listener primes it from the network the system reports at that moment, seeded and replayed in one lane step, never from a snapshot taken at registration time. And a delivery whose link properties are not readable yet is no longer dropped: the cleared reading is delivered instead, which still has the core refresh its interface list, and the reading that lands later corrects the default. (c0e72c5)
+- **core** The crash report's first line now closes the death block in the service log. A native death already surfaced the report's head, its tail and the stage-marker trail, but the line that names the failure sits at the top of that block — above the window a failure card shows. The last line of the block is now a crash reason line carrying the report's first non-empty line verbatim, so the reason reads off the card directly; a report that is missing or unreadable leaves a one-line note saying so. (b4816b5)
+
 ## v0.2.19 (2026-10-27)
 
 **Bug Fixes**
