@@ -2,6 +2,7 @@ package com.follow.clash
 
 import com.kfusion.singbox.SingBoxCrashReport
 import com.kfusion.singbox.SingBoxExitInfo
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
