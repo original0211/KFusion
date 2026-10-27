@@ -1,0 +1,48 @@
+diff --git a/daemon/instance.go b/daemon/instance.go
+index bb6a340..8eee03a 100644
+--- a/daemon/instance.go
++++ b/daemon/instance.go
+@@ -6,6 +6,7 @@ import (
+ 
+ 	"github.com/sagernet/sing-box"
+ 	"github.com/sagernet/sing-box/adapter"
++	"github.com/sagernet/sing-box/common/kfmark"
+ 	"github.com/sagernet/sing-box/common/trafficcontrol"
+ 	"github.com/sagernet/sing-box/common/urltest"
+ 	C "github.com/sagernet/sing-box/constant"
+@@ -83,6 +84,7 @@ type OverrideOptions struct {
+ }
+ 
+ func (s *StartedService) newInstance(ctx context.Context, profileContent string, overrideOptions *OverrideOptions, reloading bool) (*Instance, error) {
++	kfmark.Mark("daemon.new-instance.begin")
+ 	selectedLocale := locale.FromContext(ctx)
+ 	ctx, _ = locale.ContextWithLocale(s.ctx, selectedLocale.Locale)
+ 	ctx = service.ExtendContext(ctx)
+@@ -124,6 +126,7 @@ func (s *StartedService) newInstance(ctx context.Context, profileContent string,
+ 		cancel:                cancel,
+ 		urlTestHistoryStorage: urlTestHistoryStorage,
+ 	}
++	kfmark.Mark("daemon.box-new.begin")
+ 	boxInstance, err := box.New(box.Options{
+ 		Context:           ctx,
+ 		Options:           options,
+@@ -133,6 +136,7 @@ func (s *StartedService) newInstance(ctx context.Context, profileContent string,
+ 		cancel()
+ 		return nil, err
+ 	}
++	kfmark.Mark("daemon.box-new.ok")
+ 	i.instance = boxInstance
+ 	i.connectionManager = service.FromContext[adapter.ConnectionManager](ctx)
+ 	i.clashMode = service.PtrFromContext[clashmode.Manager](ctx)
+@@ -163,7 +167,10 @@ func attachInstance(ctx context.Context) *Instance {
+ }
+ 
+ func (i *Instance) Start() error {
+-	return i.instance.Start()
++	kfmark.Mark("daemon.instance-start.begin")
++	err := i.instance.Start()
++	kfmark.Mark("daemon.instance-start.end")
++	return err
+ }
+ 
+ func (i *Instance) Close() error {

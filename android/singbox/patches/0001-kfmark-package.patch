@@ -1,0 +1,51 @@
+diff --git a/common/kfmark/kfmark.go b/common/kfmark/kfmark.go
+new file mode 100644
+index 0000000..2f5a63c
+--- /dev/null
++++ b/common/kfmark/kfmark.go
+@@ -0,0 +1,45 @@
++// Package kfmark records box start stage markers for KFusion's switch
++// diagnosis: every Mark appends one line to a dedicated file in the
++// working directory and fsyncs it, so the last stage reached stays on
++// disk even when the process dies natively inside Start.
++package kfmark
++
++import (
++	"os"
++	"sync"
++	"time"
++)
++
++// Sentinel lets the build prove the instrumentation actually landed.
++const Sentinel = "kfusion-stage-markers-v1"
++
++var (
++	mu       sync.Mutex
++	filePath string
++	started  = time.Now()
++)
++
++// SetPath points the marker file at the libbox working directory.
++func SetPath(path string) {
++	mu.Lock()
++	defer mu.Unlock()
++	filePath = path
++}
++
++// Mark appends the stage name and the monotonic elapsed time since
++// process start; it never blocks the caller on filesystem errors.
++func Mark(stage string) {
++	mu.Lock()
++	defer mu.Unlock()
++	if filePath == "" {
++		return
++	}
++	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
++	if err != nil {
++		return
++	}
++	defer file.Close()
++	if _, err = file.WriteString(stage + " +" + time.Since(started).String() + "\n"); err == nil {
++		_ = file.Sync()
++	}
++}

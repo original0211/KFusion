@@ -178,6 +178,10 @@ abstract class BindLibbox : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sources: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val patches: ConfigurableFileCollection
+
     @get:Internal
     abstract val sourceDirectory: DirectoryProperty
 
@@ -224,6 +228,20 @@ abstract class BindLibbox : DefaultTask() {
         val path =
             listOf(bin, File(System.getProperty("java.home"), "bin"), File(go).parentFile)
                 .joinToString(File.pathSeparator) { it.path } + File.pathSeparator + System.getenv("PATH").orEmpty()
+        // KFusion stage-marker patches land before the throwaway repo stamps.
+        execOperations.exec {
+            workingDir(work)
+            environment("PATH", path)
+            commandLine("git", "init", "-q")
+        }
+        for (patch in patches.files.sortedBy { it.name }) {
+            execOperations.exec {
+                workingDir(work)
+                environment("PATH", path)
+                commandLine("git", "apply", "--whitespace=nowarn", patch.absolutePath)
+            }
+        }
+        assertStageMarkers(work)
         // build_libbox stamps the version from `git describe`, which the
         // tarball lacks; a throwaway repo restores the pinned tag as the stamp.
         for (command in listOf(
@@ -275,6 +293,25 @@ abstract class BindLibbox : DefaultTask() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // The traceback line is upstream's own; asserting it keeps a rebase from dropping it.
+    private fun assertStageMarkers(work: File) {
+        val expectations =
+            listOf(
+                "common/kfmark/kfmark.go" to "kfusion-stage-markers-v1",
+                "daemon/instance.go" to "kfmark.Mark(\"daemon.box-new.begin\")",
+                "box.go" to "kfmark.Mark(\"box.start.begin\")",
+                "experimental/libbox/monitor.go" to "kfmark.Mark(\"libbox.monitor.update.begin\")",
+                "experimental/libbox/setup.go" to "kfmark.SetPath(",
+                "experimental/libbox/setup.go" to "debug.SetTraceback(\"all\")",
+            )
+        for ((relativePath, needle) in expectations) {
+            val target = work.resolve(relativePath)
+            if (!target.isFile || !target.readText().contains(needle)) {
+                throw GradleException("sing-box stage-marker patch did not land: $relativePath lacks $needle")
             }
         }
     }
@@ -336,6 +373,9 @@ val bindLibbox =
     tasks.register<BindLibbox>("bindLibbox") {
         dependsOn(downloadSingBoxSource, installGomobile)
         sources.from(downloadSingBoxSource.flatMap { it.sourceDirectory })
+        patches.from(
+            layout.projectDirectory.dir("patches").asFileTree.matching { include("*.patch") },
+        )
         sourceDirectory.set(downloadSingBoxSource.flatMap { it.sourceDirectory })
         goExecutable.set(goExecutablePath)
         goVersion.set(

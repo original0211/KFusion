@@ -1,0 +1,36 @@
+diff --git a/box.go b/box.go
+index 3654fb6..6a6bf8b 100644
+--- a/box.go
++++ b/box.go
+@@ -14,6 +14,7 @@ import (
+ 	"github.com/sagernet/sing-box/common/certificate"
+ 	"github.com/sagernet/sing-box/common/dialer"
+ 	"github.com/sagernet/sing-box/common/httpclient"
++	"github.com/sagernet/sing-box/common/kfmark"
+ 	"github.com/sagernet/sing-box/common/netns"
+ 	"github.com/sagernet/sing-box/common/taskmonitor"
+ 	"github.com/sagernet/sing-box/common/tls"
+@@ -499,6 +500,7 @@ func (s *Box) PreStart() error {
+ }
+ 
+ func (s *Box) Start() error {
++	kfmark.Mark("box.start.begin")
+ 	err := s.start()
+ 	if err != nil {
+ 		s.Close()
+@@ -515,6 +517,7 @@ type boxComponent struct {
+ 
+ func (s *Box) startComponents(stage adapter.StartStage, components ...boxComponent) error {
+ 	for _, component := range components {
++		kfmark.Mark("box.component." + stage.String() + "." + component.name)
+ 		err := s.scope.Start(component.name, component.lifecycle, stage)
+ 		if err != nil {
+ 			return err
+@@ -525,6 +528,7 @@ func (s *Box) startComponents(stage adapter.StartStage, components ...boxCompone
+ 
+ func (s *Box) startInternalServices(stage adapter.StartStage) error {
+ 	for _, lifecycleService := range s.internalService {
++		kfmark.Mark("box.internal." + stage.String() + "." + lifecycleService.Name())
+ 		err := s.scope.Start(lifecycleService.Name(), lifecycleService, stage)
+ 		if err != nil {
+ 			return err

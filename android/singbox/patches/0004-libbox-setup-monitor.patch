@@ -1,0 +1,48 @@
+diff --git a/experimental/libbox/monitor.go b/experimental/libbox/monitor.go
+index e42ea17..09f9315 100644
+--- a/experimental/libbox/monitor.go
++++ b/experimental/libbox/monitor.go
+@@ -5,6 +5,7 @@ import (
+ 	"slices"
+ 
+ 	"github.com/sagernet/sing-box/adapter"
++	"github.com/sagernet/sing-box/common/kfmark"
+ 	C "github.com/sagernet/sing-box/constant"
+ 	"github.com/sagernet/sing-box/service/powerreport"
+ 	tun "github.com/sagernet/sing-tun"
+@@ -100,6 +101,7 @@ func (m *platformDefaultInterfaceMonitor) UpdateNetworkPath(networkPath string)
+ }
+ 
+ func (m *platformDefaultInterfaceMonitor) UpdateDefaultInterface(interfaceName string, interfaceIndex32 int32, isExpensive bool, isConstrained bool) {
++	kfmark.Mark("libbox.monitor.update.begin")
+ 	if sFixAndroidStack {
+ 		done := make(chan struct{})
+ 		go func() {
+@@ -110,6 +112,7 @@ func (m *platformDefaultInterfaceMonitor) UpdateDefaultInterface(interfaceName s
+ 	} else {
+ 		m.updateDefaultInterface(interfaceName, interfaceIndex32, isExpensive, isConstrained)
+ 	}
++	kfmark.Mark("libbox.monitor.update.end")
+ }
+ 
+ func (m *platformDefaultInterfaceMonitor) updateDefaultInterface(interfaceName string, interfaceIndex32 int32, isExpensive bool, isConstrained bool) {
+diff --git a/experimental/libbox/setup.go b/experimental/libbox/setup.go
+index 07f1673..97b7971 100644
+--- a/experimental/libbox/setup.go
++++ b/experimental/libbox/setup.go
+@@ -9,6 +9,7 @@ import (
+ 	"runtime/debug"
+ 	"time"
+ 
++	"github.com/sagernet/sing-box/common/kfmark"
+ 	"github.com/sagernet/sing-box/common/networkquality"
+ 	"github.com/sagernet/sing-box/common/stun"
+ 	C "github.com/sagernet/sing-box/constant"
+@@ -114,6 +115,7 @@ func ReloadSetupOptions(options *SetupOptions) {
+ 
+ func Setup(options *SetupOptions) error {
+ 	applySetupOptions(options)
++	kfmark.SetPath(filepath.Join(sWorkingPath, "kfusion-stage-markers.log"))
+ 	os.MkdirAll(sWorkingPath, 0o777)
+ 	os.MkdirAll(sTempPath, 0o777)
+ 	err := redirectStderr(filepath.Join(sWorkingPath, "CrashReport-"+sCrashReportSource+".log"))
