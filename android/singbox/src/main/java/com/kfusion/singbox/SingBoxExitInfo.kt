@@ -207,6 +207,11 @@ object SingBoxCrashReport {
         return lines.filter { it.isNotBlank() }.take(maxLines)
     }
 
+    fun reasonLine(workingDir: File): String {
+        val first = headLines(workingDir, 1)?.firstOrNull()
+        return "crash reason: " + (first?.take(300) ?: "report unreadable")
+    }
+
     fun unreadLines(
         workingDir: File,
         seenModified: Long,

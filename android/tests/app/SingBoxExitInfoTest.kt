@@ -258,6 +258,36 @@ class SingBoxExitInfoTest {
     }
 
     @Test
+    fun crashReasonLineTakesTheFirstNonBlankLine() {
+        val working = folder.newFolder("singbox")
+        val body = "\n\nfatal error: all goroutines are asleep - deadlock!\nstack line\n"
+        SingBoxCrashReport.fileIn(working).writeText(body)
+        assertEquals(
+            "crash reason: fatal error: all goroutines are asleep - deadlock!",
+            SingBoxCrashReport.reasonLine(working),
+        )
+    }
+
+    @Test
+    fun crashReasonLineTruncatesAtThreeHundredChars() {
+        val working = folder.newFolder("singbox")
+        SingBoxCrashReport.fileIn(working).writeText("x".repeat(400) + "\n")
+        assertEquals(
+            "crash reason: " + "x".repeat(300),
+            SingBoxCrashReport.reasonLine(working),
+        )
+    }
+
+    @Test
+    fun crashReasonLineIsUnreadableWithoutAUsableReport() {
+        val missing = folder.newFolder("missing")
+        assertEquals("crash reason: report unreadable", SingBoxCrashReport.reasonLine(missing))
+        val blank = folder.newFolder("blank")
+        SingBoxCrashReport.fileIn(blank).writeText("\n\n")
+        assertEquals("crash reason: report unreadable", SingBoxCrashReport.reasonLine(blank))
+    }
+
+    @Test
     fun stageMarkersTailKeepsTheLastNonBlankLines() {
         val working = folder.newFolder("singbox")
         val body = "\n" + (1..10).joinToString("\n") { "mark $it" } + "\n"

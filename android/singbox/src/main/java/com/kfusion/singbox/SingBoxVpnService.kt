@@ -136,6 +136,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     private fun surfaceLastDeath() {
         val prefs = preferences()
+        var goCrash = false
         val exit = SingBoxExitInfo.latest(this)
         if (exit != null && exit.timestamp > prefs.getLong(PREF_EXIT_SURFACED, 0L)) {
             prefs.edit().putLong(PREF_EXIT_SURFACED, exit.timestamp).apply()
@@ -151,6 +152,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             }
             SingBoxLog.append(this, SingBoxExitInfo.summaryLine(exit) + attemptNote)
             if (exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE) {
+                goCrash = true
                 val probe = SingBoxExitInfo.probeCrashHeadline(this)
                 if (probe.headline != null) {
                     SingBoxLog.append(this, "exit signal: ${probe.headline}")
@@ -177,6 +179,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
             prefs.edit().putLong(PREF_CRASH_SURFACED, crash.first).apply()
             // A bare mtime bump from this process's own setup rotation has no lines.
             if (crash.second.isNotEmpty()) {
+                goCrash = true
                 val head = SingBoxCrashReport.headLines(workingDir)
                 if (head.isNullOrEmpty()) {
                     SingBoxLog.append(this, "crash head: report unreadable")
@@ -198,6 +201,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                     }
                 }
             }
+        }
+        // Last line of the block, so the card's window always shows it even
+        // when the tombstone carried no signal line of its own.
+        if (goCrash) {
+            SingBoxLog.append(this, SingBoxCrashReport.reasonLine(workingDir))
         }
     }
 
