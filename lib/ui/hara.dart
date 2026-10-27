@@ -12,6 +12,11 @@ class HaraPalette {
     required this.vermilion,
   });
 
+  // The one literal allowed outside a palette instance: fully clear, for
+  // slots that must keep their geometry while showing nothing (the mode
+  // row's unselected underlines).
+  static const Color transparent = Color(0x00000000);
+
   final Color bg;
   final Color ink;
   final Color sub;

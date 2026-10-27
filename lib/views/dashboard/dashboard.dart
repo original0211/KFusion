@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'edit.dart';
+import 'hara_dashboard.dart';
 import 'layout.dart';
 import 'style.dart';
 import 'widget_registry.dart';
@@ -48,9 +49,12 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
   @override
   Widget build(BuildContext context) {
+    final editing = _editing;
+    if (!editing) {
+      return const HaraDashboard();
+    }
     final platform = widget.platform ?? SupportPlatform.currentPlatform;
     final scale = math.max(1.0, MediaQuery.textScalerOf(context).scale(1));
-    final editing = _editing;
     final gap = cardSpacingOf(context, ref.watch(viewModeProvider));
     final appLocalizations = context.appLocalizations;
     return CommonScaffold(

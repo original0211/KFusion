@@ -160,11 +160,11 @@ class _HaraNavBarButtonState extends State<_HaraNavBarButton> {
       child: InkWell(
         onTap: widget.onTap,
         onFocusChange: (focused) => setState(() => _focused = focused),
-        customBorder: AppShape.none,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
+        customBorder: AppShape.hara,
+        splashColor: HaraPalette.transparent,
+        highlightColor: HaraPalette.transparent,
+        hoverColor: HaraPalette.transparent,
+        focusColor: HaraPalette.transparent,
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: _focused
@@ -188,7 +188,7 @@ class _HaraNavBarButtonState extends State<_HaraNavBarButton> {
               Container(
                 width: HaraSpace.navUnderlineWidth,
                 height: HaraSpace.navUnderlineHeight,
-                color: widget.current ? palette.ink : Colors.transparent,
+                color: widget.current ? palette.ink : HaraPalette.transparent,
               ),
             ],
           ),
@@ -224,11 +224,11 @@ class _HaraNavRailButtonState extends State<_HaraNavRailButton> {
       child: InkWell(
         onTap: widget.onTap,
         onFocusChange: (focused) => setState(() => _focused = focused),
-        customBorder: AppShape.none,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
+        customBorder: AppShape.hara,
+        splashColor: HaraPalette.transparent,
+        highlightColor: HaraPalette.transparent,
+        hoverColor: HaraPalette.transparent,
+        focusColor: HaraPalette.transparent,
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: _focused
@@ -243,7 +243,7 @@ class _HaraNavRailButtonState extends State<_HaraNavRailButton> {
                 Container(
                   width: HaraSpace.navUnderlineWidth,
                   height: HaraSpace.navUnderlineHeight,
-                  color: widget.current ? palette.ink : Colors.transparent,
+                  color: widget.current ? palette.ink : HaraPalette.transparent,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
