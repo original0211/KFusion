@@ -11,6 +11,9 @@ import 'package:material_ui/material_ui.dart';
 /// [AppCorner.fit] and sheets, and [alert] is a dialog's own.
 abstract final class AppCorner {
   static const double none = 0;
+
+  /// The Hara A tier declares its corners, and the declaration is zero.
+  static const double hara = none;
   static const double xs = 4;
   static const double sm = 8;
   static const double md = 16;
@@ -38,6 +41,7 @@ abstract final class AppCorner {
 
 abstract final class AppRadius {
   static const BorderRadius none = BorderRadius.zero;
+  static const BorderRadius hara = none;
   static const BorderRadius xs = BorderRadius.all(
     Radius.circular(AppCorner.xs),
   );
@@ -79,6 +83,7 @@ abstract final class AppRadius {
 
 abstract final class AppShape {
   static const RoundedSuperellipseBorder none = RoundedSuperellipseBorder();
+  static const RoundedSuperellipseBorder hara = none;
   static const RoundedSuperellipseBorder xs = RoundedSuperellipseBorder(
     borderRadius: AppRadius.xs,
   );

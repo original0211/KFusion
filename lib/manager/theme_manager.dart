@@ -78,6 +78,7 @@ ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
       fontFamily: themeSetting.fontFamily,
     ),
     extensions: [
+      HaraTheme(HaraPalette.of(brightness, pureBlack: themeSetting.pureBlack)),
       if (brightness == Brightness.dark)
         ElevatedColorScheme(
           // Plain dark is pure black a level up, with the seed's tint that a
