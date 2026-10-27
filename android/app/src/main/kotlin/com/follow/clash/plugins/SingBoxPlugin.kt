@@ -183,7 +183,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
         }
         val workingDir = File(context.filesDir, "singbox")
         lines += SingBoxStageMarkers.tailLineInWindow(workingDir, attempt?.since ?: epoch)
-        lines += SingBoxCrashReport.freshReasonLine(
+        lines += SingBoxCrashReport.reasonLineIn(
             workingDir,
             epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS,
         )

@@ -234,16 +234,17 @@ object SingBoxCrashReport {
         return lines.filter { it.isNotBlank() }.take(maxLines)
     }
 
-    fun reasonLine(workingDir: File): String {
+    // One wording on both card paths: no file, stale file, unusable file.
+    fun reasonLineIn(
+        workingDir: File,
+        notBeforeMs: Long?,
+    ): String {
+        val file = latestFileIn(workingDir) ?: return "crash reason: no report"
+        if (notBeforeMs != null && file.lastModified() < notBeforeMs) {
+            return "crash reason: no fresh report"
+        }
         val first = headLines(workingDir, 1)?.firstOrNull()
         return "crash reason: " + (first?.take(300) ?: "report unreadable")
-    }
-
-    // A report older than the attempt's window belongs to an earlier death.
-    fun freshReasonLine(workingDir: File, notBeforeMs: Long): String {
-        val file = latestFileIn(workingDir) ?: return "crash reason: no fresh report"
-        if (file.lastModified() < notBeforeMs) return "crash reason: no fresh report"
-        return reasonLine(workingDir)
     }
 
     fun unreadLines(

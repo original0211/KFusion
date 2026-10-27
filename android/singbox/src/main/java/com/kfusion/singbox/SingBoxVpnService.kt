@@ -201,7 +201,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         // Last line of the block, so the card's window always shows it even
         // when the tombstone carried no signal line of its own.
         if (goCrash) {
-            SingBoxLog.append(this, SingBoxCrashReport.reasonLine(workingDir))
+            SingBoxLog.append(this, SingBoxCrashReport.reasonLineIn(workingDir, null))
         }
         harvestDeathLetter(workingDir)
     }

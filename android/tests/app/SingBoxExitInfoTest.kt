@@ -265,7 +265,7 @@ class SingBoxExitInfoTest {
         SingBoxCrashReport.fileIn(working).writeText(body)
         assertEquals(
             "crash reason: fatal error: all goroutines are asleep - deadlock!",
-            SingBoxCrashReport.reasonLine(working),
+            SingBoxCrashReport.reasonLineIn(working, null),
         )
     }
 
@@ -275,17 +275,17 @@ class SingBoxExitInfoTest {
         SingBoxCrashReport.fileIn(working).writeText("x".repeat(400) + "\n")
         assertEquals(
             "crash reason: " + "x".repeat(300),
-            SingBoxCrashReport.reasonLine(working),
+            SingBoxCrashReport.reasonLineIn(working, null),
         )
     }
 
     @Test
-    fun crashReasonLineIsUnreadableWithoutAUsableReport() {
+    fun crashReasonLineDistinguishesNoReportFromUnreadable() {
         val missing = folder.newFolder("missing")
-        assertEquals("crash reason: report unreadable", SingBoxCrashReport.reasonLine(missing))
+        assertEquals("crash reason: no report", SingBoxCrashReport.reasonLineIn(missing, null))
         val blank = folder.newFolder("blank")
         SingBoxCrashReport.fileIn(blank).writeText("\n\n")
-        assertEquals("crash reason: report unreadable", SingBoxCrashReport.reasonLine(blank))
+        assertEquals("crash reason: report unreadable", SingBoxCrashReport.reasonLineIn(blank, null))
     }
 
     @Test
@@ -400,24 +400,24 @@ class SingBoxExitInfoTest {
         assertTrue(report.setLastModified(2_000L))
         assertEquals(
             "crash reason: panic: fresh boom",
-            SingBoxCrashReport.freshReasonLine(working, 1_000L),
+            SingBoxCrashReport.reasonLineIn(working, 1_000L),
         )
     }
 
     @Test
-    fun freshCrashReasonRefusesAStaleReportAndAMissingOne() {
+    fun freshCrashReasonRefusesAStaleReport() {
         val working = folder.newFolder("singbox")
         val report = SingBoxCrashReport.fileIn(working)
         report.writeText("panic: older boom\n")
         assertTrue(report.setLastModified(1_000L))
         assertEquals(
             "crash reason: no fresh report",
-            SingBoxCrashReport.freshReasonLine(working, 2_000L),
+            SingBoxCrashReport.reasonLineIn(working, 2_000L),
         )
         val empty = folder.newFolder("empty")
         assertEquals(
-            "crash reason: no fresh report",
-            SingBoxCrashReport.freshReasonLine(empty, 0L),
+            "crash reason: no report",
+            SingBoxCrashReport.reasonLineIn(empty, 0L),
         )
     }
 
