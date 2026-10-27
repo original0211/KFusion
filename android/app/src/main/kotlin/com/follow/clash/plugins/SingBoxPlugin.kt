@@ -109,7 +109,7 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                         }
                         SingBoxStartGate.Verdict.FAILED -> {
                             message = if (snapshot?.state == SingBoxStatus.State.STARTING) {
-                                deathMessage(context, epoch)
+                                deathMessage(context, epoch, snapshot)
                             } else {
                                 snapshot?.message?.ifEmpty { null }
                                     ?: "sing-box 启动失败"
@@ -129,11 +129,21 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     }
 
     // An exit record is quoted only when the mirrored ledger ties it to this poll's attempt.
-    private fun deathMessage(context: Context, epoch: Long): String {
+    private fun deathMessage(
+        context: Context,
+        epoch: Long,
+        snapshot: SingBoxStatus.Snapshot?,
+    ): String {
         val generic = "sing-box 进程在启动中退出"
         val parts = mutableListOf(generic)
         var settled: SingBoxDeathGate.Settled? = null
         val attempt = SingBoxStatus.readAttempt(context)
+        SingBoxLog.append(
+            context,
+            "death verdict inputs: state=${snapshot?.state} pid=${snapshot?.pid} " +
+                "updatedAt=${snapshot?.updatedAt} epoch=$epoch " +
+                "attempt=${attempt?.seq}/${attempt?.since}",
+        )
         if (attempt != null &&
             attempt.since >= epoch - SingBoxStagedStart.ASSOCIATION_SLACK_MS
         ) {
