@@ -5,7 +5,6 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/views/dashboard/dashboard.dart';
 import 'package:kfusion/views/dashboard/layout.dart';
 import 'package:kfusion/views/dashboard/widgets/widgets.dart';
 import 'package:flutter/gestures.dart';
@@ -76,7 +75,13 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: const TestApp(
-          child: DashboardView(platform: SupportPlatform.MacOS),
+          child: Scaffold(
+            body: DashboardDensityScope(
+              density: DashboardDensity.standard,
+              scale: 1,
+              child: ConnectionsTableCard(),
+            ),
+          ),
         ),
       ),
     );

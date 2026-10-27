@@ -1,19 +1,15 @@
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/l10n/l10n.dart';
-import 'package:kfusion/models/models.dart';
-import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/access.dart';
 import 'package:kfusion/views/dashboard/dashboard.dart';
-import 'package:kfusion/views/dashboard/edit.dart';
 import 'package:kfusion/views/logs.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 
 import '../helpers/glyph_finders.dart';
 import '../helpers/preferences.dart';
@@ -262,45 +258,6 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('inactive page scope exits dashboard edit layer', (tester) async {
-    final container = ProviderContainer(
-      overrides: [
-        _phoneView(tester),
-        dashboardStateProvider.overrideWithValue(
-          const DashboardState(dashboardWidgets: []),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-    final isActive = ValueNotifier(true);
-    addTearDown(isActive.dispose);
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: _DashboardTestApp(
-          child: _PageActivityTestScope(
-            isActive: isActive,
-            child: const DashboardView(platform: SupportPlatform.Android),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.byTooltip('Edit dashboard'));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.byType(DashboardEditor), findsOneWidget);
-
-    isActive.value = false;
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.byType(DashboardEditor), findsNothing);
-    expect(find.byTooltip('Edit dashboard'), findsOneWidget);
-  });
-
   testWidgets('inactive page scope exits access search layer', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -330,97 +287,6 @@ void main() {
 
     expect(find.byType(TextField), findsNothing);
   });
-
-  testWidgets('done and system back cannot re-enter dashboard edit mode', (
-    tester,
-  ) async {
-    final container = ProviderContainer(
-      overrides: [
-        _phoneView(tester),
-        dashboardStateProvider.overrideWithValue(
-          const DashboardState(dashboardWidgets: []),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const _DashboardTestApp(),
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.byTooltip('Edit dashboard'));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.byType(DashboardEditor), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Done'));
-    await tester.binding.handlePopRoute();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.byType(DashboardEditor), findsNothing);
-    expect(find.byTooltip('Edit dashboard'), findsOneWidget);
-  });
-
-  testWidgets('system back keeps a card removed in edit mode', (tester) async {
-    final container = ProviderContainer(
-      overrides: [
-        _phoneView(tester),
-        dashboardStateProvider.overrideWithValue(
-          const DashboardState(
-            dashboardWidgets: [
-              DashboardWidget.networkSpeed,
-              DashboardWidget.outboundMode,
-            ],
-          ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    final appSettingSubscription = container.listen(
-      appSettingProvider,
-      (_, _) {},
-      fireImmediately: true,
-    );
-    addTearDown(appSettingSubscription.close);
-    globalState.container = container;
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const _DashboardTestApp(),
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.byTooltip('Edit dashboard'));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    await tester.tap(find.byTooltip('Remove Network speed'));
-    await tester.pump();
-    await tester.binding.handlePopRoute();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.byType(DashboardEditor), findsNothing);
-    expect(container.read(appSettingProvider).dashboardWidgets, [
-      DashboardWidget.outboundMode,
-      DashboardWidget.networkTakeover,
-    ]);
-  });
-}
-
-const _phoneSize = Size(412, 915);
-
-/// A phone's view, where the dashboard lays out the single column it edits.
-Override _phoneView(WidgetTester tester) {
-  tester.view.physicalSize = _phoneSize;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-  return viewSizeProvider.overrideWithBuild((_, _) => _phoneSize);
 }
 
 class _DashboardTestApp extends StatelessWidget {

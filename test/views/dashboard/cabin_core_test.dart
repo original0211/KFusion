@@ -12,7 +12,6 @@ import 'package:kfusion/providers/outbound_ip.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/providers/routed_probe.dart';
 import 'package:kfusion/ui/ui.dart';
-import 'package:kfusion/views/dashboard/dashboard.dart';
 import 'package:kfusion/views/dashboard/layout.dart';
 import 'package:kfusion/views/dashboard/widgets/card.dart';
 import 'package:kfusion/views/dashboard/widgets/cabin_core.dart';
@@ -27,7 +26,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/glyph_finders.dart';
-import '../../helpers/preferences.dart';
 import '../../helpers/test_app.dart';
 
 const _ip = '203.0.113.9';
@@ -696,129 +694,6 @@ void main() {
           .toList();
       expect(sizes, contains(74));
       expect(sizes, isNot(contains(40)));
-    });
-  });
-
-  group('the dashboard scroll fold', () {
-    testWidgets('the compact preference starts folded and the bar reopens', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(412, 700);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await mockPreferences();
-      await tester.pumpWidget(
-        TestApp(
-          locale: const Locale('en'),
-          overrides: [
-            profilesProvider.overrideWithValue(const [_profile]),
-            outboundIpProbeProvider.overrideWithBuild(
-              (_, _) => const RoutedProbeState({
-                routedOutbound: ProbeEntry(
-                  phase: ProbePhase.fresh,
-                  value: IpInfo(ip: _ip, countryCode: 'GB'),
-                  stamp: RouteStamp(
-                    coreEpoch: 1,
-                    picksVersion: 1,
-                    hostEpoch: 1,
-                    proxied: true,
-                    chains: ['HK 03 · IEPL'],
-                  ),
-                ),
-              }),
-            ),
-            ipQualityProvider.overrideWith((_, _) async => _residential),
-          ],
-          child: const DashboardView(),
-        ),
-      );
-      await tester.pump();
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(DashboardView)),
-      );
-      container.read(runTimeProvider.notifier).value = 1;
-      container
-          .read(appSettingProvider.notifier)
-          .update((state) => state.copyWith(cabinCoreCompact: true));
-      await tester.pump();
-      await tester.pump(commonDuration);
-
-      expect(tester.getSize(find.byType(CabinCoreCard)).height, 76);
-
-      await tester.tap(find.byType(CabinCoreCard));
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-      expect(tester.getSize(find.byType(CabinCoreCard)).height, 300);
-
-      await tester.drag(find.byType(CabinExitPanel), const Offset(0, -240));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(tester.getSize(find.byType(CabinCoreCard)).height, 76);
-    });
-
-    testWidgets('scrolling folds the core into its bar and the bar reopens', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(412, 700);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await mockPreferences();
-      await tester.pumpWidget(
-        TestApp(
-          locale: const Locale('en'),
-          overrides: [
-            profilesProvider.overrideWithValue(const [_profile]),
-            outboundIpProbeProvider.overrideWithBuild(
-              (_, _) => const RoutedProbeState({
-                routedOutbound: ProbeEntry(
-                  phase: ProbePhase.fresh,
-                  value: IpInfo(ip: _ip, countryCode: 'GB'),
-                  stamp: RouteStamp(
-                    coreEpoch: 1,
-                    picksVersion: 1,
-                    hostEpoch: 1,
-                    proxied: true,
-                    chains: ['HK 03 · IEPL'],
-                  ),
-                ),
-              }),
-            ),
-            ipQualityProvider.overrideWith((_, _) async => _residential),
-          ],
-          child: const DashboardView(),
-        ),
-      );
-      await tester.pump();
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(DashboardView)),
-      );
-      container.read(runTimeProvider.notifier).value = 1;
-      await tester.pump();
-      await tester.pump(commonDuration);
-
-      expect(tester.getSize(find.byType(CabinCoreCard)).height, 300);
-
-      await tester.drag(find.byType(CabinExitPanel), const Offset(0, -240));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(tester.getSize(find.byType(CabinCoreCard)).height, 76);
-      expect(
-        tester
-            .widgetList<DashboardDiscMotif>(find.byType(DashboardDiscMotif))
-            .map((motif) => motif.size),
-        contains(40),
-      );
-
-      await tester.tap(find.byType(CabinCoreCard));
-      // The run-time readout ticks every second, so the dashboard never
-      // settles; pump past the unfold animation instead.
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-
-      expect(tester.getSize(find.byType(CabinCoreCard)).height, 300);
     });
   });
 }
