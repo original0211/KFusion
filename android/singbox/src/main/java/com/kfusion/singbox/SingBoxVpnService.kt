@@ -208,13 +208,26 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
 
     // The next start settles the still-open attempt's death from the full record list.
     private fun harvestDeathLetter(workingDir: File) {
-        val prefs = preferences()
         if (startGate.get()) return
+        harvestOpenAttempt(workingDir)
+    }
+
+    // Shared by the surface pass and by startBox, which settles the previous
+    // attempt before its own marks replace the ledger entry; the gate is
+    // legitimately held by the new start there, so it does not apply.
+    private fun harvestOpenAttempt(workingDir: File) {
+        val prefs = preferences()
         if (!prefs.getBoolean(PREF_ATTEMPT_OPEN, false)) return
         val seq = prefs.getLong(PREF_ATTEMPT_SEQ, 0L)
         if (seq <= 0L) return
         if (SingBoxDeathLetter.readFrom(workingDir)?.seq == seq) return
-        val records = SingBoxExitInfo.all(this) ?: return
+        val records = SingBoxExitInfo.all(this)
+        if (records == null) {
+            // Log the miss so a silent platform refusal cannot pass for an
+            // empty history on the next field report.
+            SingBoxLog.append(this, "death letter: exit history unavailable")
+            return
+        }
         val since = prefs.getLong(PREF_ATTEMPT_SINCE, 0L)
         val matched =
             SingBoxDeathLetter.select(
@@ -230,7 +243,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 record = matched,
                 newestOther = if (matched == null) SingBoxDeathLetter.newestOtherOf(records) else null,
             )
-        SingBoxDeathLetter.writeTo(workingDir, letter)
+        val written = runCatching { SingBoxDeathLetter.writeTo(workingDir, letter) }
+        if (written.isFailure) return
         if (matched != null) {
             prefs.edit().putLong(PREF_DEATH_LETTER_THROUGH, matched.timestamp).apply()
         }
@@ -299,6 +313,10 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     private fun startBox(configPath: String, attempt: Long) {
         try {
             SingBoxLog.append(this, "start: begin")
+            // Settle the previous attempt while the ledger still names it:
+            // a process born as a reload continuation never ran a surface
+            // pass, and this is the last moment its entry survives.
+            harvestOpenAttempt(File(filesDir, "singbox"))
             val configFile = File(configPath)
             check(configFile.isFile) { "sing-box 配置文件不存在：$configPath" }
             val content = configFile.readText()
@@ -326,10 +344,11 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 }
             }
             SingBoxLog.append(this, "start: command server ready")
+            val attemptSeq = nextAttemptSeq()
             if (decision.kind == SingBoxStagedStart.Decision.STAGED) {
-                runStagedStart(server, content, attempt)
+                runStagedStart(server, content, attempt, attemptSeq)
             } else {
-                startFull(server, content, attempt)
+                startFull(server, content, attempt, attemptSeq)
             }
         } catch (error: Throwable) {
             GlobalState.log("sing-box start failed: $error")
@@ -348,8 +367,8 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         stopSelf()
     }
 
-    private fun startFull(server: CommandServer, content: String, attempt: Long) {
-        markAttempt(SingBoxStagedStart.NORMAL_LEVEL, "")
+    private fun startFull(server: CommandServer, content: String, attempt: Long, attemptSeq: Long) {
+        markAttempt(attemptSeq, SingBoxStagedStart.NORMAL_LEVEL, "")
         SingBoxLog.append(this, memorySnapshotLine())
         SingBoxLog.append(this, "start: startOrReloadService begin")
         if (startOnce(server, content, attempt)) settleRunning()
@@ -361,12 +380,17 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         return SingBoxMemory.snapshotLine(Debug.getPss(), info.availMem / 1024, info.lowMemory)
     }
 
-    private fun runStagedStart(server: CommandServer, content: String, attempt: Long) {
+    private fun runStagedStart(
+        server: CommandServer,
+        content: String,
+        attempt: Long,
+        attemptSeq: Long,
+    ) {
         val plan = runCatching {
             SingBoxStagedStart.levels(SingBoxStagedStart.factsOf(JSONObject(content)))
         }.getOrNull()
         if (plan == null) {
-            startFull(server, content, attempt)
+            startFull(server, content, attempt, attemptSeq)
             return
         }
         val swept = SingBoxCacheGuard.sweepProbeCaches(File(filesDir, "singbox"))
@@ -379,7 +403,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                 content
             } else {
                 val built = runCatching {
-                    SingBoxStagedStart.build(content, level, nextAttemptSeq())
+                    SingBoxStagedStart.build(content, level, attemptSeq)
                 }
                     .getOrNull()
                     ?.takeIf { runCatching { Libbox.checkConfig(it) }.isSuccess }
@@ -388,12 +412,12 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
                         this,
                         "staged: $label trim rejected; falling back to full start",
                     )
-                    startFull(server, content, attempt)
+                    startFull(server, content, attempt, attemptSeq)
                     return
                 }
                 built
             }
-            markAttempt(level.index, level.name)
+            markAttempt(attemptSeq, level.index, level.name)
             SingBoxLog.append(
                 this,
                 "staged: $label (${level.name}) begin; " +
@@ -428,11 +452,20 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         GlobalState.log("sing-box service started")
     }
 
-    private fun markAttempt(level: Int, levelName: String) {
+    private fun markAttempt(seq: Long, level: Int, levelName: String) {
         // The ledger exists to survive this process dying mid-start: commit.
+        // One seq names the whole start: staged levels refresh the level
+        // fields only, keeping the attempt's start time, so the death
+        // letter's seq stays inside the card's one-attempt window however
+        // many levels the start walked before it died.
         val prefs = preferences()
-        val seq = prefs.getLong(PREF_ATTEMPT_SEQ, 0L) + 1
-        val since = System.currentTimeMillis()
+        val sameAttempt = prefs.getLong(PREF_ATTEMPT_SEQ, 0L) == seq
+        val since = if (sameAttempt) {
+            prefs.getLong(PREF_ATTEMPT_SINCE, 0L).takeIf { it > 0L }
+                ?: System.currentTimeMillis()
+        } else {
+            System.currentTimeMillis()
+        }
         prefs.edit()
             .putBoolean(PREF_ATTEMPT_OPEN, true)
             .putInt(PREF_ATTEMPT_LEVEL, level)
