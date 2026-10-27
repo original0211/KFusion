@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.24 (2026-10-27)
+
+**Bug Fixes**
+
+- **core** The death-letter harvest now asks the system for its exit records with a concrete cap, and survives a record whose trace will not open. The harvest used to request the unbounded form of the list — the one form that had never produced a visible result on the device in question, while the capped form beside it worked every round — so a death could go unlettered for reasons indistinguishable from the platform having nothing to say. The request now carries an explicit cap, a platform that answers nothing leaves a line in the service log saying the exit history was unavailable, and reading a record's trace is guarded, so one unreadable record can no longer take the whole harvest down with it. (2a3ff6e)
+- **core** A death letter can no longer be lost to the numbering of the staged start. The ladder used to stamp each of its levels with a fresh sequence number, so a start that climbed several levels pushed the previous attempt's number far outside the window the failure card accepts, and the letter written for it was discarded in silence — three deaths in a row arrived letterless for exactly this reason. A whole start now takes a single sequence number, its levels refresh only their own label under it, and the start path itself settles the previous attempt before anything overwrites the ledger, giving the harvest a second chance at the one moment it cannot miss. (ebb8061)
+- **core** The crash-reason line is now judged against the attempt it describes, on both paths that compose it. Freshness used to be measured from each reader's own clock: an early reader found the report inside its window and called it unreadable, a later one found the same untouched file outside its window and called it stale, and one death carried two verdicts. The plugin and the service now anchor the window to the attempt's own start, so one death, one file, one answer. (11dfd8f)
+
 ## v0.2.23 (2026-10-27)
 
 **Bug Fixes**
