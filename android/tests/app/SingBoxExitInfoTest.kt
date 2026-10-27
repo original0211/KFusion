@@ -508,7 +508,7 @@ class SingBoxExitInfoTest {
         assertTrue(report.setLastModified(attemptSince - 1_000L))
         val firstPoll = SingBoxCrashReport.reasonLineIn(working, window)
         val secondPoll = SingBoxCrashReport.reasonLineIn(working, window)
-        assertEquals("crash reason: report unreadable", firstPoll)
+        assertEquals("crash reason: report empty", firstPoll)
         assertEquals(firstPoll, secondPoll)
     }
 
