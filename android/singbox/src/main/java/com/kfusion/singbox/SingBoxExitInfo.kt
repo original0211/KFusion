@@ -251,6 +251,7 @@ object SingBoxCrashReport {
         if (notBeforeMs != null && file.lastModified() < notBeforeMs) {
             return "crash reason: no fresh report"
         }
+        if (file.length() == 0L) return "crash reason: report empty"
         val first = headLines(workingDir, 1)?.firstOrNull()
         return "crash reason: " + (first?.take(300) ?: "report unreadable")
     }

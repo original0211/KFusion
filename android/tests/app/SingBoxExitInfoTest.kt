@@ -290,6 +290,24 @@ class SingBoxExitInfoTest {
     }
 
     @Test
+    fun crashReasonLineNamesAnEmptyReportFile() {
+        val working = folder.newFolder("empty")
+        SingBoxCrashReport.fileIn(working).writeText("")
+        assertEquals(
+            "crash reason: report empty",
+            SingBoxCrashReport.reasonLineIn(working, null),
+        )
+        val staleDir = folder.newFolder("stale")
+        val staleFile = SingBoxCrashReport.fileIn(staleDir)
+        staleFile.writeText("")
+        staleFile.setLastModified(1_000L)
+        assertEquals(
+            "crash reason: no fresh report",
+            SingBoxCrashReport.reasonLineIn(staleDir, 2_000L),
+        )
+    }
+
+    @Test
     fun stageMarkersTailKeepsTheLastNonBlankLines() {
         val working = folder.newFolder("singbox")
         val body = "\n" + (1..10).joinToString("\n") { "mark $it" } + "\n"
