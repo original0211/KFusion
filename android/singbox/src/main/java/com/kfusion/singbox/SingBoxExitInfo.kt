@@ -96,7 +96,7 @@ object SingBoxExitInfo {
     // Every record published for this package, newest first; null = the platform cannot answer.
     fun all(context: Context): List<Record>? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
-        val exits = exitInfos(context, 0) ?: return null
+        val exits = exitInfos(context, ALL_RECORDS_CAP) ?: return null
         return exits.map { recordOf(it) }
     }
 
@@ -115,7 +115,10 @@ object SingBoxExitInfo {
         maxChars: Int = 1200,
     ): String? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
-        val stream = latestExitInfo(context)?.traceInputStream ?: return null
+        // The getter itself can throw on records that carry no trace; it runs
+        // ahead of the death-letter harvest, so a throw must not skip both.
+        val stream = runCatching { latestExitInfo(context)?.traceInputStream }
+            .getOrNull() ?: return null
         return runCatching {
             stream.bufferedReader().use { reader -> reader.readText() }.trim().take(maxChars)
         }.getOrNull()?.ifBlank { null }
@@ -213,6 +216,11 @@ object SingBoxExitInfo {
             manager.getHistoricalProcessExitReasons(context.packageName, 0, maxNum)
         }.getOrNull()
     }
+
+    // A concrete cap, not the 0 = "all" form: latest() (cap 8) demonstrably
+    // answers on the field device while no death letter was ever harvested
+    // through the 0 form there, so all() stops depending on that reading.
+    private const val ALL_RECORDS_CAP = 64
 }
 
 object SingBoxCrashReport {
