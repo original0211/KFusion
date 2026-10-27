@@ -68,6 +68,7 @@ export 'surface.dart';
 export 'table_layout.dart';
 export 'text.dart';
 export 'text_loupe.dart';
+export 'text_navigation.dart';
 export 'text_style.dart';
 export 'theme.dart';
 export 'theme_cross_fade.dart';

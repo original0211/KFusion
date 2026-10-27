@@ -142,44 +142,32 @@ class _Sidebar extends ConsumerWidget {
   const _Sidebar({
     required this.items,
     required this.currentIndex,
-    required this.viewMode,
     required this.onSelected,
   });
 
   final List<NavigationItem> items;
   final int currentIndex;
-  final ViewMode viewMode;
   final void Function(int index) onSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final canExpand = canExpandSidebar(viewMode);
-    final sidebarExpanded = ref.watch(
-      appSettingProvider.select((state) => state.sidebarExpanded),
-    );
     final version = ref.watch(versionProvider);
-    return NavigationSidebar(
-      destinations: [
-        for (final item in items)
-          SidebarDestination(glyph: item.glyph, label: item.label.label),
-      ],
+    final blur = ref.watch(windowBlurProvider);
+    final windowControls = windowControlsOverSidebar(
+      isMacOS: system.isMacOS,
+      version: version,
+    );
+    return HaraNavRail(
+      brand: 'KFUSION',
+      items: [for (final item in items) HaraNavItem(label: item.label.label)],
       selectedIndex: currentIndex,
-      expanded: canExpand && sidebarExpanded,
       onSelected: onSelected,
-      onToggle: canExpand
-          ? () {
-              ref
-                  .read(appSettingProvider.notifier)
-                  .update(
-                    (state) =>
-                        state.copyWith(sidebarExpanded: !state.sidebarExpanded),
-                  );
-            }
+      topInset: windowControls.height,
+      backgroundColor: blur
+          ? context.colorScheme.chromeSurface.withValues(
+              alpha: kSidebarBlurOpacity,
+            )
           : null,
-      windowControls: windowControlsOverSidebar(
-        isMacOS: system.isMacOS,
-        version: version,
-      ),
     );
   }
 }
@@ -201,8 +189,7 @@ class AppSidebarContainer extends ConsumerWidget {
     final focusNode = FocusManager.instance.primaryFocus;
     final focusContext = focusNode?.context;
     final preserveNavigationFocus =
-        focusContext?.findAncestorWidgetOfExactType<NavigationSidebar>() !=
-        null;
+        focusContext?.findAncestorWidgetOfExactType<HaraNavRail>() != null;
     ref.read(currentPageLabelProvider.notifier).toPage(pageLabel);
     if (!preserveNavigationFocus || focusNode == null) {
       return;
@@ -222,7 +209,6 @@ class AppSidebarContainer extends ConsumerWidget {
     final currentIndex = navigationState.currentIndex;
     final blur = ref.watch(windowBlurProvider);
     final page = SurfaceLevel.page.colorOf(context.colorScheme);
-    final chrome = context.colorScheme.chromeSurface;
     void onSelected(int index) {
       _handleToPage(ref, navigationItems[index].label);
     }
@@ -235,21 +221,14 @@ class AppSidebarContainer extends ConsumerWidget {
         children: [
           AnimatedVisibility.sidebar(
             visible: hasSidebar,
-            child: Material(
-              color: blur
-                  ? chrome.withValues(alpha: kSidebarBlurOpacity)
-                  : chrome,
-              shape: BorderDirectional(end: context.colorScheme.cabinRimSide),
-              child: MediaQuery.removePadding(
-                context: context,
-                removeLeft: !isLtr,
-                removeRight: isLtr,
-                child: _Sidebar(
-                  items: navigationItems,
-                  currentIndex: currentIndex,
-                  viewMode: viewMode,
-                  onSelected: onSelected,
-                ),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeLeft: !isLtr,
+              removeRight: isLtr,
+              child: _Sidebar(
+                items: navigationItems,
+                currentIndex: currentIndex,
+                onSelected: onSelected,
               ),
             ),
           ),

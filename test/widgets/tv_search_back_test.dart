@@ -142,7 +142,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.byType(NavigationSidebar), findsOneWidget);
+    expect(find.byType(HaraNavRail), findsOneWidget);
 
     await tester.tap(find.byGlyph(AppGlyphs.search));
     await tester.pumpAndSettle();

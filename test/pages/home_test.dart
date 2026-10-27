@@ -1,5 +1,6 @@
 import 'package:kfusion/common/app_localizations.dart';
 import 'package:kfusion/common/app_ports.dart';
+import 'package:kfusion/common/l10n_labels.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/manager/app_manager.dart';
@@ -23,7 +24,15 @@ import '../helpers/glyph_finders.dart';
 import '../helpers/preferences.dart';
 import '../helpers/test_app.dart';
 
-Finder _glyph(Glyph glyph) => find.byGlyph(glyph);
+Finder _barItem(PageLabel label) => find.descendant(
+  of: find.byType(HaraNavBar),
+  matching: find.text(label.label),
+);
+
+Finder _railItem(PageLabel label) => find.descendant(
+  of: find.byType(HaraNavRail),
+  matching: find.text(label.label),
+);
 
 void main() {
   setUp(() async {
@@ -73,16 +82,16 @@ void main() {
 
     expect(globalState.navigatorKey.currentContext, isNotNull);
     expect(container.read(viewSizeProvider), const Size(1200, 800));
-    expect(find.byType(FloatingNavigationBar), findsNothing);
+    expect(find.byType(HaraNavBar), findsNothing);
 
     await tester.pump();
 
-    expect(find.byType(NavigationSidebar), findsOneWidget);
-    expect(find.byType(FloatingNavigationBar), findsNothing);
+    expect(find.byType(HaraNavRail), findsOneWidget);
+    expect(find.byType(HaraNavBar), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 150));
 
-    expect(find.byType(FloatingNavigationBar), findsNothing);
+    expect(find.byType(HaraNavBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -141,26 +150,31 @@ void main() {
         tester.element(find.byType(AppSidebarContainer)),
       ).colorScheme;
       expect(sidebarContainer.color, SurfaceLevel.page.colorOf(colorScheme));
-      final sidebarSurface = tester.widget<Material>(
+      final railSurface = tester.widget<Container>(
         find
-            .ancestor(
-              of: find.byType(NavigationSidebar),
-              matching: find.byType(Material),
+            .descendant(
+              of: find.byType(HaraNavRail),
+              matching: find.byType(Container),
             )
             .first,
       );
-      expect(sidebarSurface.color, colorScheme.chromeSurface);
-      expect(sidebarSurface.color, isNot(sidebarContainer.color));
+      final railDecoration = railSurface.decoration! as BoxDecoration;
+      expect(railDecoration.color, HaraPalette.light.bg);
+      expect(railDecoration.color, isNot(sidebarContainer.color));
       expect(
-        (sidebarSurface.shape! as BorderDirectional).end,
-        colorScheme.cabinRimSide,
+        (railDecoration.border! as Border).right.width,
+        HaraSpace.hairline,
+      );
+      expect(
+        (railDecoration.border! as Border).right.color,
+        HaraPalette.light.line,
       );
 
       await tester.tap(find.text('count: 0'));
       await tester.pump();
       expect(find.text('count: 1'), findsOneWidget);
-      expect(find.byType(NavigationSidebar), findsOneWidget);
-      expect(find.byType(FloatingNavigationBar), findsNothing);
+      expect(find.byType(HaraNavRail), findsOneWidget);
+      expect(find.byType(HaraNavBar), findsNothing);
 
       for (var width = 1180.0; width >= 500; width -= 20) {
         tester.view.physicalSize = Size(width, 800);
@@ -170,39 +184,36 @@ void main() {
       }
 
       expect(find.text('count: 1'), findsOneWidget);
-      expect(find.byType(NavigationSidebar), findsOneWidget);
-      expect(find.byType(FloatingNavigationBar), findsOneWidget);
+      expect(find.byType(HaraNavRail), findsOneWidget);
+      expect(find.byType(HaraNavBar), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 150));
       expect(tester.takeException(), isNull);
 
-      final outgoingTools = find.descendant(
-        of: find.byType(NavigationSidebar),
-        matching: _glyph(AppGlyphs.tools),
-      );
+      final outgoingTools = _railItem(PageLabel.tools);
       await tester.tap(outgoingTools, warnIfMissed: false);
       await tester.pump();
       expect(container.read(currentPageLabelProvider), PageLabel.dashboard);
 
       await tester.pump(const Duration(milliseconds: 301));
-      expect(find.byType(NavigationSidebar), findsNothing);
-      expect(find.byType(FloatingNavigationBar), findsOneWidget);
+      expect(find.byType(HaraNavRail), findsNothing);
+      expect(find.byType(HaraNavBar), findsOneWidget);
 
       tester.view.physicalSize = const Size(1200, 800);
       container.read(viewSizeProvider.notifier).value = const Size(1200, 800);
       await tester.pump();
 
       expect(find.text('count: 1'), findsOneWidget);
-      expect(find.byType(NavigationSidebar), findsOneWidget);
-      expect(find.byType(FloatingNavigationBar), findsOneWidget);
+      expect(find.byType(HaraNavRail), findsOneWidget);
+      expect(find.byType(HaraNavBar), findsOneWidget);
 
       await tester.pump(const Duration(milliseconds: 301));
-      expect(find.byType(NavigationSidebar), findsOneWidget);
-      expect(find.byType(FloatingNavigationBar), findsNothing);
+      expect(find.byType(HaraNavRail), findsOneWidget);
+      expect(find.byType(HaraNavBar), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('the sidebar widens in place only at desktop width', (
+  testWidgets('the rail keeps its settled width at every wide layout', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 800);
@@ -242,32 +253,17 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    final sidebar = find.byType(NavigationSidebar);
-    expect(tester.getSize(sidebar).width, 220);
-
-    await tester.tap(find.byTooltip('Collapse'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(container.read(appSettingProvider).sidebarExpanded, isFalse);
-    expect(tester.getSize(sidebar).width, 48);
-
-    await tester.tap(find.byTooltip('Expand'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.getSize(sidebar).width, 220);
+    final sidebar = find.byType(HaraNavRail);
+    expect(tester.getSize(sidebar).width, HaraSpace.railWidth);
+    expect(find.byTooltip('Collapse'), findsNothing);
+    expect(find.byTooltip('Expand'), findsNothing);
 
     tester.view.physicalSize = const Size(800, 800);
     container.read(viewSizeProvider.notifier).value = const Size(800, 800);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.getSize(sidebar).width, 48);
-
-    await tester.tap(find.byTooltip('Expand'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.getSize(sidebar).width, 48);
-    expect(find.text('Tools'), findsNWidgets(2));
-    expect(container.read(appSettingProvider).sidebarExpanded, isTrue);
+    expect(tester.getSize(sidebar).width, HaraSpace.railWidth);
+    expect(find.text('Tools'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -382,7 +378,7 @@ void main() {
       );
       await tester.pump();
       expect(find.byType(ToolsView), findsOneWidget);
-      expect(find.byType(FloatingNavigationBar), findsOneWidget);
+      expect(find.byType(HaraNavBar), findsOneWidget);
 
       for (var width = 520.0; width <= 1200; width += 20) {
         tester.view.physicalSize = Size(width, 800);
@@ -393,7 +389,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 301));
       expect(tester.takeException(), isNull);
       expect(find.byType(ToolsView), findsOneWidget);
-      expect(find.byType(NavigationSidebar), findsOneWidget);
+      expect(find.byType(HaraNavRail), findsOneWidget);
       expect(container.read(currentPageLabelProvider), PageLabel.tools);
 
       for (var width = 1180.0; width >= 500; width -= 20) {
@@ -560,59 +556,56 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.byType(NavigationSidebar), findsOneWidget);
+      expect(find.byType(HaraNavRail), findsOneWidget);
 
       bool focusInSidebar() {
         final context = FocusManager.instance.primaryFocus?.context;
-        return context?.findAncestorWidgetOfExactType<NavigationSidebar>() !=
-            null;
+        return context?.findAncestorWidgetOfExactType<HaraNavRail>() != null;
       }
 
-      Glyph? focusedSidebarIcon() {
+      PageLabel? focusedRailItem() {
         final focusNode = FocusManager.instance.primaryFocus;
         if (!focusInSidebar() || focusNode == null) {
           return null;
         }
-        for (final glyph in [AppGlyphs.dashboard, AppGlyphs.proxies]) {
-          if (focusNode.rect.contains(tester.getCenter(_glyph(glyph)))) {
-            return glyph;
+        for (final label in [PageLabel.dashboard, PageLabel.proxies]) {
+          if (focusNode.rect.contains(tester.getCenter(_railItem(label)))) {
+            return label;
           }
         }
         return null;
       }
 
-      for (var i = 0; i < 30 && focusedSidebarIcon() == null; i++) {
+      for (var i = 0; i < 30 && focusedRailItem() == null; i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
       }
-      expect(focusedSidebarIcon(), AppGlyphs.dashboard);
+      expect(focusedRailItem(), PageLabel.dashboard);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
-      expect(focusedSidebarIcon(), AppGlyphs.proxies);
+      expect(focusedRailItem(), PageLabel.proxies);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
       expect(container.read(currentPageLabelProvider), PageLabel.proxies);
-      final sidebar = tester.widget<NavigationSidebar>(
-        find.byType(NavigationSidebar),
-      );
+      final sidebar = tester.widget<HaraNavRail>(find.byType(HaraNavRail));
       expect(sidebar.selectedIndex, 1);
-      expect(focusedSidebarIcon(), AppGlyphs.proxies);
+      expect(focusedRailItem(), PageLabel.proxies);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
       await tester.pump();
-      expect(focusedSidebarIcon(), AppGlyphs.dashboard);
+      expect(focusedRailItem(), PageLabel.dashboard);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
       expect(container.read(currentPageLabelProvider), PageLabel.dashboard);
-      expect(focusedSidebarIcon(), AppGlyphs.dashboard);
+      expect(focusedRailItem(), PageLabel.dashboard);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
 
-      expect(focusedSidebarIcon(), AppGlyphs.proxies);
+      expect(focusedRailItem(), PageLabel.proxies);
       expect(container.read(currentPageLabelProvider), PageLabel.dashboard);
     },
   );
@@ -689,13 +682,11 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.byType(FloatingNavigationBar), findsOneWidget);
+    expect(find.byType(HaraNavBar), findsOneWidget);
 
-    FloatingNavigationBar navBar() => tester.widget<FloatingNavigationBar>(
-      find.byType(FloatingNavigationBar),
-    );
+    HaraNavBar navBar() => tester.widget<HaraNavBar>(find.byType(HaraNavBar));
 
-    await tester.tap(_glyph(AppGlyphs.tools));
+    await tester.tap(_barItem(PageLabel.tools));
     await tester.pumpAndSettle();
     expect(container.read(currentPageLabelProvider), PageLabel.tools);
     expect(navBar().selectedIndex, 2);
@@ -703,8 +694,7 @@ void main() {
 
     bool focusInNav() {
       final context = FocusManager.instance.primaryFocus?.context;
-      return context?.findAncestorWidgetOfExactType<FloatingNavigationBar>() !=
-          null;
+      return context?.findAncestorWidgetOfExactType<HaraNavBar>() != null;
     }
 
     for (var i = 0; i < 20 && !focusInNav(); i++) {
@@ -721,11 +711,11 @@ void main() {
     expect(navBar().selectedIndex, 1);
     expect(find.text('page:profiles'), findsOneWidget);
 
-    await tester.tap(_glyph(AppGlyphs.tools));
+    await tester.tap(_barItem(PageLabel.tools));
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(_glyph(AppGlyphs.proxies));
+    await tester.tap(_barItem(PageLabel.logs));
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(_glyph(AppGlyphs.profiles));
+    await tester.tap(_barItem(PageLabel.profiles));
     await tester.pumpAndSettle();
     expect(container.read(currentPageLabelProvider), PageLabel.profiles);
     expect(navBar().selectedIndex, 1);
@@ -784,12 +774,11 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(_glyph(AppGlyphs.proxies));
+    await tester.tap(_barItem(PageLabel.proxies));
     await tester.pumpAndSettle();
 
-    int selectedIndex() => tester
-        .widget<FloatingNavigationBar>(find.byType(FloatingNavigationBar))
-        .selectedIndex;
+    int selectedIndex() =>
+        tester.widget<HaraNavBar>(find.byType(HaraNavBar)).selectedIndex;
 
     expect(selectedIndex(), 1);
     expect(find.text('page:proxies active:true'), findsOneWidget);
@@ -808,9 +797,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a non-floating bottom bar leaves the page no bottom inset', (
-    tester,
-  ) async {
+  testWidgets('the text bar leaves the page no bottom inset in either '
+      'bar preference', (tester) async {
     tester.view.physicalSize = const Size(500, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -857,26 +845,22 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.byType(FloatingNavigationBar), findsNothing);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(HaraNavBar), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
     expect(find.text('page:dashboard inset:0.0'), findsOneWidget);
 
-    await tester.tap(_glyph(AppGlyphs.tools));
+    await tester.tap(_barItem(PageLabel.tools));
     await tester.pumpAndSettle();
     expect(container.read(currentPageLabelProvider), PageLabel.tools);
-    expect(
-      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-      1,
-    );
+    expect(tester.widget<HaraNavBar>(find.byType(HaraNavBar)).selectedIndex, 1);
 
     container
         .read(appSettingProvider.notifier)
         .update((state) => state.copyWith(floatingNavigationBar: true));
     await tester.pumpAndSettle();
     expect(find.byType(NavigationBar), findsNothing);
-    expect(find.byType(FloatingNavigationBar), findsOneWidget);
-    expect(find.textContaining('page:tools inset:'), findsOneWidget);
-    expect(find.text('page:tools inset:0.0'), findsNothing);
+    expect(find.byType(HaraNavBar), findsOneWidget);
+    expect(find.text('page:tools inset:0.0'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -989,7 +973,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(_glyph(AppGlyphs.tools));
+    await tester.tap(_barItem(PageLabel.tools));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('page:dashboard'), findsOneWidget);
@@ -999,7 +983,7 @@ void main() {
     expect(find.text('page:dashboard'), findsNothing);
     expect(find.text('page:tools'), findsOneWidget);
 
-    await tester.tap(_glyph(AppGlyphs.dashboard));
+    await tester.tap(_barItem(PageLabel.dashboard));
     await tester.pumpAndSettle();
     expect(find.text('page:dashboard'), findsOneWidget);
     expect(inits.toSet(), {PageLabel.dashboard, PageLabel.tools});
@@ -1061,10 +1045,10 @@ void main() {
     await tester.enterText(find.byType(TextField), 'needle');
     expect(query, 'needle');
 
-    await tester.tap(_glyph(AppGlyphs.tools));
+    await tester.tap(_barItem(PageLabel.tools));
     await tester.pumpAndSettle();
     expect(query, isEmpty);
-    await tester.tap(_glyph(AppGlyphs.dashboard));
+    await tester.tap(_barItem(PageLabel.dashboard));
     await tester.pumpAndSettle();
 
     expect(find.byType(TextField), findsNothing);
@@ -1111,17 +1095,14 @@ void main() {
     );
     await tester.pump();
 
-    Finder railIcon(Glyph glyph) => find.descendant(
-      of: find.byType(NavigationSidebar),
-      matching: _glyph(glyph),
-    );
+    Finder railIcon(PageLabel label) => _railItem(label);
 
-    await tester.tap(railIcon(AppGlyphs.profiles));
+    await tester.tap(railIcon(PageLabel.profiles));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.binding.hasScheduledFrame, isTrue);
 
-    await tester.tap(railIcon(AppGlyphs.dashboard));
+    await tester.tap(railIcon(PageLabel.dashboard));
     await tester.pumpAndSettle();
 
     expect(
@@ -1183,19 +1164,11 @@ void main() {
     await tester.enterText(find.byType(TextField), 'needle');
     expect(query, 'needle');
 
-    final navigationRail = find.byType(NavigationSidebar);
-    await tester.tap(
-      find.descendant(of: navigationRail, matching: _glyph(AppGlyphs.tools)),
-    );
+    await tester.tap(_railItem(PageLabel.tools));
     await tester.pumpAndSettle();
     expect(query, isEmpty);
 
-    await tester.tap(
-      find.descendant(
-        of: navigationRail,
-        matching: _glyph(AppGlyphs.dashboard),
-      ),
-    );
+    await tester.tap(_railItem(PageLabel.dashboard));
     await tester.pumpAndSettle();
 
     expect(find.text('Nested search'), findsOneWidget);
@@ -1322,25 +1295,21 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.byType(NavigationSidebar), findsOneWidget);
+      expect(find.byType(HaraNavRail), findsOneWidget);
 
-      Finder railIcon(Glyph glyph) => find.descendant(
-        of: find.byType(NavigationSidebar),
-        matching: _glyph(glyph),
-      );
+      Finder railIcon(PageLabel label) => _railItem(label);
 
       // Visit another page so its content stays alive in the PageView cache.
-      await tester.tap(railIcon(AppGlyphs.profiles));
+      await tester.tap(railIcon(PageLabel.profiles));
       await tester.pumpAndSettle();
       expect(container.read(currentPageLabelProvider), PageLabel.profiles);
-      await tester.tap(railIcon(AppGlyphs.dashboard));
+      await tester.tap(railIcon(PageLabel.dashboard));
       await tester.pumpAndSettle();
       expect(container.read(currentPageLabelProvider), PageLabel.dashboard);
 
       bool focusInSidebar() {
         final context = FocusManager.instance.primaryFocus?.context;
-        return context?.findAncestorWidgetOfExactType<NavigationSidebar>() !=
-            null;
+        return context?.findAncestorWidgetOfExactType<HaraNavRail>() != null;
       }
 
       for (var i = 0; i < 40 && !focusInSidebar(); i++) {

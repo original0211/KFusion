@@ -3,7 +3,6 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/manager/app_manager.dart';
 import 'package:kfusion/models/common.dart';
 import 'package:kfusion/providers/providers.dart';
-import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
@@ -63,76 +62,31 @@ class _HomeShell extends ConsumerWidget {
     final state = ref.watch(navigationStateProvider);
     final isMobile = state.viewMode == ViewMode.mobile;
     final navigationItems = state.navigationItems;
-    final floating = ref.watch(
-      appSettingProvider.select((state) => state.floatingNavigationBar),
-    );
     return Material(
       color: SurfaceLevel.page.colorOf(context.colorScheme),
       child: Column(
         children: [
           Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: FocusTraversalGroup(
-                    policy: PageTraversalPolicy(),
-                    child: BottomInsetScope(
-                      inset: isMobile && floating
-                          ? NavigationDock.insetOf(context)
-                          : 0,
-                      child: _BodyPadding(isMobile: isMobile, child: child),
-                    ),
-                  ),
-                ),
-                PositionedDirectional(
-                  start: 0,
-                  end: 0,
-                  bottom: 0,
-                  child: AnimatedVisibility.bottomNavigation(
-                    visible: isMobile && floating,
-                    child: _NavigationPadding(
-                      child: NavigationDock(
-                        destinations: [
-                          for (final item in navigationItems)
-                            NavigationDockDestination(
-                              glyph: item.glyph,
-                              label: item.label.label,
-                            ),
-                        ],
-                        selectedIndex: state.currentIndex,
-                        onSelected: (index) {
-                          _handleToPage(navigationItems[index].label, ref);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: FocusTraversalGroup(
+              policy: PageTraversalPolicy(),
+              child: BottomInsetScope(
+                inset: 0,
+                child: _BodyPadding(isMobile: isMobile, child: child),
+              ),
             ),
           ),
           AnimatedVisibility.bottomNavigation(
-            visible: isMobile && !floating,
+            visible: isMobile,
             child: _NavigationPadding(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(top: context.colorScheme.cabinRimSide),
-                ),
-                child: NavigationBar(
-                  destinations: [
-                    for (final (index, item) in navigationItems.indexed)
-                      NavigationDestination(
-                        icon: AnimatedGlyph(
-                          glyph: item.glyph,
-                          filled: index == state.currentIndex,
-                        ),
-                        label: item.label.label,
-                      ),
-                  ],
-                  selectedIndex: state.currentIndex,
-                  onDestinationSelected: (index) {
-                    _handleToPage(navigationItems[index].label, ref);
-                  },
-                ),
+              child: HaraNavBar(
+                items: [
+                  for (final item in navigationItems)
+                    HaraNavItem(label: item.label.label),
+                ],
+                selectedIndex: state.currentIndex,
+                onSelected: (index) {
+                  _handleToPage(navigationItems[index].label, ref);
+                },
               ),
             ),
           ),
