@@ -117,6 +117,25 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                             settled = true
                             break
                         }
+                        SingBoxStartGate.Verdict.SUSPECT -> {
+                            if (deathConfirmed(context)) {
+                                message = if (
+                                    snapshot?.state == SingBoxStatus.State.STARTING
+                                ) {
+                                    deathMessage(context, epoch, snapshot)
+                                } else {
+                                    snapshot?.message?.ifEmpty { null }
+                                        ?: "sing-box 启动失败"
+                                }
+                                settled = true
+                                break
+                            }
+                            if (snapshot?.state == SingBoxStatus.State.RUNNING) {
+                                message = ""
+                                settled = true
+                                break
+                            }
+                        }
                         SingBoxStartGate.Verdict.PENDING -> Unit
                     }
                     Thread.sleep(POLL_INTERVAL_MS)
@@ -126,6 +145,19 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 mainHandler.post { result.success(message) }
             }
         }
+    }
+
+    // SUSPECT's second channel: only an exit record tied to this attempt confirms a death.
+    private fun deathConfirmed(context: Context): Boolean {
+        val attempt = SingBoxStatus.readAttempt(context) ?: return false
+        return SingBoxDeathGate.awaitRecord(
+            DEATH_RECORD_ATTEMPTS,
+            { Thread.sleep(DEATH_RECORD_POLL_MS) },
+        ) {
+            SingBoxExitInfo.latest(context)?.takeIf {
+                SingBoxStagedStart.isAttemptDeath(true, it.timestamp, attempt.since)
+            }
+        } != null
     }
 
     // An exit record is quoted only when the mirrored ledger ties it to this poll's attempt.

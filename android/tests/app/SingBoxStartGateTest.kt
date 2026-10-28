@@ -48,10 +48,10 @@ class SingBoxStartGateTest {
     }
 
     @Test
-    fun thisAttemptsStartingWithADeadPidFails() {
+    fun thisAttemptsStartingWithAnUnseeablePidIsOnlySuspect() {
         val starting = snapshot(SingBoxStatus.State.STARTING, updatedAt = epoch)
         assertEquals(
-            SingBoxStartGate.Verdict.FAILED,
+            SingBoxStartGate.Verdict.SUSPECT,
             verdict(starting, alive = { false }),
         )
     }
@@ -76,12 +76,55 @@ class SingBoxStartGateTest {
     }
 
     @Test
-    fun thisAttemptsRunningWithADeadPidFails() {
+    fun thisAttemptsRunningWithAnUnseeablePidIsOnlySuspect() {
         val running = snapshot(SingBoxStatus.State.RUNNING, updatedAt = epoch + 5)
         assertEquals(
-            SingBoxStartGate.Verdict.FAILED,
+            SingBoxStartGate.Verdict.SUSPECT,
             verdict(running, alive = { false }),
         )
+    }
+
+    // Field replay (2026-10-28 13:09, attempt #160): polls meet the service's
+    // dispatch write (its pid, refreshed 4-6 ms after each epoch), never a death.
+    @Test
+    fun theAttempt160TimelineNeverFailsTheStart() {
+        val appPid = 1000
+        val servicePid = 24907
+        val seeable: (Int) -> Boolean = { it == appPid }
+        val secondEpoch = 1_793_164_177_187L
+        val thirdEpoch = 1_793_164_184_405L
+        val polls = listOf(
+            secondEpoch to snapshot(
+                SingBoxStatus.State.STARTING,
+                updatedAt = secondEpoch,
+                pid = appPid,
+            ),
+            secondEpoch to snapshot(
+                SingBoxStatus.State.STARTING,
+                updatedAt = secondEpoch + 4,
+                pid = servicePid,
+            ),
+            thirdEpoch to snapshot(
+                SingBoxStatus.State.STARTING,
+                updatedAt = thirdEpoch,
+                pid = appPid,
+            ),
+            thirdEpoch to snapshot(
+                SingBoxStatus.State.STARTING,
+                updatedAt = thirdEpoch + 6,
+                pid = servicePid,
+            ),
+        )
+        polls.forEach { (epochMs, snap) ->
+            assertEquals(
+                if (snap.pid == servicePid) {
+                    SingBoxStartGate.Verdict.SUSPECT
+                } else {
+                    SingBoxStartGate.Verdict.PENDING
+                },
+                SingBoxStartGate.verdict(snap, epochMs, seeable),
+            )
+        }
     }
 
     @Test
