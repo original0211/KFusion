@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.26 (2026-10-28)
+
+**Bug Fixes**
+
+- **core** A healthy sing-box start can no longer be pronounced dead for being invisible. The start gate judged the service by whether its /proc entry was visible from the app process, and a sibling process's entry is not reliably visible on Android — so a service that had written its own STARTING snapshot moments earlier, its pid fresh in it, could be failed as 'exited during start' while its router was still loading rule-sets, as the previous release's own verdict-inputs line caught in the act, twice in one start. The gate now returns only suspicion for an unseeable pid, and the poll must confirm the death in the platform's exit history — the same record window the death letter reads — before a start may be failed; unconfirmed, a RUNNING report is taken at the service's word and a STARTING one simply keeps waiting. The budgets, the polling beat and the record window are untouched: what changed is the standard of evidence, from one channel's guess to the platform's own record. (c5964f1)
+- **core** Whether sing-box is running is answered from evidence now, not from visibility. The check shared the start gate's blind spot — a RUNNING report whose pid the app process could not see read as not running however alive the service was, so the interface restored itself around a phantom and more than one switch decision reasoned from the same false negative. A RUNNING report now stands unless the exit history overturns it: a death record for that process later than the report itself; anything older belongs to an earlier incarnation, and where the platform cannot answer, the report is taken at its word. Stopping a service likewise waits for the stop to be real now, instead of reporting success on the first blind look. (2d94976)
+- **core** A slow sing-box start is given the time its slowest phase measurably takes. Fetching rule-sets alone has been seen alive past forty-nine seconds, beyond the old forty-second poll budget — which, once a start may no longer be failed on suspicion, would have torn a healthy start down for slowness alone. The poll budget is ninety seconds now, held in the gate where the contract tests pin it, and the Dart side's sing-box timeout follows at ninety-five, keeping its five-second margin over the service's own verdict; mihomo's budgets are untouched, and a death confirmed in the exit history still lands as fast as it ever did — only an unproven start is waited on longer. (0ac2402)
+
 ## v0.2.25 (2026-10-28)
 
 **Features**
