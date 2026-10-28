@@ -177,47 +177,61 @@ void main() {
       return fake;
     }
 
-    DecoratedBox kindRowBox(WidgetTester tester, String name) {
-      final boxes = tester.widgetList<DecoratedBox>(
-        find.ancestor(of: find.text(name), matching: find.byType(DecoratedBox)),
+    Container kindUnderline(WidgetTester tester, String name) {
+      final column = find
+          .ancestor(of: find.text(name), matching: find.byType(Column))
+          .first;
+      return tester.widget<Container>(
+        find.descendant(
+          of: column,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.color != null &&
+                widget.constraints?.minHeight == 1.2,
+          ),
+        ),
       );
-      return boxes.singleWhere((box) {
-        final decoration = box.decoration;
-        return decoration is ShapeDecoration &&
-            decoration.shape is RoundedSuperellipseBorder &&
-            (decoration.shape as RoundedSuperellipseBorder).borderRadius ==
-                AppRadius.md;
-      });
     }
 
-    testWidgets('the selector reads like the switch card rows', (tester) async {
-      final profile = Profile.normal(
-        label: 'supp test',
-        url: 'https://example.com/sub',
-      );
-      await pumpEdit(tester, profile, {profile.id: CoreKind.mihomo});
+    testWidgets(
+      'the selector reads as text with an ink underline on the current core',
+      (tester) async {
+        final profile = Profile.normal(
+          label: 'supp test',
+          url: 'https://example.com/sub',
+        );
+        await pumpEdit(tester, profile, {profile.id: CoreKind.mihomo});
 
-      expect(find.byType(DropdownButton<CoreKind>), findsNothing);
-      expect(find.text('mihomo'), findsOneWidget);
-      expect(find.text('sing-box'), findsOneWidget);
-      expect(find.byType(DashboardDiscMotif), findsNWidgets(2));
-      expect(find.byType(SelectionCheck), findsOneWidget);
-      final fieldContext = tester.element(
-        find.ancestor(of: find.text('运行核心'), matching: find.byType(CommonCard)),
-      );
-      final colorScheme = Theme.of(fieldContext).colorScheme;
-      final rowBox = kindRowBox(tester, 'mihomo');
-      final decoration = rowBox.decoration as ShapeDecoration;
-      expect(
-        decoration.color,
-        fieldContext.raisedSurfaceLevel.colorOf(colorScheme),
-      );
-      final checkRect = tester.getRect(find.byType(SelectionCheck));
-      final mihomoRowRect = tester.getRect(find.byWidget(rowBox));
-      expect(mihomoRowRect.contains(checkRect.center), isTrue);
-      expect(find.byTooltip('Save'), findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsNothing);
-    });
+        expect(find.byType(DropdownButton<CoreKind>), findsNothing);
+        expect(find.text('mihomo'), findsOneWidget);
+        expect(find.text('sing-box'), findsOneWidget);
+        final field = find.ancestor(
+          of: find.text('运行核心'),
+          matching: find.byType(CommonCard),
+        );
+        expect(
+          find.descendant(of: field, matching: find.byType(DashboardDiscMotif)),
+          findsNothing,
+        );
+        expect(
+          find.descendant(of: field, matching: find.byType(SelectionCheck)),
+          findsNothing,
+        );
+        expect(kindUnderline(tester, 'mihomo').color, const Color(0xFF1A1A1A));
+        expect(kindUnderline(tester, 'sing-box').color, Colors.transparent);
+        expect(
+          tester.widget<Text>(find.text('mihomo')).style?.fontWeight,
+          FontWeight.w500,
+        );
+        expect(
+          tester.widget<Text>(find.text('sing-box')).style?.fontWeight,
+          FontWeight.w400,
+        );
+        expect(find.byTooltip('Save'), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
 
     testWidgets('tapping a kind row reuses the persisted setKind wiring', (
       tester,
@@ -233,12 +247,8 @@ void main() {
       await tester.tap(find.text('sing-box'));
       await tester.pump();
       expect(fake.calls, [(profile.id, CoreKind.singbox)]);
-      expect(find.byType(SelectionCheck), findsOneWidget);
-      final checkRect = tester.getRect(find.byType(SelectionCheck));
-      final singBoxRowRect = tester.getRect(
-        find.byWidget(kindRowBox(tester, 'sing-box')),
-      );
-      expect(singBoxRowRect.contains(checkRect.center), isTrue);
+      expect(kindUnderline(tester, 'sing-box').color, const Color(0xFF1A1A1A));
+      expect(kindUnderline(tester, 'mihomo').color, Colors.transparent);
 
       await tester.tap(find.text('sing-box'));
       await tester.pump();

@@ -439,6 +439,9 @@ class _CoreKindField extends ConsumerWidget {
 
   final int profileId;
 
+  // The selector reads as text in the Hara A reading: the current core is
+  // ink with a 1.2 ink underline, the other is dim. The tap still writes
+  // through coreKindsProvider exactly as the raised rows did.
   Widget _coreRow(
     BuildContext context,
     WidgetRef ref,
@@ -446,42 +449,33 @@ class _CoreKindField extends ConsumerWidget {
     CoreKind current,
   ) {
     final selected = kind == current;
-    final colorScheme = context.colorScheme;
-    const shape = AppShape.md;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: context.raisedSurfaceLevel.colorOf(colorScheme),
-        shape: shape,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          customBorder: shape,
-          onTap: selected
-              ? null
-              : () => ref
-                    .read(coreKindsProvider.notifier)
-                    .setKind(profileId, kind),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                DashboardDiscMotif(
-                  size: 20,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
+    final palette = context.haraPalette;
+    return InkWell(
+      customBorder: AppShape.hara,
+      onTap: selected
+          ? null
+          : () => ref.read(coreKindsProvider.notifier).setKind(profileId, kind),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                coreKindDisplayName(kind),
+                style: HaraText.mode(
+                  context,
+                  selected ? palette.ink : palette.dim,
+                  selected: selected,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    coreKindDisplayName(kind),
-                    style: context.listTitleStyle,
-                  ),
-                ),
-                if (selected) const SelectionCheck(),
-              ],
-            ),
+              ),
+              const SizedBox(height: 5),
+              Container(
+                height: 1.2,
+                color: selected ? palette.ink : Colors.transparent,
+              ),
+            ],
           ),
         ),
       ),
