@@ -6,6 +6,17 @@ import com.kfusion.singbox.SingBoxStatus
 internal object SingBoxStartGate {
     enum class Verdict { PENDING, RUNNING, FAILED, SUSPECT }
 
+    // One start's total poll patience, counted from its epoch. A healthy
+    // fetch phase alone has kept a start in flight past 49 s on field
+    // devices, so the old 40 s budget condemned live starts; a real death
+    // is confirmed through exit history in ~5 s, never by this budget.
+    // The Dart channel budget (95 s) sits above it: the verdict stays
+    // the service's.
+    const val POLL_BUDGET_MS = 90_000L
+
+    fun expired(nowMs: Long, epochMs: Long): Boolean =
+        nowMs - epochMs >= POLL_BUDGET_MS
+
     fun verdict(
         snapshot: SingBoxStatus.Snapshot?,
         epochMs: Long,

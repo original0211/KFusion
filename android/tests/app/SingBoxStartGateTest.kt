@@ -128,6 +128,56 @@ class SingBoxStartGateTest {
     }
 
     @Test
+    fun thePollBudgetIsNinetySeconds() {
+        assertEquals(90_000L, SingBoxStartGate.POLL_BUDGET_MS)
+        assertEquals(false, SingBoxStartGate.expired(epoch + 89_999, epoch))
+        assertEquals(true, SingBoxStartGate.expired(epoch + 90_000, epoch))
+    }
+
+    // Attempt #160's shape stretched past the longest field-observed
+    // fetch: in flight at +49 s, where the old 40 s budget expired.
+    @Test
+    fun aStartStillInFlightPastFortyNineSecondsStaysWithinBudget() {
+        val startEpoch = 1_793_164_168_268L
+        val appPid = 1000
+        val servicePid = 24907
+        val seeable: (Int) -> Boolean = { it == appPid }
+        val starting = snapshot(
+            SingBoxStatus.State.STARTING,
+            updatedAt = startEpoch + 4,
+            pid = servicePid,
+        )
+        val inFlight = listOf(
+            200L to snapshot(
+                SingBoxStatus.State.STARTING,
+                updatedAt = startEpoch,
+                pid = appPid,
+            ),
+            4_000L to starting,
+            38_500L to starting,
+            49_000L to starting,
+            75_000L to starting,
+            89_900L to snapshot(
+                SingBoxStatus.State.RUNNING,
+                updatedAt = startEpoch + 80_000,
+                pid = servicePid,
+            ),
+        )
+        inFlight.forEach { (offset, snap) ->
+            assertEquals(
+                if (snap.pid == servicePid) {
+                    SingBoxStartGate.Verdict.SUSPECT
+                } else {
+                    SingBoxStartGate.Verdict.PENDING
+                },
+                SingBoxStartGate.verdict(snap, startEpoch, seeable),
+            )
+            assertEquals(false, SingBoxStartGate.expired(startEpoch + offset, startEpoch))
+        }
+        assertEquals(true, SingBoxStartGate.expired(startEpoch + 90_000, startEpoch))
+    }
+
+    @Test
     fun thisAttemptsFailureFails() {
         val failed = snapshot(SingBoxStatus.State.FAILED, updatedAt = epoch + 5)
         assertEquals(SingBoxStartGate.Verdict.FAILED, verdict(failed))

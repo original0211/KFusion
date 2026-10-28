@@ -96,10 +96,9 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
                 return@prepareVpn
             }
             thread(name = "singbox-start-wait") {
-                val deadline = System.currentTimeMillis() + START_TIMEOUT_MS
                 var message = "sing-box 服务启动超时"
                 var settled = false
-                while (System.currentTimeMillis() < deadline) {
+                while (!SingBoxStartGate.expired(System.currentTimeMillis(), epoch)) {
                     val snapshot = SingBoxStatus.read(context)
                     when (SingBoxStartGate.verdict(snapshot, epoch, SingBoxStatus::isPidAlive)) {
                         SingBoxStartGate.Verdict.RUNNING -> {
@@ -333,8 +332,6 @@ class SingBoxPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAw
     private companion object {
         val SINGBOX_CHANNEL = "${Components.PACKAGE_NAME}/singbox"
         const val VPN_PERMISSION_REQUEST_CODE = 1007
-        // Under the Dart channel budget (45s): the verdict stays the service's.
-        const val START_TIMEOUT_MS = 40_000L
         const val CHECK_TIMEOUT_MS = 30_000L
         const val CHECK_ATTEMPTS = 2
         const val STOP_TIMEOUT_MS = 5_000L
