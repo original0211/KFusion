@@ -15,6 +15,7 @@ const aSurfaces = <String>[
   'lib/views/dashboard/hara_dashboard.dart',
   'lib/views/proxies/hara_proxies.dart',
   'lib/views/profiles/hara_profiles.dart',
+  'lib/views/profiles/singbox_degradations.dart',
   'lib/views/profiles/universal_import.dart',
 ];
 

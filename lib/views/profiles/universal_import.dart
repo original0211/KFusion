@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -8,6 +9,7 @@ import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
+import 'package:kfusion/views/profiles/singbox_degradations.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,12 +120,35 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
       final label = _labelController.text.trim().isEmpty
           ? 'KFusion 导入'
           : _labelController.text.trim();
-      await ref
+      final saved = await ref
           .read(profilesActionProvider.notifier)
           .addUniversalProfile(label, yamlText);
       if (!mounted) return;
+      final degradations = await scanAndStoreSingBoxDegradations(
+        ref.read(singBoxDegradationStoreProvider),
+        saved.id,
+      );
+      ref.invalidate(profileDegradationsProvider(saved.id));
+      var viewList = false;
+      if (degradations.isNotEmpty && mounted) {
+        viewList =
+            await showSingBoxImportSummary(context, degradations.length) ??
+            false;
+      }
+      if (!mounted) return;
       globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
       ref.read(currentPageLabelProvider.notifier).toProfiles();
+      if (viewList) {
+        final homeContext = globalState.navigatorKey.currentContext;
+        if (homeContext != null && homeContext.mounted) {
+          unawaited(
+            BaseNavigator.push(
+              homeContext,
+              SingBoxDegradationsView(profile: saved),
+            ),
+          );
+        }
+      }
     } catch (e) {
       setState(() => _error = '导入失败：${compactError(e)}');
     } finally {

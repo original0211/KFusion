@@ -8,6 +8,7 @@ import 'package:kfusion/core/singbox/singbox_binary.dart';
 import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/core_kind.dart';
 import 'package:kfusion/features/config_hub/core_switch.dart';
+import 'package:kfusion/features/config_hub/singbox_degradations.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/plugins/singbox.dart';
@@ -454,6 +455,12 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
               )
             : const SingBoxStatus(state: SingBoxState.idle),
       );
+      if (target == CoreKind.singbox && ready != null && id != null) {
+        await ref
+            .read(singBoxDegradationStoreProvider)
+            .write(id, ready.rendered.degradations);
+        ref.invalidate(profileDegradationsProvider(id));
+      }
       return;
     }
 

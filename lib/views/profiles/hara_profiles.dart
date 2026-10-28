@@ -4,10 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/views/profiles/add.dart';
 import 'package:kfusion/views/profiles/profiles.dart';
+import 'package:kfusion/views/profiles/singbox_degradations.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -318,6 +320,7 @@ class _HaraProfileRow extends ConsumerWidget {
                     const SizedBox(height: HaraSpace.profileMetaGap),
                     _metaLine2(context, palette, isUpdating: isUpdating),
                   ],
+                  ..._degradationEntry(context, ref, palette),
                 ],
               ),
             ),
@@ -398,5 +401,38 @@ class _HaraProfileRow extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // Absent while the ledger loads and when nothing degrades.
+  List<Widget> _degradationEntry(
+    BuildContext context,
+    WidgetRef ref,
+    HaraPalette palette,
+  ) {
+    final items = ref.watch(profileDegradationsProvider(profile.id)).value;
+    if (items == null || items.isEmpty) return const [];
+    return [
+      const SizedBox(height: HaraSpace.profileMetaGap),
+      InkWell(
+        customBorder: AppShape.hara,
+        onTap: () {
+          BaseNavigator.push(
+            context,
+            SingBoxDegradationsView(profile: profile),
+          );
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.appLocalizations.singBoxDegradationsCount(items.length),
+              style: HaraText.profileMeta(context, palette.sub),
+            ),
+            const SizedBox(width: 6),
+            Text('→', style: HaraText.addRowArrow(context, palette.sub)),
+          ],
+        ),
+      ),
+    ];
   }
 }

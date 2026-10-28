@@ -8133,12 +8133,251 @@ class AppLocalizations {
     );
   }
 
+  /// `Sing-box degradations`
+  String get singBoxDegradationsTitle {
+    return Intl.message(
+      'Sing-box degradations',
+      name: 'singBoxDegradationsTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} sing-box degradations`
+  String singBoxDegradationsCount(Object count) {
+    return Intl.message(
+      '$count sing-box degradations',
+      name: 'singBoxDegradationsCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Everything is carried over to sing-box`
+  String get singBoxDegradationsAllCarried {
+    return Intl.message(
+      'Everything is carried over to sing-box',
+      name: 'singBoxDegradationsAllCarried',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Imported, with sing-box degradations`
+  String get singBoxDegradationsImportTitle {
+    return Intl.message(
+      'Imported, with sing-box degradations',
+      name: 'singBoxDegradationsImportTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} items in this profile are degraded under sing-box; the list names each one.`
+  String singBoxDegradationsImportSummary(Object count) {
+    return Intl.message(
+      '$count items in this profile are degraded under sing-box; the list names each one.',
+      name: 'singBoxDegradationsImportSummary',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `View list`
+  String get singBoxDegradationsView {
+    return Intl.message(
+      'View list',
+      name: 'singBoxDegradationsView',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Node protocols`
+  String get singBoxDegradationKindNodeProtocol {
+    return Intl.message(
+      'Node protocols',
+      name: 'singBoxDegradationKindNodeProtocol',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group types`
+  String get singBoxDegradationKindGroupType {
+    return Intl.message(
+      'Group types',
+      name: 'singBoxDegradationKindGroupType',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Nested groups`
+  String get singBoxDegradationKindGroupNested {
+    return Intl.message(
+      'Nested groups',
+      name: 'singBoxDegradationKindGroupNested',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group members`
+  String get singBoxDegradationKindGroupMember {
+    return Intl.message(
+      'Group members',
+      name: 'singBoxDegradationKindGroupMember',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dropped groups`
+  String get singBoxDegradationKindGroupDropped {
+    return Intl.message(
+      'Dropped groups',
+      name: 'singBoxDegradationKindGroupDropped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Chains`
+  String get singBoxDegradationKindChain {
+    return Intl.message(
+      'Chains',
+      name: 'singBoxDegradationKindChain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Routing`
+  String get singBoxDegradationKindRouting {
+    return Intl.message(
+      'Routing',
+      name: 'singBoxDegradationKindRouting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Other`
+  String get singBoxDegradationKindOther {
+    return Intl.message(
+      'Other',
+      name: 'singBoxDegradationKindOther',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Protocol {type} is not supported by sing-box`
+  String singBoxDegradationReasonNodeProtocol(Object type) {
+    return Intl.message(
+      'Protocol $type is not supported by sing-box',
+      name: 'singBoxDegradationReasonNodeProtocol',
+      desc: '',
+      args: [type],
+    );
+  }
+
+  /// `Missing a field sing-box requires (the WireGuard local address)`
+  String get singBoxDegradationReasonNodeUnusable {
+    return Intl.message(
+      'Missing a field sing-box requires (the WireGuard local address)',
+      name: 'singBoxDegradationReasonNodeUnusable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group type {type} is not carried over; only select and url-test are`
+  String singBoxDegradationReasonGroupType(Object type) {
+    return Intl.message(
+      'Group type $type is not carried over; only select and url-test are',
+      name: 'singBoxDegradationReasonGroupType',
+      desc: '',
+      args: [type],
+    );
+  }
+
+  /// `Its members include other groups; nested groups are not carried over`
+  String get singBoxDegradationReasonGroupNested {
+    return Intl.message(
+      'Its members include other groups; nested groups are not carried over',
+      name: 'singBoxDegradationReasonGroupNested',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Member {member} is unavailable under sing-box and was pruned`
+  String singBoxDegradationReasonGroupMember(Object member) {
+    return Intl.message(
+      'Member $member is unavailable under sing-box and was pruned',
+      name: 'singBoxDegradationReasonGroupMember',
+      desc: '',
+      args: [member],
+    );
+  }
+
+  /// `REJECT has no sing-box outbound and was pruned`
+  String get singBoxDegradationReasonGroupMemberReject {
+    return Intl.message(
+      'REJECT has no sing-box outbound and was pruned',
+      name: 'singBoxDegradationReasonGroupMemberReject',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Every member is unavailable, so the group was dropped`
+  String get singBoxDegradationReasonGroupDropped {
+    return Intl.message(
+      'Every member is unavailable, so the group was dropped',
+      name: 'singBoxDegradationReasonGroupDropped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The chain target is unavailable under sing-box, so the chain does not apply`
+  String get singBoxDegradationReasonChain {
+    return Intl.message(
+      'The chain target is unavailable under sing-box, so the chain does not apply',
+      name: 'singBoxDegradationReasonChain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group-level dialer-proxy has no sing-box equivalent`
+  String get singBoxDegradationReasonChainGroup {
+    return Intl.message(
+      'Group-level dialer-proxy has no sing-box equivalent',
+      name: 'singBoxDegradationReasonChainGroup',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} subscription rules were not carried over; the built-in template applies`
+  String singBoxDegradationReasonRouting(Object count) {
+    return Intl.message(
+      '$count subscription rules were not carried over; the built-in template applies',
+      name: 'singBoxDegradationReasonRouting',
+      desc: '',
+      args: [count],
+    );
+  }
+
   /// `{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}`
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',

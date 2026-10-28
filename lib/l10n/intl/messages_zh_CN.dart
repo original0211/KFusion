@@ -198,21 +198,33 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m82(link) => "无法从 ${link} 中读取代理";
 
-  static String m83(percent) => "正在下载 sing-box…${percent}%";
+  static String m83(member) => "成员 ${member} 在 sing-box 下不可用，已剪除";
 
-  static String m84(version, path) => "应用托管的二进制（版本 ${version}）：${path}";
+  static String m84(type) => "组类型 ${type} 未承接，仅保留 select 与 url-test";
 
-  static String m85(label) => "${label}只能是一项";
+  static String m85(type) => "协议 ${type} 不受 sing-box 支持";
 
-  static String m86(value) => "峰值 ${value}";
+  static String m86(count) => "${count} 条订阅分流规则未移植，由内置模板替代";
 
-  static String m87(value) => "累计 ${value}";
+  static String m87(count) => "sing-box 降级 ${count} 项";
 
-  static String m88(label) => "${label}必须为URL";
+  static String m88(count) => "这份配置有 ${count} 项在 sing-box 下被降级，点名清单可逐项查看。";
 
-  static String m89(count) => "${count} 年前";
+  static String m89(percent) => "正在下载 sing-box…${percent}%";
 
-  static String m90(count) => "${count} 年前";
+  static String m90(version, path) => "应用托管的二进制（版本 ${version}）：${path}";
+
+  static String m91(label) => "${label}只能是一项";
+
+  static String m92(value) => "峰值 ${value}";
+
+  static String m93(value) => "累计 ${value}";
+
+  static String m94(label) => "${label}必须为URL";
+
+  static String m95(count) => "${count} 年前";
+
+  static String m96(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1366,19 +1378,72 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
       "未找到 sing-box 二进制",
     ),
+    "singBoxDegradationKindChain": MessageLookupByLibrary.simpleMessage("链"),
+    "singBoxDegradationKindGroupDropped": MessageLookupByLibrary.simpleMessage(
+      "组丢弃",
+    ),
+    "singBoxDegradationKindGroupMember": MessageLookupByLibrary.simpleMessage(
+      "组成员",
+    ),
+    "singBoxDegradationKindGroupNested": MessageLookupByLibrary.simpleMessage(
+      "组嵌套",
+    ),
+    "singBoxDegradationKindGroupType": MessageLookupByLibrary.simpleMessage(
+      "组型",
+    ),
+    "singBoxDegradationKindNodeProtocol": MessageLookupByLibrary.simpleMessage(
+      "节点协议",
+    ),
+    "singBoxDegradationKindOther": MessageLookupByLibrary.simpleMessage("其他"),
+    "singBoxDegradationKindRouting": MessageLookupByLibrary.simpleMessage(
+      "分流模板",
+    ),
+    "singBoxDegradationReasonChain": MessageLookupByLibrary.simpleMessage(
+      "链式前置目标在 sing-box 下不可用，未生效",
+    ),
+    "singBoxDegradationReasonChainGroup": MessageLookupByLibrary.simpleMessage(
+      "组级 dialer-proxy 在 sing-box 无对应字段",
+    ),
+    "singBoxDegradationReasonGroupDropped":
+        MessageLookupByLibrary.simpleMessage("组内成员全部不可用，整组已跳过"),
+    "singBoxDegradationReasonGroupMember": m83,
+    "singBoxDegradationReasonGroupMemberReject":
+        MessageLookupByLibrary.simpleMessage("REJECT 在 sing-box 无对应出站，已剪除"),
+    "singBoxDegradationReasonGroupNested": MessageLookupByLibrary.simpleMessage(
+      "成员包含其他组，嵌套组未承接",
+    ),
+    "singBoxDegradationReasonGroupType": m84,
+    "singBoxDegradationReasonNodeProtocol": m85,
+    "singBoxDegradationReasonNodeUnusable":
+        MessageLookupByLibrary.simpleMessage(
+          "缺少 sing-box 所需参数（WireGuard 本地地址）",
+        ),
+    "singBoxDegradationReasonRouting": m86,
+    "singBoxDegradationsAllCarried": MessageLookupByLibrary.simpleMessage(
+      "全部承接，sing-box 下无降级",
+    ),
+    "singBoxDegradationsCount": m87,
+    "singBoxDegradationsImportSummary": m88,
+    "singBoxDegradationsImportTitle": MessageLookupByLibrary.simpleMessage(
+      "导入完成（有 sing-box 降级）",
+    ),
+    "singBoxDegradationsTitle": MessageLookupByLibrary.simpleMessage(
+      "sing-box 降级清单",
+    ),
+    "singBoxDegradationsView": MessageLookupByLibrary.simpleMessage("查看清单"),
     "singBoxDownload": MessageLookupByLibrary.simpleMessage("下载 sing-box"),
     "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
       "sing-box 未随包附带。可下载官方钉版（约 33 MB）到应用数据目录，应用升级不会丢失；也可按 tools/singbox/README.md 手工摆放 sing-box.exe。",
     ),
     "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage("重试下载"),
-    "singBoxDownloading": m83,
-    "singBoxManagedBinary": m84,
+    "singBoxDownloading": m89,
+    "singBoxManagedBinary": m90,
     "singleAdd": MessageLookupByLibrary.simpleMessage("单条添加"),
     "singleImport": MessageLookupByLibrary.simpleMessage("单条导入"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "这里只能填写一条链接，多条请在列表的快速编辑中填写",
     ),
-    "singleValueTip": m85,
+    "singleValueTip": m91,
     "size": MessageLookupByLibrary.simpleMessage("尺寸"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage("跳过证书验证"),
     "skipDomain": MessageLookupByLibrary.simpleMessage("跳过域名"),
@@ -1463,8 +1528,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("上传总量"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy端口"),
     "traffic": MessageLookupByLibrary.simpleMessage("流量"),
-    "trafficPeak": m86,
-    "trafficTotal": m87,
+    "trafficPeak": m92,
+    "trafficTotal": m93,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量统计"),
     "transport": MessageLookupByLibrary.simpleMessage("传输协议"),
     "tun": MessageLookupByLibrary.simpleMessage("虚拟网卡"),
@@ -1494,7 +1559,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("上行带宽"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m88,
+    "urlTip": m94,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "usedShort": MessageLookupByLibrary.simpleMessage("已用"),
@@ -1517,8 +1582,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "写入系统会同时设置系统时钟，Android 上不生效。",
     ),
-    "yearsAgo": m89,
-    "yearsAgoShort": m90,
+    "yearsAgo": m95,
+    "yearsAgoShort": m96,
     "yes": MessageLookupByLibrary.simpleMessage("是"),
     "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };

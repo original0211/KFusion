@@ -227,23 +227,39 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m82(link) => "Не удалось прочитать прокси из ${link}";
 
-  static String m83(percent) => "Загрузка sing-box… ${percent}%";
+  static String m83(member) =>
+      "Участник ${member} недоступен в sing-box и был исключён";
 
-  static String m84(version, path) =>
+  static String m84(type) =>
+      "Тип группы ${type} не переносится; остаются только select и url-test";
+
+  static String m85(type) => "Протокол ${type} не поддерживается в sing-box";
+
+  static String m86(count) =>
+      "Правила подписки (${count}) не перенесены; применяется встроенный шаблон";
+
+  static String m87(count) => "Деградаций sing-box: ${count}";
+
+  static String m88(count) =>
+      "В этом профиле ${count} элементов деградируют в sing-box; список называет каждый.";
+
+  static String m89(percent) => "Загрузка sing-box… ${percent}%";
+
+  static String m90(version, path) =>
       "Управляемый приложением бинарный файл (версия ${version}): ${path}";
 
-  static String m85(label) => "«${label}» — только одно значение";
+  static String m91(label) => "«${label}» — только одно значение";
 
-  static String m86(value) => "Пик ${value}";
+  static String m92(value) => "Пик ${value}";
 
-  static String m87(value) => "Всего ${value}";
+  static String m93(value) => "Всего ${value}";
 
-  static String m88(label) => "Значение «${label}» должно быть URL";
+  static String m94(label) => "Значение «${label}» должно быть URL";
 
-  static String m89(count) =>
+  static String m95(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
-  static String m90(count) =>
+  static String m96(count) =>
       "${Intl.plural(count, one: '${count} г. назад', few: '${count} г. назад', many: '${count} л. назад', other: '${count} г. назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -1067,9 +1083,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -1839,6 +1856,69 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
       "Бинарный файл sing-box не найден",
     ),
+    "singBoxDegradationKindChain": MessageLookupByLibrary.simpleMessage(
+      "Цепочки",
+    ),
+    "singBoxDegradationKindGroupDropped": MessageLookupByLibrary.simpleMessage(
+      "Удалённые группы",
+    ),
+    "singBoxDegradationKindGroupMember": MessageLookupByLibrary.simpleMessage(
+      "Участники групп",
+    ),
+    "singBoxDegradationKindGroupNested": MessageLookupByLibrary.simpleMessage(
+      "Вложенные группы",
+    ),
+    "singBoxDegradationKindGroupType": MessageLookupByLibrary.simpleMessage(
+      "Типы групп",
+    ),
+    "singBoxDegradationKindNodeProtocol": MessageLookupByLibrary.simpleMessage(
+      "Протоколы узлов",
+    ),
+    "singBoxDegradationKindOther": MessageLookupByLibrary.simpleMessage(
+      "Прочее",
+    ),
+    "singBoxDegradationKindRouting": MessageLookupByLibrary.simpleMessage(
+      "Маршрутизация",
+    ),
+    "singBoxDegradationReasonChain": MessageLookupByLibrary.simpleMessage(
+      "Цель цепочки недоступна в sing-box, поэтому цепочка не применяется",
+    ),
+    "singBoxDegradationReasonChainGroup": MessageLookupByLibrary.simpleMessage(
+      "Для группового dialer-proxy нет эквивалента в sing-box",
+    ),
+    "singBoxDegradationReasonGroupDropped":
+        MessageLookupByLibrary.simpleMessage(
+          "Все участники недоступны, поэтому группа удалена",
+        ),
+    "singBoxDegradationReasonGroupMember": m83,
+    "singBoxDegradationReasonGroupMemberReject":
+        MessageLookupByLibrary.simpleMessage(
+          "Для REJECT нет исходящего соединения sing-box, он был исключён",
+        ),
+    "singBoxDegradationReasonGroupNested": MessageLookupByLibrary.simpleMessage(
+      "Участники включают другие группы; вложенные группы не переносятся",
+    ),
+    "singBoxDegradationReasonGroupType": m84,
+    "singBoxDegradationReasonNodeProtocol": m85,
+    "singBoxDegradationReasonNodeUnusable":
+        MessageLookupByLibrary.simpleMessage(
+          "Не хватает поля, нужного sing-box (локальный адрес WireGuard)",
+        ),
+    "singBoxDegradationReasonRouting": m86,
+    "singBoxDegradationsAllCarried": MessageLookupByLibrary.simpleMessage(
+      "Всё переносится в sing-box",
+    ),
+    "singBoxDegradationsCount": m87,
+    "singBoxDegradationsImportSummary": m88,
+    "singBoxDegradationsImportTitle": MessageLookupByLibrary.simpleMessage(
+      "Импортировано, с деградациями sing-box",
+    ),
+    "singBoxDegradationsTitle": MessageLookupByLibrary.simpleMessage(
+      "Деградации sing-box",
+    ),
+    "singBoxDegradationsView": MessageLookupByLibrary.simpleMessage(
+      "Показать список",
+    ),
     "singBoxDownload": MessageLookupByLibrary.simpleMessage("Скачать sing-box"),
     "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
       "sing-box не входит в комплект. Скачайте закреплённую официальную сборку (около 33 МБ) в папку данных приложения — она сохранится при обновлениях. Можно также разместить sing-box.exe вручную, см. tools/singbox/README.md.",
@@ -1846,14 +1926,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage(
       "Повторить загрузку",
     ),
-    "singBoxDownloading": m83,
-    "singBoxManagedBinary": m84,
+    "singBoxDownloading": m89,
+    "singBoxManagedBinary": m90,
     "singleAdd": MessageLookupByLibrary.simpleMessage("По одному"),
     "singleImport": MessageLookupByLibrary.simpleMessage("По одному"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "Здесь укажите одну ссылку, несколько можно задать в быстром редактировании списка",
     ),
-    "singleValueTip": m85,
+    "singleValueTip": m91,
     "size": MessageLookupByLibrary.simpleMessage("Размер"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage(
       "Пропускать проверку сертификата",
@@ -1974,8 +2054,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Отдано"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Порт TProxy"),
     "traffic": MessageLookupByLibrary.simpleMessage("Трафик"),
-    "trafficPeak": m86,
-    "trafficTotal": m87,
+    "trafficPeak": m92,
+    "trafficTotal": m93,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Статистика трафика"),
     "transport": MessageLookupByLibrary.simpleMessage("Транспорт"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -2011,7 +2091,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("Отдача"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Скорость отдачи"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m88,
+    "urlTip": m94,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системный hosts",
@@ -2044,8 +2124,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "«Записывать в систему» также устанавливает системные часы; Android это игнорирует.",
     ),
-    "yearsAgo": m89,
-    "yearsAgoShort": m90,
+    "yearsAgo": m95,
+    "yearsAgoShort": m96,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };

@@ -61,6 +61,7 @@ class ProfilesAction extends _$ProfilesAction {
 
   void putProfile(Profile profile) {
     ref.read(profilesProvider.notifier).put(profile);
+    unawaited(refreshSingBoxDegradations(ref, profile.id));
     if (ref.read(currentProfileIdProvider) != null) return;
     ref.read(currentProfileIdProvider.notifier).value = profile.id;
   }
@@ -159,6 +160,7 @@ class ProfilesAction extends _$ProfilesAction {
         lastUpdateDate: updated.lastUpdateDate,
       );
       ref.read(profilesProvider.notifier).put(newProfile);
+      unawaited(refreshSingBoxDegradations(ref, profile.id));
       if (profile.id == ref.read(currentProfileIdProvider)) {
         ref
             .read(setupActionProvider.notifier)
@@ -472,6 +474,7 @@ class ProfilesAction extends _$ProfilesAction {
   }
 
   Future<void> clearEffect(int profileId) async {
+    unawaited(removeSingBoxDegradations(ref, profileId));
     final profilePath = await appPath.getProfilePath(profileId.toString());
     final profileFile = File(profilePath);
     final isExists = await profileFile.exists();

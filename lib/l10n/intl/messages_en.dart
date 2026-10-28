@@ -229,23 +229,39 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m82(link) => "No proxy could be read from ${link}";
 
-  static String m83(percent) => "Downloading sing-box… ${percent}%";
+  static String m83(member) =>
+      "Member ${member} is unavailable under sing-box and was pruned";
 
-  static String m84(version, path) =>
+  static String m84(type) =>
+      "Group type ${type} is not carried over; only select and url-test are";
+
+  static String m85(type) => "Protocol ${type} is not supported by sing-box";
+
+  static String m86(count) =>
+      "${count} subscription rules were not carried over; the built-in template applies";
+
+  static String m87(count) => "${count} sing-box degradations";
+
+  static String m88(count) =>
+      "${count} items in this profile are degraded under sing-box; the list names each one.";
+
+  static String m89(percent) => "Downloading sing-box… ${percent}%";
+
+  static String m90(version, path) =>
       "App-managed binary (version ${version}): ${path}";
 
-  static String m85(label) => "${label} must be a single item";
+  static String m91(label) => "${label} must be a single item";
 
-  static String m86(value) => "Peak ${value}";
+  static String m92(value) => "Peak ${value}";
 
-  static String m87(value) => "Total ${value}";
+  static String m93(value) => "Total ${value}";
 
-  static String m88(label) => "${label} must be a URL";
+  static String m94(label) => "${label} must be a URL";
 
-  static String m89(count) =>
+  static String m95(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
-  static String m90(count) => "${Intl.plural(count, other: '${count}y ago')}";
+  static String m96(count) => "${Intl.plural(count, other: '${count}y ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1028,9 +1044,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Enter the rule content",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -1758,6 +1775,69 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxBinaryMissing": MessageLookupByLibrary.simpleMessage(
       "sing-box binary not found",
     ),
+    "singBoxDegradationKindChain": MessageLookupByLibrary.simpleMessage(
+      "Chains",
+    ),
+    "singBoxDegradationKindGroupDropped": MessageLookupByLibrary.simpleMessage(
+      "Dropped groups",
+    ),
+    "singBoxDegradationKindGroupMember": MessageLookupByLibrary.simpleMessage(
+      "Group members",
+    ),
+    "singBoxDegradationKindGroupNested": MessageLookupByLibrary.simpleMessage(
+      "Nested groups",
+    ),
+    "singBoxDegradationKindGroupType": MessageLookupByLibrary.simpleMessage(
+      "Group types",
+    ),
+    "singBoxDegradationKindNodeProtocol": MessageLookupByLibrary.simpleMessage(
+      "Node protocols",
+    ),
+    "singBoxDegradationKindOther": MessageLookupByLibrary.simpleMessage(
+      "Other",
+    ),
+    "singBoxDegradationKindRouting": MessageLookupByLibrary.simpleMessage(
+      "Routing",
+    ),
+    "singBoxDegradationReasonChain": MessageLookupByLibrary.simpleMessage(
+      "The chain target is unavailable under sing-box, so the chain does not apply",
+    ),
+    "singBoxDegradationReasonChainGroup": MessageLookupByLibrary.simpleMessage(
+      "Group-level dialer-proxy has no sing-box equivalent",
+    ),
+    "singBoxDegradationReasonGroupDropped":
+        MessageLookupByLibrary.simpleMessage(
+          "Every member is unavailable, so the group was dropped",
+        ),
+    "singBoxDegradationReasonGroupMember": m83,
+    "singBoxDegradationReasonGroupMemberReject":
+        MessageLookupByLibrary.simpleMessage(
+          "REJECT has no sing-box outbound and was pruned",
+        ),
+    "singBoxDegradationReasonGroupNested": MessageLookupByLibrary.simpleMessage(
+      "Its members include other groups; nested groups are not carried over",
+    ),
+    "singBoxDegradationReasonGroupType": m84,
+    "singBoxDegradationReasonNodeProtocol": m85,
+    "singBoxDegradationReasonNodeUnusable":
+        MessageLookupByLibrary.simpleMessage(
+          "Missing a field sing-box requires (the WireGuard local address)",
+        ),
+    "singBoxDegradationReasonRouting": m86,
+    "singBoxDegradationsAllCarried": MessageLookupByLibrary.simpleMessage(
+      "Everything is carried over to sing-box",
+    ),
+    "singBoxDegradationsCount": m87,
+    "singBoxDegradationsImportSummary": m88,
+    "singBoxDegradationsImportTitle": MessageLookupByLibrary.simpleMessage(
+      "Imported, with sing-box degradations",
+    ),
+    "singBoxDegradationsTitle": MessageLookupByLibrary.simpleMessage(
+      "Sing-box degradations",
+    ),
+    "singBoxDegradationsView": MessageLookupByLibrary.simpleMessage(
+      "View list",
+    ),
     "singBoxDownload": MessageLookupByLibrary.simpleMessage(
       "Download sing-box",
     ),
@@ -1767,14 +1847,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage(
       "Retry download",
     ),
-    "singBoxDownloading": m83,
-    "singBoxManagedBinary": m84,
+    "singBoxDownloading": m89,
+    "singBoxManagedBinary": m90,
     "singleAdd": MessageLookupByLibrary.simpleMessage("Single add"),
     "singleImport": MessageLookupByLibrary.simpleMessage("Single import"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "Enter one link here; edit several from the quick edit of the list",
     ),
-    "singleValueTip": m85,
+    "singleValueTip": m91,
     "size": MessageLookupByLibrary.simpleMessage("Size"),
     "skipCertVerify": MessageLookupByLibrary.simpleMessage(
       "Skip certificate verification",
@@ -1883,8 +1963,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Uploaded"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxy port"),
     "traffic": MessageLookupByLibrary.simpleMessage("Traffic"),
-    "trafficPeak": m86,
-    "trafficTotal": m87,
+    "trafficPeak": m92,
+    "trafficTotal": m93,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),
     "transport": MessageLookupByLibrary.simpleMessage("Transport"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
@@ -1918,7 +1998,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Upload bandwidth"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
-    "urlTip": m88,
+    "urlTip": m94,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "usedShort": MessageLookupByLibrary.simpleMessage("used"),
@@ -1943,8 +2023,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Write to system also sets the system clock; Android ignores it.",
     ),
-    "yearsAgo": m89,
-    "yearsAgoShort": m90,
+    "yearsAgo": m95,
+    "yearsAgoShort": m96,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
