@@ -255,6 +255,14 @@ abstract final class HaraText {
   static TextStyle pageAction(BuildContext context, Color color) {
     return _of(context, size: 12.5, color: color);
   }
+
+  static TextStyle action(BuildContext context, Color color) {
+    return _of(context, size: 13.5, weight: FontWeight.w500, color: color);
+  }
+
+  static TextStyle payload(BuildContext context, Color color) {
+    return _of(context, size: 12.5, color: color, mono: true);
+  }
 }
 
 /// Settled A measurements: the single hairline, the page inset and the
@@ -287,6 +295,17 @@ abstract final class HaraSpace {
   static const dataRowVertical = 13.5;
   static const listToModeGap = 34.0;
   static const modeToNavGap = 30.0;
+  static const titleTopGap = 24.0;
+  static const titleToFirstGroup = 42.0;
+  static const groupGap = 36.0;
+  static const sectionTitleGap = 8.0;
+  static const nodeRowVertical = 14.5;
+  static const titleToList = 38.0;
+  static const profileRowVertical = 20.0;
+  static const profileNameToMeta = 8.0;
+  static const profileMetaGap = 3.0;
+  static const listToAddGap = 46.0;
+  static const addRowVertical = 15.0;
 }
 
 /// The one hairline of the A surfaces: 0.7 logical pixels, palette line
