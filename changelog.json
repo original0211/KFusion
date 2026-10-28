@@ -2,6 +2,24 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.31",
+      "tag": "v0.2.31",
+      "date": "2026-10-29",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "5932a9c",
+              "scope": "singbox",
+              "text": "A native sing-box JSON profile is now fed to the sing-box kernel exactly as imported instead of being converted through the clash render. The universal import recognises the format, checks its structure and stores the bytes untouched; switching to such a profile hands the stored text to the kernel as-is, with its ports, TUN inbound and readiness following the config itself, which must declare its own experimental.clash_api endpoint for the app's panel and probes. Mihomo refuses a native profile in plain words at preflight instead of failing obscurely, and the degradation ledger treats a native profile as not applicable instead of reporting an empty list."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.30",
       "tag": "v0.2.30",
       "date": "2026-10-29",
