@@ -107,8 +107,18 @@ List<Map<String, Object?>> _outbounds(Map<String, Object?> config) {
   return const [];
 }
 
+List<SingBoxDegradation> _degradationsOf(
+  SingBoxRenderResult result,
+  SingBoxDegradationKind kind,
+) {
+  return [
+    for (final degradation in result.degradations)
+      if (degradation.kind == kind) degradation,
+  ];
+}
+
 void main() {
-  test('clash sample renders to sing-box json', () {
+  test('clash sample renders to sing-box json under the contract', () {
     final result = renderSingBoxFromClash(
       _clashSample(),
       secret: 'test-secret',
@@ -141,21 +151,7 @@ void main() {
     expect(byTag['direct']?['type'], 'direct');
     expect(byTag.containsKey('block'), isFalse);
     final route = config['route'] as Map;
-    final rules = route['rules'] as List;
-    expect(rules.length, 7);
-    expect((rules.first as Map)['protocol'], 'dns');
-    expect((rules.first as Map)['action'], 'hijack-dns');
     expect(route['final'], 'PROXY');
-    final geoRules = [
-      for (final entry in rules.skip(1))
-        if ((entry as Map)['rule_set'] != null) entry,
-    ];
-    expect(geoRules.length, 2);
-    final ruleSetTags = {
-      for (final def in route['rule_set'] as List)
-        ((def as Map)['tag'] as String),
-    };
-    expect(ruleSetTags, containsAll(['geoip-cn', 'geosite-cn']));
     final dns = config['dns'] as Map;
     final dnsServers = dns['servers'] as List;
     expect(dnsServers.length, 3);
@@ -171,8 +167,13 @@ void main() {
     expect(clashApi['secret'], 'test-secret');
     expect(clashApi.containsKey('cache_file'), isFalse);
     expect((experimental['cache_file'] as Map)['enabled'], true);
+    // The eight source rule lines are not translated; one aggregate
+    // routing degradation stands in for the whole routing brain.
+    expect(result.degradations.length, 1);
+    final routing = result.degradations.single;
+    expect(routing.kind, SingBoxDegradationKind.routing);
+    expect(routing.reason, contains('8'));
     expect(result.unsupported.length, 1);
-    expect(result.unsupported.first, contains('RULE-SET'));
   });
 
   test('rendered config carries no sing-box 1.14 removed constructs', () {
@@ -216,41 +217,173 @@ void main() {
     expect(tun['address'], ['172.19.0.1/30']);
   });
 
-  test('DIRECT members map and REJECT members are dropped with a note', () {
+  test('every contract node type renders; off-contract types degrade', () {
+    Map<String, Object?> node(
+      String name,
+      String type, [
+      Map<String, Object?> params = const {},
+    ]) => {
+      'name': name,
+      'type': type,
+      'server': '1.1.1.1',
+      'port': 443,
+      ...params,
+    };
+    final clash = <String, Object?>{
+      'proxies': [
+        node('N-ss', 'ss', {'cipher': 'aes-256-gcm', 'password': 'p'}),
+        node('N-vmess', 'vmess', {'uuid': 'u'}),
+        node('N-vless', 'vless', {'uuid': 'u'}),
+        node('N-trojan', 'trojan', {'password': 'p'}),
+        node('N-hysteria2', 'hysteria2', {'password': 'p'}),
+        node('N-tuic', 'tuic', {'uuid': 'u', 'password': 'p'}),
+        node('N-wireguard', 'wireguard', {
+          'ip': '10.0.0.2',
+          'private-key': 'k',
+          'public-key': 'p',
+        }),
+        node('N-socks5', 'socks5'),
+        node('N-http', 'http'),
+        node('N-openvpn', 'openvpn'),
+        node('N-snell', 'snell'),
+        node('N-ssr', 'ssr'),
+        node('N-anytls', 'anytls'),
+      ],
+    };
+    expect(
+      singBoxContractNodeTypes,
+      containsAll([
+        'ss',
+        'vmess',
+        'vless',
+        'trojan',
+        'hysteria2',
+        'tuic',
+        'wireguard',
+        'socks5',
+        'http',
+      ]),
+    );
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final outbounds = _outbounds(result.config);
+    final types = {
+      for (final outbound in outbounds)
+        outbound['tag'].toString(): outbound['type'],
+    };
+    expect(types['N-ss'], 'shadowsocks');
+    expect(types['N-vmess'], 'vmess');
+    expect(types['N-vless'], 'vless');
+    expect(types['N-trojan'], 'trojan');
+    expect(types['N-hysteria2'], 'hysteria2');
+    expect(types['N-tuic'], 'tuic');
+    expect(types['N-socks5'], 'socks');
+    expect(types['N-http'], 'http');
+    final endpoints = result.config['endpoints'] as List;
+    expect((endpoints.single as Map)['tag'], 'N-wireguard');
+    for (final name in ['N-openvpn', 'N-snell', 'N-ssr', 'N-anytls']) {
+      expect(types.containsKey(name), isFalse, reason: name);
+    }
+    final dropped = _degradationsOf(
+      result,
+      SingBoxDegradationKind.nodeProtocol,
+    );
+    expect(dropped.map((d) => d.name), [
+      'N-openvpn',
+      'N-snell',
+      'N-ssr',
+      'N-anytls',
+    ]);
+    _expectAllReferencesResolve(result.config);
+  });
+
+  test('route template sends private and CN traffic direct', () {
+    final result = renderSingBoxFromClash(
+      _clashSample(),
+      secret: 'test-secret',
+    );
+    final route = result.config['route'] as Map;
+    final rules = route['rules'] as List;
+    expect(rules.length, 4);
+    expect((rules[0] as Map)['protocol'], 'dns');
+    expect((rules[0] as Map)['action'], 'hijack-dns');
+    expect((rules[1] as Map)['ip_is_private'], isTrue);
+    expect((rules[1] as Map)['outbound'], 'direct');
+    expect((rules[2] as Map)['rule_set'], ['geoip-cn']);
+    expect((rules[2] as Map)['outbound'], 'direct');
+    expect((rules[3] as Map)['rule_set'], ['geosite-cn']);
+    expect((rules[3] as Map)['outbound'], 'direct');
+    final ruleSetTags = {
+      for (final def in route['rule_set'] as List)
+        ((def as Map)['tag'] as String),
+    };
+    expect(ruleSetTags, {'geoip-cn', 'geosite-cn'});
+    final urls = {
+      for (final def in route['rule_set'] as List)
+        ((def as Map)['url'] as String),
+    };
+    // Verified live (HTTP 200) on 2026-10-28; sing-geoip publishes codes only.
+    expect(urls, {
+      'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs',
+      'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs',
+    });
+  });
+
+  test('a profile with no rules records no routing degradation', () {
+    final clash = _clashSample();
+    clash.remove('rules');
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    expect(result.degradations, isEmpty);
+    expect(result.unsupported, isEmpty);
+  });
+
+  test('DIRECT members map and REJECT members are pruned with a note', () {
     final clash = _clashSample();
     (clash['proxy-groups'] as List).add({
       'name': 'Pick',
       'type': 'select',
       'proxies': ['DIRECT', 'REJECT', 'SS'],
     });
-    (clash['rules'] as List).insert(0, 'DOMAIN-SUFFIX,ads.example.com,REJECT');
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
     final outbounds = _outbounds(result.config);
     final pick = outbounds.firstWhere((outbound) => outbound['tag'] == 'Pick');
     expect(pick['outbounds'], ['direct', 'SS']);
-    expect(
-      result.unsupported.any((note) => note.contains('REJECT in proxy-group')),
-      isTrue,
+    final memberDrops = _degradationsOf(
+      result,
+      SingBoxDegradationKind.groupMember,
     );
-    final rules = (result.config['route'] as Map)['rules'] as List;
-    final reject =
-        rules.firstWhere((entry) => (entry as Map)['action'] == 'reject')
-            as Map;
-    expect(reject['domain_suffix'], ['ads.example.com']);
-    expect(reject.containsKey('outbound'), isFalse);
+    expect(memberDrops.single.name, 'Pick');
+    expect(memberDrops.single.reason, contains('REJECT'));
   });
 
-  test('a MATCH to REJECT ends the rules with a reject action', () {
-    final clash = _clashSample();
-    final rules = clash['rules'] as List;
-    rules[rules.length - 1] = 'MATCH,REJECT';
+  test('source MATCH is ignored; final is the primary selector group', () {
+    final clash = <String, Object?>{
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'password',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'Auto',
+          'type': 'url-test',
+          'proxies': ['SS'],
+        },
+        {
+          'name': 'PROXY',
+          'type': 'select',
+          'proxies': ['SS'],
+        },
+      ],
+      'rules': ['MATCH,Auto'],
+    };
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
     final route = result.config['route'] as Map;
-    final rendered = route['rules'] as List;
-    expect((rendered.last as Map)['action'], 'reject');
-    final outbounds = _outbounds(result.config);
-    expect(outbounds.any((outbound) => outbound['tag'] == 'block'), isFalse);
-    expect(route['final'], isNot('block'));
+    expect(route['final'], 'PROXY');
   });
 
   test('a group of only REJECT members is dropped entirely', () {
@@ -263,6 +396,11 @@ void main() {
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
     final outbounds = _outbounds(result.config);
     expect(outbounds.any((outbound) => outbound['tag'] == 'Deny'), isFalse);
+    final dropped = _degradationsOf(
+      result,
+      SingBoxDegradationKind.groupDropped,
+    );
+    expect(dropped.map((d) => d.name), contains('Deny'));
   });
 
   test('wireguard node renders as an endpoint, not an outbound', () {
@@ -322,39 +460,6 @@ void main() {
     expect(CoreKind.fromValue('bogus'), CoreKind.mihomo);
   });
 
-  test('GEOIP LAN renders as ip_is_private, never as a remote rule set', () {
-    final clash = _clashSample();
-    (clash['rules'] as List).insert(0, 'GEOIP,LAN,DIRECT');
-    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
-    final route = result.config['route'] as Map;
-    final rules = route['rules'] as List;
-    final lanRule =
-        rules.firstWhere((entry) => (entry as Map)['ip_is_private'] == true)
-            as Map;
-    expect(lanRule['outbound'], 'direct');
-    final ruleSetTags = {
-      for (final def in route['rule_set'] as List)
-        ((def as Map)['tag'] as String),
-    };
-    expect(ruleSetTags, isNot(contains('geoip-lan')));
-  });
-
-  test('remote rule set urls are exactly the verified upstream files', () {
-    final clash = _clashSample();
-    (clash['rules'] as List).insert(0, 'GEOIP,LAN,DIRECT');
-    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
-    final route = result.config['route'] as Map;
-    final urls = {
-      for (final def in route['rule_set'] as List)
-        ((def as Map)['url'] as String),
-    };
-    // Verified live (HTTP 200) on 2026-10-28; sing-geoip publishes codes only.
-    expect(urls, {
-      'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs',
-      'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs',
-    });
-  });
-
   test('every reference in the clash sample resolves', () {
     final result = renderSingBoxFromClash(
       _clashSample(),
@@ -373,26 +478,53 @@ void main() {
     expect(tags, isNot(contains('🏠 HK-家宽-01')));
     expect(tags, isNot(contains('🏠 家宽节点')));
     expect(tags, isNot(contains('🏠 家宽自动')));
-    final picker = outbounds.firstWhere(
-      (outbound) => outbound['tag'] == '🚀 节点选择',
+    expect(tags, isNot(contains('🚀 节点选择')));
+    final front = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == '⚡ CF前置',
     );
-    expect(picker['outbounds'], ['⚡ CF前置', 'CF-01']);
+    expect(front['outbounds'], ['CF-01', 'CF-02']);
+    final route = result.config['route'] as Map;
+    expect(route['final'], '⚡ CF前置');
     expect(
-      result.unsupported.any(
-        (note) => note.contains('proxy-group "🏠 家宽节点" dropped'),
-      ),
-      isTrue,
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.nodeProtocol,
+      ).map((d) => d.name),
+      containsAll(['🏠 HK-家宽-01', '🏠 JP-家宽-01']),
     );
     expect(
-      result.unsupported.any(
-        (note) => note.contains('"🚀 节点选择" member "🏠 家宽节点"'),
-      ),
-      isTrue,
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupType,
+      ).map((d) => d.name),
+      contains('🏠 家宽自动'),
     );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupDropped,
+      ).map((d) => d.name),
+      contains('🏠 家宽节点'),
+    );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupMember,
+      ).where((d) => d.name == '🏠 家宽节点').length,
+      2,
+    );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupNested,
+      ).map((d) => d.name),
+      contains('🚀 节点选择'),
+    );
+    expect(_degradationsOf(result, SingBoxDegradationKind.routing).length, 1);
     _expectAllReferencesResolve(result.config);
   });
 
-  test('group drops cascade through referencing groups', () {
+  test('nested groups degrade; member pruning drops hollow groups', () {
     final clash = _clashSample();
     (clash['proxies'] as List).add({
       'name': 'Ghost',
@@ -420,8 +552,21 @@ void main() {
     final tags = {for (final outbound in outbounds) outbound['tag']};
     expect(tags, isNot(contains('Inner')));
     expect(tags, isNot(contains('Outer')));
-    final top = outbounds.firstWhere((outbound) => outbound['tag'] == 'Top');
-    expect(top['outbounds'], ['SS']);
+    expect(tags, isNot(contains('Top')));
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupDropped,
+      ).map((d) => d.name),
+      contains('Inner'),
+    );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupNested,
+      ).map((d) => d.name),
+      containsAll(['Outer', 'Top']),
+    );
     _expectAllReferencesResolve(result.config);
   });
 
@@ -460,43 +605,130 @@ void main() {
       (outbound) => outbound['tag'] == 'BadChain',
     );
     expect(badChain.containsKey('detour'), isFalse);
-    expect(
-      result.unsupported.any(
-        (note) => note.contains('dialer-proxy "NoSuchGroup" of "BadChain"'),
-      ),
-      isTrue,
-    );
     final groupChain = outbounds.firstWhere(
       (outbound) => outbound['tag'] == 'GroupChain',
     );
     expect(groupChain.containsKey('detour'), isFalse);
     expect(
-      result.unsupported.any(
-        (note) => note.contains('dialer-proxy on proxy-group "GroupChain"'),
-      ),
-      isTrue,
+      _degradationsOf(result, SingBoxDegradationKind.chain).map((d) => d.name),
+      containsAll(['BadChain', 'GroupChain']),
+    );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.chain,
+      ).any((d) => d.name == 'Chained'),
+      isFalse,
     );
     _expectAllReferencesResolve(result.config);
   });
 
-  test('rules and MATCH targeting a dropped group do not dangle', () {
-    final clash = _homeBroadbandShape();
-    clash['rules'] = ['DOMAIN,example.com,🏠 家宽节点', 'MATCH,🏠 家宽节点'];
+  test(
+    'a wireguard dialer-proxy reaches its endpoint detour or the ledger',
+    () {
+      final clash = _clashSample();
+      Map<String, Object> wg(String name, String dialer) => {
+        'name': name,
+        'type': 'wireguard',
+        'server': '5.5.5.5',
+        'port': 51820,
+        'ip': '10.0.0.2',
+        'private-key': 'privatekey',
+        'public-key': 'publickey',
+        'dialer-proxy': dialer,
+      };
+      (clash['proxies'] as List).add(wg('WGChained', 'PROXY'));
+      (clash['proxies'] as List).add(wg('WGBadChain', 'NoSuchGroup'));
+      final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+      final endpoints = result.config['endpoints'] as List;
+      final chained =
+          endpoints.firstWhere((entry) => (entry as Map)['tag'] == 'WGChained')
+              as Map;
+      expect(chained['detour'], 'PROXY');
+      final bad =
+          endpoints.firstWhere((entry) => (entry as Map)['tag'] == 'WGBadChain')
+              as Map;
+      expect(bad.containsKey('detour'), isFalse);
+      expect(
+        _degradationsOf(
+          result,
+          SingBoxDegradationKind.chain,
+        ).map((d) => d.name),
+        contains('WGBadChain'),
+      );
+      _expectAllReferencesResolve(result.config);
+    },
+  );
+
+  test('mutually referencing groups degrade; no cycle can be rendered', () {
+    final clash = _clashSample();
+    (clash['proxy-groups'] as List).add({
+      'name': 'CycleA',
+      'type': 'select',
+      'proxies': ['CycleB', 'SS'],
+    });
+    (clash['proxy-groups'] as List).add({
+      'name': 'CycleB',
+      'type': 'select',
+      'proxies': ['CycleA'],
+    });
+    (clash['proxy-groups'] as List).add({
+      'name': 'SelfRef',
+      'type': 'select',
+      'proxies': ['SelfRef', 'SS'],
+    });
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
-    final route = result.config['route'] as Map;
-    final rules = route['rules'] as List;
+    final outbounds = _outbounds(result.config);
+    final tags = {for (final outbound in outbounds) outbound['tag']};
+    expect(tags, isNot(contains('CycleA')));
+    expect(tags, isNot(contains('CycleB')));
+    expect(tags, isNot(contains('SelfRef')));
     expect(
-      rules.any((entry) => (entry as Map)['outbound'] == '🏠 家宽节点'),
-      isFalse,
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupNested,
+      ).map((d) => d.name),
+      containsAll(['CycleA', 'CycleB', 'SelfRef']),
     );
-    expect(
-      result.unsupported.any(
-        (note) => note.contains('target "🏠 家宽节点" has no sing-box outbound'),
-      ),
-      isTrue,
-    );
-    expect(route['final'], '⚡ CF前置');
+    // No emitted outbound may list another outbound as a member, so the
+    // member graph is a star over leaves and a cycle cannot exist.
+    for (final outbound in outbounds) {
+      final members = outbound['outbounds'];
+      if (members is List) {
+        for (final member in members) {
+          final target = outbounds.firstWhere(
+            (entry) => entry['tag'] == member,
+          );
+          expect(target.containsKey('outbounds'), isFalse, reason: '$member');
+        }
+      }
+    }
     _expectAllReferencesResolve(result.config);
+  });
+
+  test('degradation ledger serializes to a stable json shape', () {
+    final result = renderSingBoxFromClash(
+      _homeBroadbandShape(),
+      secret: 'test-secret',
+    );
+    final decoded =
+        jsonDecode(
+              jsonEncode([
+                for (final degradation in result.degradations)
+                  degradation.toJson(),
+              ]),
+            )
+            as List;
+    expect(decoded.length, result.degradations.length);
+    final kindNames = SingBoxDegradationKind.values.map((k) => k.name).toSet();
+    for (final entry in decoded) {
+      final map = entry as Map;
+      expect(map.keys.toSet(), {'kind', 'name', 'reason'});
+      expect(kindNames, contains(map['kind']));
+      expect((map['name'] as String).isNotEmpty, isTrue);
+      expect((map['reason'] as String).isNotEmpty, isTrue);
+    }
+    expect(result.unsupported.length, result.degradations.length);
   });
 }
 

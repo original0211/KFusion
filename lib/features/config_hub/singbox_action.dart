@@ -563,6 +563,14 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       '${configDir.path}${Platform.pathSeparator}config.json',
     );
     await configFile.writeAsString(jsonEncode(rendered.config));
+    final degradationsFile = File(
+      '${configDir.path}${Platform.pathSeparator}degradations.json',
+    );
+    await degradationsFile.writeAsString(
+      jsonEncode([
+        for (final degradation in rendered.degradations) degradation.toJson(),
+      ]),
+    );
     return configFile.path;
   }
 

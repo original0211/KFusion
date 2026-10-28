@@ -1,14 +1,65 @@
 import 'package:kfusion/features/config_hub/ir.dart';
 
+/// Why one piece of a Clash profile did not reach the sing-box render.
+enum SingBoxDegradationKind {
+  nodeProtocol,
+  nodeUnusable,
+  groupType,
+  groupNested,
+  groupDropped,
+  groupMember,
+  chain,
+  routing,
+}
+
+/// One named item the render degraded; the render's single drop ledger.
+class SingBoxDegradation {
+  const SingBoxDegradation({
+    required this.kind,
+    required this.name,
+    required this.reason,
+    required this.message,
+  });
+
+  final SingBoxDegradationKind kind;
+  final String name;
+  final String reason;
+
+  final String message;
+
+  Map<String, Object?> toJson() => {
+    'kind': kind.name,
+    'name': name,
+    'reason': reason,
+  };
+}
+
 class SingBoxRenderResult {
   const SingBoxRenderResult({
     required this.config,
-    this.unsupported = const [],
+    this.degradations = const [],
   });
 
   final Map<String, Object?> config;
-  final List<String> unsupported;
+  final List<SingBoxDegradation> degradations;
+
+  List<String> get unsupported => [
+    for (final degradation in degradations) degradation.message,
+  ];
 }
+
+/// Clash node types the sing-box contract converts (SUBTRACTION_SPEC.md §2).
+const singBoxContractNodeTypes = {
+  'ss',
+  'vmess',
+  'vless',
+  'trojan',
+  'hysteria2',
+  'tuic',
+  'wireguard',
+  'socks5',
+  'http',
+};
 
 Map<String, Object?> _asMap(Object? value) {
   if (value is Map) {
@@ -128,7 +179,19 @@ Map<String, Object?> _transportFromClash(Map<String, Object?> params) {
   }
 }
 
-Map<String, Object?>? _nodeToSingBox(IrNode node, List<String> unsupported) {
+SingBoxDegradation _nodeProtocolDegradation(IrNode node) {
+  return SingBoxDegradation(
+    kind: SingBoxDegradationKind.nodeProtocol,
+    name: node.name,
+    reason: '协议 ${node.type} 不在 sing-box 渲染契约内',
+    message: 'proxy type "${node.type}" (${node.name})',
+  );
+}
+
+Map<String, Object?>? _nodeToSingBox(
+  IrNode node,
+  List<SingBoxDegradation> degradations,
+) {
   final params = node.params;
   final base = <String, Object?>{
     'tag': node.name,
@@ -222,7 +285,7 @@ Map<String, Object?>? _nodeToSingBox(IrNode node, List<String> unsupported) {
         if (params['password'] != null) 'password': params['password'],
       };
     default:
-      unsupported.add('proxy type "${node.type}" (${node.name})');
+      degradations.add(_nodeProtocolDegradation(node));
       return null;
   }
 }
@@ -230,7 +293,7 @@ Map<String, Object?>? _nodeToSingBox(IrNode node, List<String> unsupported) {
 /// Renders a Clash wireguard node as a sing-box endpoint.
 Map<String, Object?>? _wireGuardEndpoint(
   IrNode node,
-  List<String> unsupported,
+  List<SingBoxDegradation> degradations,
 ) {
   final params = node.params;
   final ip = _asString(params['ip']);
@@ -240,8 +303,13 @@ Map<String, Object?>? _wireGuardEndpoint(
     if (ipv6.isNotEmpty) '$ipv6/128',
   ];
   if (addresses.isEmpty) {
-    unsupported.add(
-      'wireguard node "${node.name}" has no local address (ip/ipv6)',
+    degradations.add(
+      SingBoxDegradation(
+        kind: SingBoxDegradationKind.nodeUnusable,
+        name: node.name,
+        reason: 'wireguard 节点缺少本地地址（ip/ipv6）',
+        message: 'wireguard node "${node.name}" has no local address (ip/ipv6)',
+      ),
     );
     return null;
   }
@@ -266,41 +334,94 @@ Map<String, Object?>? _wireGuardEndpoint(
 }
 
 Map<String, Object?>? _groupToSingBox(
-  Map<String, Object?> group,
-  List<String> unsupported,
-) {
+  Map<String, Object?> group, {
+  required Set<String> leafTags,
+  required Set<String> sourceGroupNames,
+  required List<SingBoxDegradation> degradations,
+}) {
   final name = _asString(group['name']);
   final type = _asString(group['type']);
-  final proxies = <String>[];
-  for (final entry in _asList(group['proxies'])) {
-    final member = entry.toString();
+  if (type != 'select' && type != 'url-test') {
+    degradations.add(
+      SingBoxDegradation(
+        kind: SingBoxDegradationKind.groupType,
+        name: name,
+        reason: '组类型 $type 未承接（契约只保留 select / url-test）',
+        message: 'proxy-group type "$type" ($name)',
+      ),
+    );
+    return null;
+  }
+  final rawMembers = [
+    for (final entry in _asList(group['proxies'])) entry.toString(),
+  ];
+  if (rawMembers.any(sourceGroupNames.contains)) {
+    degradations.add(
+      SingBoxDegradation(
+        kind: SingBoxDegradationKind.groupNested,
+        name: name,
+        reason: '组成员包含其他组，嵌套组未承接',
+        message: 'proxy-group "$name" nests other proxy-groups',
+      ),
+    );
+    return null;
+  }
+  final members = <String>[];
+  for (final member in rawMembers) {
     if (member == 'REJECT') {
-      unsupported.add(
-        'REJECT in proxy-group "$name" (no block outbound in sing-box 1.13+)',
+      degradations.add(
+        SingBoxDegradation(
+          kind: SingBoxDegradationKind.groupMember,
+          name: name,
+          reason: 'REJECT 成员在 sing-box 1.13+ 无对应出站，已剪除',
+          message:
+              'REJECT in proxy-group "$name" (no block outbound in '
+              'sing-box 1.13+)',
+        ),
       );
       continue;
     }
-    proxies.add(_target(member));
+    final tag = _target(member);
+    if (leafTags.contains(tag)) {
+      members.add(tag);
+    } else {
+      degradations.add(
+        SingBoxDegradation(
+          kind: SingBoxDegradationKind.groupMember,
+          name: name,
+          reason: '成员 $member 在 sing-box 下不可用，已剪除',
+          message:
+              'proxy-group "$name" member "$member" has no sing-box '
+              'outbound',
+        ),
+      );
+    }
   }
-  if (proxies.isEmpty) {
-    unsupported.add('proxy-group "$name" has no usable member');
+  if (members.isEmpty) {
+    degradations.add(
+      SingBoxDegradation(
+        kind: SingBoxDegradationKind.groupDropped,
+        name: name,
+        reason: '组内成员全部不可用',
+        message: 'proxy-group "$name" has no usable member',
+      ),
+    );
     return null;
   }
   switch (type) {
     case 'select':
-      return {'type': 'selector', 'tag': name, 'outbounds': proxies};
+      return {'type': 'selector', 'tag': name, 'outbounds': members};
     case 'url-test':
       return {
         'type': 'urltest',
         'tag': name,
-        'outbounds': proxies,
+        'outbounds': members,
         'url': _asString(group['url'], 'https://www.gstatic.com/generate_204'),
         if (group['interval'] != null)
           'interval': _intervalText(group['interval']),
         if (group['tolerance'] != null) 'tolerance': group['tolerance'],
       };
     default:
-      unsupported.add('proxy-group type "$type" ($name)');
       return null;
   }
 }
@@ -313,126 +434,28 @@ String _intervalText(Object? value) {
   return text;
 }
 
-List<Map<String, Object?>> _rulesToSingBox(
-  String line,
-  List<String> unsupported,
+/// The built-in route template of the subtraction contract
+/// (SUBTRACTION_SPEC.md §2): private and CN traffic direct, the rest to
+/// the primary outbound. Both rule-set files were verified live (HTTP
+/// 200) on 2026-10-28; sing-geoip publishes country codes only, so no
+/// LAN set exists to reference.
+List<Map<String, Object?>> _templateRules(
   Map<String, Map<String, Object?>> ruleSets,
 ) {
-  var parts = line.split(',');
-  if (parts.length < 2) {
-    unsupported.add('rule "$line"');
-    return const [];
-  }
-  if (parts.last.trim() == 'no-resolve') {
-    parts = parts.sublist(0, parts.length - 1);
-  }
-  final kind = parts.first.trim();
-  final rawTarget = parts.last.trim();
-  final args = parts.sublist(1, parts.length - 1).map((e) => e.trim()).toList();
-  final List<Map<String, Object?>> rules;
-  switch (kind) {
-    case 'DOMAIN':
-      rules = [
-        {'domain': args},
-      ];
-    case 'DOMAIN-SUFFIX':
-      rules = [
-        {'domain_suffix': args},
-      ];
-    case 'DOMAIN-KEYWORD':
-      rules = [
-        {'domain_keyword': args},
-      ];
-    case 'DOMAIN-REGEX':
-      rules = [
-        {'domain_regex': args},
-      ];
-    case 'IP-CIDR':
-    case 'IP-CIDR6':
-      rules = [
-        {'ip_cidr': args},
-      ];
-    case 'SRC-IP-CIDR':
-      rules = [
-        {'source_ip_cidr': args},
-      ];
-    case 'SRC-PORT':
-      rules = [_portRuleFields(args, 'source_port', 'source_port_range')];
-    case 'DST-PORT':
-      rules = [_portRuleFields(args, 'port', 'port_range')];
-    case 'GEOIP':
-      final codes = args.where((arg) => arg != 'no-resolve').toList();
-      if (codes.isEmpty) {
-        unsupported.add('rule "$line"');
-        return const [];
-      }
-      // sing-geoip publishes country codes only: the LAN code has no
-      // upstream file (its URL 404s), so it takes the native field instead.
-      final remoteCodes = [
-        for (final code in codes)
-          if (code.toUpperCase() != 'LAN') code,
-      ];
-      rules = [
-        if (remoteCodes.isNotEmpty)
-          {
-            'rule_set': [
-              for (final code in remoteCodes)
-                _registerGeoRuleSet(ruleSets, 'geoip', code),
-            ],
-          },
-        if (remoteCodes.length != codes.length) {'ip_is_private': true},
-      ];
-    case 'GEOSITE':
-      if (args.isEmpty) {
-        unsupported.add('rule "$line"');
-        return const [];
-      }
-      rules = [
-        {
-          'rule_set': [
-            for (final code in args)
-              _registerGeoRuleSet(ruleSets, 'geosite', code),
-          ],
-        },
-      ];
-    case 'PROCESS-NAME':
-      rules = [
-        {'process_name': args},
-      ];
-    default:
-      unsupported.add('rule "$line"');
-      return const [];
-  }
-  // A REJECT target becomes the rule action; no outbound represents it.
-  for (final rule in rules) {
-    if (rawTarget == 'REJECT') {
-      rule['action'] = 'reject';
-    } else {
-      rule['outbound'] = _target(rawTarget);
-    }
-  }
-  return rules;
-}
-
-Map<String, Object?> _portRuleFields(
-  List<String> args,
-  String singleKey,
-  String rangeKey,
-) {
-  final rule = <String, Object?>{};
-  final singles = <int>[];
-  final ranges = <String>[];
-  for (final arg in args) {
-    if (arg.contains('-')) {
-      ranges.add(arg);
-    } else {
-      final port = int.tryParse(arg);
-      if (port != null) singles.add(port);
-    }
-  }
-  if (singles.isNotEmpty) rule[singleKey] = singles;
-  if (ranges.isNotEmpty) rule[rangeKey] = ranges;
-  return rule;
+  final geoipCn = _registerGeoRuleSet(ruleSets, 'geoip', 'cn');
+  final geositeCn = _registerGeoRuleSet(ruleSets, 'geosite', 'cn');
+  return [
+    {'protocol': 'dns', 'action': 'hijack-dns'},
+    {'ip_is_private': true, 'outbound': 'direct'},
+    {
+      'rule_set': [geoipCn],
+      'outbound': 'direct',
+    },
+    {
+      'rule_set': [geositeCn],
+      'outbound': 'direct',
+    },
+  ];
 }
 
 IrProfile _irFromClashMap(Map<String, Object?> doc) {
@@ -488,7 +511,7 @@ SingBoxRenderResult renderSingBox(
   int clashApiPort = 9091,
   int mixedPort = 7890,
 }) {
-  final unsupported = <String>[];
+  final degradations = <SingBoxDegradation>[];
   final outbounds = <Map<String, Object?>>[];
   final endpoints = <Map<String, Object?>>[];
   final nodeByName = <String, IrNode>{};
@@ -496,8 +519,12 @@ SingBoxRenderResult renderSingBox(
   final leafOrder = <String>[];
   for (final node in profile.nodes) {
     nodeByName[node.name] = node;
+    if (!singBoxContractNodeTypes.contains(node.type)) {
+      degradations.add(_nodeProtocolDegradation(node));
+      continue;
+    }
     if (node.type == 'wireguard') {
-      final endpoint = _wireGuardEndpoint(node, unsupported);
+      final endpoint = _wireGuardEndpoint(node, degradations);
       if (endpoint != null) {
         endpoints.add(endpoint);
         leafTags.add(node.name);
@@ -505,79 +532,74 @@ SingBoxRenderResult renderSingBox(
       }
       continue;
     }
-    final outbound = _nodeToSingBox(node, unsupported);
+    final outbound = _nodeToSingBox(node, degradations);
     if (outbound != null) {
       outbounds.add(outbound);
       leafTags.add(node.name);
       leafOrder.add(node.name);
     }
   }
-  final groupCandidates = <Map<String, Object?>>[];
+  final sourceGroupNames = {
+    for (final group in profile.groups) _asString(group['name']),
+  };
   final groupByName = <String, Map<String, Object?>>{};
+  final survivingGroups = <Map<String, Object?>>[];
   for (final group in profile.groups) {
     groupByName[_asString(group['name'])] = group;
-    final outbound = _groupToSingBox(group, unsupported);
-    if (outbound != null) groupCandidates.add(outbound);
+    final outbound = _groupToSingBox(
+      group,
+      leafTags: leafTags,
+      sourceGroupNames: sourceGroupNames,
+      degradations: degradations,
+    );
+    if (outbound != null) survivingGroups.add(outbound);
   }
-  // Group members are copied verbatim from the Clash config, so a member
-  // whose node produced no outbound would dangle until start resolves it.
-  final groupNames = _pruneGroupMembers(groupCandidates, leafTags, unsupported);
-  outbounds.addAll(groupCandidates);
-  final allTags = <String>{...leafTags, ...groupNames};
-  _applyDialerDetours(outbounds, nodeByName, groupByName, allTags, unsupported);
+  outbounds.addAll(survivingGroups);
   outbounds.add(const {'type': 'direct', 'tag': 'direct'});
-  final ruleSets = <String, Map<String, Object?>>{};
-  final dnsRuleSet = _registerGeoRuleSet(ruleSets, 'geosite', 'cn');
-  final rules = <Map<String, Object?>>[
-    {'protocol': 'dns', 'action': 'hijack-dns'},
-  ];
-  var finalOutbound = '';
-  var finalRejected = false;
-  for (final line in profile.rules) {
-    final trimmed = line.trim();
-    if (trimmed.isEmpty) continue;
-    final kind = trimmed.split(',').first.trim();
-    if (kind == 'MATCH' || kind == 'FINAL') {
-      final target = trimmed.split(',').last.trim();
-      if (target == 'REJECT') {
-        finalRejected = true;
-      } else {
-        finalOutbound = _target(target);
-      }
-      continue;
-    }
-    for (final rule in _rulesToSingBox(trimmed, unsupported, ruleSets)) {
-      final target = rule['outbound'];
-      if (target != null && !allTags.contains(target)) {
-        unsupported.add(
-          'rule "$trimmed" target "$target" has no sing-box outbound',
-        );
-        continue;
-      }
-      rules.add(rule);
+  final allTags = <String>{
+    ...leafTags,
+    for (final group in survivingGroups) group['tag'].toString(),
+  };
+  _applyDialerDetours(
+    outbounds,
+    endpoints,
+    nodeByName,
+    groupByName,
+    allTags,
+    degradations,
+  );
+  var primaryOutbound = 'direct';
+  for (final group in survivingGroups) {
+    if (group['type'] == 'selector') {
+      primaryOutbound = group['tag'].toString();
+      break;
     }
   }
-  if (finalRejected) {
-    rules.add({'action': 'reject'});
-  }
-  if (finalOutbound.isNotEmpty && !allTags.contains(finalOutbound)) {
-    unsupported.add('MATCH target "$finalOutbound" has no sing-box outbound');
-    finalOutbound = '';
-  }
-  if (finalOutbound.isEmpty) {
-    if (groupNames.isNotEmpty) {
-      finalOutbound = groupNames.first;
+  if (primaryOutbound == 'direct') {
+    if (survivingGroups.isNotEmpty) {
+      primaryOutbound = survivingGroups.first['tag'].toString();
     } else if (leafOrder.isNotEmpty) {
-      finalOutbound = leafOrder.first;
-    } else {
-      finalOutbound = 'direct';
+      primaryOutbound = leafOrder.first;
     }
   }
-  final proxyOutbound = groupNames.isNotEmpty
-      ? groupNames.first
-      : leafOrder.isNotEmpty
-      ? leafOrder.first
-      : 'direct';
+  final sourceRuleCount = profile.rules
+      .where((line) => line.trim().isNotEmpty)
+      .length;
+  if (sourceRuleCount > 0) {
+    degradations.add(
+      SingBoxDegradation(
+        kind: SingBoxDegradationKind.routing,
+        name: '订阅分流规则',
+        reason: '共 $sourceRuleCount 条订阅规则未移植，由内置模板替代',
+        message:
+            'subscription routing replaced by the built-in template '
+            '($sourceRuleCount rule lines)',
+      ),
+    );
+  }
+  final ruleSets = <String, Map<String, Object?>>{};
+  final rules = _templateRules(ruleSets);
+  final dnsRuleSet = _asString(ruleSets['geosite-cn']?['tag'], 'geosite-cn');
   final inbounds = <Map<String, Object?>>[
     {
       'type': 'mixed',
@@ -606,7 +628,7 @@ SingBoxRenderResult renderSingBox(
           'tag': 'remote',
           'server': 'dns.google',
           'path': '/dns-query',
-          'detour': proxyOutbound,
+          'detour': primaryOutbound,
         },
         {'type': 'udp', 'tag': 'direct', 'server': '223.5.5.5'},
         {
@@ -634,8 +656,8 @@ SingBoxRenderResult renderSingBox(
     if (endpoints.isNotEmpty) 'endpoints': endpoints,
     'route': {
       'rules': rules,
-      if (ruleSets.isNotEmpty) 'rule_set': ruleSets.values.toList(),
-      'final': finalOutbound,
+      'rule_set': ruleSets.values.toList(),
+      'final': primaryOutbound,
       'auto_detect_interface': true,
       'default_domain_resolver': {'server': 'direct'},
     },
@@ -655,91 +677,66 @@ SingBoxRenderResult renderSingBox(
       '${unresolved.join('; ')}',
     );
   }
-  return SingBoxRenderResult(config: config, unsupported: unsupported);
+  return SingBoxRenderResult(config: config, degradations: degradations);
 }
 
-/// Drops group members no emitted outbound or endpoint carries, then
-/// drops groups left with no resolvable member; both cascade.
-List<String> _pruneGroupMembers(
-  List<Map<String, Object?>> candidates,
-  Set<String> leafTags,
-  List<String> unsupported,
-) {
-  final alive = <String>{
-    for (final candidate in candidates) candidate['tag'].toString(),
-  };
-  var changed = true;
-  while (changed) {
-    changed = false;
-    for (final candidate in candidates) {
-      final tag = candidate['tag'].toString();
-      if (!alive.contains(tag)) continue;
-      final resolvable = _asList(
-        candidate['outbounds'],
-      ).any((member) => leafTags.contains(member) || alive.contains(member));
-      if (!resolvable) {
-        alive.remove(tag);
-        changed = true;
-      }
-    }
-  }
-  candidates.removeWhere((candidate) {
-    final tag = candidate['tag'].toString();
-    if (alive.contains(tag)) return false;
-    unsupported.add(
-      'proxy-group "$tag" dropped: no member resolves to a sing-box '
-      'outbound',
-    );
-    return true;
-  });
-  final surviving = <String>[];
-  for (final candidate in candidates) {
-    final tag = candidate['tag'].toString();
-    surviving.add(tag);
-    final kept = <Object?>[];
-    for (final member in _asList(candidate['outbounds'])) {
-      if (leafTags.contains(member) || alive.contains(member)) {
-        kept.add(member);
-      } else {
-        unsupported.add(
-          'proxy-group "$tag" member "$member" has no sing-box outbound',
-        );
-      }
-    }
-    candidate['outbounds'] = kept;
-  }
-  return surviving;
-}
-
-/// Maps a Clash `dialer-proxy` onto the sing-box `detour` of the outbound
-/// it chains through; group outbounds have no detour field in sing-box.
+/// Maps Clash `dialer-proxy` onto detour, which outbounds and wireguard
+/// endpoints both resolve at start in sing-box 1.14 (verified against
+/// the 1.14.4 binary); unresolvable targets are named in the ledger
+/// instead, and group outbounds have no detour field.
 void _applyDialerDetours(
   List<Map<String, Object?>> outbounds,
+  List<Map<String, Object?>> endpoints,
   Map<String, IrNode> nodeByName,
   Map<String, Map<String, Object?>> groupByName,
   Set<String> allTags,
-  List<String> unsupported,
+  List<SingBoxDegradation> degradations,
 ) {
+  void apply(Map<String, Object?> carrier, Object? dialer, String tag) {
+    if (dialer is! String || dialer.isEmpty) return;
+    final target = _target(dialer);
+    if (target != tag && allTags.contains(target)) {
+      carrier['detour'] = target;
+    } else {
+      degradations.add(
+        SingBoxDegradation(
+          kind: SingBoxDegradationKind.chain,
+          name: tag,
+          reason: '链式前置目标在 sing-box 下不可用，未写 detour',
+          message:
+              'dialer-proxy "$dialer" of "$tag" has no sing-box '
+              'outbound',
+        ),
+      );
+    }
+  }
+
   for (final outbound in outbounds) {
     final tag = outbound['tag'].toString();
     final node = nodeByName[tag];
-    final Object? dialer = node != null
-        ? node.params['dialer-proxy']
-        : groupByName[tag]?['dialer-proxy'];
-    if (dialer is! String || dialer.isEmpty) continue;
-    if (node == null) {
-      unsupported.add(
-        'dialer-proxy on proxy-group "$tag" is not supported in sing-box',
-      );
-      continue;
+    if (node != null) {
+      apply(outbound, node.params['dialer-proxy'], tag);
+    } else if (groupByName.containsKey(tag)) {
+      final dialer = groupByName[tag]?['dialer-proxy'];
+      if (dialer is String && dialer.isNotEmpty) {
+        degradations.add(
+          SingBoxDegradation(
+            kind: SingBoxDegradationKind.chain,
+            name: tag,
+            reason: '组级 dialer-proxy 在 sing-box 无对应字段',
+            message:
+                'dialer-proxy on proxy-group "$tag" is not supported '
+                'in sing-box',
+          ),
+        );
+      }
     }
-    final target = _target(dialer);
-    if (allTags.contains(target)) {
-      outbound['detour'] = target;
-    } else {
-      unsupported.add(
-        'dialer-proxy "$dialer" of "$tag" has no sing-box outbound',
-      );
+  }
+  for (final endpoint in endpoints) {
+    final tag = endpoint['tag'].toString();
+    final node = nodeByName[tag];
+    if (node != null) {
+      apply(endpoint, node.params['dialer-proxy'], tag);
     }
   }
 }
@@ -756,7 +753,9 @@ List<String> _unresolvedSingBoxReferences(Map<String, Object?> config) {
     outboundTags.add(_asString(outbound['tag']));
   }
   for (final entry in _asList(config['endpoints'])) {
-    outboundTags.add(_asString(_asMap(entry)['tag']));
+    final endpoint = _asMap(entry);
+    outboundTags.add(_asString(endpoint['tag']));
+    outbounds.add(endpoint);
   }
   void checkRef(String kind, Object? ref, Set<String> namespace) {
     if (ref == null) return;
@@ -815,5 +814,35 @@ List<String> _unresolvedSingBoxReferences(Map<String, Object?> config) {
     _asMap(route['default_domain_resolver'])['server'],
     dnsServerTags,
   );
+  // Resolvable is not enough: sing-box refuses a reference cycle at
+  // start too, so the member/detour graph must stay acyclic.
+  final edges = <String, List<String>>{};
+  for (final outbound in outbounds) {
+    final tag = _asString(outbound['tag']);
+    edges[tag] = [
+      for (final member in _asList(outbound['outbounds'])) member.toString(),
+      if (outbound['detour'] != null) outbound['detour'].toString(),
+    ];
+  }
+  final marks = <String, int>{};
+  final stack = <String>[];
+  void visit(String tag) {
+    marks[tag] = 1;
+    stack.add(tag);
+    for (final next in edges[tag] ?? const <String>[]) {
+      if (marks[next] == 1) {
+        final cycle = [...stack.sublist(stack.indexOf(next)), next];
+        problems.add('circular reference "${cycle.join('" -> "')}"');
+      } else if (marks[next] == null && edges.containsKey(next)) {
+        visit(next);
+      }
+    }
+    stack.removeLast();
+    marks[tag] = 2;
+  }
+
+  for (final tag in edges.keys) {
+    if (marks[tag] == null) visit(tag);
+  }
   return problems;
 }
