@@ -35,10 +35,7 @@ class HaraNavBar extends StatelessWidget {
         children: [
           const HaraHairline(),
           SizedBox(
-            height:
-                HaraSpace.navHeight -
-                HaraSpace.navTopPadding -
-                HaraSpace.hairline,
+            height: HaraSpace.navHeight - HaraSpace.hairline,
             child: Padding(
               padding: const EdgeInsets.only(top: HaraSpace.navTopPadding),
               child: Row(
