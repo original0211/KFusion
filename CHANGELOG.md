@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.29 (2026-10-28)
+
+**Features**
+
+- **core** A Clash profile rendered for sing-box now follows a defined contract instead of a best-effort full translation. Only the mainstream node protocols convert — shadowsocks, vmess, vless, trojan, hysteria2, tuic, wireguard, socks5 and http — and groups keep only the selector and url-test shapes whose members are all nodes. The subscription's own routing is no longer translated rule by rule: a built-in template sends private addresses and the CN rule sets direct and everything else through the main group. Anything the contract does not carry — an off-contract protocol such as openvpn, a nested group, the source rules — is no longer dropped silently or left pointing at a name that was never emitted: each drop is recorded by name in one structured degradation ledger, also written next to the rendered config, ready to be presented in the app. (76f8ba6)
+
 ## v0.2.28 (2026-10-28)
 
 **Bug Fixes**
