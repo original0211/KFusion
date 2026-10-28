@@ -21,9 +21,14 @@
           "type": "fix",
           "entries": [
             {
-              "id": "c30cbb45",
+              "id": "c30cbb4",
               "scope": "singbox",
               "text": "The background scan that refreshes a profile's degradation ledger after an import could finish after the profiles provider had already been disposed or rebuilt, and its trailing refresh hint then threw instead of landing quietly. The hint now goes through the same mounted check the providers already use after an async gap: the ledger file is written before the hint either way, watchers in a dead container need no hint, and a later container reads the file fresh."
+            },
+            {
+              "id": "74f2de8",
+              "scope": "common",
+              "text": "Removed a cache-directory warm-up in the app path helper that nothing ever read. The side future it fired had no error handler, so when the first path lookup happened before the platform binding was ready — as a plain test isolate does — the error escaped as an unhandled async failure and was blamed on whichever test happened to be running. No behaviour changes; the injection point the test helpers use stays."
             }
           ]
         }
