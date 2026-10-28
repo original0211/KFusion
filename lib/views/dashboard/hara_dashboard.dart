@@ -350,7 +350,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
               style: HaraText.addRow(context, palette.sub),
             ),
             const SizedBox(width: 8),
-            Text('→', style: HaraText.addRow(context, palette.sub)),
+            Text('→', style: HaraText.addRowArrow(context, palette.sub)),
           ],
         ),
       ),
