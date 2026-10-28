@@ -2,6 +2,29 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.28",
+      "tag": "v0.2.28",
+      "date": "2026-10-28",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "d381d29",
+              "scope": "core",
+              "text": "A sing-box start no longer dies on a group member the renderer could not emit. Members were copied from the Clash config verbatim, so a node with no sing-box form — the openvpn home broadband nodes — or a dropped group left a name pointing at nothing: a reference the format check never resolves and the outbound manager rejects only at start, as a dependency not found. Members are now pruned to the outbounds actually emitted, every drop noted; a group left empty drops in cascade, rules and match targets that resolve to nothing are dropped or fall back, and a dialer-proxy maps to detour only when its target survives. A final self-check over every cross reference refuses to ship a config with any name left unresolvable."
+            },
+            {
+              "id": "3d5d666",
+              "scope": "config",
+              "text": "Domain-addressed nodes no longer time out on profiles that bring no DNS of their own. The universal import keeps only proxies, groups and rules, so such a profile runs on the baseline DNS — which named domain-form DoH endpoints and no proxy-server nameserver, leaving a proxy server's own name to be resolved by first bootstrapping the nameserver's host through the default nameserver. The baseline now carries a dedicated proxy-server nameserver, and both nameserver lists use the IP-literal DoH endpoints a working subscription uses, so server names resolve directly; a guard keeps every baseline endpoint an IP literal. A subscription that brings its own DNS section is untouched, byte for byte."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.27",
       "tag": "v0.2.27",
       "date": "2026-10-28",
