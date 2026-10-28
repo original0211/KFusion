@@ -359,7 +359,7 @@ class _HaraSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.haraPalette;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (title != null) ...[
           Text(title!, style: HaraText.sectionTitle(context, palette.dim)),

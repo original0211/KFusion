@@ -61,14 +61,26 @@ class _HaraProxiesViewState extends ConsumerState<HaraProxiesView> {
     );
   }
 
-  String? _exitLeafName(List<Group> groups) {
+  // The chain the traffic actually takes: start at the GLOBAL group (or
+  // the first group) and follow each group's selection while it names
+  // another group. The dot belongs to the leaf row of the last group on
+  // this chain — the same leaf can be picked inside groups off the chain,
+  // and those rows stay unmarked.
+  ({String group, String leaf})? _exitLeaf(List<Group> groups) {
     if (groups.isEmpty) return null;
-    final head = groups.where((group) => group.name == 'GLOBAL').firstOrNull;
-    final start = ref.watch(
-      selectedProxyNameProvider((head ?? groups.first).name),
-    );
-    if (start == null || start.isEmpty) return null;
-    return ref.watch(realSelectedProxyStateProvider(start)).proxyName;
+    final byName = {for (final group in groups) group.name: group};
+    var current = byName['GLOBAL'] ?? groups.first;
+    final visited = <String>{};
+    while (visited.add(current.name)) {
+      final selected = ref.watch(selectedProxyNameProvider(current.name));
+      if (selected == null || selected.isEmpty) return null;
+      final next = byName[selected];
+      if (next == null) {
+        return (group: current.name, leaf: selected);
+      }
+      current = next;
+    }
+    return null;
   }
 
   @override
@@ -77,7 +89,7 @@ class _HaraProxiesViewState extends ConsumerState<HaraProxiesView> {
     final groups = ref.watch(
       proxiesListStateProvider.select((state) => state.groups),
     );
-    final exitName = _exitLeafName(groups);
+    final exit = _exitLeaf(groups);
     return Material(
       color: palette.bg,
       child: SafeArea(
@@ -104,7 +116,9 @@ class _HaraProxiesViewState extends ConsumerState<HaraProxiesView> {
                         for (final (index, group) in groups.indexed)
                           _HaraGroupSection(
                             group: group,
-                            exitName: exitName,
+                            exitName: exit != null && exit.group == group.name
+                                ? exit.leaf
+                                : null,
                             first: index == 0,
                           ),
                       const SliverToBoxAdapter(
@@ -136,7 +150,7 @@ class _HaraProxiesViewState extends ConsumerState<HaraProxiesView> {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: HaraSpace.titleTopGap),
         Row(
@@ -234,7 +248,7 @@ class _HaraGroupSection extends StatelessWidget {
       slivers: [
         SliverToBoxAdapter(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
                 height: first
@@ -296,6 +310,7 @@ class _HaraProxyRow extends ConsumerWidget {
         proxyName: proxy.name,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(

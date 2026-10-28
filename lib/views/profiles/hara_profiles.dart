@@ -141,7 +141,7 @@ class _HaraProfilesViewState extends ConsumerState<HaraProfilesView> {
     final palette = context.haraPalette;
     final localizations = context.appLocalizations;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: HaraSpace.listToAddGap),
         Text(
@@ -212,6 +212,7 @@ class _HaraAddRow extends StatelessWidget {
       customBorder: AppShape.hara,
       onTap: onTap,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -254,7 +255,7 @@ class _HaraProfileRow extends ConsumerWidget {
           ref.read(currentProfileIdProvider.notifier).value = profile.id;
         },
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(
