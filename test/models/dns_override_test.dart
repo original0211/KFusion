@@ -186,7 +186,30 @@ void main() {
         'enable': true,
         'enhanced-mode': 'fake-ip',
         'nameserver': baselineDns.nameserver,
+        'proxy-server-nameserver': baselineDns.proxyServerNameserver,
       });
+    });
+
+    test('the baseline gives proxy servers their own nameserver', () {
+      expect(baselineDns.proxyServerNameserver, isNotEmpty);
+      expect(
+        baselineDnsOverrideKeys,
+        contains(DnsOverrideKey.proxyServerNameserver),
+      );
+    });
+
+    test('every baseline nameserver endpoint is an IP literal', () {
+      final ipv4 = RegExp(r'^\d+\.\d+\.\d+\.\d+$');
+      for (final endpoint in [
+        ...baselineDns.nameserver,
+        ...baselineDns.proxyServerNameserver,
+      ]) {
+        expect(
+          ipv4.hasMatch(Uri.parse(endpoint).host),
+          isTrue,
+          reason: endpoint,
+        );
+      }
     });
 
     test('a config saved before the key set keeps the keys it overrode', () {

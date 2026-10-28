@@ -19,15 +19,24 @@ const defaultProfileTun = ProfileTun();
 
 /// What a profile that brings no DNS section of its own is given, so the core
 /// always resolves. The user's own override set starts empty.
+///
+/// Every endpoint here is an IP literal: a proxy server given as a domain
+/// name must resolve without first resolving the nameserver's own host, or
+/// domain-addressed nodes can never connect.
 const baselineDnsOverrideKeys = {
   DnsOverrideKey.enable,
   DnsOverrideKey.enhancedMode,
   DnsOverrideKey.nameserver,
+  DnsOverrideKey.proxyServerNameserver,
 };
 const baselineDns = Dns(
   enable: true,
   enhancedMode: DnsMode.fakeIp,
-  nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
+  nameserver: ['https://223.5.5.5/dns-query', 'https://119.29.29.29/dns-query'],
+  proxyServerNameserver: [
+    'https://223.5.5.5/dns-query',
+    'https://119.29.29.29/dns-query',
+  ],
 );
 const defaultGeoXUrl = {
   GeoResource.MMDB:
