@@ -11,7 +11,6 @@ class AppPath {
   late ResolveOnce<Directory> _dataDir;
   late ResolveOnce<Directory?> _downloadDir;
   late ResolveOnce<Directory> _tempDir;
-  Completer<Directory> cacheDir = Completer();
 
   @visibleForTesting
   static Future<Directory> Function() supportDirectory =
@@ -35,7 +34,6 @@ class AppPath {
 
   @visibleForTesting
   Future<void> rebind() async {
-    cacheDir = Completer();
     _bind();
     await Future.wait([_dataDir.value, _downloadDir.value, _tempDir.value]);
   }
@@ -44,7 +42,6 @@ class AppPath {
     _dataDir = ResolveOnce(supportDirectory);
     _downloadDir = ResolveOnce(downloadDirectory);
     _tempDir = ResolveOnce(temporaryDirectory);
-    cacheDirectory().then(cacheDir.complete);
   }
 
   factory AppPath() {
