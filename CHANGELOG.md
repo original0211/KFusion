@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.25 (2026-10-28)
+
+**Features**
+
+- **theme** The first layer of the Kenya Hara 'White' redesign: a fixed token layer — a six-value palette in light and dark, a settled type scale, hairline rules, and a standing ban on rounded corners, shadows and gradients on migrated surfaces — and the outline disc, the product mark redrawn as a fine ring whose centre stays empty. Guard tests pin the constitution, the disc's settled bite geometry among it, so the batches that follow build on values that cannot drift in silence. (e962fec)
+- **ui** Navigation takes one text form on phone and desktop alike. The floating dock and the sidebar retire; a text bar and a text rail carry the section names as words instead, the current one marked — a name needs no icon to be found. Their elastic press survives the retirement, kept in its own file for the surfaces that still use it. (74915bb)
+- **dashboard** The dashboard is rebuilt to the redesign's fixed composition: the outline disc as the connection state's whole portrait across all four states — unconnected, connecting, connected, failed — with the status line taking over the compact role when the page scrolls, standing in for the cabin core's compact bar. The card-customisable layout steps aside on this first surface; its data is kept, unpresented. (d3ae061)
+- **ui** Three settled values restored where independent review found them drifted: the phone navigation bar's height, which had subtracted its top padding twice and come up short of the settled whole; the dashboard status line's spacing after its vermilion dot, returned to the settled figure; and the disc's bite geometry — direction, distance and radius — now asserted value by value in the guard tests, where before only its single declaration was watched. (d78ad37)
+
+**Bug Fixes**
+
+- **core** A death letter can no longer be lost to a closed ledger. The harvest used to look only at attempts still marked open, so an attempt settled by its own verdict — the ordinary way a failed start ends — became permanently invisible to it, and two releases in a row reached the failure card letterless even though the previous death had been recorded. The harvest now settles the most recent attempt whether its ledger stands open or closed, telling a service's own incarnation and an owner's own settlement apart by token — and an upgrade heals ledgers that older versions left closed, on its first start. (ce1cd7f)
+- **core** An untouched crash report is no longer called unreadable. The native setup creates a fresh, empty report file at every start, and only a genuine crash ever writes into it — an empty file is a setup artifact, not a trace that failed to read. The crash-reason line now names that state 'report empty', and keeps 'unreadable' for a file that carries writing yet yields no readable line, so the two can no longer be mistaken for each other on the card. (7f6fa45)
+- **core** A sing-box death verdict now leaves its inputs in the service log. When the failure card is composed, the snapshot that triggered the verdict — its state, its process id, its timestamp — is appended as one line beside the attempt's own sequence and start, so the next contested verdict can be settled from the record itself instead of being reconstructed from arithmetic on the card's log tail. Nothing about the verdict changes; only its evidence is kept. (51677e6)
+
 ## v0.2.24 (2026-10-27)
 
 **Bug Fixes**
