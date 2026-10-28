@@ -328,9 +328,9 @@ void main() {
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
     final route = result.config['route'] as Map;
     final rules = route['rules'] as List;
-    final lanRule = rules.firstWhere(
-      (entry) => (entry as Map)['ip_is_private'] == true,
-    ) as Map;
+    final lanRule =
+        rules.firstWhere((entry) => (entry as Map)['ip_is_private'] == true)
+            as Map;
     expect(lanRule['outbound'], 'direct');
     final ruleSetTags = {
       for (final def in route['rule_set'] as List)
