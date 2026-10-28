@@ -15,7 +15,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'add.dart';
 import 'edit.dart';
+import 'hara_profiles.dart';
 import 'preview.dart';
+
+/// Updates every url profile in [profiles] and returns the failures, the
+/// same run the profiles pages' update action performs.
+Future<List<UpdatingMessage>> updateUrlProfiles(
+  BuildContext context,
+  WidgetRef ref,
+  List<Profile> profiles,
+) async {
+  final appLocalizations = context.appLocalizations;
+  final profilesAction = ref.read(profilesActionProvider.notifier);
+  final List<UpdatingMessage> messages = [];
+  final updates = profiles.map<Future>((profile) async {
+    if (profile.type != ProfileType.url) return;
+    try {
+      await profilesAction.updateProfile(profile, showLoading: true);
+    } catch (e) {
+      messages.add(
+        UpdatingMessage(
+          label: profile.realLabel,
+          message: userFacingErrorMessage(e, appLocalizations),
+        ),
+      );
+    }
+  });
+  await Future.wait(updates);
+  return messages;
+}
 
 const _infoGap = 4.0;
 
@@ -45,23 +73,7 @@ class _ProfilesViewState extends ConsumerState<ProfilesView> {
       return;
     }
     _isUpdating = true;
-    final appLocalizations = context.appLocalizations;
-    final profilesAction = ref.read(profilesActionProvider.notifier);
-    final List<UpdatingMessage> messages = [];
-    final updateProfiles = profiles.map<Future>((profile) async {
-      if (profile.type != ProfileType.url) return;
-      try {
-        await profilesAction.updateProfile(profile, showLoading: true);
-      } catch (e) {
-        messages.add(
-          UpdatingMessage(
-            label: profile.realLabel,
-            message: userFacingErrorMessage(e, appLocalizations),
-          ),
-        );
-      }
-    });
-    await Future.wait(updateProfiles);
+    final messages = await updateUrlProfiles(context, ref, profiles);
     dialogs.showFailures(messages);
     _isUpdating = false;
   }
@@ -94,6 +106,11 @@ class _ProfilesViewState extends ConsumerState<ProfilesView> {
 
   @override
   Widget build(BuildContext context) {
+    // The main navigation entry reads in the Hara A composition; the picker
+    // keeps the card grid inside its sheet.
+    if (!widget.picker) {
+      return const HaraProfilesView();
+    }
     return Consumer(
       builder: (_, ref, _) {
         final appLocalizations = context.appLocalizations;
@@ -259,6 +276,171 @@ class _ProfilesGridState extends ConsumerState<_ProfilesGrid> {
   }
 }
 
+/// The profile row actions, shared by the card grid and the Hara A list.
+Future<void> confirmDeleteProfile(
+  BuildContext context,
+  WidgetRef ref,
+  Profile profile,
+) async {
+  final profilesAction = ref.read(profilesActionProvider.notifier);
+  final appLocalizations = context.appLocalizations;
+  final users = await profilesAction.providerUsers(profile);
+  final res = await dialogs.showMessage(
+    title: appLocalizations.tip,
+    message: TextSpan(
+      text: users.isEmpty
+          ? appLocalizations.deleteTip(appLocalizations.profile)
+          : appLocalizations.providerInUse(
+              profile.realLabel,
+              users.map((item) => item.realLabel).join(', '),
+            ),
+    ),
+    destructive: true,
+    confirmText: appLocalizations.delete,
+  );
+  if (res != true) {
+    return;
+  }
+  await profilesAction.deleteProfile(profile.id);
+}
+
+void previewProfile(BuildContext context, Profile profile) {
+  unawaited(
+    BaseNavigator.push<String>(context, PreviewProfileView(profile: profile)),
+  );
+}
+
+Future<void> syncProfile(WidgetRef ref, Profile profile) async {
+  if (profile.type != ProfileType.url) return;
+  await globalState.loadingRun(() async {
+    await ref
+        .read(profilesActionProvider.notifier)
+        .updateProfile(profile, showLoading: true);
+  }, tag: LoadingTag.profiles);
+}
+
+void editProfileEntry(BuildContext context, Profile profile) {
+  if (profile.type == ProfileType.custom) {
+    BaseNavigator.push(context, CustomProfileView(profileId: profile.id));
+    return;
+  }
+  showExtend(context, builder: (context) => EditProfileView(profile: profile));
+}
+
+Future<void> copyProfileLink(BuildContext context, Profile profile) async {
+  await Clipboard.setData(ClipboardData(text: profile.url));
+  if (context.mounted) {
+    context.showNotifier(
+      context.appLocalizations.copySuccess,
+      level: MessageLevel.success,
+    );
+  }
+}
+
+Future<void> exportProfileFile(BuildContext context, Profile profile) async {
+  final appLocalizations = context.appLocalizations;
+  final res = await globalState.safeRun<bool>(() async {
+    final mFile = await profile.file;
+    final value = await picker.saveFile(
+      profile.exportFileName,
+      mFile.readAsBytesSync(),
+    );
+    if (value == null) return false;
+    return true;
+  }, title: appLocalizations.tip);
+  if (res == true && context.mounted) {
+    context.showNotifier(
+      appLocalizations.exportSuccess,
+      level: MessageLevel.success,
+    );
+  }
+}
+
+List<CommonPopupMenuItem> profileMenuItems(
+  BuildContext context,
+  WidgetRef ref,
+  Profile profile,
+) {
+  final appLocalizations = context.appLocalizations;
+  final isUrl = profile.type == ProfileType.url;
+  final isCustom = profile.type == ProfileType.custom;
+  return [
+    CommonPopupMenuItem(
+      glyph: AppGlyphs.edit,
+      label: appLocalizations.edit,
+      onPressed: () => editProfileEntry(context, profile),
+    ),
+    if (isCustom) ...[
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.textShort,
+        label: appLocalizations.rename,
+        onPressed: () {
+          renameProfile(context, ref, profile);
+        },
+      ),
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.eye,
+        label: appLocalizations.runtimeConfig,
+        onPressed: () {
+          previewProfile(context, profile);
+        },
+      ),
+    ] else
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.puzzle,
+        label: appLocalizations.extend,
+        onPressed: () {
+          BaseNavigator.push(context, ExtendView(profileId: profile.id));
+        },
+      ),
+    if (isUrl)
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.sync,
+        label: appLocalizations.sync,
+        onPressed: () {
+          syncProfile(ref, profile);
+        },
+      ),
+    if (!isCustom)
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.moreCircle,
+        label: appLocalizations.more,
+        subItems: [
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.eye,
+            label: appLocalizations.runtimeConfig,
+            onPressed: () {
+              previewProfile(context, profile);
+            },
+          ),
+          if (isUrl)
+            CommonPopupMenuItem(
+              glyph: AppGlyphs.copy,
+              label: appLocalizations.copyLink,
+              onPressed: () {
+                copyProfileLink(context, profile);
+              },
+            ),
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.export,
+            label: appLocalizations.exportFile,
+            onPressed: () {
+              exportProfileFile(context, profile);
+            },
+          ),
+        ],
+      ),
+    CommonPopupMenuItem(
+      danger: true,
+      glyph: AppGlyphs.delete,
+      label: appLocalizations.delete,
+      onPressed: () {
+        confirmDeleteProfile(context, ref, profile);
+      },
+    ),
+  ];
+}
+
 class ProfileItem extends ConsumerWidget {
   final Profile profile;
   final int? groupValue;
@@ -271,49 +453,8 @@ class ProfileItem extends ConsumerWidget {
     required this.onChanged,
   });
 
-  Future<void> _handleDeleteProfile(BuildContext context, WidgetRef ref) async {
-    final profilesAction = ref.read(profilesActionProvider.notifier);
-    final appLocalizations = context.appLocalizations;
-    final users = await profilesAction.providerUsers(profile);
-    final res = await dialogs.showMessage(
-      title: appLocalizations.tip,
-      message: TextSpan(
-        text: users.isEmpty
-            ? appLocalizations.deleteTip(appLocalizations.profile)
-            : appLocalizations.providerInUse(
-                profile.realLabel,
-                users.map((item) => item.realLabel).join(', '),
-              ),
-      ),
-      destructive: true,
-      confirmText: appLocalizations.delete,
-    );
-    if (res != true) {
-      return;
-    }
-    await profilesAction.deleteProfile(profile.id);
-  }
-
-  Future<void> _handlePreview(BuildContext context) async {
-    unawaited(
-      BaseNavigator.push<String>(context, PreviewProfileView(profile: profile)),
-    );
-  }
-
-  Future updateProfile(WidgetRef ref) async {
-    if (profile.type != ProfileType.url) return;
-    await globalState.loadingRun(() async {
-      await ref
-          .read(profilesActionProvider.notifier)
-          .updateProfile(profile, showLoading: true);
-    }, tag: LoadingTag.profiles);
-  }
-
-  void _handleShowEditExtendPage(BuildContext context) {
-    showExtend(
-      context,
-      builder: (context) => EditProfileView(profile: profile),
-    );
+  List<CommonPopupMenuItem> _menuItems(BuildContext context, WidgetRef ref) {
+    return profileMenuItems(context, ref, profile);
   }
 
   SubscriptionInfo? get _subscriptionInfo =>
@@ -349,132 +490,6 @@ class ProfileItem extends ConsumerWidget {
               compact: true,
             ),
     );
-  }
-
-  Future<void> _handleCopyLink(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: profile.url));
-    if (context.mounted) {
-      context.showNotifier(
-        context.appLocalizations.copySuccess,
-        level: MessageLevel.success,
-      );
-    }
-  }
-
-  Future<void> _handleExportFile(BuildContext context) async {
-    final appLocalizations = context.appLocalizations;
-    final res = await globalState.safeRun<bool>(() async {
-      final mFile = await profile.file;
-      final value = await picker.saveFile(
-        profile.exportFileName,
-        mFile.readAsBytesSync(),
-      );
-      if (value == null) return false;
-      return true;
-    }, title: appLocalizations.tip);
-    if (res == true && context.mounted) {
-      context.showNotifier(
-        appLocalizations.exportSuccess,
-        level: MessageLevel.success,
-      );
-    }
-  }
-
-  void _handlePushGenProfilePage(BuildContext context, int id) {
-    BaseNavigator.push(context, ExtendView(profileId: id));
-  }
-
-  void _handlePushCustomProfilePage(BuildContext context, int id) {
-    BaseNavigator.push(context, CustomProfileView(profileId: id));
-  }
-
-  void _handleEdit(BuildContext context) {
-    if (profile.type == ProfileType.custom) {
-      _handlePushCustomProfilePage(context, profile.id);
-    } else {
-      _handleShowEditExtendPage(context);
-    }
-  }
-
-  List<CommonPopupMenuItem> _menuItems(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final isUrl = profile.type == ProfileType.url;
-    final isCustom = profile.type == ProfileType.custom;
-    return [
-      CommonPopupMenuItem(
-        glyph: AppGlyphs.edit,
-        label: appLocalizations.edit,
-        onPressed: () => _handleEdit(context),
-      ),
-      if (isCustom) ...[
-        CommonPopupMenuItem(
-          glyph: AppGlyphs.textShort,
-          label: appLocalizations.rename,
-          onPressed: () {
-            renameProfile(context, ref, profile);
-          },
-        ),
-        CommonPopupMenuItem(
-          glyph: AppGlyphs.eye,
-          label: appLocalizations.runtimeConfig,
-          onPressed: () {
-            _handlePreview(context);
-          },
-        ),
-      ] else
-        CommonPopupMenuItem(
-          glyph: AppGlyphs.puzzle,
-          label: appLocalizations.extend,
-          onPressed: () {
-            _handlePushGenProfilePage(context, profile.id);
-          },
-        ),
-      if (isUrl)
-        CommonPopupMenuItem(
-          glyph: AppGlyphs.sync,
-          label: appLocalizations.sync,
-          onPressed: () {
-            updateProfile(ref);
-          },
-        ),
-      if (!isCustom)
-        CommonPopupMenuItem(
-          glyph: AppGlyphs.moreCircle,
-          label: appLocalizations.more,
-          subItems: [
-            CommonPopupMenuItem(
-              glyph: AppGlyphs.eye,
-              label: appLocalizations.runtimeConfig,
-              onPressed: () {
-                _handlePreview(context);
-              },
-            ),
-            if (isUrl)
-              CommonPopupMenuItem(
-                glyph: AppGlyphs.copy,
-                label: appLocalizations.copyLink,
-                onPressed: () {
-                  _handleCopyLink(context);
-                },
-              ),
-            CommonPopupMenuItem(
-              glyph: AppGlyphs.export,
-              label: appLocalizations.exportFile,
-              onPressed: () {
-                _handleExportFile(context);
-              },
-            ),
-          ],
-        ),
-      CommonPopupMenuItem(
-        danger: true,
-        glyph: AppGlyphs.delete,
-        label: appLocalizations.delete,
-        onPressed: () {
-          _handleDeleteProfile(context, ref);
-        },
-      ),
-    ];
   }
 
   @override

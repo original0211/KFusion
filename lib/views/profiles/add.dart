@@ -14,6 +14,52 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _customOpenPause = Duration(milliseconds: 150);
 
+/// The link import form behind the add page's link entry, shared with the
+/// profiles page's own add rows.
+Future<void> showAddProfileFromLinkForm(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final profilesAction = ref.read(profilesActionProvider.notifier);
+  final appLocalizations = context.appLocalizations;
+  final res = await showNamedUrlsForm(
+    context,
+    title: appLocalizations.importFromLink,
+    urlLabel: appLocalizations.link,
+    batchTip: appLocalizations.batchLinkInputTip,
+    urlValidator: (value) {
+      if (value == null || value.isEmpty) {
+        return appLocalizations.emptyTip(appLocalizations.link);
+      }
+      if (!value.isUrl && !value.isShareLink) {
+        return appLocalizations.invalidLinkTip;
+      }
+      return null;
+    },
+    existingUrls: {
+      for (final profile in ref.read(profilesProvider))
+        if (profile.url.isNotEmpty) profile.url,
+    },
+    withAgeSecretKey: true,
+  );
+  switch (res) {
+    case null:
+      return;
+    case [final single]:
+      unawaited(
+        profilesAction.addProfileFromLink(
+          single.url,
+          label: single.label,
+          ageSecretKey: single.ageSecretKey,
+        ),
+      );
+    default:
+      unawaited(
+        profilesAction.addProfilesFromLinks([for (final item in res) item.url]),
+      );
+  }
+}
+
 void showAddProfilePage(BuildContext origin) {
   final context = globalState.navigatorKey.currentState!.context;
   showExtend(
@@ -56,46 +102,7 @@ class AddProfileView extends ConsumerWidget {
   }
 
   Future<void> _toAdd(WidgetRef ref) async {
-    final profilesAction = ref.read(profilesActionProvider.notifier);
-    final appLocalizations = context.appLocalizations;
-    final res = await showNamedUrlsForm(
-      context,
-      title: appLocalizations.importFromLink,
-      urlLabel: appLocalizations.link,
-      batchTip: appLocalizations.batchLinkInputTip,
-      urlValidator: (value) {
-        if (value == null || value.isEmpty) {
-          return appLocalizations.emptyTip(appLocalizations.link);
-        }
-        if (!value.isUrl && !value.isShareLink) {
-          return appLocalizations.invalidLinkTip;
-        }
-        return null;
-      },
-      existingUrls: {
-        for (final profile in ref.read(profilesProvider))
-          if (profile.url.isNotEmpty) profile.url,
-      },
-      withAgeSecretKey: true,
-    );
-    switch (res) {
-      case null:
-        return;
-      case [final single]:
-        unawaited(
-          profilesAction.addProfileFromLink(
-            single.url,
-            label: single.label,
-            ageSecretKey: single.ageSecretKey,
-          ),
-        );
-      default:
-        unawaited(
-          profilesAction.addProfilesFromLinks([
-            for (final item in res) item.url,
-          ]),
-        );
-    }
+    await showAddProfileFromLinkForm(context, ref);
   }
 
   Future<void> _toAddCustom(BuildContext context, WidgetRef ref) async {
