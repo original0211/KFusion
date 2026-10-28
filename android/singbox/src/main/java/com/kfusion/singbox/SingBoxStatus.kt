@@ -75,11 +75,22 @@ object SingBoxStatus {
 
     fun isRunning(context: Context): Boolean {
         val snapshot = read(context) ?: return false
-        return snapshot.state == State.RUNNING && isAlive(snapshot)
+        return isRunning(snapshot, SingBoxStatus::isPidAlive, SingBoxExitInfo.latest(context))
     }
 
-    // A killed service process leaves a stale "running" file behind.
-    fun isAlive(snapshot: Snapshot): Boolean = isPidAlive(snapshot.pid)
+    // The report's pid belongs to the service process, whose /proc entry
+    // the app process cannot see; only a platform-recorded death after
+    // the report's own write refutes it.
+    fun isRunning(
+        snapshot: Snapshot,
+        pidAlive: (Int) -> Boolean,
+        latestExit: SingBoxExitInfo.Record?,
+    ): Boolean {
+        if (snapshot.state != State.RUNNING) return false
+        if (pidAlive(snapshot.pid)) return true
+        val death = latestExit ?: return true
+        return death.timestamp <= snapshot.updatedAt
+    }
 
     fun isPidAlive(pid: Int): Boolean =
         pid > 0 && File("/proc/$pid").exists()
