@@ -321,4 +321,37 @@ void main() {
     expect(CoreKind.fromValue('singbox'), CoreKind.singbox);
     expect(CoreKind.fromValue('bogus'), CoreKind.mihomo);
   });
+
+  test('GEOIP LAN renders as ip_is_private, never as a remote rule set', () {
+    final clash = _clashSample();
+    (clash['rules'] as List).insert(0, 'GEOIP,LAN,DIRECT');
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final route = result.config['route'] as Map;
+    final rules = route['rules'] as List;
+    final lanRule = rules.firstWhere(
+      (entry) => (entry as Map)['ip_is_private'] == true,
+    ) as Map;
+    expect(lanRule['outbound'], 'direct');
+    final ruleSetTags = {
+      for (final def in route['rule_set'] as List)
+        ((def as Map)['tag'] as String),
+    };
+    expect(ruleSetTags, isNot(contains('geoip-lan')));
+  });
+
+  test('remote rule set urls are exactly the verified upstream files', () {
+    final clash = _clashSample();
+    (clash['rules'] as List).insert(0, 'GEOIP,LAN,DIRECT');
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final route = result.config['route'] as Map;
+    final urls = {
+      for (final def in route['rule_set'] as List)
+        ((def as Map)['url'] as String),
+    };
+    // Verified live (HTTP 200) on 2026-10-28; sing-geoip publishes codes only.
+    expect(urls, {
+      'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs',
+      'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs',
+    });
+  });
 }

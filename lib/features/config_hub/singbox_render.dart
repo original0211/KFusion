@@ -313,7 +313,7 @@ String _intervalText(Object? value) {
   return text;
 }
 
-Map<String, Object?>? _ruleToSingBox(
+List<Map<String, Object?>> _rulesToSingBox(
   String line,
   List<String> unsupported,
   Map<String, Map<String, Object?>> ruleSets,
@@ -321,7 +321,7 @@ Map<String, Object?>? _ruleToSingBox(
   var parts = line.split(',');
   if (parts.length < 2) {
     unsupported.add('rule "$line"');
-    return null;
+    return const [];
   }
   if (parts.last.trim() == 'no-resolve') {
     parts = parts.sublist(0, parts.length - 1);
@@ -329,61 +329,89 @@ Map<String, Object?>? _ruleToSingBox(
   final kind = parts.first.trim();
   final rawTarget = parts.last.trim();
   final args = parts.sublist(1, parts.length - 1).map((e) => e.trim()).toList();
-  final Map<String, Object?> rule;
+  final List<Map<String, Object?>> rules;
   switch (kind) {
     case 'DOMAIN':
-      rule = {'domain': args};
+      rules = [
+        {'domain': args},
+      ];
     case 'DOMAIN-SUFFIX':
-      rule = {'domain_suffix': args};
+      rules = [
+        {'domain_suffix': args},
+      ];
     case 'DOMAIN-KEYWORD':
-      rule = {'domain_keyword': args};
+      rules = [
+        {'domain_keyword': args},
+      ];
     case 'DOMAIN-REGEX':
-      rule = {'domain_regex': args};
+      rules = [
+        {'domain_regex': args},
+      ];
     case 'IP-CIDR':
     case 'IP-CIDR6':
-      rule = {'ip_cidr': args};
+      rules = [
+        {'ip_cidr': args},
+      ];
     case 'SRC-IP-CIDR':
-      rule = {'source_ip_cidr': args};
+      rules = [
+        {'source_ip_cidr': args},
+      ];
     case 'SRC-PORT':
-      rule = _portRuleFields(args, 'source_port', 'source_port_range');
+      rules = [_portRuleFields(args, 'source_port', 'source_port_range')];
     case 'DST-PORT':
-      rule = _portRuleFields(args, 'port', 'port_range');
+      rules = [_portRuleFields(args, 'port', 'port_range')];
     case 'GEOIP':
       final codes = args.where((arg) => arg != 'no-resolve').toList();
       if (codes.isEmpty) {
         unsupported.add('rule "$line"');
-        return null;
+        return const [];
       }
-      rule = {
-        'rule_set': [
-          for (final code in codes)
-            _registerGeoRuleSet(ruleSets, 'geoip', code),
-        ],
-      };
+      // sing-geoip publishes country codes only: the LAN code has no
+      // upstream file (its URL 404s), so it takes the native field instead.
+      final remoteCodes = [
+        for (final code in codes)
+          if (code.toUpperCase() != 'LAN') code,
+      ];
+      rules = [
+        if (remoteCodes.isNotEmpty)
+          {
+            'rule_set': [
+              for (final code in remoteCodes)
+                _registerGeoRuleSet(ruleSets, 'geoip', code),
+            ],
+          },
+        if (remoteCodes.length != codes.length) {'ip_is_private': true},
+      ];
     case 'GEOSITE':
       if (args.isEmpty) {
         unsupported.add('rule "$line"');
-        return null;
+        return const [];
       }
-      rule = {
-        'rule_set': [
-          for (final code in args)
-            _registerGeoRuleSet(ruleSets, 'geosite', code),
-        ],
-      };
+      rules = [
+        {
+          'rule_set': [
+            for (final code in args)
+              _registerGeoRuleSet(ruleSets, 'geosite', code),
+          ],
+        },
+      ];
     case 'PROCESS-NAME':
-      rule = {'process_name': args};
+      rules = [
+        {'process_name': args},
+      ];
     default:
       unsupported.add('rule "$line"');
-      return null;
+      return const [];
   }
   // A REJECT target becomes the rule action; no outbound represents it.
-  if (rawTarget == 'REJECT') {
-    rule['action'] = 'reject';
-  } else {
-    rule['outbound'] = _target(rawTarget);
+  for (final rule in rules) {
+    if (rawTarget == 'REJECT') {
+      rule['action'] = 'reject';
+    } else {
+      rule['outbound'] = _target(rawTarget);
+    }
   }
-  return rule;
+  return rules;
 }
 
 Map<String, Object?> _portRuleFields(
@@ -503,8 +531,7 @@ SingBoxRenderResult renderSingBox(
       }
       continue;
     }
-    final rule = _ruleToSingBox(trimmed, unsupported, ruleSets);
-    if (rule != null) rules.add(rule);
+    rules.addAll(_rulesToSingBox(trimmed, unsupported, ruleSets));
   }
   if (finalRejected) {
     rules.add({'action': 'reject'});
