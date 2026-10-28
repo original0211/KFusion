@@ -373,7 +373,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: globalContainer,
-        child: const TestApp(child: ProxiesView()),
+        child: const TestApp(child: ProxiesView(picker: true)),
       ),
     );
     await tester.pump();

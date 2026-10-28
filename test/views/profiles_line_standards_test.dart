@@ -82,7 +82,7 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const TestApp(child: ProfilesView()),
+          child: const TestApp(child: ProfilesView(picker: true)),
         ),
       );
       await tester.pumpAndSettle();
@@ -135,7 +135,7 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const TestApp(child: ProfilesView()),
+          child: const TestApp(child: ProfilesView(picker: true)),
         ),
       );
       await tester.pumpAndSettle();
@@ -197,25 +197,42 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    FilledButton confirmButton(WidgetTester tester) =>
-        tester.widget<FilledButton>(find.widgetWithText(FilledButton, '确认导入'));
+    Container actionUnderline(WidgetTester tester, String label) {
+      final column = find
+          .ancestor(of: find.text(label), matching: find.byType(Column))
+          .first;
+      return tester.widget<Container>(
+        find.descendant(
+          of: column,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.color != null &&
+                widget.constraints?.minHeight == 1.2,
+          ),
+        ),
+      );
+    }
 
-    testWidgets('method actions sit on their rows under a disc header', (
+    testWidgets('method actions sit on their rows as underlined text', (
       tester,
     ) async {
       await pumpView(tester);
-      expect(find.byType(DashboardDiscMotif), findsOneWidget);
+      expect(find.byType(DashboardDiscMotif), findsNothing);
+      expect(find.byType(TonalButton), findsNothing);
       for (final label in ['下载并解析', '选择文件', '解析文本']) {
+        expect(find.text(label), findsOneWidget, reason: label);
         expect(
-          find.widgetWithText(TonalButton, label),
-          findsOneWidget,
+          actionUnderline(tester, label).color,
+          const Color(0xFF1A1A1A),
           reason: label,
         );
       }
-      expect(confirmButton(tester).onPressed, isNull);
+      final confirm = tester.widget<Text>(find.text('确认导入'));
+      expect(confirm.style?.color, const Color(0xFFB4B4B0));
     });
 
-    testWidgets('unparsable text surfaces an error in the banner', (
+    testWidgets('unparsable text surfaces an error as red text', (
       tester,
     ) async {
       await pumpView(tester);
@@ -226,7 +243,10 @@ void main() {
       await tester.tap(find.text('解析文本'));
       await tester.pumpAndSettle();
       expect(find.textContaining('未解析出任何节点'), findsOneWidget);
-      expect(find.byType(ErrorBanner), findsOneWidget);
+      expect(find.byType(ErrorBanner), findsNothing);
+      final context = tester.element(find.byType(UniversalImportView));
+      final errorText = tester.widget<Text>(find.textContaining('未解析出任何节点'));
+      expect(errorText.style?.color, Theme.of(context).colorScheme.error);
     });
 
     testWidgets('a parsed paste reports its nodes and enables confirm', (
@@ -246,37 +266,32 @@ void main() {
       await tester.tap(find.text('解析文本'));
       await tester.pumpAndSettle();
       expect(find.textContaining('1 个节点'), findsOneWidget);
-      expect(confirmButton(tester).onPressed, isNotNull);
+      for (var i = 0; i < 4; i++) {
+        await tester.drag(find.byType(ListView), const Offset(0, -600));
+        await tester.pumpAndSettle();
+      }
+      final confirm = tester.widget<Text>(find.text('确认导入'));
+      expect(confirm.style?.color, const Color(0xFF1A1A1A));
+      expect(actionUnderline(tester, '确认导入').color, const Color(0xFF1A1A1A));
+      expect(find.text('导出 sing-box 配置'), findsOneWidget);
     });
 
-    testWidgets('payload surfaces sit in rimmed wells below the card step', (
+    testWidgets('payload wells are framed by hairlines with no fill', (
       tester,
     ) async {
       await pumpView(tester);
-      final context = tester.element(find.byType(UniversalImportView));
-      final scheme = Theme.of(context).colorScheme;
-      List<ShapeDecoration> wells() => tester
+      List<BoxDecoration> wells() => tester
           .widgetList<DecoratedBox>(find.byType(DecoratedBox))
           .map((box) => box.decoration)
-          .whereType<ShapeDecoration>()
-          .where(
-            (decoration) =>
-                decoration.shape is RoundedSuperellipseBorder &&
-                (decoration.shape as RoundedSuperellipseBorder).side !=
-                    BorderSide.none,
-          )
+          .whereType<BoxDecoration>()
+          .where((decoration) => decoration.border != null)
           .toList();
-      Color rimColor(ShapeDecoration decoration) =>
-          (decoration.shape as RoundedSuperellipseBorder).side.color;
-      final insetWells = wells()
-          .where(
-            (decoration) =>
-                decoration.color == SurfaceLevel.inset.colorOf(scheme),
-          )
-          .toList();
-      expect(insetWells, hasLength(2));
-      for (final decoration in insetWells) {
-        expect(rimColor(decoration), scheme.cabinRim);
+      expect(wells(), hasLength(2));
+      for (final decoration in wells()) {
+        expect(decoration.color, isNull);
+        final border = decoration.border! as Border;
+        expect(border.top.width, 0.7);
+        expect(border.top.color, const Color(0xFFE9E9E6));
       }
       await tester.enterText(
         find.byType(TextField).at(1),
@@ -290,14 +305,7 @@ void main() {
       );
       await tester.tap(find.text('解析文本'));
       await tester.pumpAndSettle();
-      final blockWells = wells()
-          .where(
-            (decoration) =>
-                decoration.color == SurfaceLevel.block.colorOf(scheme),
-          )
-          .toList();
-      expect(blockWells, hasLength(1));
-      expect(rimColor(blockWells.single), scheme.cabinRim);
+      expect(wells(), hasLength(3));
     });
   });
 }

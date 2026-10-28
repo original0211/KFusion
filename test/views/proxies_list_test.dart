@@ -54,7 +54,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const TestApp(child: ProxiesView()),
+        child: const TestApp(child: ProxiesView(picker: true)),
       ),
     );
     container
@@ -124,7 +124,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const TestApp(child: ProxiesView()),
+        child: const TestApp(child: ProxiesView(picker: true)),
       ),
     );
     container

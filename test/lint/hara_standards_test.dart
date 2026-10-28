@@ -13,6 +13,9 @@ const aSurfaces = <String>[
   'lib/ui/hara.dart',
   'lib/ui/text_navigation.dart',
   'lib/views/dashboard/hara_dashboard.dart',
+  'lib/views/proxies/hara_proxies.dart',
+  'lib/views/profiles/hara_profiles.dart',
+  'lib/views/profiles/universal_import.dart',
 ];
 
 const tokenLayer = 'lib/ui/hara.dart';
@@ -100,6 +103,8 @@ void main() {
       const whitelist = <String>{
         tokenLayer,
         'lib/views/dashboard/hara_dashboard.dart',
+        'lib/views/proxies/hara_proxies.dart',
+        'lib/views/profiles/hara_profiles.dart',
       };
       final offenders = <String>[];
       for (final file in libFiles()) {

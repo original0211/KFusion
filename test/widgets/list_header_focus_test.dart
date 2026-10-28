@@ -72,7 +72,7 @@ void main() {
           builder: (context, child) {
             return wrapAppScopes(context, child!);
           },
-          home: const ProxiesView(),
+          home: const ProxiesView(picker: true),
         ),
       ),
     );
