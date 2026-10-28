@@ -8,6 +8,7 @@ import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'hara_proxies.dart';
 import 'setting.dart';
 import 'tab.dart';
 
@@ -90,6 +91,11 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
 
   @override
   Widget build(BuildContext context) {
+    // The main navigation entry reads in the Hara A composition; the picker
+    // keeps the tab and list readings inside its sheet.
+    if (!widget.picker) {
+      return const HaraProxiesView();
+    }
     final proxiesType = ref.watch(
       proxiesStyleSettingProvider.select((state) => state.type),
     );
