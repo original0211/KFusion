@@ -974,6 +974,7 @@
   "singBoxDegradationsTitle": "Деградации sing-box",
   "singBoxDegradationsCount": "Деградаций sing-box: {count}",
   "singBoxDegradationsAllCarried": "Всё переносится в sing-box",
+  "singBoxDegradationsNative": "Нативная конфигурация sing-box, используется как есть: ничего не переводится, поэтому список деградаций не применим",
   "singBoxDegradationsImportTitle": "Импортировано, с деградациями sing-box",
   "singBoxDegradationsImportSummary": "В этом профиле {count} элементов деградируют в sing-box; список называет каждый.",
   "singBoxDegradationsView": "Показать список",

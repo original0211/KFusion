@@ -11,6 +11,7 @@ import 'package:kfusion/core/core.dart';
 import 'package:kfusion/database/database.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/singbox_degradations.dart';
+import 'package:kfusion/features/config_hub/singbox_native.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/plugins/app.dart';
 import 'package:kfusion/plugins/service.dart';

@@ -206,9 +206,13 @@ class SingBoxRunner {
     if (_tailLines.length > 200) _tailLines.removeAt(0);
   }
 
+  /// Starts the binary on [config]; a native config passes
+  /// [configText] instead and is written byte for byte, never
+  /// re-encoded.
   Future<SingBoxStartResult> start({
     required String executable,
     required Map<String, Object?> config,
+    String? configText,
     required Directory configDir,
     required int apiPort,
     required String secret,
@@ -221,7 +225,7 @@ class SingBoxRunner {
     try {
       await configDir.create(recursive: true);
       final configFile = File(p.join(configDir.path, 'config.json'));
-      await configFile.writeAsString(json.encode(config));
+      await configFile.writeAsString(configText ?? json.encode(config));
       final process = await launcher.start(executable, [
         'run',
         '-c',

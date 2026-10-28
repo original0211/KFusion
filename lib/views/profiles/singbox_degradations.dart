@@ -140,9 +140,15 @@ class SingBoxDegradationsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final palette = context.haraPalette;
     final localizations = context.appLocalizations;
-    final items =
-        ref.watch(profileDegradationsProvider(profile.id)).value ??
-        const <SingBoxDegradation>[];
+    // A completed null is the native marker: the profile was never
+    // translated, which must not read as an empty ledger.
+    final (isNative, items) = switch (ref.watch(
+      profileDegradationsProvider(profile.id),
+    )) {
+      AsyncData(value: final List<SingBoxDegradation> list) => (false, list),
+      AsyncData() => (true, const <SingBoxDegradation>[]),
+      _ => (false, const <SingBoxDegradation>[]),
+    };
     return CommonScaffold(
       title: localizations.singBoxDegradationsTitle,
       body: Material(
@@ -164,7 +170,12 @@ class SingBoxDegradationsView extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: HaraSpace.titleToList),
-                if (items.isEmpty)
+                if (isNative)
+                  Text(
+                    localizations.singBoxDegradationsNative,
+                    style: HaraText.profileMeta(context, palette.sub),
+                  )
+                else if (items.isEmpty)
                   Text(
                     localizations.singBoxDegradationsAllCarried,
                     style: HaraText.profileMeta(context, palette.sub),

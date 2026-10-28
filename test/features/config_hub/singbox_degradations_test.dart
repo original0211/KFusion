@@ -26,6 +26,18 @@ class _GatedStore extends SingBoxDegradationStore {
   }
 }
 
+const _nativeJson = '''
+{
+  "outbounds": [
+    {"type": "vless", "tag": "V1", "server": "203.0.113.9", "server_port": 443, "uuid": "u"},
+    {"type": "direct", "tag": "direct"}
+  ],
+  "experimental": {
+    "clash_api": {"external_controller": "127.0.0.1:9091", "secret": "s"}
+  }
+}
+''';
+
 const _yaml = '''
 proxies:
   - {name: OVPN, type: openvpn, server: 203.0.113.1, port: 1194}
@@ -103,7 +115,7 @@ void main() {
       final items = singBoxDegradationsOf(_yaml);
       expect(items, isNotEmpty);
       await store.write(7, items);
-      expect(_triples(await store.read(7)), _triples(items));
+      expect(_triples((await store.read(7))!), _triples(items));
       expect(await store.read(8), isEmpty);
     });
 
@@ -119,6 +131,18 @@ void main() {
       expect(await store.read(7), isEmpty);
     });
 
+    test('a native marker reads as not-applicable, never as empty', () async {
+      await store.writeNative(7);
+      expect(await store.read(7), isNull);
+      final items = singBoxDegradationsOf(_yaml);
+      await store.write(7, items);
+      expect(_triples((await store.read(7))!), _triples(items));
+      await store.writeNative(7);
+      expect(await store.read(7), isNull);
+      await store.remove(7);
+      expect(await store.read(7), isEmpty);
+    });
+
     test('the view-model provider serves the stored ledger', () async {
       final container = ProviderContainer(
         overrides: [singBoxDegradationStoreProvider.overrideWithValue(store)],
@@ -129,7 +153,7 @@ void main() {
       final served = await container.read(
         profileDegradationsProvider(7).future,
       );
-      expect(_triples(served), _triples(items));
+      expect(_triples(served!), _triples(items));
       expect(
         await container.read(profileDegradationsProvider(8).future),
         isEmpty,
@@ -167,7 +191,7 @@ void main() {
 
         final items = await refreshed;
         expect(items, isNotEmpty);
-        expect(_triples(store.written!), _triples(items));
+        expect(_triples(store.written!), _triples(items!));
 
         // Nothing was lost with the dead ref: a later container reads
         // the stored ledger fresh from the sidecar file.
@@ -182,8 +206,33 @@ void main() {
         );
         addTearDown(next.dispose);
         final served = await next.read(profileDegradationsProvider(7).future);
-        expect(_triples(served), _triples(items));
+        expect(_triples(served!), _triples(items));
       },
     );
+  });
+
+  group('scan of a native profile', () {
+    test('stores the marker and serves not-applicable', () async {
+      final home = await Directory.systemTemp.createTemp('degradations-native');
+      addTearDown(() => home.delete(recursive: true));
+      await useAppPaths(home);
+      final profilesDir = Directory(await appPath.profilesPath);
+      await profilesDir.create(recursive: true);
+      await File('${profilesDir.path}/9.yaml').writeAsString(_nativeJson);
+      final store = SingBoxDegradationStore(
+        profilesDir: () async => profilesDir.path,
+      );
+      final scanned = await scanAndStoreSingBoxDegradations(store, 9);
+      expect(scanned, isNull);
+      expect(await store.read(9), isNull);
+      final container = ProviderContainer(
+        overrides: [singBoxDegradationStoreProvider.overrideWithValue(store)],
+      );
+      addTearDown(container.dispose);
+      expect(
+        await container.read(profileDegradationsProvider(9).future),
+        isNull,
+      );
+    });
   });
 }

@@ -974,6 +974,7 @@
   "singBoxDegradationsTitle": "sing-box 降格リスト",
   "singBoxDegradationsCount": "sing-box 降格 {count} 件",
   "singBoxDegradationsAllCarried": "すべて sing-box に引き継がれます",
+  "singBoxDegradationsNative": "sing-box ネイティブ構成：そのまま使用され、変換されないため降格リストはありません",
   "singBoxDegradationsImportTitle": "インポート完了（sing-box 降格あり）",
   "singBoxDegradationsImportSummary": "このプロファイルには sing-box で降格される項目が {count} 件あります。一覧で各項目を確認できます。",
   "singBoxDegradationsView": "一覧を見る",

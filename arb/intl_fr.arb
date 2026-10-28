@@ -974,6 +974,7 @@
   "singBoxDegradationsTitle": "Dégradations sing-box",
   "singBoxDegradationsCount": "{count} dégradations sing-box",
   "singBoxDegradationsAllCarried": "Tout est repris par sing-box",
+  "singBoxDegradationsNative": "Configuration sing-box native, utilisée telle quelle : rien n’est traduit, aucune liste de dégradation ne s’applique",
   "singBoxDegradationsImportTitle": "Importé, avec des dégradations sing-box",
   "singBoxDegradationsImportSummary": "{count} éléments de ce profil sont dégradés sous sing-box ; la liste les nomme chacun.",
   "singBoxDegradationsView": "Voir la liste",

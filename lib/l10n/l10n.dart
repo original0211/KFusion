@@ -8163,6 +8163,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Native sing-box config, used as-is: nothing is translated, so no degradation list applies`
+  String get singBoxDegradationsNative {
+    return Intl.message(
+      'Native sing-box config, used as-is: nothing is translated, so no degradation list applies',
+      name: 'singBoxDegradationsNative',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Imported, with sing-box degradations`
   String get singBoxDegradationsImportTitle {
     return Intl.message(

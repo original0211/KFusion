@@ -1956,6 +1956,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxDegradationsImportTitle": MessageLookupByLibrary.simpleMessage(
       "Importado, con degradaciones de sing-box",
     ),
+    "singBoxDegradationsNative": MessageLookupByLibrary.simpleMessage(
+      "Configuración nativa de sing-box, usada tal cual: nada se traduce, por lo que no aplica ninguna lista de degradación",
+    ),
     "singBoxDegradationsTitle": MessageLookupByLibrary.simpleMessage(
       "Degradaciones de sing-box",
     ),

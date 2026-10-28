@@ -27,6 +27,12 @@ void main() {
     type: ProfileType.file,
     autoUpdateDuration: Duration.zero,
   );
+  const gamma = Profile(
+    id: 3,
+    label: 'Gamma',
+    type: ProfileType.file,
+    autoUpdateDuration: Duration.zero,
+  );
 
   const ledger = [
     SingBoxDegradation(
@@ -58,10 +64,16 @@ void main() {
   ProviderContainer makeContainer() {
     final container = ProviderContainer(
       overrides: [
-        profilesProvider.overrideWith(() => TestProfiles(const [alpha, beta])),
+        profilesProvider.overrideWith(
+          () => TestProfiles(const [alpha, beta, gamma]),
+        ),
         currentProfileIdProvider.overrideWithBuild((_, _) => 1),
         profileDegradationsProvider.overrideWith(
-          (ref, id) async => id == 1 ? ledger : const <SingBoxDegradation>[],
+          (ref, id) async => switch (id) {
+            1 => ledger,
+            3 => null,
+            _ => const <SingBoxDegradation>[],
+          },
         ),
       ],
     );
@@ -135,6 +147,21 @@ void main() {
     await pumpPage(tester, const SingBoxDegradationsView(profile: beta));
     expect(find.text('Everything is carried over to sing-box'), findsOneWidget);
     expect(find.text('Beta'), findsOneWidget);
+  });
+
+  testWidgets('a native profile reads as not-applicable, never as carried', (
+    tester,
+  ) async {
+    await pumpPage(tester, const SingBoxDegradationsView(profile: gamma));
+    expect(
+      find.text(
+        'Native sing-box config, used as-is: nothing is translated, '
+        'so no degradation list applies',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Everything is carried over to sing-box'), findsNothing);
+    expect(find.text('Gamma'), findsOneWidget);
   });
 
   testWidgets('the import summary names the count and can open the list', (

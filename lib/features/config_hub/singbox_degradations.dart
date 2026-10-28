@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/singbox_native.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
 
 /// The core switch preflight's own render, run on the stored file: the
@@ -37,10 +38,12 @@ class SingBoxDegradationStore {
     return '$dir${Platform.pathSeparator}$profileId.degradations.json';
   }
 
-  Future<List<SingBoxDegradation>> read(int profileId) async {
+  /// The stored ledger; null for a native sing-box profile, where no ledger applies.
+  Future<List<SingBoxDegradation>?> read(int profileId) async {
     try {
       final text = await File(await _filePath(profileId)).readAsString();
       final decoded = jsonDecode(text);
+      if (decoded is Map && decoded['format'] == 'singbox') return null;
       if (decoded is! List) return const [];
       return [
         for (final entry in decoded)
@@ -68,6 +71,11 @@ class SingBoxDegradationStore {
     );
   }
 
+  Future<void> writeNative(int profileId) async {
+    final file = File(await _filePath(profileId));
+    await file.writeAsString(jsonEncode({'format': 'singbox'}));
+  }
+
   Future<void> remove(int profileId) async {
     try {
       final file = File(await _filePath(profileId));
@@ -90,22 +98,28 @@ final singBoxDegradationStoreProvider = Provider<SingBoxDegradationStore>(
 );
 
 final profileDegradationsProvider =
-    FutureProvider.family<List<SingBoxDegradation>, int>(
+    FutureProvider.family<List<SingBoxDegradation>?, int>(
       (ref, profileId) =>
           ref.watch(singBoxDegradationStoreProvider).read(profileId),
     );
 
 // Never throws: a failed scan must not break its triggering profile flow.
-Future<List<SingBoxDegradation>> scanAndStoreSingBoxDegradations(
+Future<List<SingBoxDegradation>?> scanAndStoreSingBoxDegradations(
   SingBoxDegradationStore store,
   int profileId,
 ) async {
   try {
     final path = await appPath.getProfilePath(profileId.toString());
     final text = await readTextFileTask(path);
-    final items = text == null || text.isEmpty
-        ? const <SingBoxDegradation>[]
-        : await singBoxDegradationsTask(text);
+    if (text == null || text.isEmpty) {
+      await store.write(profileId, const []);
+      return const [];
+    }
+    if (isNativeSingBoxConfig(text)) {
+      await store.writeNative(profileId);
+      return null;
+    }
+    final items = await singBoxDegradationsTask(text);
     await store.write(profileId, items);
     return items;
   } catch (error) {
@@ -118,7 +132,7 @@ Future<List<SingBoxDegradation>> scanAndStoreSingBoxDegradations(
 }
 
 /// The scan plus a watcher refresh, for notifier-side [Ref] holders.
-Future<List<SingBoxDegradation>> refreshSingBoxDegradations(
+Future<List<SingBoxDegradation>?> refreshSingBoxDegradations(
   Ref ref,
   int profileId,
 ) async {

@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kfusion/features/config_hub/singbox_action.dart';
+import 'package:kfusion/features/config_hub/singbox_render.dart';
 
 void main() {
   Future<void> noPause(Duration duration) async {}
@@ -114,5 +118,71 @@ void main() {
     );
     expect(result, isFalse);
     expect(reads, greaterThan(1));
+  });
+
+  group('config writers', () {
+    late Directory dir;
+
+    setUp(() async {
+      dir = await Directory.systemTemp.createTemp('singbox-config-write');
+    });
+
+    tearDown(() async {
+      await dir.delete(recursive: true);
+    });
+
+    test('a native config is written byte for byte', () async {
+      const text = '''
+{
+    "outbounds": [
+        {"type": "vless", "tag": "节点", "server": "203.0.113.9", "server_port": 443, "uuid": "u"}
+    ]
+}
+''';
+      final stale = File('${dir.path}/degradations.json');
+      await stale.writeAsString('[]');
+      final path = await writeNativeSingBoxConfig(dir, text);
+      expect(path, '${dir.path}/config.json');
+      expect(
+        await File(path).readAsBytes(),
+        utf8.encode(text),
+        reason: 'no re-encode: whitespace and wording survive verbatim',
+      );
+      expect(
+        await stale.exists(),
+        isFalse,
+        reason: 'a rendered ledger must not be read as this config\u2019s own',
+      );
+    });
+
+    test('a rendered config still lands beside its ledger', () async {
+      final rendered = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'SS-1',
+            'type': 'ss',
+            'server': '203.0.113.2',
+            'port': 8388,
+            'cipher': 'aes-256-gcm',
+            'password': 'pw',
+          },
+          {
+            'name': 'OVPN',
+            'type': 'openvpn',
+            'server': '203.0.113.1',
+            'port': 1194,
+          },
+        ],
+      }, secret: 's');
+      final path = await writeRenderedSingBoxConfig(dir, rendered);
+      expect(await File(path).readAsString(), jsonEncode(rendered.config));
+      final ledger =
+          jsonDecode(await File('${dir.path}/degradations.json').readAsString())
+              as List;
+      expect(ledger, [
+        for (final degradation in rendered.degradations) degradation.toJson(),
+      ]);
+      expect(ledger, isNotEmpty);
+    });
   });
 }

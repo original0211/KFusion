@@ -228,6 +228,23 @@ class ProfilesAction extends _$ProfilesAction {
     return saved;
   }
 
+  /// Creates a file profile from a native sing-box JSON config, stored
+  /// byte for byte. The mihomo core does not judge it — validation is
+  /// the structural sing-box check, and the kernel's own check at
+  /// switch time stays the deep verdict.
+  Future<Profile> addNativeSingBoxProfile(String label, String jsonText) async {
+    final profile = Profile.normal(label: label);
+    final saved = await profile.saveFile(
+      Uint8List.fromList(utf8.encode(jsonText)),
+      validate: (path, _) async {
+        final text = await File(path).readAsString();
+        return nativeSingBoxConfigProblem(text) ?? '';
+      },
+    );
+    putProfile(saved);
+    return saved;
+  }
+
   void touchProfile(int id) {
     final profile = ref.read(profilesProvider).getProfile(id);
     if (profile == null) return;

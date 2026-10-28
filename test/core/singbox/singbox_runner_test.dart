@@ -122,6 +122,40 @@ void main() {
     expect(launcher.last?.killCount, 1);
   });
 
+  test('runner writes a native config byte for byte', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(server.close);
+    server.listen((request) async {
+      request.response.headers.contentType = ContentType.json;
+      request.response.write(json.encode({'proxies': {}}));
+      await request.response.close();
+    });
+    final launcher = _FakeLauncher();
+    addTearDown(() => launcher.last?.close());
+    final runner = SingBoxRunner(launcher: launcher);
+    const nativeText = '''
+{
+    "outbounds": [
+        {"type": "direct", "tag": "direct"}
+    ]
+}
+''';
+    final result = await runner.start(
+      executable: 'sing-box',
+      config: const {},
+      configText: nativeText,
+      configDir: tempDir,
+      apiPort: server.port,
+      secret: 'secret',
+    );
+    expect(result.ok, isTrue);
+    expect(
+      await File('${tempDir.path}/config.json').readAsString(),
+      nativeText,
+    );
+    await runner.stop();
+  });
+
   test(
     'runner times out and kills the process when api never answers',
     () async {

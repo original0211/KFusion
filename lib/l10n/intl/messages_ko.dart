@@ -1552,6 +1552,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxDegradationsImportTitle": MessageLookupByLibrary.simpleMessage(
       "가져오기 완료(sing-box 강등 있음)",
     ),
+    "singBoxDegradationsNative": MessageLookupByLibrary.simpleMessage(
+      "sing-box 네이티브 구성: 그대로 사용되며 변환되지 않아 강등 목록이 없습니다",
+    ),
     "singBoxDegradationsTitle": MessageLookupByLibrary.simpleMessage(
       "sing-box 강등 목록",
     ),

@@ -1427,6 +1427,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "singBoxDegradationsImportTitle": MessageLookupByLibrary.simpleMessage(
       "导入完成（有 sing-box 降级）",
     ),
+    "singBoxDegradationsNative": MessageLookupByLibrary.simpleMessage(
+      "sing-box 原生配置：原样使用、不经翻译，因此没有降级清单",
+    ),
     "singBoxDegradationsTitle": MessageLookupByLibrary.simpleMessage(
       "sing-box 降级清单",
     ),

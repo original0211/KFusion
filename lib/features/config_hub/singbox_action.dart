@@ -9,6 +9,7 @@ import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/core_kind.dart';
 import 'package:kfusion/features/config_hub/core_switch.dart';
 import 'package:kfusion/features/config_hub/singbox_degradations.dart';
+import 'package:kfusion/features/config_hub/singbox_native.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/plugins/singbox.dart';
@@ -68,12 +69,23 @@ const int singBoxClashApiPort = 9091;
 final singBoxActionProvider =
     AsyncNotifierProvider<SingBoxAction, SingBoxStatus>(SingBoxAction.new);
 
-typedef _PreparedSingBox = ({SingBoxRenderResult rendered, String secret});
+/// A profile made ready for the kernel: a rendered config, or a
+/// native one fed verbatim with its own declared panel endpoint.
+typedef _PreparedSingBox = ({
+  SingBoxRenderResult? rendered,
+  String? nativeText,
+  String secret,
+  int apiPort,
+  int mixedPort,
+});
 
 class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
   SingBoxRunner? _runner;
   SingBoxClashApi? _api;
   var _switching = false;
+
+  /// The mixed port the running config actually bound.
+  var _appliedMixedPort = singBoxMixedPort;
 
   static const _stopTimeout = Duration(seconds: 20);
   static const _startTimeout = Duration(seconds: 45);
@@ -194,15 +206,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         );
       }
       if (target == CoreKind.mihomo) {
-        try {
-          final parsed = loadPlainYaml(yamlText);
-          if (parsed is! Map || parsed.isEmpty) {
-            return notRenderable;
-          }
-        } catch (_) {
-          return notRenderable;
-        }
-        return const CoreSwitchStepResult.ok();
+        return mihomoProfileVerdict(yamlText);
       }
       if (system.isAndroid) {
         if (singBoxService == null) {
@@ -215,45 +219,71 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           failure: CoreSwitchFailure.platformUnsupported,
         );
       }
-      final tunEnabled =
-          system.isAndroid || await Preferences().getSingBoxTunEnabled();
-      if (system.isWindows && tunEnabled && !await isWindowsAdmin()) {
-        return const CoreSwitchStepResult(
-          failure: CoreSwitchFailure.adminRequired,
-        );
-      }
-      try {
-        final clashMap = _asMap(loadPlainYaml(yamlText));
-        if (clashMap.isEmpty) {
-          return const CoreSwitchStepResult(
-            failure: CoreSwitchFailure.profileNotRenderable,
-            detail: '配置内容为空或不是可识别的 Clash 配置',
-          );
-        }
-        final secret = generateSingBoxSecret();
-        final rendered = renderSingBoxFromClash(
-          clashMap,
-          secret: secret,
-          tunEnabled: tunEnabled,
-          clashApiPort: singBoxClashApiPort,
-          mixedPort: singBoxMixedPort,
-        );
-        if (!_hasUsableOutbound(rendered)) {
+      if (isNativeSingBoxConfig(yamlText)) {
+        final native = prepareNativeSingBox(yamlText);
+        final problem = native.problem;
+        if (problem != null) {
           return CoreSwitchStepResult(
             failure: CoreSwitchFailure.profileNotRenderable,
-            detail: singBoxNoUsableOutboundDetail(rendered.unsupported),
+            detail: problem,
           );
         }
-        prepared = (rendered: rendered, secret: secret);
-      } catch (error) {
-        // An unexpected throw is not a verdict on the profile; its text is
-        // not a stable user-facing reason, so the card stays bare and the
-        // error lands in the log instead.
-        commonPrint.log(
-          'sing-box render failed during preflight: $error',
-          logLevel: LogLevel.error,
-        );
-        return notRenderable;
+        final doc = decodeSingBoxConfig(yamlText);
+        if (system.isWindows &&
+            doc != null &&
+            nativeSingBoxUsesTun(doc) &&
+            !await isWindowsAdmin()) {
+          return const CoreSwitchStepResult(
+            failure: CoreSwitchFailure.adminRequired,
+          );
+        }
+        prepared = native.prepared;
+      } else {
+        final tunEnabled =
+            system.isAndroid || await Preferences().getSingBoxTunEnabled();
+        if (system.isWindows && tunEnabled && !await isWindowsAdmin()) {
+          return const CoreSwitchStepResult(
+            failure: CoreSwitchFailure.adminRequired,
+          );
+        }
+        try {
+          final clashMap = _asMap(loadPlainYaml(yamlText));
+          if (clashMap.isEmpty) {
+            return const CoreSwitchStepResult(
+              failure: CoreSwitchFailure.profileNotRenderable,
+              detail: '配置内容为空或不是可识别的 Clash 配置',
+            );
+          }
+          final secret = generateSingBoxSecret();
+          final rendered = renderSingBoxFromClash(
+            clashMap,
+            secret: secret,
+            tunEnabled: tunEnabled,
+            clashApiPort: singBoxClashApiPort,
+            mixedPort: singBoxMixedPort,
+          );
+          if (!_hasUsableOutbound(rendered)) {
+            return CoreSwitchStepResult(
+              failure: CoreSwitchFailure.profileNotRenderable,
+              detail: singBoxNoUsableOutboundDetail(rendered.unsupported),
+            );
+          }
+          prepared = (
+            rendered: rendered,
+            nativeText: null,
+            secret: secret,
+            apiPort: singBoxClashApiPort,
+            mixedPort: singBoxMixedPort,
+          );
+        } catch (error) {
+          // An unexpected throw is not a verdict on the profile, so the
+          // card stays bare and the error lands in the log instead.
+          commonPrint.log(
+            'sing-box render failed during preflight: $error',
+            logLevel: LogLevel.error,
+          );
+          return notRenderable;
+        }
       }
       if (system.isAndroid) {
         // Strictly checked before any core stops, not after.
@@ -262,7 +292,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           return const CoreSwitchStepResult(failure: CoreSwitchFailure.unknown);
         }
         try {
-          final configPath = await _writeSingBoxConfig(ready.rendered);
+          final configPath = await _writePreparedConfig(ready);
           final checkError = await singBoxService!
               .checkConfig(configPath)
               .timeout(_checkTimeout);
@@ -349,11 +379,11 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         }
         try {
           await systemProxyQueue?.apply(
-            const ProxyState(
+            ProxyState(
               isStart: true,
               systemProxy: true,
-              bassDomain: [],
-              port: singBoxMixedPort,
+              bassDomain: const [],
+              port: prepared?.mixedPort ?? singBoxMixedPort,
             ),
           );
           return const CoreSwitchStepResult.ok();
@@ -416,11 +446,11 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       if (system.isWindows) {
         try {
           await systemProxyQueue?.apply(
-            const ProxyState(
+            ProxyState(
               isStart: true,
               systemProxy: true,
-              bassDomain: [],
-              port: singBoxMixedPort,
+              bassDomain: const [],
+              port: ready.mixedPort,
             ),
           );
         } catch (_) {
@@ -450,15 +480,19 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         target == CoreKind.singbox && ready != null
             ? SingBoxStatus(
                 state: SingBoxState.running,
-                message: _runningMessage(ready.rendered),
-                unsupportedCount: ready.rendered.unsupported.length,
+                message: _runningMessage(ready),
+                unsupportedCount: ready.rendered?.unsupported.length ?? 0,
               )
             : const SingBoxStatus(state: SingBoxState.idle),
       );
       if (target == CoreKind.singbox && ready != null && id != null) {
-        await ref
-            .read(singBoxDegradationStoreProvider)
-            .write(id, ready.rendered.degradations);
+        final store = ref.read(singBoxDegradationStoreProvider);
+        final rendered = ready.rendered;
+        if (rendered != null) {
+          await store.write(id, rendered.degradations);
+        } else {
+          await store.writeNative(id);
+        }
         ref.invalidate(profileDegradationsProvider(id));
       }
       return;
@@ -490,6 +524,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
     if (yamlText == null || yamlText.isEmpty) {
       return null;
     }
+    if (isNativeSingBoxConfig(yamlText)) {
+      return prepareNativeSingBox(yamlText).prepared;
+    }
     try {
       final clashMap = _asMap(loadPlainYaml(yamlText));
       if (clashMap.isEmpty) {
@@ -504,7 +541,13 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         clashApiPort: singBoxClashApiPort,
         mixedPort: singBoxMixedPort,
       );
-      return (rendered: rendered, secret: secret);
+      return (
+        rendered: rendered,
+        nativeText: null,
+        secret: secret,
+        apiPort: singBoxClashApiPort,
+        mixedPort: singBoxMixedPort,
+      );
     } catch (_) {
       return null;
     }
@@ -553,7 +596,13 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         : 'sing-box 运行中，系统代理 127.0.0.1:$singBoxMixedPort';
   }
 
-  String _runningMessage(SingBoxRenderResult rendered) {
+  String _runningMessage(_PreparedSingBox ready) {
+    final rendered = ready.rendered;
+    if (rendered == null) {
+      return system.isAndroid
+          ? 'sing-box 运行中（Android TUN，原生配置直通，面板 127.0.0.1:${ready.apiPort}）'
+          : 'sing-box 运行中，系统代理 127.0.0.1:${ready.mixedPort}（原生配置直通）';
+    }
     final unsupportedNote = rendered.unsupported.isEmpty
         ? ''
         : '（${rendered.unsupported.length} 条规则或节点未翻译，见导出说明）';
@@ -562,23 +611,14 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         : 'sing-box 运行中，系统代理 127.0.0.1:$singBoxMixedPort$unsupportedNote';
   }
 
-  Future<String> _writeSingBoxConfig(SingBoxRenderResult rendered) async {
+  Future<String> _writePreparedConfig(_PreparedSingBox ready) async {
     final homeDir = await appPath.homeDirPath;
     final configDir = Directory('$homeDir${Platform.pathSeparator}singbox');
-    await configDir.create(recursive: true);
-    final configFile = File(
-      '${configDir.path}${Platform.pathSeparator}config.json',
-    );
-    await configFile.writeAsString(jsonEncode(rendered.config));
-    final degradationsFile = File(
-      '${configDir.path}${Platform.pathSeparator}degradations.json',
-    );
-    await degradationsFile.writeAsString(
-      jsonEncode([
-        for (final degradation in rendered.degradations) degradation.toJson(),
-      ]),
-    );
-    return configFile.path;
+    final nativeText = ready.nativeText;
+    if (nativeText != null) {
+      return writeNativeSingBoxConfig(configDir, nativeText);
+    }
+    return writeRenderedSingBoxConfig(configDir, ready.rendered!);
   }
 
   /// Starts the sing-box runtime on a prepared render; on Windows this is
@@ -596,7 +636,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       }
       String startError;
       try {
-        final configPath = await _writeSingBoxConfig(prepared.rendered);
+        final configPath = await _writePreparedConfig(prepared);
         startError = await service
             .start(configPath)
             .timeout(_singBoxStartTimeout);
@@ -611,10 +651,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           detail: startError,
         );
       }
-      _api = SingBoxClashApi(
-        port: singBoxClashApiPort,
-        secret: prepared.secret,
-      );
+      _api = SingBoxClashApi(port: prepared.apiPort, secret: prepared.secret);
       // RUNNING alone is not readiness; the panel API has to answer.
       final probeDetail = await waitForSingBoxApi(() => _api!.getProxies());
       if (probeDetail != null) {
@@ -659,10 +696,10 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         executable: binary,
         configPath: configPath,
       );
-      if (!await CoreSwitch().awaitPortFree(singBoxMixedPort)) {
-        return const CoreSwitchStepResult(
+      if (!await CoreSwitch().awaitPortFree(prepared.mixedPort)) {
+        return CoreSwitchStepResult(
           failure: CoreSwitchFailure.startFailed,
-          detail: '端口 $singBoxMixedPort 仍被其他程序占用，sing-box 未启动',
+          detail: '端口 ${prepared.mixedPort} 仍被其他程序占用，sing-box 未启动',
         );
       }
       final runner = SingBoxRunner(
@@ -673,9 +710,13 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       );
       final result = await runner.start(
         executable: binary,
-        config: prepared.rendered.config,
+        config:
+            prepared.rendered?.config ??
+            decodeSingBoxConfig(prepared.nativeText ?? '') ??
+            const {},
+        configText: prepared.nativeText,
         configDir: configDir,
-        apiPort: singBoxClashApiPort,
+        apiPort: prepared.apiPort,
         secret: prepared.secret,
       );
       if (!result.ok) {
@@ -689,10 +730,8 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
         );
       }
       _runner = runner;
-      _api = SingBoxClashApi(
-        port: singBoxClashApiPort,
-        secret: prepared.secret,
-      );
+      _appliedMixedPort = prepared.mixedPort;
+      _api = SingBoxClashApi(port: prepared.apiPort, secret: prepared.secret);
       return const CoreSwitchStepResult.ok();
     } on SingBoxBinaryException catch (error) {
       return CoreSwitchStepResult(
@@ -719,11 +758,11 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
     }
     try {
       await systemProxyQueue?.apply(
-        const ProxyState(
+        ProxyState(
           isStart: false,
           systemProxy: false,
-          bassDomain: [],
-          port: singBoxMixedPort,
+          bassDomain: const [],
+          port: _appliedMixedPort,
         ),
       );
     } catch (_) {
@@ -749,11 +788,11 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
     _runner = null;
     _api = null;
     await systemProxyQueue?.apply(
-      const ProxyState(
+      ProxyState(
         isStart: false,
         systemProxy: false,
-        bassDomain: [],
-        port: singBoxMixedPort,
+        bassDomain: const [],
+        port: _appliedMixedPort,
       ),
     );
     await ref.read(activeCoreKindProvider.notifier).set(CoreKind.mihomo);
@@ -773,6 +812,98 @@ Map<String, Object?> _asMap(Object? value) {
     };
   }
   return const {};
+}
+
+/// The mihomo preflight verdict for a stored profile: a native
+/// sing-box config is refused in plain words, not fed to mihomo.
+CoreSwitchStepResult mihomoProfileVerdict(String text) {
+  const notRenderable = CoreSwitchStepResult(
+    failure: CoreSwitchFailure.profileNotRenderable,
+  );
+  if (isNativeSingBoxConfig(text)) {
+    return const CoreSwitchStepResult(
+      failure: CoreSwitchFailure.profileNotRenderable,
+      detail: '该配置是 sing-box 原生配置，mihomo 无法使用，请切换到 sing-box 核心',
+    );
+  }
+  try {
+    final parsed = loadPlainYaml(text);
+    if (parsed is! Map || parsed.isEmpty) {
+      return notRenderable;
+    }
+  } catch (_) {
+    return notRenderable;
+  }
+  return const CoreSwitchStepResult.ok();
+}
+
+/// Makes a native config ready to hand to the kernel verbatim; it
+/// must bring its own clash_api for the panel and readiness probe.
+({String? problem, _PreparedSingBox? prepared}) prepareNativeSingBox(
+  String text,
+) {
+  final problem = nativeSingBoxConfigProblem(text);
+  if (problem != null) {
+    return (problem: problem, prepared: null);
+  }
+  final doc = decodeSingBoxConfig(text)!;
+  final api = nativeSingBoxClashApi(doc);
+  if (api == null) {
+    return (
+      problem: '原生配置未声明 clash_api（experimental.clash_api），KFusion 无法接管其面板',
+      prepared: null,
+    );
+  }
+  return (
+    problem: null,
+    prepared: (
+      rendered: null,
+      nativeText: text,
+      secret: api.secret,
+      apiPort: api.port,
+      mixedPort: nativeSingBoxMixedPort(doc) ?? singBoxMixedPort,
+    ),
+  );
+}
+
+/// Writes a rendered config beside its degradation ledger.
+Future<String> writeRenderedSingBoxConfig(
+  Directory configDir,
+  SingBoxRenderResult rendered,
+) async {
+  await configDir.create(recursive: true);
+  final configFile = File(
+    '${configDir.path}${Platform.pathSeparator}config.json',
+  );
+  await configFile.writeAsString(jsonEncode(rendered.config));
+  final degradationsFile = File(
+    '${configDir.path}${Platform.pathSeparator}degradations.json',
+  );
+  await degradationsFile.writeAsString(
+    jsonEncode([
+      for (final degradation in rendered.degradations) degradation.toJson(),
+    ]),
+  );
+  return configFile.path;
+}
+
+/// Writes a native config byte for byte, dropping a stale ledger.
+Future<String> writeNativeSingBoxConfig(
+  Directory configDir,
+  String text,
+) async {
+  await configDir.create(recursive: true);
+  final configFile = File(
+    '${configDir.path}${Platform.pathSeparator}config.json',
+  );
+  await configFile.writeAsString(text);
+  final staleLedger = File(
+    '${configDir.path}${Platform.pathSeparator}degradations.json',
+  );
+  if (await staleLedger.exists()) {
+    await staleLedger.delete();
+  }
+  return configFile.path;
 }
 
 /// Stops a running mihomo through the run-state chain before a sing-box start.

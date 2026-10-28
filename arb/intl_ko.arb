@@ -974,6 +974,7 @@
   "singBoxDegradationsTitle": "sing-box 강등 목록",
   "singBoxDegradationsCount": "sing-box 강등 {count}건",
   "singBoxDegradationsAllCarried": "모두 sing-box로 이관됩니다",
+  "singBoxDegradationsNative": "sing-box 네이티브 구성: 그대로 사용되며 변환되지 않아 강등 목록이 없습니다",
   "singBoxDegradationsImportTitle": "가져오기 완료(sing-box 강등 있음)",
   "singBoxDegradationsImportSummary": "이 프로필의 {count}개 항목이 sing-box에서 강등됩니다. 목록에서 항목별로 확인할 수 있습니다.",
   "singBoxDegradationsView": "목록 보기",

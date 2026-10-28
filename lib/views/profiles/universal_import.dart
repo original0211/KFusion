@@ -7,6 +7,7 @@ import 'package:kfusion/common/common.dart';
 import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/features/form/form.dart';
+import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/views/profiles/singbox_degradations.dart';
@@ -14,7 +15,7 @@ import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Universal import: any Clash YAML, sing-box JSON, share-link list or
+/// Universal import: any Clash YAML, sing-box JSON (stored natively),
 /// base64 subscription becomes one file profile of Clash YAML, optionally
 /// under a routing template. Failures are shown, never silently imported.
 class UniversalImportView extends ConsumerStatefulWidget {
@@ -32,6 +33,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
   var _templateId = kfusionDefaultTemplate.id;
   IrParseResult? _preview;
   ConfigFormat? _format;
+  String _rawContent = '';
   String? _error;
   String? _exportMessage;
   var _busy = false;
@@ -47,6 +49,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
   void _showPreview(String content) {
     setState(() {
       _error = null;
+      _rawContent = content;
       try {
         _format = detectFormat(content);
         _preview = parseConfig(content);
@@ -102,8 +105,11 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
     final skipped = preview.skipped.isEmpty
         ? ''
         : '，跳过：${preview.skipped.join('、')}';
+    final native = _format == ConfigFormat.singbox
+        ? '；原生配置将原样保存，不做转换，路由模板不适用'
+        : '';
     return '检测到：${_format?.name ?? ''}，'
-        '${preview.profile.nodes.length} 个节点$unsupported$skipped';
+        '${preview.profile.nodes.length} 个节点$unsupported$skipped$native';
   }
 
   Future<void> _confirm() async {
@@ -114,15 +120,22 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
     }
     setState(() => _busy = true);
     try {
-      final yamlText = yaml.encode(
-        applyTemplate(preview.profile.toClashMap(), _templateId),
-      );
       final label = _labelController.text.trim().isEmpty
           ? 'KFusion 导入'
           : _labelController.text.trim();
-      final saved = await ref
-          .read(profilesActionProvider.notifier)
-          .addUniversalProfile(label, yamlText);
+      final Profile saved;
+      if (_format == ConfigFormat.singbox) {
+        saved = await ref
+            .read(profilesActionProvider.notifier)
+            .addNativeSingBoxProfile(label, _rawContent);
+      } else {
+        final yamlText = yaml.encode(
+          applyTemplate(preview.profile.toClashMap(), _templateId),
+        );
+        saved = await ref
+            .read(profilesActionProvider.notifier)
+            .addUniversalProfile(label, yamlText);
+      }
       if (!mounted) return;
       final degradations = await scanAndStoreSingBoxDegradations(
         ref.read(singBoxDegradationStoreProvider),
@@ -130,7 +143,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
       );
       ref.invalidate(profileDegradationsProvider(saved.id));
       var viewList = false;
-      if (degradations.isNotEmpty && mounted) {
+      if (degradations != null && degradations.isNotEmpty && mounted) {
         viewList =
             await showSingBoxImportSummary(context, degradations.length) ??
             false;
