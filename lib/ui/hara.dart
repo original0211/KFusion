@@ -239,6 +239,10 @@ abstract final class HaraText {
     return _of(context, size: 14.5, color: color);
   }
 
+  static TextStyle addRowArrow(BuildContext context, Color color) {
+    return _of(context, size: 14, color: color);
+  }
+
   static TextStyle navLabel(
     BuildContext context,
     Color color, {

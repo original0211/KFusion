@@ -245,7 +245,7 @@ class _HaraAddRow extends StatelessWidget {
                     style: HaraText.addRow(context, palette.sub),
                   ),
                 ),
-                Text('→', style: HaraText.addRow(context, palette.sub)),
+                Text('→', style: HaraText.addRowArrow(context, palette.sub)),
               ],
             ),
           ),
