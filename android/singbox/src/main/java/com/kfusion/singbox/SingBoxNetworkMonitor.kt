@@ -10,6 +10,9 @@ import android.os.Handler
 import android.os.HandlerThread
 import io.nekohasekai.libbox.InterfaceUpdateListener
 import java.net.NetworkInterface
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 // Every update crosses this lane one at a time, in arrival order, before
 // reaching Go, whose monitor lock does not cover the enumeration and router
@@ -62,6 +65,26 @@ class SingBoxInterfaceUpdates<T : Any>(
     }
 }
 
+// One attach cycle's wait for the first delivery naming a real interface: Go's enumeration is empty until one lands.
+class SingBoxFirstDeliveryGate {
+    companion object {
+        const val WAIT_MS: Long = 5_000
+    }
+
+    private val latch = CountDownLatch(1)
+    private val deliveredName = AtomicReference<String?>(null)
+
+    fun onDelivered(name: String) {
+        if (name.isEmpty()) return
+        if (deliveredName.compareAndSet(null, name)) latch.countDown()
+    }
+
+    fun awaitFirst(timeoutMs: Long): String? {
+        latch.await(timeoutMs, TimeUnit.MILLISECONDS)
+        return deliveredName.get()
+    }
+}
+
 // Claimed once per service lifetime, however many instances ask; the count is the test seam.
 class SingBoxMonitorRegistration {
     var registrations: Int = 0
@@ -93,6 +116,9 @@ class SingBoxNetworkMonitor(private val connectivity: ConnectivityManager) {
 
     @Volatile
     private var listener: InterfaceUpdateListener? = null
+
+    @Volatile
+    private var attachGate: SingBoxFirstDeliveryGate? = null
 
     val registrationCount: Int
         get() = registration.registrations
@@ -139,16 +165,20 @@ class SingBoxNetworkMonitor(private val connectivity: ConnectivityManager) {
         worker = null
     }
 
-    fun attachListener(next: InterfaceUpdateListener) {
+    fun attachListener(next: InterfaceUpdateListener): SingBoxFirstDeliveryGate {
         start()
         listener = next
+        val gate = SingBoxFirstDeliveryGate()
+        attachGate = gate
         // Queried at attach, not at registration: a snapshot taken while the
         // previous core's VPN was still coming down may name a dead network.
         updates?.prime(connectivity.activeNetwork)
+        return gate
     }
 
     fun detachListener() {
         listener = null
+        attachGate = null
     }
 
     private fun registerCallback(
@@ -189,5 +219,6 @@ class SingBoxNetworkMonitor(private val connectivity: ConnectivityManager) {
             runCatching { NetworkInterface.getByName(name)?.index ?: -1 }.getOrDefault(-1)
         // SFA always reports the default interface as not expensive.
         target.updateDefaultInterface(name, index, false, false)
+        attachGate?.onDelivered(name)
     }
 }

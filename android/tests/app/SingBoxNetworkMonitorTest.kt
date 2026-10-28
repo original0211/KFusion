@@ -1,5 +1,6 @@
 package com.follow.clash
 
+import com.kfusion.singbox.SingBoxFirstDeliveryGate
 import com.kfusion.singbox.SingBoxInterfaceUpdates
 import com.kfusion.singbox.SingBoxMonitorRegistration
 import java.util.Collections
@@ -7,6 +8,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -178,6 +180,54 @@ class SingBoxNetworkMonitorTest {
         } finally {
             executor.shutdownNow()
         }
+    }
+
+    @Test
+    fun firstDialAfterTheGateSeesTheLateInterface() {
+        // Device form: empty enumeration, late first delivery, gated dial.
+        val gate = SingBoxFirstDeliveryGate()
+        val applied = AtomicReference<String?>(null)
+        val dialSaw = AtomicReference<String?>("unset")
+        val startThread =
+            Thread {
+                val name = gate.awaitFirst(5_000)
+                dialSaw.set(name?.let { applied.get() })
+            }
+        startThread.start()
+        Thread.sleep(200)
+        assertTrue(startThread.isAlive)
+        applied.set("wlan1")
+        gate.onDelivered("wlan1")
+        startThread.join(5_000)
+        assertFalse(startThread.isAlive)
+        assertEquals("wlan1", dialSaw.get())
+    }
+
+    @Test
+    fun emptyDeliveriesNeverReleaseTheGate() {
+        val gate = SingBoxFirstDeliveryGate()
+        val released = CountDownLatch(1)
+        val waiter =
+            Thread {
+                gate.awaitFirst(5_000)
+                released.countDown()
+            }
+        waiter.start()
+        gate.onDelivered("")
+        assertFalse(released.await(150, TimeUnit.MILLISECONDS))
+        gate.onDelivered("wlan1")
+        assertTrue(released.await(5, TimeUnit.SECONDS))
+        waiter.join(5_000)
+    }
+
+    @Test
+    fun gateReturnsNullWhenNoInterfaceArrivesWithinTheBound() {
+        val gate = SingBoxFirstDeliveryGate()
+        val began = System.nanoTime()
+        assertEquals(null, gate.awaitFirst(150))
+        val elapsedMs = (System.nanoTime() - began) / 1_000_000
+        assertTrue(elapsedMs >= 150)
+        assertTrue(elapsedMs < 5_000)
     }
 
     @Test

@@ -788,7 +788,19 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
     }
 
     override fun startDefaultInterfaceMonitor(listener: InterfaceUpdateListener) {
-        ensureNetworkMonitor()?.attachListener(listener)
+        val gate = ensureNetworkMonitor()?.attachListener(listener) ?: return
+        // On the start thread, before Router.Start dials: hold for the first
+        // delivered interface; timing out proceeds and fails on the real error.
+        val name = gate.awaitFirst(SingBoxFirstDeliveryGate.WAIT_MS)
+        SingBoxLog.append(
+            this,
+            if (name != null) {
+                "monitor: first interface $name delivered; start proceeds"
+            } else {
+                "monitor: no interface delivered within " +
+                    "${SingBoxFirstDeliveryGate.WAIT_MS}ms; start proceeds ungated"
+            },
+        )
     }
 
     override fun closeDefaultInterfaceMonitor(listener: InterfaceUpdateListener) {
