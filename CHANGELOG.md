@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.30 (2026-10-29)
+
+**Features**
+
+- **singbox** The degradations a sing-box render records for a profile are now presented in the app instead of living only in a file next to the rendered config. Each profile keeps its own ledger — a sidecar written when the profile is saved, refreshed or switched to — and the profiles screen shows the count on the profile's row and opens a page that names every item, grouped by kind with a localized reason for each. A universal import ends with a one-time summary when the imported profile carries degradations. The page and the core-switch card read the same render ledger, so their counts always agree. (9e5a2a2)
+
+**Bug Fixes**
+
+- **singbox** The background scan that refreshes a profile's degradation ledger after an import could finish after the profiles provider had already been disposed or rebuilt, and its trailing refresh hint then threw instead of landing quietly. The hint now goes through the same mounted check the providers already use after an async gap: the ledger file is written before the hint either way, watchers in a dead container need no hint, and a later container reads the file fresh. (c30cbb45)
+
 ## v0.2.29 (2026-10-28)
 
 **Features**
