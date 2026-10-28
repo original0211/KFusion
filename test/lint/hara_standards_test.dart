@@ -4,8 +4,10 @@
 // token layer, the vermilion is consumed only through HaraDot in the
 // whitelisted files, and the disc bite geometry has exactly one home.
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kfusion/ui/disc_motif.dart';
 
 const aSurfaces = <String>[
   'lib/ui/hara.dart',
@@ -129,6 +131,12 @@ void main() {
           reason: '$constant must be declared exactly once',
         );
       }
+    });
+
+    test('the disc bite keeps its settled values', () {
+      expect(DiscGeometry.biteDirection, closeTo(157 * math.pi / 180, 1e-12));
+      expect(DiscGeometry.biteDistance, 1.28);
+      expect(DiscGeometry.biteRadius, 0.67);
     });
   });
 }
