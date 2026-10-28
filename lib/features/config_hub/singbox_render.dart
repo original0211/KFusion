@@ -491,26 +491,41 @@ SingBoxRenderResult renderSingBox(
   final unsupported = <String>[];
   final outbounds = <Map<String, Object?>>[];
   final endpoints = <Map<String, Object?>>[];
+  final nodeByName = <String, IrNode>{};
+  final leafTags = <String>{'direct'};
+  final leafOrder = <String>[];
   for (final node in profile.nodes) {
+    nodeByName[node.name] = node;
     if (node.type == 'wireguard') {
       final endpoint = _wireGuardEndpoint(node, unsupported);
-      if (endpoint != null) endpoints.add(endpoint);
+      if (endpoint != null) {
+        endpoints.add(endpoint);
+        leafTags.add(node.name);
+        leafOrder.add(node.name);
+      }
       continue;
     }
     final outbound = _nodeToSingBox(node, unsupported);
-    if (outbound != null) outbounds.add(outbound);
-  }
-  final groupNames = <String>[];
-  for (final group in profile.groups) {
-    final outbound = _groupToSingBox(group, unsupported);
     if (outbound != null) {
       outbounds.add(outbound);
-      groupNames.add(_asString(group['name']));
+      leafTags.add(node.name);
+      leafOrder.add(node.name);
     }
   }
-  outbounds.addAll(const [
-    {'type': 'direct', 'tag': 'direct'},
-  ]);
+  final groupCandidates = <Map<String, Object?>>[];
+  final groupByName = <String, Map<String, Object?>>{};
+  for (final group in profile.groups) {
+    groupByName[_asString(group['name'])] = group;
+    final outbound = _groupToSingBox(group, unsupported);
+    if (outbound != null) groupCandidates.add(outbound);
+  }
+  // Group members are copied verbatim from the Clash config, so a member
+  // whose node produced no outbound would dangle until start resolves it.
+  final groupNames = _pruneGroupMembers(groupCandidates, leafTags, unsupported);
+  outbounds.addAll(groupCandidates);
+  final allTags = <String>{...leafTags, ...groupNames};
+  _applyDialerDetours(outbounds, nodeByName, groupByName, allTags, unsupported);
+  outbounds.add(const {'type': 'direct', 'tag': 'direct'});
   final ruleSets = <String, Map<String, Object?>>{};
   final dnsRuleSet = _registerGeoRuleSet(ruleSets, 'geosite', 'cn');
   final rules = <Map<String, Object?>>[
@@ -531,24 +546,37 @@ SingBoxRenderResult renderSingBox(
       }
       continue;
     }
-    rules.addAll(_rulesToSingBox(trimmed, unsupported, ruleSets));
+    for (final rule in _rulesToSingBox(trimmed, unsupported, ruleSets)) {
+      final target = rule['outbound'];
+      if (target != null && !allTags.contains(target)) {
+        unsupported.add(
+          'rule "$trimmed" target "$target" has no sing-box outbound',
+        );
+        continue;
+      }
+      rules.add(rule);
+    }
   }
   if (finalRejected) {
     rules.add({'action': 'reject'});
   }
+  if (finalOutbound.isNotEmpty && !allTags.contains(finalOutbound)) {
+    unsupported.add('MATCH target "$finalOutbound" has no sing-box outbound');
+    finalOutbound = '';
+  }
   if (finalOutbound.isEmpty) {
     if (groupNames.isNotEmpty) {
       finalOutbound = groupNames.first;
-    } else if (profile.nodes.isNotEmpty) {
-      finalOutbound = profile.nodes.first.name;
+    } else if (leafOrder.isNotEmpty) {
+      finalOutbound = leafOrder.first;
     } else {
       finalOutbound = 'direct';
     }
   }
   final proxyOutbound = groupNames.isNotEmpty
       ? groupNames.first
-      : profile.nodes.isNotEmpty
-      ? profile.nodes.first.name
+      : leafOrder.isNotEmpty
+      ? leafOrder.first
       : 'direct';
   final inbounds = <Map<String, Object?>>[
     {
@@ -620,5 +648,172 @@ SingBoxRenderResult renderSingBox(
       'cache_file': {'enabled': true, 'path': 'cache.db'},
     },
   };
+  final unresolved = _unresolvedSingBoxReferences(config);
+  if (unresolved.isNotEmpty) {
+    throw StateError(
+      'sing-box render left unresolvable references: '
+      '${unresolved.join('; ')}',
+    );
+  }
   return SingBoxRenderResult(config: config, unsupported: unsupported);
+}
+
+/// Drops group members no emitted outbound or endpoint carries, then
+/// drops groups left with no resolvable member; both cascade.
+List<String> _pruneGroupMembers(
+  List<Map<String, Object?>> candidates,
+  Set<String> leafTags,
+  List<String> unsupported,
+) {
+  final alive = <String>{
+    for (final candidate in candidates) candidate['tag'].toString(),
+  };
+  var changed = true;
+  while (changed) {
+    changed = false;
+    for (final candidate in candidates) {
+      final tag = candidate['tag'].toString();
+      if (!alive.contains(tag)) continue;
+      final resolvable = _asList(
+        candidate['outbounds'],
+      ).any((member) => leafTags.contains(member) || alive.contains(member));
+      if (!resolvable) {
+        alive.remove(tag);
+        changed = true;
+      }
+    }
+  }
+  candidates.removeWhere((candidate) {
+    final tag = candidate['tag'].toString();
+    if (alive.contains(tag)) return false;
+    unsupported.add(
+      'proxy-group "$tag" dropped: no member resolves to a sing-box '
+      'outbound',
+    );
+    return true;
+  });
+  final surviving = <String>[];
+  for (final candidate in candidates) {
+    final tag = candidate['tag'].toString();
+    surviving.add(tag);
+    final kept = <Object?>[];
+    for (final member in _asList(candidate['outbounds'])) {
+      if (leafTags.contains(member) || alive.contains(member)) {
+        kept.add(member);
+      } else {
+        unsupported.add(
+          'proxy-group "$tag" member "$member" has no sing-box outbound',
+        );
+      }
+    }
+    candidate['outbounds'] = kept;
+  }
+  return surviving;
+}
+
+/// Maps a Clash `dialer-proxy` onto the sing-box `detour` of the outbound
+/// it chains through; group outbounds have no detour field in sing-box.
+void _applyDialerDetours(
+  List<Map<String, Object?>> outbounds,
+  Map<String, IrNode> nodeByName,
+  Map<String, Map<String, Object?>> groupByName,
+  Set<String> allTags,
+  List<String> unsupported,
+) {
+  for (final outbound in outbounds) {
+    final tag = outbound['tag'].toString();
+    final node = nodeByName[tag];
+    final Object? dialer = node != null
+        ? node.params['dialer-proxy']
+        : groupByName[tag]?['dialer-proxy'];
+    if (dialer is! String || dialer.isEmpty) continue;
+    if (node == null) {
+      unsupported.add(
+        'dialer-proxy on proxy-group "$tag" is not supported in sing-box',
+      );
+      continue;
+    }
+    final target = _target(dialer);
+    if (allTags.contains(target)) {
+      outbound['detour'] = target;
+    } else {
+      unsupported.add(
+        'dialer-proxy "$dialer" of "$tag" has no sing-box outbound',
+      );
+    }
+  }
+}
+
+/// Every cross-reference a rendered config carries, each in its own
+/// namespace; `sing-box check` resolves none of these, only start does.
+List<String> _unresolvedSingBoxReferences(Map<String, Object?> config) {
+  final problems = <String>[];
+  final outboundTags = <String>{};
+  final outbounds = <Map<String, Object?>>[];
+  for (final entry in _asList(config['outbounds'])) {
+    final outbound = _asMap(entry);
+    outbounds.add(outbound);
+    outboundTags.add(_asString(outbound['tag']));
+  }
+  for (final entry in _asList(config['endpoints'])) {
+    outboundTags.add(_asString(_asMap(entry)['tag']));
+  }
+  void checkRef(String kind, Object? ref, Set<String> namespace) {
+    if (ref == null) return;
+    if (!namespace.contains(ref.toString())) {
+      problems.add('$kind "$ref"');
+    }
+  }
+
+  final route = _asMap(config['route']);
+  final ruleSetTags = <String>{
+    for (final entry in _asList(route['rule_set']))
+      _asString(_asMap(entry)['tag']),
+  };
+  for (final outbound in outbounds) {
+    for (final member in _asList(outbound['outbounds'])) {
+      checkRef('member of "${outbound['tag']}"', member, outboundTags);
+    }
+    checkRef(
+      'detour of "${outbound['tag']}"',
+      outbound['detour'],
+      outboundTags,
+    );
+  }
+  for (final entry in _asList(route['rules'])) {
+    final rule = _asMap(entry);
+    checkRef('rule outbound', rule['outbound'], outboundTags);
+    for (final ref in _asList(rule['rule_set'])) {
+      checkRef('rule rule_set', ref, ruleSetTags);
+    }
+  }
+  checkRef('route final', route['final'], outboundTags);
+  for (final entry in _asList(route['rule_set'])) {
+    checkRef(
+      'rule_set download_detour',
+      _asMap(entry)['download_detour'],
+      outboundTags,
+    );
+  }
+  final dns = _asMap(config['dns']);
+  final dnsServerTags = <String>{};
+  for (final entry in _asList(dns['servers'])) {
+    final server = _asMap(entry);
+    dnsServerTags.add(_asString(server['tag']));
+    checkRef('dns server detour', server['detour'], outboundTags);
+  }
+  for (final entry in _asList(dns['rules'])) {
+    final rule = _asMap(entry);
+    checkRef('dns rule server', rule['server'], dnsServerTags);
+    for (final ref in _asList(rule['rule_set'])) {
+      checkRef('dns rule rule_set', ref, ruleSetTags);
+    }
+  }
+  checkRef('dns final', dns['final'], dnsServerTags);
+  checkRef(
+    'default_domain_resolver',
+    _asMap(route['default_domain_resolver'])['server'],
+    dnsServerTags,
+  );
+  return problems;
 }

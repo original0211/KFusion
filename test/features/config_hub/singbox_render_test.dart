@@ -354,4 +354,280 @@ void main() {
       'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs',
     });
   });
+
+  test('every reference in the clash sample resolves', () {
+    final result = renderSingBoxFromClash(
+      _clashSample(),
+      secret: 'test-secret',
+    );
+    _expectAllReferencesResolve(result.config);
+  });
+
+  test('home broadband shape: unrenderable members never dangle', () {
+    final result = renderSingBoxFromClash(
+      _homeBroadbandShape(),
+      secret: 'test-secret',
+    );
+    final outbounds = _outbounds(result.config);
+    final tags = {for (final outbound in outbounds) outbound['tag']};
+    expect(tags, isNot(contains('🏠 HK-家宽-01')));
+    expect(tags, isNot(contains('🏠 家宽节点')));
+    expect(tags, isNot(contains('🏠 家宽自动')));
+    final picker = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == '🚀 节点选择',
+    );
+    expect(picker['outbounds'], ['⚡ CF前置', 'CF-01']);
+    expect(
+      result.unsupported.any(
+        (note) => note.contains('proxy-group "🏠 家宽节点" dropped'),
+      ),
+      isTrue,
+    );
+    expect(
+      result.unsupported.any(
+        (note) => note.contains('"🚀 节点选择" member "🏠 家宽节点"'),
+      ),
+      isTrue,
+    );
+    _expectAllReferencesResolve(result.config);
+  });
+
+  test('group drops cascade through referencing groups', () {
+    final clash = _clashSample();
+    (clash['proxies'] as List).add({
+      'name': 'Ghost',
+      'type': 'openvpn',
+      'server': '6.6.6.6',
+      'port': 1194,
+    });
+    (clash['proxy-groups'] as List).add({
+      'name': 'Inner',
+      'type': 'select',
+      'proxies': ['Ghost'],
+    });
+    (clash['proxy-groups'] as List).add({
+      'name': 'Outer',
+      'type': 'select',
+      'proxies': ['Inner'],
+    });
+    (clash['proxy-groups'] as List).add({
+      'name': 'Top',
+      'type': 'select',
+      'proxies': ['Outer', 'SS'],
+    });
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final outbounds = _outbounds(result.config);
+    final tags = {for (final outbound in outbounds) outbound['tag']};
+    expect(tags, isNot(contains('Inner')));
+    expect(tags, isNot(contains('Outer')));
+    final top = outbounds.firstWhere((outbound) => outbound['tag'] == 'Top');
+    expect(top['outbounds'], ['SS']);
+    _expectAllReferencesResolve(result.config);
+  });
+
+  test('dialer-proxy maps to a detour only when its target survives', () {
+    final clash = _clashSample();
+    (clash['proxies'] as List).add({
+      'name': 'Chained',
+      'type': 'vless',
+      'server': '13.0.0.1',
+      'port': 443,
+      'uuid': '44444444-5555-6666-7777-888888888888',
+      'dialer-proxy': 'PROXY',
+    });
+    (clash['proxies'] as List).add({
+      'name': 'BadChain',
+      'type': 'ss',
+      'server': '13.0.0.2',
+      'port': 8388,
+      'cipher': 'aes-256-gcm',
+      'password': 'password',
+      'dialer-proxy': 'NoSuchGroup',
+    });
+    (clash['proxy-groups'] as List).add({
+      'name': 'GroupChain',
+      'type': 'select',
+      'proxies': ['SS'],
+      'dialer-proxy': 'PROXY',
+    });
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final outbounds = _outbounds(result.config);
+    final chained = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == 'Chained',
+    );
+    expect(chained['detour'], 'PROXY');
+    final badChain = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == 'BadChain',
+    );
+    expect(badChain.containsKey('detour'), isFalse);
+    expect(
+      result.unsupported.any(
+        (note) => note.contains('dialer-proxy "NoSuchGroup" of "BadChain"'),
+      ),
+      isTrue,
+    );
+    final groupChain = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == 'GroupChain',
+    );
+    expect(groupChain.containsKey('detour'), isFalse);
+    expect(
+      result.unsupported.any(
+        (note) => note.contains('dialer-proxy on proxy-group "GroupChain"'),
+      ),
+      isTrue,
+    );
+    _expectAllReferencesResolve(result.config);
+  });
+
+  test('rules and MATCH targeting a dropped group do not dangle', () {
+    final clash = _homeBroadbandShape();
+    clash['rules'] = ['DOMAIN,example.com,🏠 家宽节点', 'MATCH,🏠 家宽节点'];
+    final result = renderSingBoxFromClash(clash, secret: 'test-secret');
+    final route = result.config['route'] as Map;
+    final rules = route['rules'] as List;
+    expect(
+      rules.any((entry) => (entry as Map)['outbound'] == '🏠 家宽节点'),
+      isFalse,
+    );
+    expect(
+      result.unsupported.any(
+        (note) => note.contains('target "🏠 家宽节点" has no sing-box outbound'),
+      ),
+      isTrue,
+    );
+    expect(route['final'], '⚡ CF前置');
+    _expectAllReferencesResolve(result.config);
+  });
+}
+
+/// The CFDirect shape behind the v0.2.27 phone failure: VPNGate home
+/// broadband nodes are Clash `openvpn` proxies, which sing-box cannot
+/// represent, chained through a vless front group via dialer-proxy.
+Map<String, Object?> _homeBroadbandShape() {
+  Map<String, Object?> openVpn(String name, String server) => {
+    'name': name,
+    'type': 'openvpn',
+    'server': server,
+    'port': 1194,
+    'proto': 'tcp',
+    'username': 'vpn',
+    'password': 'vpn',
+    'cipher': 'AES-128-CBC',
+    'auth': 'SHA1',
+    'udp': false,
+    'dialer-proxy': '⚡ CF前置',
+    'ca': 'CA-PEM',
+    'cert': 'CERT-PEM',
+    'key': 'KEY-PEM',
+  };
+  Map<String, Object?> vless(String name, String server) => {
+    'name': name,
+    'type': 'vless',
+    'server': server,
+    'port': 443,
+    'uuid': '11111111-2222-3333-4444-555555555555',
+    'tls': true,
+    'servername': 'example.com',
+    'network': 'ws',
+    'ws-opts': {
+      'path': '/ws',
+      'headers': {'Host': 'example.com'},
+    },
+  };
+  return {
+    'proxies': [
+      vless('CF-01', '104.16.0.1'),
+      vless('CF-02', '104.17.0.1'),
+      openVpn('🏠 HK-家宽-01', '219.100.37.1'),
+      openVpn('🏠 JP-家宽-01', '219.100.37.2'),
+    ],
+    'proxy-groups': [
+      {
+        'name': '⚡ CF前置',
+        'type': 'url-test',
+        'proxies': ['CF-01', 'CF-02'],
+        'url': 'https://www.gstatic.com/generate_204',
+        'interval': 300,
+        'tolerance': 50,
+      },
+      {
+        'name': '🏠 家宽自动',
+        'type': 'fallback',
+        'proxies': ['🏠 HK-家宽-01', '🏠 JP-家宽-01'],
+        'url': 'https://www.gstatic.com/generate_204',
+        'interval': 1800,
+        'lazy': true,
+      },
+      {
+        'name': '🏠 家宽节点',
+        'type': 'select',
+        'proxies': ['🏠 HK-家宽-01', '🏠 JP-家宽-01'],
+      },
+      {
+        'name': '🚀 节点选择',
+        'type': 'select',
+        'proxies': ['⚡ CF前置', '🏠 家宽自动', '🏠 家宽节点', 'CF-01'],
+      },
+    ],
+    'rules': ['MATCH,🚀 节点选择'],
+  };
+}
+
+/// Independent walk of every cross-reference in a rendered config;
+/// `sing-box check` resolves none of these, so the tests must.
+void _expectAllReferencesResolve(Map<String, Object?> config) {
+  final outbounds = _outbounds(config);
+  final tags = {for (final outbound in outbounds) outbound['tag'].toString()};
+  final endpoints = config['endpoints'];
+  if (endpoints is List) {
+    for (final entry in endpoints) {
+      tags.add((entry as Map)['tag'].toString());
+    }
+  }
+  final route = config['route'] as Map;
+  final ruleSetTags = {
+    for (final def in route['rule_set'] as List) (def as Map)['tag'].toString(),
+  };
+  for (final outbound in outbounds) {
+    final members = outbound['outbounds'];
+    if (members is List) {
+      for (final member in members) {
+        expect(
+          tags,
+          contains(member.toString()),
+          reason: 'member of ${outbound['tag']}',
+        );
+      }
+    }
+    final detour = outbound['detour'];
+    if (detour != null) {
+      expect(tags, contains(detour.toString()), reason: 'detour');
+    }
+  }
+  for (final entry in route['rules'] as List) {
+    final rule = entry as Map;
+    final target = rule['outbound'];
+    if (target != null) {
+      expect(tags, contains(target.toString()), reason: 'rule target');
+    }
+    final sets = rule['rule_set'];
+    if (sets is List) {
+      for (final ref in sets) {
+        expect(ruleSetTags, contains(ref.toString()), reason: 'rule_set');
+      }
+    }
+  }
+  expect(tags, contains(route['final'].toString()), reason: 'route final');
+  final dns = config['dns'] as Map;
+  final serverTags = {
+    for (final server in dns['servers'] as List)
+      (server as Map)['tag'].toString(),
+  };
+  for (final server in dns['servers'] as List) {
+    final detour = (server as Map)['detour'];
+    if (detour != null) {
+      expect(tags, contains(detour.toString()), reason: 'dns detour');
+    }
+  }
+  expect(serverTags, contains(dns['final'].toString()), reason: 'dns final');
 }
