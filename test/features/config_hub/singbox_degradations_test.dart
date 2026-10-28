@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/features/config_hub/singbox_degradations.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
+
+import '../../helpers/app_paths.dart';
+
+/// A store whose write parks until the test releases it.
+class _GatedStore extends SingBoxDegradationStore {
+  _GatedStore({required super.profilesDir});
+
+  final writeEntered = Completer<void>();
+  final releaseWrite = Completer<void>();
+  List<SingBoxDegradation>? written;
+
+  @override
+  Future<void> write(int profileId, List<SingBoxDegradation> items) async {
+    written = items;
+    if (!writeEntered.isCompleted) writeEntered.complete();
+    await releaseWrite.future;
+    await super.write(profileId, items);
+  }
+}
 
 const _yaml = '''
 proxies:
@@ -115,5 +135,55 @@ void main() {
         isEmpty,
       );
     });
+  });
+
+  group('refresh across a dying container', () {
+    test(
+      'a scan landing after its container died still stores the ledger',
+      () async {
+        final home = await Directory.systemTemp.createTemp(
+          'degradations-refresh',
+        );
+        addTearDown(() => home.delete(recursive: true));
+        await useAppPaths(home);
+        final profilesDir = Directory(await appPath.profilesPath);
+        await profilesDir.create(recursive: true);
+        await File('${profilesDir.path}/7.yaml').writeAsString(_yaml);
+        final store = _GatedStore(profilesDir: () async => profilesDir.path);
+        final refProbe = Provider<Ref>((ref) => ref);
+        final container = ProviderContainer(
+          overrides: [singBoxDegradationStoreProvider.overrideWithValue(store)],
+        );
+        final subscription = container.listen(refProbe, (_, _) {});
+        addTearDown(subscription.close);
+        final ref = container.read(refProbe);
+        expect(ref.mounted, isTrue);
+
+        final refreshed = refreshSingBoxDegradations(ref, 7);
+        await store.writeEntered.future;
+        container.dispose();
+        expect(ref.mounted, isFalse);
+        store.releaseWrite.complete();
+
+        final items = await refreshed;
+        expect(items, isNotEmpty);
+        expect(_triples(store.written!), _triples(items));
+
+        // Nothing was lost with the dead ref: a later container reads
+        // the stored ledger fresh from the sidecar file.
+        final next = ProviderContainer(
+          overrides: [
+            singBoxDegradationStoreProvider.overrideWithValue(
+              SingBoxDegradationStore(
+                profilesDir: () async => profilesDir.path,
+              ),
+            ),
+          ],
+        );
+        addTearDown(next.dispose);
+        final served = await next.read(profileDegradationsProvider(7).future);
+        expect(_triples(served), _triples(items));
+      },
+    );
   });
 }

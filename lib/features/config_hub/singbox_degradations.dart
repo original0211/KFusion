@@ -126,13 +126,26 @@ Future<List<SingBoxDegradation>> refreshSingBoxDegradations(
     ref.read(singBoxDegradationStoreProvider),
     profileId,
   );
-  ref.invalidate(profileDegradationsProvider(profileId));
+  _invalidateDegradations(ref, profileId);
   return items;
 }
 
 Future<void> removeSingBoxDegradations(Ref ref, int profileId) async {
   await ref.read(singBoxDegradationStoreProvider).remove(profileId);
-  ref.invalidate(profileDegradationsProvider(profileId));
+  _invalidateDegradations(ref, profileId);
+}
+
+/// The sidecar file is already written when this runs, so invalidation
+/// is only a refresh hint for watchers in the same container. A ref
+/// whose element died or was rebuilt during the scan has no live
+/// watchers left to hint — a later container reads the file fresh —
+/// and using it throws, so the hint is skipped instead. The check and
+/// the invalidate stay in one synchronous run, so nothing can dispose
+/// the element in between.
+void _invalidateDegradations(Ref ref, int profileId) {
+  if (ref.mounted) {
+    ref.invalidate(profileDegradationsProvider(profileId));
+  }
 }
 
 Map<String, Object?> _asMap(Object? value) {

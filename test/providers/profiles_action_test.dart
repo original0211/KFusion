@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:kfusion/common/common.dart';
+import 'package:kfusion/features/config_hub/singbox_degradations.dart';
+import 'package:kfusion/features/config_hub/singbox_render.dart';
 import 'package:kfusion/core/controller.dart';
 import 'package:kfusion/core/interface.dart';
 import 'package:kfusion/enum/enum.dart';
@@ -22,6 +25,23 @@ import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
 
 class _MockCoreHandlerInterface extends Mock implements CoreHandlerInterface {}
+
+/// A degradation store whose write parks until the test releases it.
+class _GatedDegradationStore extends SingBoxDegradationStore {
+  _GatedDegradationStore({required super.profilesDir});
+
+  final writeEntered = Completer<void>();
+  final releaseWrite = Completer<void>();
+  List<SingBoxDegradation>? written;
+
+  @override
+  Future<void> write(int profileId, List<SingBoxDegradation> items) async {
+    written = items;
+    if (!writeEntered.isCompleted) writeEntered.complete();
+    await releaseWrite.future;
+    await super.write(profileId, items);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -217,6 +237,32 @@ void main() {
       );
       expect(container.read(profilesProvider), isEmpty);
       verifyNever(() => core.validateConfig(any()));
+    });
+  });
+
+  group('putProfile degradation refresh', () {
+    test('a container dying mid-scan does not break the refresh', () async {
+      final store = _GatedDegradationStore(
+        profilesDir: () => appPath.profilesPath,
+      );
+      final local = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(TestProfiles.new),
+          coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
+          singBoxDegradationStoreProvider.overrideWithValue(store),
+        ],
+      );
+
+      local
+          .read(profilesActionProvider.notifier)
+          .putProfile(Profile.normal(label: 'Scan'));
+      await store.writeEntered.future;
+      local.dispose();
+      store.releaseWrite.complete();
+
+      // An escaped refresh error fails this test, as it did in CI.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(store.written, isNotNull);
     });
   });
 }
