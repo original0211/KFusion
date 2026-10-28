@@ -297,7 +297,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
                 if (phase == _Phase.connected || phase == _Phase.suspended)
                   const HaraDot(size: HaraSpace.dotStatus),
                 if (phase == _Phase.connected || phase == _Phase.suspended)
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 9),
                 Flexible(
                   child: Text(
                     statusText,
