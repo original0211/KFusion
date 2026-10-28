@@ -1,7 +1,7 @@
 name: kfusion
 description: KFusion - a proxy client for Android and Windows based on FlClash and the mihomo (Clash.Meta) core, open-source and ad-free.
 publish_to: 'none'
-version: 0.2.27+29
+version: 0.2.28+30
 environment:
   sdk: '>=3.10.0 <4.0.0'
 
