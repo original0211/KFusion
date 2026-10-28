@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:kfusion/common/common.dart';
@@ -7,7 +8,6 @@ import 'package:kfusion/features/config_hub/config_hub.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -162,203 +162,398 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     final preview = _preview;
-    final sections = <Widget>[
-      generateSection(
-        items: [
-          ListItem(
-            leading: const GlyphIcon(AppGlyphs.cloudDownload),
-            title: const Text('从订阅链接导入'),
-            subtitle: const Text('支持 Clash / sing-box / 分享链接'),
-            trailing: TonalButton(
-              label: '下载并解析',
-              onPressed: _busy ? null : _loadFromUrl,
-            ),
-            onTap: _busy ? null : _loadFromUrl,
-          ),
-          DecorationListItem(
-            title: _PayloadWell(
-              level: SurfaceLevel.inset,
-              child: TextField(
-                controller: _urlController,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                decoration: const InputDecoration.collapsed(
-                  border: NoInputBorder(),
-                  hintText: 'https://…',
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      generateSection(
-        items: [
-          ListItem(
-            leading: const GlyphIcon(AppGlyphs.importFile),
-            title: const Text('从文件导入'),
-            subtitle: const Text('Clash YAML / sing-box JSON / 链接文本'),
-            trailing: TonalButton(
-              label: '选择文件',
-              onPressed: _busy ? null : _loadFromFile,
-            ),
-            onTap: _busy ? null : _loadFromFile,
-          ),
-        ],
-      ),
-      generateSection(
-        items: [
-          ListItem(
-            leading: const GlyphIcon(AppGlyphs.customize),
-            title: const Text('解析粘贴的文本'),
-            subtitle: const Text('粘贴内容后点「解析文本」'),
-            trailing: TonalButton(
-              label: '解析文本',
-              onPressed: _busy
-                  ? null
-                  : () => _showPreview(_pasteController.text),
-            ),
-            onTap: _busy ? null : () => _showPreview(_pasteController.text),
-          ),
-          DecorationListItem(
-            title: _PayloadWell(
-              level: SurfaceLevel.inset,
-              child: TextField(
-                controller: _pasteController,
-                minLines: 4,
-                maxLines: null,
-                autocorrect: false,
-                decoration: const InputDecoration.collapsed(
-                  border: NoInputBorder(),
-                  hintText: '粘贴配置文本…',
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      generateSection(
-        items: [
-          FormRow(
-            title: '配置名称',
-            trailing: FormRowTextField(
-              controller: _labelController,
-              hintText: 'KFusion 导入',
-            ),
-          ),
-          FormRow(
-            title: '路由模板',
-            trailing: DropdownButton<String>(
-              value: _templateId,
-              items: [
-                for (final template in routingTemplates)
-                  DropdownMenuItem(
-                    value: template.id,
-                    child: Text(template.label),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _templateId = value);
-              },
-            ),
-          ),
-        ],
-      ),
-      if (preview != null) ...[
-        generateSection(
-          title: '解析结果',
-          footer: system.isAndroid
-              ? 'Android 由 sing-box VPN 运行时接管（真机待验）。'
-              : null,
-          items: [
-            DecorationListItem(
-              title: _PayloadWell(
-                level: SurfaceLevel.block,
-                child: Text(_previewText(preview)),
-              ),
-            ),
-            if (_exportMessage != null)
-              DecorationListItem(title: Text(_exportMessage!)),
-          ],
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
-          children: [
-            FilledButton(
-              onPressed: _busy ? null : _confirm,
-              child: const Text('确认导入'),
-            ),
-            FilledButton.tonal(
-              onPressed: _busy ? null : _exportSingBox,
-              child: const Text('导出 sing-box 配置'),
-            ),
-          ],
-        ),
-      ] else ...[
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 8,
-          children: [
-            const FilledButton(onPressed: null, child: Text('确认导入')),
-            Text('解析成功后可在此确认导入', style: context.listCaptionStyle),
-          ],
-        ),
-      ],
-    ];
     return CommonScaffold(
       title: '万能导入',
-      body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-        ).copyWith(top: context.contentTopPadding, bottom: 16),
-        children: [
-          Row(
-            spacing: 16,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = math.max(
+            HaraSpace.pageInset,
+            (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+          );
+          return ListView(
+            padding: EdgeInsets.symmetric(
+              horizontal: side,
+            ).copyWith(top: context.contentTopPadding, bottom: 16),
             children: [
-              DashboardDiscMotif(size: 44, color: colorScheme.onSurface),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('万能导入', style: AppTextStyle.headline.of(context)),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Clash / sing-box / 分享链接 / 订阅，一次导入',
-                      style: AppTextStyle.footnote.of(context).toLighter,
+              Text('万能导入', style: HaraText.pageTitle(context, palette.ink)),
+              const SizedBox(height: 6),
+              Text(
+                'Clash / sing-box / 分享链接 / 订阅，一次导入',
+                style: HaraText.statusNode(context, palette.sub),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  _error!,
+                  style: HaraText.statusNode(
+                    context,
+                    context.colorScheme.error,
+                  ),
+                ),
+              ],
+              const SizedBox(height: HaraSpace.groupGap),
+              _HaraSection(
+                rows: [
+                  _HaraSourceRow(
+                    title: '从订阅链接导入',
+                    subtitle: '支持 Clash / sing-box / 分享链接',
+                    actionLabel: '下载并解析',
+                    onTap: _busy ? null : _loadFromUrl,
+                  ),
+                  _HaraWell(
+                    child: TextField(
+                      controller: _urlController,
+                      keyboardType: TextInputType.url,
+                      autocorrect: false,
+                      style: HaraText.payload(context, palette.ink),
+                      decoration: InputDecoration.collapsed(
+                        border: const NoInputBorder(),
+                        hintText: 'https://…',
+                        hintStyle: HaraText.payload(context, palette.dim),
+                      ),
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: HaraSpace.groupGap),
+              _HaraSection(
+                rows: [
+                  _HaraSourceRow(
+                    title: '从文件导入',
+                    subtitle: 'Clash YAML / sing-box JSON / 链接文本',
+                    actionLabel: '选择文件',
+                    onTap: _busy ? null : _loadFromFile,
+                  ),
+                ],
+              ),
+              const SizedBox(height: HaraSpace.groupGap),
+              _HaraSection(
+                rows: [
+                  _HaraSourceRow(
+                    title: '解析粘贴的文本',
+                    subtitle: '粘贴内容后点「解析文本」',
+                    actionLabel: '解析文本',
+                    onTap: _busy
+                        ? null
+                        : () => _showPreview(_pasteController.text),
+                  ),
+                  _HaraWell(
+                    child: TextField(
+                      controller: _pasteController,
+                      minLines: 4,
+                      maxLines: null,
+                      autocorrect: false,
+                      style: HaraText.payload(context, palette.ink),
+                      decoration: InputDecoration.collapsed(
+                        border: const NoInputBorder(),
+                        hintText: '粘贴配置文本…',
+                        hintStyle: HaraText.payload(context, palette.dim),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: HaraSpace.groupGap),
+              _HaraSection(
+                rows: [
+                  _HaraFieldRow(
+                    title: '配置名称',
+                    child: FormRowTextField(
+                      controller: _labelController,
+                      hintText: 'KFusion 导入',
+                    ),
+                  ),
+                  _HaraFieldRow(
+                    title: '路由模板',
+                    child: DropdownButton<String>(
+                      value: _templateId,
+                      isExpanded: true,
+                      underline: const SizedBox.shrink(),
+                      style: HaraText.nodeName(
+                        context,
+                        palette.ink,
+                        current: false,
+                      ),
+                      items: [
+                        for (final template in routingTemplates)
+                          DropdownMenuItem(
+                            value: template.id,
+                            child: Text(
+                              template.label,
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) setState(() => _templateId = value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              if (preview != null) ...[
+                const SizedBox(height: HaraSpace.groupGap),
+                _HaraSection(
+                  title: '解析结果',
+                  rows: [
+                    _HaraWell(
+                      child: Text(
+                        _previewText(preview),
+                        style: HaraText.payload(context, palette.sub),
+                      ),
+                    ),
+                    if (_exportMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        child: Text(
+                          _exportMessage!,
+                          style: HaraText.statusNode(context, palette.sub),
+                        ),
+                      ),
                   ],
                 ),
-              ),
+                if (system.isAndroid) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Android 由 sing-box VPN 运行时接管（真机待验）。',
+                    style: HaraText.profileMeta(context, palette.dim),
+                  ),
+                ],
+                const SizedBox(height: 30),
+                _HaraPrimaryAction(
+                  label: '确认导入',
+                  onTap: _busy ? null : _confirm,
+                ),
+                const SizedBox(height: 18),
+                _HaraTextAction(
+                  label: '导出 sing-box 配置',
+                  onTap: _busy ? null : _exportSingBox,
+                ),
+              ] else ...[
+                const SizedBox(height: 30),
+                Text('确认导入', style: HaraText.action(context, palette.dim)),
+                const SizedBox(height: 8),
+                Text(
+                  '解析成功后可在此确认导入',
+                  style: HaraText.profileMeta(context, palette.dim),
+                ),
+              ],
             ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// One import section: an optional small section title over hairline rows.
+class _HaraSection extends StatelessWidget {
+  const _HaraSection({this.title, required this.rows});
+
+  final String? title;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title != null) ...[
+          Text(title!, style: HaraText.sectionTitle(context, palette.dim)),
+          const SizedBox(height: HaraSpace.sectionTitleGap),
+        ],
+        HaraHairline(color: palette.line),
+        for (final (index, row) in rows.indexed) ...[
+          row,
+          if (index < rows.length - 1) HaraHairline(color: palette.line),
+        ],
+        HaraHairline(color: palette.line),
+      ],
+    );
+  }
+}
+
+class _HaraSourceRow extends StatelessWidget {
+  const _HaraSourceRow({
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final enabled = onTap != null;
+    return InkWell(
+      customBorder: AppShape.hara,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: HaraText.nodeName(
+                      context,
+                      palette.ink,
+                      current: false,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: HaraText.profileMeta(context, palette.sub),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            _HaraUnderlinedAction(
+              label: actionLabel,
+              color: enabled ? palette.ink : palette.dim,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HaraFieldRow extends StatelessWidget {
+  const _HaraFieldRow({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: HaraText.nodeName(context, palette.ink, current: false),
           ),
-          const SizedBox(height: 24),
-          ErrorBanner(message: _error),
-          ...sections.separated(const SizedBox(height: 24)),
+          const SizedBox(width: 16),
+          Expanded(child: child),
         ],
       ),
     );
   }
 }
 
-class _PayloadWell extends StatelessWidget {
-  const _PayloadWell({required this.level, required this.child});
+/// The primary action reading: ink text over a 1.2 ink underline.
+class _HaraUnderlinedAction extends StatelessWidget {
+  const _HaraUnderlinedAction({required this.label, required this.color});
 
-  final SurfaceLevel level;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicWidth(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(label, style: HaraText.action(context, color)),
+          const SizedBox(height: 5),
+          Container(height: 1.2, color: color),
+        ],
+      ),
+    );
+  }
+}
+
+class _HaraPrimaryAction extends StatelessWidget {
+  const _HaraPrimaryAction({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        customBorder: AppShape.hara,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: _HaraUnderlinedAction(
+            label: label,
+            color: onTap == null ? palette.dim : palette.ink,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HaraTextAction extends StatelessWidget {
+  const _HaraTextAction({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        customBorder: AppShape.hara,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Text(
+            label,
+            style: HaraText.action(
+              context,
+              onTap == null ? palette.dim : palette.sub,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A payload well: hairlines on all four sides, no fill, mono text inside.
+class _HaraWell extends StatelessWidget {
+  const _HaraWell({required this.child});
+
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: level.colorOf(colorScheme),
-        shape: AppShape.md.copyWith(side: colorScheme.cabinRimSide),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: child,
+    final palette = context.haraPalette;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: palette.line, width: 0.7),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: child,
+        ),
       ),
     );
   }
