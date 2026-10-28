@@ -122,14 +122,33 @@ class _HaraProfilesViewState extends ConsumerState<HaraProfilesView> {
         Row(
           children: [
             Expanded(
-              child: Text(
-                localizations.profiles,
-                style: HaraText.pageTitle(context, palette.ink),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  localizations.profiles,
+                  style: HaraText.pageTitle(context, palette.ink),
+                ),
               ),
             ),
             if (profiles.isNotEmpty) ...[
-              action(localizations.update, () => _updateAll(profiles)),
-              action(localizations.profilesSort, () => _openSort(profiles)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      action(localizations.update, () => _updateAll(profiles)),
+                      action(
+                        localizations.profilesSort,
+                        () => _openSort(profiles),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ],
         ),
