@@ -1,5 +1,5 @@
 name: kfusion
-description: KFusion - a proxy client for Android and Windows based on FlClash and the mihomo (Clash.Meta) core, open-source and ad-free.
+description: Vessel - a proxy client for Android and Windows based on FlClash and the mihomo (Clash.Meta) core, open-source and ad-free.
 publish_to: 'none'
 version: 0.2.35+2037
 environment:

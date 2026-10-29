@@ -201,7 +201,7 @@ class _AboutHero extends StatelessWidget {
         _DeveloperModeDetector(
           onEnterDeveloperMode: onEnterDeveloperMode,
           child: Image.asset(
-            'assets/images/icon.png',
+            'assets/images/icon_mono.png',
             width: _logoSize,
             height: _logoSize,
           ),

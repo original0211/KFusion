@@ -7,7 +7,7 @@ import 'src/changelog/git.dart';
 import 'src/changelog/models.dart';
 import 'src/changelog/render.dart';
 
-const _repository = 'original0211/KFusion';
+const _repository = 'original0211/Vessel';
 
 Future<void> main(List<String> arguments) async {
   final parser = ArgParser()

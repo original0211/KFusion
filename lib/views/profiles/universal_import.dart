@@ -29,7 +29,7 @@ class UniversalImportView extends ConsumerStatefulWidget {
 class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
   final _urlController = TextEditingController();
   final _pasteController = TextEditingController();
-  final _labelController = TextEditingController(text: 'KFusion 导入');
+  final _labelController = TextEditingController(text: 'Vessel 导入');
   var _templateId = kfusionDefaultTemplate.id;
   IrParseResult? _preview;
   ConfigFormat? _format;
@@ -121,7 +121,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
     setState(() => _busy = true);
     try {
       final label = _labelController.text.trim().isEmpty
-          ? 'KFusion 导入'
+          ? 'Vessel 导入'
           : _labelController.text.trim();
       final Profile saved;
       if (_format == ConfigFormat.singbox) {
@@ -300,7 +300,7 @@ class _UniversalImportViewState extends ConsumerState<UniversalImportView> {
                     title: '配置名称',
                     child: FormRowTextField(
                       controller: _labelController,
-                      hintText: 'KFusion 导入',
+                      hintText: 'Vessel 导入',
                     ),
                   ),
                   _HaraFieldRow(

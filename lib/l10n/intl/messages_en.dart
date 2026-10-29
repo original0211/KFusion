@@ -26,7 +26,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m1(detail) => "Couldn\'t clear the data: ${detail}";
 
   static String m2(code) =>
-      "Windows refused to run KFusionCore.exe (error ${code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow KFusion in that policy or turn it off, then try again.";
+      "Windows refused to run KFusionCore.exe (error ${code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow Vessel in that policy or turn it off, then try again.";
 
   static String m3(core) => "${core} not running";
 
@@ -512,7 +512,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "core": MessageLookupByLibrary.simpleMessage("Core"),
     "coreBlockedByPolicyTip": m2,
     "coreBlockedBySmartAppControlTip": MessageLookupByLibrary.simpleMessage(
-      "Windows Smart App Control blocked KFusionCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start KFusion again. Smart App Control cannot be turned back on without reinstalling Windows.",
+      "Windows Smart App Control blocked KFusionCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start Vessel again. Smart App Control cannot be turned back on without reinstalling Windows.",
     ),
     "coreNotConnectedTip": MessageLookupByLibrary.simpleMessage(
       "The core is not connected. Start the core and try again.",
@@ -685,7 +685,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Changes to this statement",
     ),
     "disclaimerDesc": MessageLookupByLibrary.simpleMessage(
-      "Before using KFusion (\"the Software\"), please read this statement carefully and make sure you understand all of it. Tapping \"Agree\" means you have read, understood, and accept every term below. If you do not agree, tap \"Exit\" and stop using the Software.",
+      "Before using Vessel (\"the Software\"), please read this statement carefully and make sure you understand all of it. Tapping \"Agree\" means you have read, understood, and accept every term below. If you do not agree, tap \"Exit\" and stop using the Software.",
     ),
     "disclaimerLiabilityContent": MessageLookupByLibrary.simpleMessage(
       "To the maximum extent permitted by applicable law, neither the developers nor any contributor shall be liable for any direct, indirect, incidental, special, punitive, or consequential damages arising from the use of or inability to use the Software, including but not limited to data loss, device damage, network failures, business interruption, lost profits, or any resulting legal dispute, even if advised of the possibility of such damages.",
@@ -900,7 +900,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "healthCheck": MessageLookupByLibrary.simpleMessage("Health check"),
     "helperCorruptTip": MessageLookupByLibrary.simpleMessage(
-      "Helper service unavailable; TUN mode cannot be enabled. Reinstall KFusion to restore it.",
+      "Helper service unavailable; TUN mode cannot be enabled. Reinstall Vessel to restore it.",
     ),
     "hex": MessageLookupByLibrary.simpleMessage("Hex"),
     "hideFromList": MessageLookupByLibrary.simpleMessage("Hide from list"),
@@ -971,7 +971,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "init": MessageLookupByLibrary.simpleMessage("Init"),
     "initFailed": MessageLookupByLibrary.simpleMessage("Startup failed"),
     "initFailedTip": MessageLookupByLibrary.simpleMessage(
-      "KFusion ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.",
+      "Vessel ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.",
     ),
     "initiator": MessageLookupByLibrary.simpleMessage("Initiator"),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage(
@@ -1695,7 +1695,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Download sing-box",
     ),
     "singBoxDownloadHint": MessageLookupByLibrary.simpleMessage(
-      "KFusion does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.",
+      "Vessel does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.",
     ),
     "singBoxDownloadRetry": MessageLookupByLibrary.simpleMessage(
       "Retry download",

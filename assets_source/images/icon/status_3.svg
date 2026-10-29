@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- KFusion tray status: disc with a white-filled crescent bite at
-     the lower left (bite circle r=38.7 at (33.7,168.5)); fill encodes
-     run state, an outer ring the mode. The bite is never a cutout. -->
+<!-- Vessel tray status: C3 one-point ring at tray geometry (stroke 20.4 units, dot r 22.8 at 157 deg on the ring mid-line).
+     status_1 stopped = dim ring, no dot; status_2 running = ink ring
+     + vermillion dot; status_3 TUN = gold outer ring + dot;
+     status_4 safe mode = orange ring, no dot. -->
 <svg width="108" height="108" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
   <title>status_3</title>
-  <defs>
-    <clipPath id="disc-clip"><circle cx="120" cy="120" r="102"/></clipPath>
-  </defs>
-  <circle cx="120" cy="120" r="102" fill="#181818"/>
-  <g clip-path="url(#disc-clip)">
-    <circle cx="40" cy="165" r="35.9" fill="#FFFFFF"/>
-  </g>
-  <circle cx="120" cy="120" r="112.5" fill="none" stroke="#FFB02E" stroke-width="9"/>
+  <circle cx="120" cy="120" r="109" fill="none" stroke="#FFB02E" stroke-width="20.40"/><path d="M34.20,120.57 A85.80,85.80 0 1 1 59.99,181.32" fill="none" stroke="#1A1A1A" stroke-width="20.40" stroke-linecap="butt"/><circle cx="41.02" cy="153.52" r="22.80" fill="#7F0019"/>
 </svg>

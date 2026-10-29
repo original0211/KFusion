@@ -850,7 +850,7 @@ CoreSwitchStepResult mihomoProfileVerdict(String text) {
   final api = nativeSingBoxClashApi(doc);
   if (api == null) {
     return (
-      problem: '原生配置未声明 clash_api（experimental.clash_api），KFusion 无法接管其面板',
+      problem: '原生配置未声明 clash_api（experimental.clash_api），Vessel 无法接管其面板',
       prepared: null,
     );
   }

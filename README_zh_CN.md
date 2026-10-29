@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/images/icon.png" alt="KFusion" width="88">
+<img src="assets/images/icon.png" alt="Vessel" width="88">
 
-# KFusion
+# Vessel
 
 只做 **Android 与 Windows** 的代理客户端，基于 [FlClash](https://github.com/chen08209/FlClash) 与 mihomo（Clash.Meta）内核。
 
@@ -18,7 +18,7 @@
 
 ## 状态
 
-- **P0（当前）**：fork FlClash v0.9.1 → 平台剥离 + 改名 KFusion。mihomo 单核；尚未经真实工具链（Flutter/Go/Rust）构建验证。
+- **P0（当前）**：fork FlClash v0.9.1 → 平台剥离 + 改名 Vessel。mihomo 单核；尚未经真实工具链（Flutter/Go/Rust）构建验证。
 - **P1**：配置中台（万能导入 → 中间表示 → 路由模板引擎）+ 新手模式。
 - **P2**：双核（新增 sing-box 适配器）。
 - **P3**：同步（WebDAV / 局域网 / ZIP）与打磨。

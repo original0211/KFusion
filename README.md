@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/images/icon.png" alt="KFusion" width="88">
+<img src="assets/images/icon.png" alt="Vessel" width="88">
 
-# KFusion
+# Vessel
 
 A proxy client for **Android and Windows**, based on [FlClash](https://github.com/chen08209/FlClash) and the mihomo (Clash.Meta) core.
 
@@ -12,16 +12,16 @@ A proxy client for **Android and Windows**, based on [FlClash](https://github.co
 
 </div>
 
-KFusion takes the strengths of two open-source clients:
+Vessel takes the strengths of two open-source clients:
 
 - **FlClash** — Material You UI, a modern Riverpod/Drift Flutter architecture, profile editor and override scripts, live views of connections / requests / DNS / logs.
 - **Karing** — all-format subscription compatibility, one routing template applied across subscriptions, and a beginner-friendly mode (planned; its design will be absorbed in later phases, see `NOTICE.md`).
 
-KFusion deliberately ships **only Android and Windows**. The upstream macOS and Linux targets were removed in P0 to shrink the build, test and maintenance surface.
+Vessel deliberately ships **only Android and Windows**. The upstream macOS and Linux targets were removed in P0 to shrink the build, test and maintenance surface.
 
 ## Status
 
-- **P0 (current)** — baseline: forked from FlClash v0.9.1, stripped to Android + Windows, rebranded to KFusion. Single core (mihomo) only; not yet built or verified on a real toolchain.
+- **P0 (current)** — baseline: forked from FlClash v0.9.1, stripped to Android + Windows, rebranded to Vessel. Single core (mihomo) only; not yet built or verified on a real toolchain.
 - **P1** — configuration hub: universal subscription import (Clash / sing-box / V2ray / generic Sub / share links) into an intermediate representation, plus a routing-template engine and a beginner mode.
 - **P2** — dual core: a sing-box adapter next to mihomo.
 - **P3** — sync (WebDAV / LAN / ZIP) and polish.
@@ -38,7 +38,7 @@ KFusion deliberately ships **only Android and Windows**. The upstream macOS and 
 
 ## Download
 
-No official KFusion release yet. Build from source (below), or use upstream
+No official Vessel release yet. Build from source (below), or use upstream
 [FlClash releases](https://github.com/chen08209/FlClash/releases/latest) in the meantime.
 
 | Platform | Packages |
@@ -46,14 +46,14 @@ No official KFusion release yet. Build from source (below), or use upstream
 | Android | APK for `arm64-v8a`, `armeabi-v7a` and `x86_64` |
 | Windows 10 and later | Installer (`.exe`) or portable `.zip`, for x64 and ARM64 |
 
-> The Android application id is `com.kfusion.app`, so KFusion installs as a separate app next to FlClash and does not inherit its data.
+> The Android application id is `com.kfusion.app`, so Vessel installs as a separate app next to FlClash and does not inherit its data.
 
 ## Build from source
 
 You need Flutter 3.47 (release builds use 3.47.6), Go 1.27 and Rust (via rustup). Android builds on any host; Windows builds on a Windows host.
 
 ```bash
-git clone --recursive <KFusion repository>
+git clone --recursive <Vessel repository>
 cd src
 flutter pub get
 dart setup.dart android   # or windows
@@ -63,13 +63,13 @@ Packages land in `dist/`. The Go core and the Rust libraries are compiled as par
 
 ## License
 
-KFusion is released under the [GPL-3.0 license](LICENSE), the same license as FlClash. See [NOTICE.md](NOTICE.md) for upstream attribution.
+Vessel is released under the [GPL-3.0 license](LICENSE), the same license as FlClash. See [NOTICE.md](NOTICE.md) for upstream attribution.
 
 ---
 
 ## 简介（简体中文）
 
-KFusion 是一个只做 **Android + Windows** 的代理客户端，基于 [FlClash](https://github.com/chen08209/FlClash) 与 mihomo（Clash.Meta）内核：
+Vessel 是一个只做 **Android + Windows** 的代理客户端，基于 [FlClash](https://github.com/chen08209/FlClash) 与 mihomo（Clash.Meta）内核：
 
 - 取 FlClash 之长：Material You 界面、现代 Flutter 架构、配置编辑器与覆写脚本、连接/请求/DNS/日志实时视图；
 - 取 Karing 之长（后续阶段吸收其设计）：全格式订阅兼容、一套路由模板套全部订阅、新手模式；

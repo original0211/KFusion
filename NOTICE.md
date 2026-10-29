@@ -1,6 +1,6 @@
-# NOTICE — KFusion upstream attribution
+# NOTICE — Vessel upstream attribution
 
-KFusion is a derivative work distributed under the GNU General Public License
+Vessel (formerly KFusion) is a derivative work distributed under the GNU General Public License
 v3.0 (see `LICENSE`, kept verbatim from upstream). This file records where the
 code and designs come from.
 
@@ -34,8 +34,8 @@ code and designs come from.
 - **sing-box** — https://github.com/SagerNet/sing-box (GPL-3.0)
   Planned as the second core in P2; not included yet.
 
-## KFusion itself
+## Vessel itself
 
-KFusion's own modifications are likewise released under GPL-3.0. There is no
+Vessel's own modifications are likewise released under GPL-3.0. There is no
 affiliation with, or endorsement by, the FlClash, Karing, mihomo or sing-box
 projects.

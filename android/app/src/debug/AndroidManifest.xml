@@ -2,11 +2,11 @@
     xmlns:tools="http://schemas.android.com/tools">
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="KFusion Debug"
+        android:label="Vessel Debug"
         tools:replace="android:label">
         <service
             android:name="com.follow.clash.TileService"
-            android:label="KFusion Debug"
+            android:label="Vessel Debug"
             tools:replace="android:label" />
     </application>
 </manifest>

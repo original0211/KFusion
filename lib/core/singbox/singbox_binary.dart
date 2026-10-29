@@ -210,7 +210,7 @@ class HttpSingBoxDownloader implements SingBoxDownloader {
   }) async {
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 30);
-    client.userAgent = 'KFusion';
+    client.userAgent = 'Vessel';
     client.findProxy = (_) => proxy;
     try {
       final request = await client.getUrl(url);

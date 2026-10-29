@@ -1,11 +1,11 @@
-# sing-box binary for the KFusion Windows sidecar
+# sing-box binary for the Vessel Windows sidecar
 
-KFusion does not ship a sing-box binary in git. The Windows sidecar
+Vessel does not ship a sing-box binary in git. The Windows sidecar
 (`lib/core/singbox/singbox_runner.dart`) starts the binary found at, in
 order:
 
 1. The path stored in the `singboxBinaryPath` preference, when set.
-2. `sing-box.exe` next to the KFusion executable.
+2. `sing-box.exe` next to the KFusion.exe executable.
 3. `singbox/sing-box.exe` inside the application support directory.
 
 ## Managed download (default)
@@ -42,7 +42,7 @@ for ARM64. Verify the published checksum for the asset before unzipping, then
 place `sing-box.exe` at one of the locations above.
 
 Use a stable release whose `experimental.clash_api` supports the fields
-KFusion renders: `external_controller`, `secret`, `default_mode`,
+Vessel renders: `external_controller`, `secret`, `default_mode`,
 `store_selected` and `cache_file`.
 
 ## CI note

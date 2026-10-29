@@ -12,7 +12,7 @@ class RoutingTemplate {
 
 const kfusionDefaultTemplate = RoutingTemplate(
   id: 'kfusion-default',
-  label: 'KFusion 默认',
+  label: 'Vessel 默认',
 );
 
 const keepOriginalTemplate = RoutingTemplate(
@@ -22,7 +22,7 @@ const keepOriginalTemplate = RoutingTemplate(
 
 const routingTemplates = [kfusionDefaultTemplate, keepOriginalTemplate];
 
-/// The rules of the KFusion default template. DIRECT is the built-in policy
+/// The rules of the Vessel default template. DIRECT is the built-in policy
 /// here, not a proxy group: a group named DIRECT would shadow it.
 const kfusionDefaultRules = [
   'GEOSITE,CN,DIRECT',

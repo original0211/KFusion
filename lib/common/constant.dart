@@ -9,7 +9,7 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:material_ui/material_ui.dart';
 
-const appName = 'KFusion';
+const appName = 'Vessel';
 const appHelperService = 'KFusionHelperService';
 const coreManifestName = 'manifest.json';
 const browserUa =
@@ -109,7 +109,7 @@ const configKey = 'config';
 const systemDnsRecordKey = 'system_dns_record';
 const bootRecordKey = 'boot_record';
 const defaultSystemDnsFallback = '223.5.5.5';
-const repository = 'original0211/KFusion';
+const repository = 'original0211/Vessel';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
 const defaultTestUrl = 'https://www.gstatic.com/generate_204';
