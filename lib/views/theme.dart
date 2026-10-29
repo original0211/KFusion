@@ -7,7 +7,6 @@ import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
-import 'package:kfusion/views/font_family.dart';
 import 'package:kfusion/views/theme_preview.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -40,8 +39,6 @@ class ThemeView extends StatelessWidget {
           _LiquidGlassItem(),
           SizedBox(height: 16),
           _SidebarBlurItem(),
-          _FontFamilyItem(),
-          SizedBox(height: 16),
           _TextScaleFactorItem(),
         ],
       ),
@@ -826,83 +823,6 @@ class _SidebarBlurItem extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _FontFamilyItem extends ConsumerWidget {
-  const _FontFamilyItem();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final colorScheme = context.colorScheme;
-    final fontFamily = ref.watch(
-      themeSettingProvider.select((state) => state.fontFamily),
-    );
-    final preview = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-      child: Row(
-        spacing: 12,
-        children: [
-          Text(
-            'Aa',
-            style: AppTextStyle.headline
-                .of(context)
-                .copyWith(fontFamily: fontFamily),
-          ),
-          Expanded(
-            child: Text(
-              fontFamily ?? appLocalizations.defaultText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyle.subheadline
-                  .of(context)
-                  .copyWith(
-                    fontFamily: fontFamily,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-            ),
-          ),
-          GlyphIcon(
-            AppGlyphs.chevronForward,
-            size: 20,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ],
-      ),
-    );
-    final cardColor = context.raisedSurfaceLevel.colorOf(colorScheme);
-    final cardShape = AppShape.xl.copyWith(side: colorScheme.cabinRimSide);
-    Widget card(VoidCallback onTap) => Material(
-      color: cardColor,
-      shape: cardShape,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(customBorder: cardShape, onTap: onTap, child: preview),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InfoHeader(
-          info: Info(label: appLocalizations.fontFamily, glyph: AppGlyphs.font),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: context.isMobileView
-              ? OpenContainer<void>(
-                  closedShape: AppShape.xl,
-                  closedColor: cardColor,
-                  closedBuilder: (_, open) => card(open),
-                  openBuilder: (_, _) => const FontFamilyView(),
-                )
-              : card(
-                  () => showSheet<void>(
-                    context: context,
-                    builder: (_) => const FontFamilyView(),
-                  ),
-                ),
-        ),
-      ],
     );
   }
 }

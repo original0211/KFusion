@@ -274,10 +274,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "address": MessageLookupByLibrary.simpleMessage("地址"),
     "addressHelp": MessageLookupByLibrary.simpleMessage("WebDAV服务器地址"),
     "addressTip": MessageLookupByLibrary.simpleMessage("请输入有效的WebDAV地址"),
+    "advanced": MessageLookupByLibrary.simpleMessage("高级"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("进阶配置"),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "进阶配置包含网络、DNS、附加规则与脚本。",
     ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage("高级编辑"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("配置已加密"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 私钥"),
     "ageSecretKeyRequiredTip": MessageLookupByLibrary.simpleMessage(
@@ -1153,6 +1155,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "proxyGroupsCount": m75,
     "proxyProviders": MessageLookupByLibrary.simpleMessage("代理集"),
+    "proxySettings": MessageLookupByLibrary.simpleMessage("代理设置"),
     "proxyType": MessageLookupByLibrary.simpleMessage("代理类型"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("修剪缓存"),
     "publicKey": MessageLookupByLibrary.simpleMessage("公钥"),

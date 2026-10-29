@@ -124,6 +124,12 @@ void main() {
     'Custom profile resources': CustomResourcesView,
   };
 
+  const gatedToolDestinations = {
+    'General',
+    'Advanced configuration',
+    'Custom profile resources',
+  };
+
   for (final entry in toolDestinations.entries) {
     testWidgets('tools opens ${entry.key}', (tester) async {
       tester.view.physicalSize = const Size(1400, 1000);
@@ -147,6 +153,18 @@ void main() {
         ),
       );
       await tester.pump();
+
+      if (gatedToolDestinations.contains(entry.key)) {
+        final gate = find.text('Advanced');
+        await tester.scrollUntilVisible(
+          gate,
+          500,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(gate);
+        await tester.pumpAndSettle();
+        expect(find.byType(AdvancedGateView), findsOneWidget);
+      }
 
       final target = find.text(entry.key);
       await tester.scrollUntilVisible(

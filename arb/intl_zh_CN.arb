@@ -1003,5 +1003,8 @@
   "mainScreen": "主屏",
   "subscriptions": "订阅",
   "currentExit": "当前出口",
-  "coreNotRunning": "{core} 未运行"
+  "coreNotRunning": "{core} 未运行",
+  "advanced": "高级",
+  "advancedEdit": "高级编辑",
+  "proxySettings": "代理设置"
 }

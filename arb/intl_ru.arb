@@ -1003,5 +1003,8 @@
   "mainScreen": "Главный",
   "subscriptions": "Подписки",
   "currentExit": "Текущий выход",
-  "coreNotRunning": "{core} не запущен"
+  "coreNotRunning": "{core} не запущен",
+  "advanced": "Дополнительно",
+  "advancedEdit": "Расширенное редактирование",
+  "proxySettings": "Настройки прокси"
 }

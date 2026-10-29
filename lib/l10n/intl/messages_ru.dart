@@ -328,11 +328,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Введите корректный адрес WebDAV",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("Дополнительно"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Расширенная конфигурация",
     ),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "Расширенная конфигурация включает сеть, DNS, добавленные правила и скрипты.",
+    ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage(
+      "Расширенное редактирование",
     ),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage(
       "Зашифрованный профиль",
@@ -1087,9 +1091,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -1530,6 +1535,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "proxyGroupsCount": m75,
     "proxyProviders": MessageLookupByLibrary.simpleMessage("Провайдеры прокси"),
+    "proxySettings": MessageLookupByLibrary.simpleMessage("Настройки прокси"),
     "proxyType": MessageLookupByLibrary.simpleMessage("Тип прокси"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("Очистить кэш"),
     "publicKey": MessageLookupByLibrary.simpleMessage("Открытый ключ"),

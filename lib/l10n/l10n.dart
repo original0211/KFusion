@@ -8387,8 +8387,7 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',
@@ -8459,6 +8458,31 @@ class AppLocalizations {
       name: 'coreNotRunning',
       desc: '',
       args: [core],
+    );
+  }
+
+  /// `Advanced`
+  String get advanced {
+    return Intl.message('Advanced', name: 'advanced', desc: '', args: []);
+  }
+
+  /// `Advanced edit`
+  String get advancedEdit {
+    return Intl.message(
+      'Advanced edit',
+      name: 'advancedEdit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy settings`
+  String get proxySettings {
+    return Intl.message(
+      'Proxy settings',
+      name: 'proxySettings',
+      desc: '',
+      args: [],
     );
   }
 }

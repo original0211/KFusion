@@ -742,51 +742,56 @@ ConfigToggleItem _appSettingToggle({
   );
 }
 
+/// The startup toggles the settings page heads with.
+List<Widget> startupSettingItems() {
+  return [
+    if (system.isDesktop) ...[
+      _appSettingToggle(
+        title: (l) => l.autoLaunch,
+        select: (state) => state.autoLaunch,
+        update: (state, value) => state.copyWith(autoLaunch: value),
+      ),
+      _appSettingToggle(
+        title: (l) => l.silentLaunch,
+        select: (state) => state.silentLaunch,
+        update: (state, value) => state.copyWith(silentLaunch: value),
+      ),
+    ],
+    _appSettingToggle(
+      title: (l) => l.autoRun,
+      select: (state) => state.autoRun,
+      update: (state, value) => state.copyWith(autoRun: value),
+    ),
+    _appSettingToggle(
+      title: (l) => l.minimizeOnExit,
+      select: (state) => state.minimizeOnExit,
+      update: (state, value) => state.copyWith(minimizeOnExit: value),
+    ),
+    if (system.isAndroid) ...[
+      _appSettingToggle(
+        title: (l) => l.exclude,
+        select: (state) => state.hidden,
+        update: (state, value) => state.copyWith(hidden: value),
+      ),
+      _appSettingToggle(
+        title: (l) => l.showNotificationStopAction,
+        select: (state) => state.showNotificationStopAction,
+        update: (state, value) =>
+            state.copyWith(showNotificationStopAction: value),
+      ),
+    ],
+  ];
+}
+
 class GeneralView extends ConsumerWidget {
   const GeneralView({super.key});
 
   List<Widget> _startupItems(AppLocalizations appLocalizations) {
     return [
-      const CoreSwitchItem(),
-      if (system.isDesktop) ...[
-        _appSettingToggle(
-          title: (l) => l.autoLaunch,
-          select: (state) => state.autoLaunch,
-          update: (state, value) => state.copyWith(autoLaunch: value),
-        ),
-        _appSettingToggle(
-          title: (l) => l.silentLaunch,
-          select: (state) => state.silentLaunch,
-          update: (state, value) => state.copyWith(silentLaunch: value),
-        ),
-      ],
-      _appSettingToggle(
-        title: (l) => l.autoRun,
-        select: (state) => state.autoRun,
-        update: (state, value) => state.copyWith(autoRun: value),
-      ),
       ListItem.open(
         title: Text(appLocalizations.onDemand),
         widget: const OnDemandView(),
       ),
-      _appSettingToggle(
-        title: (l) => l.minimizeOnExit,
-        select: (state) => state.minimizeOnExit,
-        update: (state, value) => state.copyWith(minimizeOnExit: value),
-      ),
-      if (system.isAndroid) ...[
-        _appSettingToggle(
-          title: (l) => l.exclude,
-          select: (state) => state.hidden,
-          update: (state, value) => state.copyWith(hidden: value),
-        ),
-        _appSettingToggle(
-          title: (l) => l.showNotificationStopAction,
-          select: (state) => state.showNotificationStopAction,
-          update: (state, value) =>
-              state.copyWith(showNotificationStopAction: value),
-        ),
-      ],
     ];
   }
 
@@ -933,11 +938,7 @@ class GeneralView extends ConsumerWidget {
           generateSection(
             title: appLocalizations.startupAndBackground,
             items: _startupItems(appLocalizations),
-            footer: [
-              if (system.isDesktop) appLocalizations.silentLaunchDesc,
-              appLocalizations.autoRunDesc,
-              appLocalizations.onDemandDesc,
-            ].join('\n'),
+            footer: appLocalizations.onDemandDesc,
           ),
           generateSection(
             title: appLocalizations.requestsAndUpdates,

@@ -1003,5 +1003,8 @@
   "mainScreen": "Principal",
   "subscriptions": "Suscripciones",
   "currentExit": "Salida actual",
-  "coreNotRunning": "{core} detenido"
+  "coreNotRunning": "{core} detenido",
+  "advanced": "Avanzado",
+  "advancedEdit": "Edición avanzada",
+  "proxySettings": "Ajustes de proxy"
 }

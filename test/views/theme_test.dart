@@ -391,8 +391,23 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    // The group covers the font page itself, pumped directly.
+    Future<void> pumpFontFamilyView(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1400, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(child: FontFamilyView()),
+        ),
+      );
+    }
+
     Future<void> openFonts(WidgetTester tester) async {
-      await tester.tap(find.text('Aa').first);
+      await pumpFontFamilyView(tester);
       await tester.pumpAndSettle();
       await pumpSettled(tester);
     }
@@ -400,16 +415,9 @@ void main() {
     testWidgets('picks an installed font on its page and back to default', (
       tester,
     ) async {
-      await pumpThemeView(tester);
-
       expect(readTheme().fontFamily, isNull);
-      expect(find.text('Default'), findsOneWidget);
 
       await openFonts(tester);
-      expect(
-        SheetProvider.of(tester.element(find.byType(FontFamilyView)))?.type,
-        SheetType.sideSheet,
-      );
       expect(inPage('Installed fonts'), findsOneWidget);
       expect(previewFamilyOf(tester, 'Beta Serif'), 'Beta Serif');
 
@@ -423,27 +431,21 @@ void main() {
       expect(readTheme().fontFamily, isNull);
     });
 
-    testWidgets('lists the fonts as the sheet opens and gives the names '
-        'their fonts once it has stopped', (tester) async {
+    testWidgets('lists the fonts as the page opens and gives the names '
+        'their fonts once it has settled', (tester) async {
       var reads = 0;
       systemFontFamiliesReader = () async {
         reads++;
         return ['Arrival Sans'];
       };
-      await pumpThemeView(tester);
+      await pumpFontFamilyView(tester);
 
-      await tester.tap(find.text('Aa').first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pump(const Duration(milliseconds: 16));
       expect(reads, 1);
       expect(fontsIllustration, findsNothing);
       expect(inPage('Arrival Sans'), findsOneWidget);
-      expect(
-        isRouteMoving(tester.element(find.byType(FontFamilyView))),
-        isTrue,
-      );
-      expect(previewFamilyOf(tester, 'Arrival Sans'), isNot('Arrival Sans'));
 
       await pumpSettled(tester);
       expect(previewFamilyOf(tester, 'Arrival Sans'), 'Arrival Sans');
@@ -454,9 +456,8 @@ void main() {
     ) async {
       final families = Completer<List<String>>();
       systemFontFamiliesReader = () => families.future;
-      await pumpThemeView(tester);
+      await pumpFontFamilyView(tester);
 
-      await tester.tap(find.text('Aa').first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       expect(fontsIllustration, findsNothing);
@@ -471,22 +472,6 @@ void main() {
       expect(fontsIllustration, findsNothing);
     });
 
-    testWidgets('previews the chosen font on its card', (tester) async {
-      container
-          .read(themeSettingProvider.notifier)
-          .update((state) => state.copyWith(fontFamily: 'Beta Serif'));
-      await pumpThemeView(tester);
-
-      expect(
-        tester.widget<Text>(find.text('Beta Serif')).style?.fontFamily,
-        'Beta Serif',
-      );
-      expect(
-        tester.widget<Text>(find.text('Aa').first).style?.fontFamily,
-        'Beta Serif',
-      );
-    });
-
     testWidgets('gives each name its own font one per frame', (tester) async {
       const families = ['Preview One', 'Preview Two', 'Preview Three'];
       var loaded = false;
@@ -494,8 +479,7 @@ void main() {
         loaded = true;
         return families;
       };
-      await pumpThemeView(tester);
-      await tester.tap(find.text('Aa').first);
+      await pumpFontFamilyView(tester);
       for (var i = 0; i < 20 && !loaded; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }

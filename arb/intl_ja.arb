@@ -1003,5 +1003,8 @@
   "mainScreen": "メイン",
   "subscriptions": "サブスクリプション",
   "currentExit": "現在の出口",
-  "coreNotRunning": "{core} は停止中"
+  "coreNotRunning": "{core} は停止中",
+  "advanced": "詳細設定",
+  "advancedEdit": "詳細編集",
+  "proxySettings": "プロキシ設定"
 }

@@ -7,6 +7,7 @@ import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/custom_resources.dart';
+import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/dns_queries.dart';
 import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/logs.dart';
@@ -330,7 +331,7 @@ void main() {
   });
 
   group('tools and index pages (cabin batch 4, #6/#16/#17)', () {
-    testWidgets('tools sections head shared cabin rows', (tester) async {
+    testWidgets('settings sections head shared cabin rows', (tester) async {
       final container = _container(tester);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -343,7 +344,8 @@ void main() {
           .widgetList<ListHeader>(find.byType(ListHeader))
           .map((header) => header.title)
           .toList();
-      expect(headers, containsAll(['Settings', 'Other']));
+      expect(headers, contains('Startup and background'));
+      expect(find.byType(CoreSwitchItem), findsOneWidget);
       expect(find.byType(DecorationListItem), findsWidgets);
     });
 

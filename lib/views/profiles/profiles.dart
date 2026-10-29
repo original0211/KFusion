@@ -367,7 +367,9 @@ List<CommonPopupMenuItem> profileMenuItems(
   return [
     CommonPopupMenuItem(
       glyph: AppGlyphs.edit,
-      label: appLocalizations.edit,
+      // A custom profile's editor group is an advanced surface: its menu
+      // door says so, where a plain profile keeps the plain edit door.
+      label: isCustom ? appLocalizations.advancedEdit : appLocalizations.edit,
       onPressed: () => editProfileEntry(context, profile),
     ),
     if (isCustom) ...[

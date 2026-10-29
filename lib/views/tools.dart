@@ -1,21 +1,18 @@
 import 'package:kfusion/common/common.dart';
-import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/l10n/l10n.dart';
-import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/about.dart';
 import 'package:kfusion/views/access.dart';
+import 'package:kfusion/views/advanced_gate.dart';
 import 'package:kfusion/views/backup_and_restore.dart';
 import 'package:kfusion/views/config/general.dart';
+import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'config/advanced.dart';
-import 'config/custom_resources.dart';
-import 'developer.dart';
 import 'disclaimer.dart';
 import 'theme.dart';
 
@@ -27,71 +24,45 @@ class ToolsView extends ConsumerStatefulWidget {
 }
 
 class _ToolViewState extends ConsumerState<ToolsView> {
-  Widget _buildNavigationMenuItem(NavigationItem navigationItem) {
-    return ListItem.open(
-      leading: GlyphIcon(navigationItem.glyph),
-      title: Text(navigationItem.label.label),
-      widget: navigationItem.builder(context),
-      forceFull: navigationItem.modes.contains(NavigationItemMode.moreFull),
-    );
-  }
-
-  Widget _getOtherList(bool enableDeveloperMode) {
-    return generateSection(
-      title: context.appLocalizations.other,
-      items: [
-        const _DisclaimerItem(),
-        if (enableDeveloperMode) const _DeveloperItem(),
-        const _InfoItem(),
-      ],
-    );
-  }
-
-  Widget _getSettingList() {
-    final appLocalizations = context.appLocalizations;
-    return generateSection(
-      title: appLocalizations.settings,
-      items: [
-        const _LocaleItem(),
-        const _ThemeItem(),
-        const _BackupItem(),
-        if (system.isDesktop) const _HotkeyItem(),
-        if (system.isAndroid) const _AccessItem(),
-        const _AdvancedConfigItem(),
-        const _CustomResourcesItem(),
-        const _GeneralItem(),
-      ],
-      footer: [
-        if (system.isAndroid) appLocalizations.accessControlDesc,
-        appLocalizations.advancedConfigDesc,
-        appLocalizations.customProfileResourcesDesc,
-      ].join('\n'),
-    );
+  // The takeover masters; their detail rows stay on the network page.
+  List<Widget> _takeoverItems() {
+    if (system.isAndroid) {
+      return const [VPNItem(), VpnSystemProxyItem()];
+    }
+    if (system.isDesktop) {
+      return const [SystemProxyItem(), TUNItem()];
+    }
+    return const [];
   }
 
   @override
   Widget build(BuildContext context) {
-    final developerMode = ref.watch(
-      appSettingProvider.select((state) => state.developerMode),
-    );
+    final appLocalizations = context.appLocalizations;
     final items = [
-      Consumer(
-        builder: (_, ref, _) {
-          final state = ref.watch(moreToolsSelectorStateProvider);
-          if (state.navigationItems.isEmpty) {
-            return Container();
-          }
-          return generateSection(
-            title: context.appLocalizations.more,
-            items: state.navigationItems.map(_buildNavigationMenuItem),
-          );
-        },
+      generateSection(items: const [CoreSwitchItem()]),
+      generateSection(
+        title: appLocalizations.startupAndBackground,
+        items: startupSettingItems(),
+        footer: [
+          if (system.isDesktop) appLocalizations.silentLaunchDesc,
+          appLocalizations.autoRunDesc,
+        ].join('\n'),
       ),
-      _getSettingList(),
-      _getOtherList(developerMode),
+      generateSection(items: _takeoverItems()),
+      generateSection(
+        items: [
+          const _LocaleItem(),
+          const _ThemeItem(),
+          const _BackupItem(),
+          if (system.isDesktop) const _HotkeyItem(),
+          if (system.isAndroid) const _AccessItem(),
+        ],
+      ),
+      generateSection(items: const [_AdvancedGateItem()]),
+      generateSection(items: const [_DisclaimerItem(), _InfoItem()]),
     ];
     return CommonScaffold(
-      title: context.appLocalizations.tools,
+      title: appLocalizations.settings,
       body: Builder(
         builder: (context) => ListView.builder(
           key: toolsStoreKey,
@@ -190,41 +161,15 @@ class _AccessItem extends StatelessWidget {
   }
 }
 
-class _GeneralItem extends StatelessWidget {
-  const _GeneralItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const GlyphIcon(AppGlyphs.settings),
-      title: Text(context.appLocalizations.general),
-      widget: const GeneralView(),
-    );
-  }
-}
-
-class _AdvancedConfigItem extends StatelessWidget {
-  const _AdvancedConfigItem();
+class _AdvancedGateItem extends StatelessWidget {
+  const _AdvancedGateItem();
 
   @override
   Widget build(BuildContext context) {
     return ListItem.open(
       leading: const GlyphIcon(AppGlyphs.wrench),
-      title: Text(context.appLocalizations.advancedConfig),
-      widget: const AdvancedConfigView(),
-    );
-  }
-}
-
-class _CustomResourcesItem extends StatelessWidget {
-  const _CustomResourcesItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const GlyphIcon(AppGlyphs.customize),
-      title: Text(context.appLocalizations.customProfileResources),
-      widget: const CustomResourcesView(),
+      title: Text(context.appLocalizations.advanced),
+      widget: const AdvancedGateView(),
     );
   }
 }
@@ -251,19 +196,6 @@ class _InfoItem extends StatelessWidget {
       leading: const GlyphIcon(AppGlyphs.info),
       title: Text(context.appLocalizations.about),
       widget: const AboutView(),
-    );
-  }
-}
-
-class _DeveloperItem extends StatelessWidget {
-  const _DeveloperItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const GlyphIcon(AppGlyphs.cpu),
-      title: Text(context.appLocalizations.developerMode),
-      widget: const DeveloperView(),
     );
   }
 }

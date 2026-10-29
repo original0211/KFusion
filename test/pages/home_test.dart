@@ -470,6 +470,15 @@ void main() {
       );
       await tester.pump();
 
+      final gateItem = find.text('Advanced');
+      await tester.scrollUntilVisible(
+        gateItem,
+        500,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(gateItem);
+      await tester.pumpAndSettle();
+
       final generalItem = find.text('General');
       await tester.scrollUntilVisible(
         generalItem,

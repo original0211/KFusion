@@ -337,12 +337,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Introduce una dirección WebDAV válida",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("Avanzado"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Configuración avanzada",
     ),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "La configuración avanzada incluye la red, el DNS, las reglas añadidas y los scripts.",
     ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage("Edición avanzada"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage(
       "Perfil cifrado",
     ),
@@ -1112,9 +1114,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Introduce el contenido de la regla",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Se denegó el permiso de lista de apps, por lo que no se pueden mostrar las apps instaladas. Concédelo manualmente en los ajustes del sistema.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Se denegó el permiso de lista de apps, por lo que no se pueden mostrar las apps instaladas. Concédelo manualmente en los ajustes del sistema.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Este sistema oculta la lista de apps instaladas hasta que se concede el permiso. Autorízalo para configurar el proxy por app.",
     ),
@@ -1569,6 +1572,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyProviders": MessageLookupByLibrary.simpleMessage(
       "Proveedores de proxies",
     ),
+    "proxySettings": MessageLookupByLibrary.simpleMessage("Ajustes de proxy"),
     "proxyType": MessageLookupByLibrary.simpleMessage("Tipo de proxy"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("Depurar caché"),
     "publicKey": MessageLookupByLibrary.simpleMessage("Clave pública"),

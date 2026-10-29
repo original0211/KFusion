@@ -340,11 +340,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Veuillez saisir une adresse WebDAV valide",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("Avancé"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Configuration avancée",
     ),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "La configuration avancée regroupe le réseau, le DNS, les règles ajoutées et les scripts.",
+    ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage(
+      "Modification avancée",
     ),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage(
       "Profil chiffré",
@@ -1117,9 +1121,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Saisissez le contenu de la règle",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Ce système masque la liste des apps installées tant que l’autorisation n’est pas accordée. Accordez-la pour configurer le proxy par app.",
     ),
@@ -1575,6 +1580,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyGroupsCount": m75,
     "proxyProviders": MessageLookupByLibrary.simpleMessage(
       "Fournisseurs de proxys",
+    ),
+    "proxySettings": MessageLookupByLibrary.simpleMessage(
+      "Paramètres du proxy",
     ),
     "proxyType": MessageLookupByLibrary.simpleMessage("Type de proxy"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("Nettoyer le cache"),

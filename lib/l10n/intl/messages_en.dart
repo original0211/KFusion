@@ -323,12 +323,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Please enter a valid WebDAV address",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("Advanced"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Advanced configuration",
     ),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "Advanced configuration holds network, DNS, added rules, and scripts.",
     ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage("Advanced edit"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage(
       "Encrypted profile",
     ),
@@ -1048,9 +1050,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Enter the rule content",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -1467,6 +1470,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "proxyGroupsCount": m75,
     "proxyProviders": MessageLookupByLibrary.simpleMessage("Proxy providers"),
+    "proxySettings": MessageLookupByLibrary.simpleMessage("Proxy settings"),
     "proxyType": MessageLookupByLibrary.simpleMessage("Proxy type"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("Prune cache"),
     "publicKey": MessageLookupByLibrary.simpleMessage("Public key"),

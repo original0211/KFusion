@@ -1003,5 +1003,8 @@
   "mainScreen": "메인",
   "subscriptions": "구독",
   "currentExit": "현재 출구",
-  "coreNotRunning": "{core} 실행 중 아님"
+  "coreNotRunning": "{core} 실행 중 아님",
+  "advanced": "고급",
+  "advancedEdit": "고급 편집",
+  "proxySettings": "프록시 설정"
 }

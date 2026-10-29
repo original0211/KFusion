@@ -284,10 +284,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "有効なWebDAVアドレスを入力してください",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("詳細設定"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("詳細設定"),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "詳細設定には、ネットワーク、DNS、追加ルール、スクリプトがあります。",
     ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage("詳細編集"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("暗号化されたプロファイル"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 秘密鍵"),
     "ageSecretKeyRequiredTip": MessageLookupByLibrary.simpleMessage(
@@ -1265,6 +1267,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "proxyGroupsCount": m75,
     "proxyProviders": MessageLookupByLibrary.simpleMessage("プロキシプロバイダー"),
+    "proxySettings": MessageLookupByLibrary.simpleMessage("プロキシ設定"),
     "proxyType": MessageLookupByLibrary.simpleMessage("プロキシタイプ"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("キャッシュを整理"),
     "publicKey": MessageLookupByLibrary.simpleMessage("公開鍵"),

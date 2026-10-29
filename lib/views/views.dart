@@ -1,5 +1,6 @@
 export 'about.dart';
 export 'access.dart';
+export 'advanced_gate.dart';
 export 'backup_and_restore.dart';
 export 'connection/connections.dart';
 export 'connection/requests.dart';

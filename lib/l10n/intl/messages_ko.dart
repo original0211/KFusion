@@ -283,10 +283,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "address": MessageLookupByLibrary.simpleMessage("주소"),
     "addressHelp": MessageLookupByLibrary.simpleMessage("WebDAV 서버 주소"),
     "addressTip": MessageLookupByLibrary.simpleMessage("올바른 WebDAV 주소를 입력하세요"),
+    "advanced": MessageLookupByLibrary.simpleMessage("고급"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("고급 구성"),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "고급 구성에는 네트워크, DNS, 추가한 규칙, 스크립트가 포함됩니다.",
     ),
+    "advancedEdit": MessageLookupByLibrary.simpleMessage("고급 편집"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("암호화된 프로필"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 비밀 키"),
     "ageSecretKeyRequiredTip": MessageLookupByLibrary.simpleMessage(
@@ -1246,6 +1248,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "proxyGroupsCount": m75,
     "proxyProviders": MessageLookupByLibrary.simpleMessage("프록시 공급자"),
+    "proxySettings": MessageLookupByLibrary.simpleMessage("프록시 설정"),
     "proxyType": MessageLookupByLibrary.simpleMessage("프록시 유형"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("캐시 정리"),
     "publicKey": MessageLookupByLibrary.simpleMessage("공개 키"),
