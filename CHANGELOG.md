@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.33 (2026-10-29)
+
+**Features**
+
+- **views** The settings half-page is read in the white Hara A language: its seeded Material switches give way to an ink-dot reading — a filled dot with the state word in ink when a setting is on, an empty slot with a dim word when it is off — its entry rows drop their icons and rounded chrome for hairline-separated text rows, and the page sits on the plain white container, in the same language as the main screen and the subscriptions screen. The composition is unchanged — core switch card, startup and takeover rows, everyday entries, the Advanced gate, and disclaimer and about at the foot — and the pages inside the gate keep their existing face. (3080008)
+- **dashboard** The main screen exit row gains the exit's country. The exit probe already returns a country code alongside the address; a local table covering 52 countries in all seven app languages turns the code into a name, with no extra network lookup. The country lands together with the address, ahead of the connection type. (5677e60)
+- **dashboard** The main screen exit row then stops printing the address itself and reads country and type only — for example 日本 · 住宅. The address stays in use internally, feeding the type lookup, and remains visible on the quality details page; when the IP is hidden, the row still shows ***** instead. (b50561e)
+- **views** The core switch card is read in the Hara A language too: the rounded, shadowed panel is gone, and the card's content — title, status and the two core rows with their disc marks — now sits directly on the page field, separated by hairlines and hit-tested through square areas. Wiring, states and behaviour are unchanged; only the surface moved. (874607b)
+- **ui** The selection check beside the running core on the switch card now renders in palette ink instead of the shared mark's seed primary, completing the card's Hara reading. The shared SelectionCheck only gains an optional color; every other surface keeps the scheme primary. (5eb133d)
+
 ## v0.2.32 (2026-10-29)
 
 **Features**
