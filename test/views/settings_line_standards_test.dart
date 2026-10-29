@@ -196,8 +196,8 @@ void main() {
 
     tearDown(() => container.dispose());
 
-    testWidgets('cards on the theme and settings pages take the card '
-        'corner档', (tester) async {
+    testWidgets('theme cards take the card corner档; the settings switch '
+        'card reads square', (tester) async {
       tester.view.physicalSize = const Size(1400, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -234,14 +234,31 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final switchCard = find.descendant(
-        of: find.byType(CoreSwitchCard),
-        matching: find.byType(CommonCard),
+      final switchCard = find.byType(CoreSwitchCard);
+      expect(
+        find.descendant(of: switchCard, matching: find.byType(CommonCard)),
+        findsNothing,
       );
-      final switchShape =
-          tester.widget<CommonCard>(switchCard.first).shape
-              as RoundedSuperellipseBorder;
-      expect(switchShape.borderRadius, AppRadius.xl);
+      final roundedShapes = find.descendant(
+        of: switchCard,
+        matching: find.byWidgetPredicate((widget) {
+          if (widget is Material) {
+            final shape = widget.shape;
+            return shape is RoundedSuperellipseBorder &&
+                shape.borderRadius != BorderRadius.zero;
+          }
+          if (widget is DecoratedBox) {
+            final decoration = widget.decoration;
+            if (decoration is ShapeDecoration) {
+              final shape = decoration.shape;
+              return shape is RoundedSuperellipseBorder &&
+                  shape.borderRadius != BorderRadius.zero;
+            }
+          }
+          return false;
+        }),
+      );
+      expect(roundedShapes, findsNothing);
     });
   });
 }

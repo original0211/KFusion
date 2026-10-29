@@ -71,10 +71,9 @@ void main() {
   }
 
   // Every visible element of the card must sit inside the card's own rect:
-  // the regression this guards is content spilling onto the page. The card
-  // itself is a FilledButton (CommonCard), so it is part of the scan.
+  // the regression this guards is content spilling onto the page.
   void expectAllInsideCard(WidgetTester tester) {
-    final cardRect = tester.getRect(find.byType(CommonCard));
+    final cardRect = tester.getRect(find.byType(CoreSwitchCard));
     final inside = find.descendant(
       of: find.byType(CoreSwitchCard),
       matching: find.byWidgetPredicate(

@@ -308,9 +308,10 @@ class CoreSwitchCard extends StatelessWidget {
   final AppLocalizations localizations;
 
   Widget _binaryContent(BuildContext context) {
+    final palette = context.haraPalette;
     final label = binaryLabel;
     if (label != null) {
-      return Text(label, style: context.listSubtitleStyle);
+      return Text(label, style: HaraText.profileMeta(context, palette.sub));
     }
     final error = downloadError;
     return Column(
@@ -318,20 +319,18 @@ class CoreSwitchCard extends StatelessWidget {
       children: [
         Text(
           localizations.singBoxBinaryMissing,
-          style: context.listSubtitleStyle,
+          style: HaraText.profileMeta(context, palette.sub),
         ),
         const SizedBox(height: 2),
         Text(
           localizations.singBoxDownloadHint,
-          style: context.listSubtitleStyle,
+          style: HaraText.profileMeta(context, palette.sub),
         ),
         if (error != null) ...[
           const SizedBox(height: 6),
           Text(
             error,
-            style: context.listSubtitleStyle.copyWith(
-              color: context.colorScheme.error,
-            ),
+            style: HaraText.profileMeta(context, context.colorScheme.error),
           ),
         ],
         const SizedBox(height: 8),
@@ -340,7 +339,10 @@ class CoreSwitchCard extends StatelessWidget {
             children: [
               Expanded(child: LinearProgressIndicator(value: progress)),
               const SizedBox(width: 12),
-              Text(_downloadingText(), style: context.listSubtitleStyle),
+              Text(
+                _downloadingText(),
+                style: HaraText.profileMeta(context, palette.sub),
+              ),
             ],
           )
         else
@@ -359,45 +361,43 @@ class CoreSwitchCard extends StatelessWidget {
   Widget _coreRow(BuildContext context, CoreKind kind) {
     final selected = kind == selectedCore;
     final running = kind == CoreKind.mihomo ? mihomoRunning : singBoxRunning;
-    final colorScheme = context.colorScheme;
-    const shape = AppShape.md;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: context.raisedSurfaceLevel.colorOf(colorScheme),
-        shape: shape,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          customBorder: shape,
-          onTap: switching || selected ? null : () => onSelectCore(kind),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                DashboardDiscMotif(
-                  size: 20,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    coreKindDisplayName(kind),
-                    style: context.listTitleStyle,
+    final palette = context.haraPalette;
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        customBorder: AppShape.hara,
+        onTap: switching || selected ? null : () => onSelectCore(kind),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              DashboardDiscMotif(
+                size: 20,
+                color: selected ? palette.ink : palette.sub,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  coreKindDisplayName(kind),
+                  style: HaraText.nodeName(
+                    context,
+                    palette.ink,
+                    current: selected,
                   ),
                 ),
-                Text(
-                  running ? localizations.running : localizations.notRunning,
-                  style: context.listSubtitleStyle,
+              ),
+              Text(
+                running ? localizations.running : localizations.notRunning,
+                style: HaraText.statusNode(
+                  context,
+                  running ? palette.sub : palette.dim,
                 ),
-                if (selected) ...[
-                  const SizedBox(width: 8),
-                  const SelectionCheck(),
-                ],
+              ),
+              if (selected) ...[
+                const SizedBox(width: 8),
+                const SelectionCheck(),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -416,72 +416,45 @@ class CoreSwitchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final position = ItemPositionProvider.of(context)?.position;
-    final isStart =
-        position == ItemPosition.start || position == ItemPosition.startAndEnd;
     final isEnd =
         position == ItemPosition.end || position == ItemPosition.startAndEnd;
-    final borderRadius = AppRadius.vertical(
-      top: isStart ? AppCorner.xl : AppCorner.none,
-      bottom: isEnd ? AppCorner.xl : AppCorner.none,
-    );
-    final card = CommonCard(
-      shape: AppShape.of(borderRadius),
-      padding: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            Text(localizations.coreSwitchTitle, style: context.listTitleStyle),
-            const SizedBox(height: 2),
-            Text(
-              statusText,
-              style: statusIsFailure
-                  ? context.listSubtitleStyle.copyWith(
-                      color: context.colorScheme.error,
-                    )
-                  : context.listSubtitleStyle,
-            ),
-            if (statusIsFailure && failureDetail.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(
-                localizations.coreSwitchFailureDetail(failureDetail),
-                style: context.listSubtitleStyle.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-            if (showBinary && binaryChecked) ...[
-              const SizedBox(height: 8),
-              _binaryContent(context),
-            ],
-            if (showSwitch) ...[
-              const SizedBox(height: 12),
-              _coreRow(context, CoreKind.mihomo),
-              const SizedBox(height: 8),
-              _coreRow(context, CoreKind.singbox),
-            ],
-            const SizedBox(height: 12),
-            if (!isEnd)
-              Divider(
-                height: 1,
-                indent: 0,
-                endIndent: 14,
-                color:
-                    DividerTheme.of(context).color ??
-                    context.colorScheme.outlineVariant,
-              ),
-          ],
+    final palette = context.haraPalette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          localizations.coreSwitchTitle,
+          style: HaraText.nodeName(context, palette.ink, current: true),
         ),
-      ),
-    );
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        shape: AppShape.of(borderRadius),
-        shadows: context.colorScheme.cabinPanelShadows,
-      ),
-      child: card,
+        const SizedBox(height: 2),
+        Text(
+          statusText,
+          style: HaraText.statusNode(
+            context,
+            statusIsFailure ? context.colorScheme.error : palette.sub,
+          ),
+        ),
+        if (statusIsFailure && failureDetail.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(
+            localizations.coreSwitchFailureDetail(failureDetail),
+            style: HaraText.profileMeta(context, palette.dim),
+          ),
+        ],
+        if (showBinary && binaryChecked) ...[
+          const SizedBox(height: 8),
+          _binaryContent(context),
+        ],
+        if (showSwitch) ...[
+          const SizedBox(height: 12),
+          _coreRow(context, CoreKind.mihomo),
+          const SizedBox(height: 8),
+          _coreRow(context, CoreKind.singbox),
+        ],
+        const SizedBox(height: 12),
+        if (!isEnd) HaraHairline(color: palette.line),
+      ],
     );
   }
 }

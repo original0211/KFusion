@@ -40,8 +40,8 @@ class _FakeCoreKinds extends CoreKindsNotifier {
 }
 
 void main() {
-  group('cabin supplement: general core switch container', () {
-    testWidgets('the card wears the cabin panel shadow at xl rounding', (
+  group('hara reading: general core switch container', () {
+    testWidgets('the card wears no panel: no card fill, no shadow', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -78,15 +78,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CommonCard), findsOneWidget);
-      final context = tester.element(find.byType(CoreSwitchCard));
-      final colorScheme = Theme.of(context).colorScheme;
-      final wrapped = tester
+      final card = find.byType(CoreSwitchCard);
+      expect(
+        find.descendant(of: card, matching: find.byType(CommonCard)),
+        findsNothing,
+      );
+      final shadowed = tester
           .widgetList<DecoratedBox>(
-            find.ancestor(
-              of: find.byType(CommonCard),
-              matching: find.byType(DecoratedBox),
-            ),
+            find.ancestor(of: card, matching: find.byType(DecoratedBox)),
           )
           .where(
             (box) =>
@@ -94,18 +93,7 @@ void main() {
                 (box.decoration as ShapeDecoration).shadows?.isNotEmpty == true,
           )
           .toList();
-      expect(wrapped, hasLength(1));
-      final decoration = wrapped.single.decoration as ShapeDecoration;
-      expect(decoration.shadows, colorScheme.cabinPanelShadows);
-      expect(
-        (decoration.shape as RoundedSuperellipseBorder).borderRadius,
-        AppRadius.xl,
-      );
-      final card = tester.widget<CommonCard>(find.byType(CommonCard));
-      expect(
-        (card.shape as RoundedSuperellipseBorder).borderRadius,
-        AppRadius.xl,
-      );
+      expect(shadowed, isEmpty);
       expect(find.text('mihomo'), findsOneWidget);
       expect(find.text('sing-box'), findsOneWidget);
     });
