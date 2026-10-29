@@ -17,6 +17,7 @@ const aSurfaces = <String>[
   'lib/views/profiles/hara_profiles.dart',
   'lib/views/profiles/singbox_degradations.dart',
   'lib/views/profiles/universal_import.dart',
+  'lib/views/tools.dart',
 ];
 
 const tokenLayer = 'lib/ui/hara.dart';

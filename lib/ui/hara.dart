@@ -347,3 +347,41 @@ class HaraDot extends StatelessWidget {
     );
   }
 }
+
+/// The A switch (spec D5): an ink dot and the state word, never vermilion.
+class HaraToggleMark extends StatelessWidget {
+  const HaraToggleMark({super.key, required this.value, required this.word});
+
+  final bool value;
+  final String word;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: HaraSpace.dotRow,
+          height: HaraSpace.dotRow,
+          child: value
+              ? Container(
+                  decoration: BoxDecoration(
+                    color: palette.ink,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(width: HaraSpace.dotNameGap),
+        Text(
+          word,
+          style: HaraText.statusNode(
+            context,
+            value ? palette.ink : palette.dim,
+          ),
+        ),
+      ],
+    );
+  }
+}

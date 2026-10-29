@@ -5,7 +5,6 @@ import 'package:kfusion/state.dart';
 import 'package:kfusion/views/advanced_gate.dart';
 import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/general.dart';
-import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/tools.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,8 +67,9 @@ void main() {
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
-    expect(find.byType(SystemProxyItem), findsOneWidget);
-    expect(find.byType(TUNItem), findsOneWidget);
+    for (final label in ['System proxy', 'TUN']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
     for (final label in [
       'Language',
       'Theme',
@@ -93,6 +93,26 @@ void main() {
     ]) {
       expect(find.text(label), findsNothing, reason: label);
     }
+  });
+
+  testWidgets('toggle rows flip their settings and carry no switch', (
+    tester,
+  ) async {
+    final container = _container(tester);
+    await _pumpSettings(tester, container);
+    await tester.pump();
+
+    expect(find.byType(Switch), findsNothing);
+
+    final autoRun = container.read(appSettingProvider).autoRun;
+    await tester.tap(find.text('Auto run'));
+    await tester.pump();
+    expect(container.read(appSettingProvider).autoRun, !autoRun);
+
+    final systemProxy = container.read(networkSettingProvider).systemProxy;
+    await tester.tap(find.text('System proxy'));
+    await tester.pump();
+    expect(container.read(networkSettingProvider).systemProxy, !systemProxy);
   });
 
   testWidgets('the advanced gate gathers the gated pages behind one door', (
