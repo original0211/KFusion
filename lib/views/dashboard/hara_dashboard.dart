@@ -452,41 +452,44 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
         : appLocalizations.connected;
     return Material(
       color: palette.bg,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: side),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: _stickyExtent - HaraSpace.hairline,
-              child: Row(
-                children: [
-                  DiscRingMotif(
-                    size: HaraSpace.ringCompact,
-                    color: palette.ink.withValues(alpha: 0.78),
-                    strokeWidth: HaraSpace.ringStroke,
-                  ),
-                  const SizedBox(width: 10),
-                  const HaraDot(size: HaraSpace.dotRow),
-                  const SizedBox(width: 8),
-                  Text(
-                    statusText,
-                    style: HaraText.statusNode(context, palette.ink),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      nodeName ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaraText.statusNode(context, palette.sub),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: side),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: _stickyExtent - HaraSpace.hairline,
+                child: Row(
+                  children: [
+                    DiscRingMotif(
+                      size: HaraSpace.ringCompact,
+                      color: palette.ink.withValues(alpha: 0.78),
+                      strokeWidth: HaraSpace.ringStroke,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    const HaraDot(size: HaraSpace.dotRow),
+                    const SizedBox(width: 8),
+                    Text(
+                      statusText,
+                      style: HaraText.statusNode(context, palette.ink),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        nodeName ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: HaraText.statusNode(context, palette.sub),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const HaraHairline(),
-          ],
+              const HaraHairline(),
+            ],
+          ),
         ),
       ),
     );
