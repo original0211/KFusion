@@ -189,7 +189,7 @@ void main() {
       );
     });
 
-    test('links added rules to the profile that declared them', () async {
+    test('ignores the added rules a legacy profile declared', () async {
       writeFile(join(source.path, 'profiles', 'p1.yaml'), '');
 
       final data = await migrateLegacyConfig(
@@ -214,48 +214,40 @@ void main() {
       );
 
       final profile = data.profiles.single;
-      final rule = data.rules.single;
-      expect(rule.content, 'example.com');
-      expect(rule.profileId, profile.id);
+      expect(data.rules, isEmpty);
       expect(profile.type, ProfileType.file);
       expect(data.disabledRules, isEmpty);
     });
 
-    test(
-      'keeps a disabled rule only for a rule id it has already seen',
-      () async {
-        writeFile(join(source.path, 'profiles', 'p1.yaml'), '');
+    test('ignores the disabled rule ids a legacy profile declared', () async {
+      writeFile(join(source.path, 'profiles', 'p1.yaml'), '');
 
-        final data = await migrateLegacyConfig(
-          configMap: legacyConfig(
-            profiles: [
-              {
-                'id': 'p1',
-                'autoUpdateDuration': 0,
-                'overwrite': {
-                  'type': 'standard',
-                  'standardOverwrite': {
-                    'addedRules': [
-                      {'id': 'r1', 'value': 'DOMAIN,example.com,DIRECT'},
-                    ],
-                    'disabledRuleIds': ['r1', 'never-seen'],
-                  },
+      final data = await migrateLegacyConfig(
+        configMap: legacyConfig(
+          profiles: [
+            {
+              'id': 'p1',
+              'autoUpdateDuration': 0,
+              'overwrite': {
+                'type': 'standard',
+                'standardOverwrite': {
+                  'addedRules': [
+                    {'id': 'r1', 'value': 'DOMAIN,example.com,DIRECT'},
+                  ],
+                  'disabledRuleIds': ['r1', 'never-seen'],
                 },
               },
-            ],
-          ),
-          sourcePath: source.path,
-          targetPath: target.path,
-        );
+            },
+          ],
+        ),
+        sourcePath: source.path,
+        targetPath: target.path,
+      );
 
-        expect(data.disabledRules, [
-          DisabledRule(
-            profileId: data.profiles.single.id,
-            ruleId: data.rules.single.id,
-          ),
-        ]);
-      },
-    );
+      expect(data.profiles, hasLength(1));
+      expect(data.rules, isEmpty);
+      expect(data.disabledRules, isEmpty);
+    });
 
     test('gives a profile with a url the url type', () async {
       writeFile(join(source.path, 'profiles', 'p1.yaml'), '');

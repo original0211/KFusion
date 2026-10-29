@@ -385,100 +385,6 @@ void main() {
     });
   });
 
-  group('GlobalRules', () {
-    late GlobalRules notifier;
-
-    setUp(() async {
-      await keepAlive(globalRulesProvider);
-      notifier = container.read(globalRulesProvider.notifier);
-    });
-
-    List<Rule> read() => notifier.value;
-
-    test('put assigns an order to a rule that has none', () async {
-      notifier.put(const Rule(id: 1, content: 'first'));
-      await pumpEventQueue();
-
-      expect(read().single.order, isNotNull);
-      final rows = await testDatabase.rulesDao.queryGlobalRules().get();
-      expect(rows.single.order, isNotNull);
-    });
-
-    test('put keeps an order the caller already supplied', () async {
-      notifier.put(const Rule(id: 1, content: 'first', order: 'm'));
-      await pumpEventQueue();
-
-      expect(read().single.order, 'm');
-    });
-
-    test('put prepends so the newest rule sorts first', () async {
-      notifier.put(const Rule(id: 1, content: 'first'));
-      await pumpEventQueue();
-      notifier.put(const Rule(id: 2, content: 'second'));
-      await pumpEventQueue();
-
-      final rows = await testDatabase.rulesDao.queryGlobalRules().get();
-      expect(rows.map((item) => item.id), [2, 1]);
-    });
-
-    test(
-      'putAll puts the batch ahead of existing rules in its order',
-      () async {
-        notifier.put(const Rule(id: 1, content: 'existing'));
-        await pumpEventQueue();
-
-        notifier.putAll(const [
-          Rule(id: 2, content: 'second'),
-          Rule(id: 3, content: 'third'),
-        ]);
-        expect(read().map((item) => item.id), [2, 3, 1], reason: 'optimistic');
-        await pumpEventQueue();
-
-        final rows = await testDatabase.rulesDao.queryGlobalRules().get();
-        expect(rows.map((item) => item.id), [2, 3, 1]);
-      },
-    );
-
-    test('delAll removes every listed rule', () async {
-      notifier.put(const Rule(id: 1, content: 'first'));
-      await pumpEventQueue();
-      notifier.put(const Rule(id: 2, content: 'second'));
-      await pumpEventQueue();
-
-      notifier.delAll([1, 2]);
-      await pumpEventQueue();
-
-      expect(read(), isEmpty);
-      expect(await testDatabase.rulesDao.queryGlobalRules().get(), isEmpty);
-    });
-
-    test('delAll restores the previous list when the write fails', () async {
-      notifier.put(const Rule(id: 1, content: 'first'));
-      await pumpEventQueue();
-      await breakTable('rules');
-
-      final failure = captureWriteFailure(() => notifier.delAll([1]));
-      expect(read(), isEmpty, reason: 'optimistic');
-
-      await failure;
-      expect(read().map((item) => item.id), [1], reason: 'rolled back');
-    });
-
-    test('order moves a rule and rewrites only its order key', () async {
-      notifier.put(const Rule(id: 1, content: 'first'));
-      await pumpEventQueue();
-      notifier.put(const Rule(id: 2, content: 'second'));
-      await pumpEventQueue();
-
-      final before = read().map((item) => item.id).toList();
-      notifier.order(0, 1);
-      await pumpEventQueue();
-
-      final rows = await testDatabase.rulesDao.queryGlobalRules().get();
-      expect(rows.map((item) => item.id), before.reversed);
-    });
-  });
-
   group('ProfileRules', () {
     late ProfileRules notifier;
 
@@ -500,7 +406,9 @@ void main() {
           .get();
       expect(scoped.single.id, 1);
       expect(
-        await testDatabase.rulesDao.queryGlobalRules().get(),
+        (await testDatabase.select(testDatabase.rules).get()).where(
+          (row) => row.profileId == null,
+        ),
         isEmpty,
         reason: 'a profile rule must not leak into the global rules',
       );
@@ -915,61 +823,6 @@ void main() {
         expect(container.read(profilesProvider).single, row);
       },
     );
-  });
-
-  group('ProfileDisabledRuleIds', () {
-    late ProfileDisabledRuleIds notifier;
-
-    setUp(() async {
-      await testDatabase.profilesDao.putAll([profile(profileId).toCompanion()]);
-      await testDatabase.rulesDao.putRule(
-        const Rule(id: 7, content: 'toggled', order: 'a'),
-      );
-      await keepAlive(profileDisabledRuleIdsProvider(profileId));
-      notifier = container.read(
-        profileDisabledRuleIdsProvider(profileId).notifier,
-      );
-    });
-
-    List<int> read() => notifier.value;
-
-    test('put disables the rule and del enables it again', () async {
-      notifier.put(7);
-      expect(read(), [7]);
-      await pumpEventQueue();
-
-      expect(
-        await testDatabase.rulesDao.queryDisabledRuleIds(profileId).get(),
-        [7],
-      );
-
-      notifier.del(7);
-      await pumpEventQueue();
-      expect(read(), isEmpty);
-      expect(
-        await testDatabase.rulesDao.queryDisabledRuleIds(profileId).get(),
-        isEmpty,
-      );
-    });
-
-    test('put is idempotent for an id that is already disabled', () async {
-      notifier.put(7);
-      await pumpEventQueue();
-      notifier.put(7);
-      await pumpEventQueue();
-
-      expect(read(), [7]);
-    });
-
-    test('put restores the previous ids when the write fails', () async {
-      await breakTable('disabled_rules');
-
-      final failure = captureWriteFailure(() => notifier.put(7));
-      expect(read(), [7], reason: 'optimistic');
-
-      await failure;
-      expect(read(), isEmpty, reason: 'rolled back');
-    });
   });
 
   group('ProxyGroups', () {

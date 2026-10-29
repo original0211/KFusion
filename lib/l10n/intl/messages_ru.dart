@@ -295,7 +295,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Добавить параметр",
     ),
     "addSsid": MessageLookupByLibrary.simpleMessage("Добавить SSID"),
-    "addedRules": MessageLookupByLibrary.simpleMessage("Добавленные правила"),
     "additionalParameters": MessageLookupByLibrary.simpleMessage(
       "Дополнительные параметры",
     ),
@@ -536,9 +535,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "content": MessageLookupByLibrary.simpleMessage("Содержимое"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Содержимое не может быть пустым",
-    ),
-    "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Управление глобальными добавленными правилами",
     ),
     "copy": MessageLookupByLibrary.simpleMessage("Копировать"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
@@ -818,9 +814,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "duration": MessageLookupByLibrary.simpleMessage("Длительность"),
     "edit": MessageLookupByLibrary.simpleMessage("Редактировать"),
-    "editGlobalRules": MessageLookupByLibrary.simpleMessage(
-      "Редактировать глобальные правила",
-    ),
     "editProxy": MessageLookupByLibrary.simpleMessage("Редактировать прокси"),
     "editProxyGroup": MessageLookupByLibrary.simpleMessage(
       "Редактировать группу прокси",
@@ -882,8 +875,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportFile": MessageLookupByLibrary.simpleMessage("Экспорт файла"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("Экспорт логов"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Экспорт выполнен"),
-    "extend": MessageLookupByLibrary.simpleMessage("Расширение"),
-    "extendMode": MessageLookupByLibrary.simpleMessage("Режим расширения"),
     "externalController": MessageLookupByLibrary.simpleMessage(
       "Внешний контроллер",
     ),
@@ -922,7 +913,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "filters": MessageLookupByLibrary.simpleMessage("Фильтры"),
     "findProcessMode": MessageLookupByLibrary.simpleMessage("Поиск процесса"),
     "floating": MessageLookupByLibrary.simpleMessage("Плавающая"),
-    "followProfile": MessageLookupByLibrary.simpleMessage("Как в профиле"),
     "followSystem": MessageLookupByLibrary.simpleMessage("Как в системе"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("Шрифт"),
     "fontSize": MessageLookupByLibrary.simpleMessage("Размер"),
@@ -952,9 +942,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "global": MessageLookupByLibrary.simpleMessage("Глобальный"),
     "go": MessageLookupByLibrary.simpleMessage("Перейти"),
     "goDownload": MessageLookupByLibrary.simpleMessage("Скачать"),
-    "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Перейти к настройке добавленных правил",
-    ),
     "grid": MessageLookupByLibrary.simpleMessage("Сетка"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Кэшировать изменения?",
@@ -1044,9 +1031,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -1683,10 +1671,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "saturation": MessageLookupByLibrary.simpleMessage("Насыщенность"),
     "save": MessageLookupByLibrary.simpleMessage("Сохранить"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("Сохранить изменения?"),
-    "script": MessageLookupByLibrary.simpleMessage("Скрипт"),
-    "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Режим скрипта: переписывает весь профиль скриптом расширения",
-    ),
     "search": MessageLookupByLibrary.simpleMessage("Поиск"),
     "seconds": MessageLookupByLibrary.simpleMessage("секунд"),
     "secondsCount": m71,
@@ -1854,9 +1838,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "stackMode": MessageLookupByLibrary.simpleMessage("Режим стека"),
     "stackTrace": MessageLookupByLibrary.simpleMessage("Трассировка стека"),
     "standard": MessageLookupByLibrary.simpleMessage("Стандартный"),
-    "standardModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Стандартный режим: добавляет правила поверх профиля",
-    ),
     "start": MessageLookupByLibrary.simpleMessage("Старт"),
     "startFromScratch": MessageLookupByLibrary.simpleMessage("С нуля"),
     "startVpn": MessageLookupByLibrary.simpleMessage("Запуск VPN…"),

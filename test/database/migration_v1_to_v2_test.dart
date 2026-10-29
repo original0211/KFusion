@@ -579,8 +579,10 @@ void main() {
       {(1, 11), (2, 10), (2, 11)},
     );
     expect(
-      (await database.rulesDao.queryAddedRules(1).get()).map((rule) => rule.id),
-      [20, 10],
+      (await database.rulesDao.queryProfileRules(1).get()).map(
+        (rule) => rule.id,
+      ),
+      [20],
     );
     expect(await database.rulesDao.queryProfileRules(2).get(), isEmpty);
   });
@@ -603,7 +605,7 @@ void main() {
 
     final database = await openAndMigrate();
 
-    expect(await database.rulesDao.queryAddedRules(2).get(), isEmpty);
+    expect(await database.rulesDao.queryProfileRules(2).get(), isEmpty);
     expect(
       (await database.profilesDao.query().get()).single.matchTarget,
       isNull,

@@ -145,140 +145,75 @@ void main() {
     expect(groups, isEmpty);
   });
 
-  test(
-    'makeRealProfileTask normalizes runtime config and added rules',
-    () async {
-      final rawConfig = await decodeJSONTask<Map<String, dynamic>>(
-        jsonEncode({
-          'dns': {
-            'enable': true,
-            'nameserver': ['1.1.1.1'],
-          },
-          'sniffer': {
-            'sniff': {
-              'HTTP': {
-                'ports': [80, '443'],
-              },
+  test('makeRealProfileTask normalizes runtime config', () async {
+    final rawConfig = await decodeJSONTask<Map<String, dynamic>>(
+      jsonEncode({
+        'dns': {
+          'enable': true,
+          'nameserver': ['1.1.1.1'],
+        },
+        'sniffer': {
+          'sniff': {
+            'HTTP': {
+              'ports': [80, '443'],
             },
           },
-          'proxy-providers': {
-            'remote': {'type': 'http', 'url': 'https://example.com/proxy.yaml'},
-            'file': {'type': 'file', 'path': './local.yaml'},
-          },
-          'rule-providers': {
-            'remote': {'type': 'http', 'url': 'https://example.com/rule.yaml'},
-          },
-          'rules': ['DOMAIN,existing.example,DIRECT', 'MATCH,Original'],
-        }),
-      );
-      final result = await makeRealProfileTask(
-        MakeRealProfileState(
-          profilesPath: '/profiles',
-          profileId: 7,
-          rawConfig: rawConfig,
-          realPatchConfig: const PatchClashConfig(
-            mixedPort: 7893,
-            port: 7890,
-            socksPort: 7891,
-            redirPort: 7892,
-            tproxyPort: 7894,
-            allowLan: true,
-            ipv6: true,
-            hosts: {'router.local': '192.168.1.1,192.168.1.2'},
-          ),
-          appendSystemDns: true,
-          proxyGroups: const [],
-          rules: const [],
-          addedRules: const [
-            Rule(
-              ruleAction: RuleAction.DOMAIN_SUFFIX,
-              content: 'added.example',
-              ruleTarget: 'MATCH',
-            ),
-          ],
-          defaultUA: 'FlClash-Test',
-        ),
-      );
-      final config = loadYaml(result.yaml) as YamlMap;
-
-      expect(result.md5, hasLength(32));
-      expect(config['mixed-port'], 7893);
-      expect(config['allow-lan'], true);
-      expect(config['global-ua'], 'FlClash-Test');
-      expect(config['profile']['store-selected'], false);
-      expect(
-        config['dns']['nameserver'],
-        containsAll(['1.1.1.1', 'system://']),
-      );
-      expect(config['hosts']['router.local'], ['192.168.1.1', '192.168.1.2']);
-      expect(config['sniffer']['sniff']['HTTP']['ports'], ['80', '443']);
-      expect(
-        config['proxy-providers']['remote']['path'],
-        startsWith('/profiles/providers/7/proxies/'),
-      );
-      expect(
-        config['rule-providers']['remote']['path'],
-        startsWith('/profiles/providers/7/rules/'),
-      );
-      expect(config['rules'], [
-        'DOMAIN-SUFFIX,added.example,Original',
-        'DOMAIN,existing.example,DIRECT',
-        'MATCH,Original',
-      ]);
-      expect(result.counts, (groups: 0, proxies: 0, rules: 3));
-    },
-  );
-
-  test('lastMatchTarget reads the last MATCH rule that names a target', () {
-    expect(
-      lastMatchTarget(['MATCH,A', 'DOMAIN,x.test,B', 'match,C', 'MATCH,']),
-      'C',
+        },
+        'proxy-providers': {
+          'remote': {'type': 'http', 'url': 'https://example.com/proxy.yaml'},
+          'file': {'type': 'file', 'path': './local.yaml'},
+        },
+        'rule-providers': {
+          'remote': {'type': 'http', 'url': 'https://example.com/rule.yaml'},
+        },
+        'rules': ['DOMAIN,existing.example,DIRECT', 'MATCH,Original'],
+      }),
     );
-    expect(lastMatchTarget(['DOMAIN,x.test,B']), isNull);
-  });
-
-  test(
-    'makeRealProfileTask routes MATCH placeholders to matchTarget',
-    () async {
-      final rawConfig = await decodeJSONTask<Map<String, dynamic>>(
-        jsonEncode({
-          'proxies': [],
-          'rules': ['DOMAIN,existing.example,DIRECT', 'MATCH,Original'],
-        }),
-      );
-      final state = MakeRealProfileState(
+    final result = await makeRealProfileTask(
+      MakeRealProfileState(
         profilesPath: '/profiles',
         profileId: 7,
         rawConfig: rawConfig,
-        realPatchConfig: const PatchClashConfig(),
-        appendSystemDns: false,
+        realPatchConfig: const PatchClashConfig(
+          mixedPort: 7893,
+          port: 7890,
+          socksPort: 7891,
+          redirPort: 7892,
+          tproxyPort: 7894,
+          allowLan: true,
+          ipv6: true,
+          hosts: {'router.local': '192.168.1.1,192.168.1.2'},
+        ),
+        appendSystemDns: true,
         proxyGroups: const [],
         rules: const [],
-        addedRules: const [
-          Rule(
-            ruleAction: RuleAction.DOMAIN_SUFFIX,
-            content: 'added.example',
-            ruleTarget: 'MATCH',
-          ),
-        ],
         defaultUA: 'FlClash-Test',
-        matchTarget: 'HK',
-      );
+      ),
+    );
+    final config = loadYaml(result.yaml) as YamlMap;
 
-      final overridden = await makeRealProfileTask(state);
-      expect((loadYaml(overridden.yaml) as YamlMap)['rules'], [
-        'DOMAIN-SUFFIX,added.example,HK',
-        'DOMAIN,existing.example,DIRECT',
-        'MATCH,Original',
-      ]);
-
-      final blank = await makeRealProfileTask(state.copyWith(matchTarget: ' '));
-      expect(
-        (loadYaml(blank.yaml) as YamlMap)['rules'].first,
-        'DOMAIN-SUFFIX,added.example,Original',
-      );
-    },
-  );
+    expect(result.md5, hasLength(32));
+    expect(config['mixed-port'], 7893);
+    expect(config['allow-lan'], true);
+    expect(config['global-ua'], 'FlClash-Test');
+    expect(config['profile']['store-selected'], false);
+    expect(config['dns']['nameserver'], containsAll(['1.1.1.1', 'system://']));
+    expect(config['hosts']['router.local'], ['192.168.1.1', '192.168.1.2']);
+    expect(config['sniffer']['sniff']['HTTP']['ports'], ['80', '443']);
+    expect(
+      config['proxy-providers']['remote']['path'],
+      startsWith('/profiles/providers/7/proxies/'),
+    );
+    expect(
+      config['rule-providers']['remote']['path'],
+      startsWith('/profiles/providers/7/rules/'),
+    );
+    expect(config['rules'], [
+      'DOMAIN,existing.example,DIRECT',
+      'MATCH,Original',
+    ]);
+    expect(result.counts, (groups: 0, proxies: 0, rules: 2));
+  });
 
   // The core re-reads these two keys out of the generated config on every
   // profile apply and adopts whatever it finds, so a subscription that ships
@@ -303,7 +238,6 @@ void main() {
           appendSystemDns: false,
           proxyGroups: const [],
           rules: const [],
-          addedRules: const [],
           defaultUA: 'FlClash-Test',
         ),
       );
@@ -330,7 +264,6 @@ void main() {
       appendSystemDns: false,
       proxyGroups: const [],
       rules: const [],
-      addedRules: const [],
       defaultUA: 'FlClash-Test',
       authentication: const ['user:pass'],
     );
@@ -371,7 +304,6 @@ void main() {
             ruleTarget: 'DIRECT',
           ),
         ],
-        addedRules: [],
         defaultUA: 'Fallback-UA',
       ),
     );
@@ -412,7 +344,6 @@ void main() {
         appendSystemDns: false,
         proxyGroups: const [],
         rules: const [],
-        addedRules: const [],
         defaultUA: 'FlClash-Test',
       ),
     );
@@ -443,7 +374,6 @@ void main() {
           appendSystemDns: false,
           proxyGroups: const [],
           rules: const [],
-          addedRules: const [],
           defaultUA: 'FlClash-Test',
           safeMode: safeMode,
         ),
@@ -480,7 +410,6 @@ void main() {
             appendSystemDns: false,
             proxyGroups: const [],
             rules: const [],
-            addedRules: const [],
             defaultUA: 'FlClash-Test',
             safeMode: safeMode,
           ),
@@ -509,7 +438,6 @@ void main() {
             appendSystemDns: false,
             proxyGroups: const [],
             rules: const [],
-            addedRules: const [],
             defaultUA: 'FlClash-Test',
           ),
         );
@@ -570,7 +498,6 @@ void main() {
             appendSystemDns: false,
             proxyGroups: const [],
             rules: const [],
-            addedRules: const [],
             defaultUA: 'FlClash-Test',
             safeMode: safeMode,
           ),
@@ -629,7 +556,6 @@ void main() {
           appendSystemDns: false,
           proxyGroups: const [],
           rules: const [],
-          addedRules: const [],
           defaultUA: 'FlClash-Test',
         ),
       );
@@ -662,7 +588,6 @@ void main() {
           appendSystemDns: false,
           proxyGroups: const [],
           rules: const [],
-          addedRules: const [],
           defaultUA: 'FlClash-Test',
         ),
       );
@@ -713,7 +638,6 @@ void main() {
           appendSystemDns: false,
           proxyGroups: const [],
           rules: const [],
-          addedRules: const [],
           defaultUA: 'FlClash-Test',
         ),
       );
@@ -810,7 +734,6 @@ void main() {
           appendSystemDns: false,
           proxyGroups: const [],
           rules: const [],
-          addedRules: const [],
           defaultUA: 'FlClash-Test',
         ),
       );

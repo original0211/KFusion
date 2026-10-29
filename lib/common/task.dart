@@ -95,19 +95,6 @@ ConfigCounts configCountsOf(Map<Object?, Object?> config) {
   );
 }
 
-String? lastMatchTarget(List<String> rules) {
-  for (int i = rules.length - 1; i >= 0; i--) {
-    final parsed = Rule.parse(rules[i]);
-    if (parsed.ruleAction == RuleAction.MATCH) {
-      final target = parsed.ruleTarget;
-      if (target != null && target.isNotEmpty) {
-        return target;
-      }
-    }
-  }
-  return null;
-}
-
 Future<RealProfile> makeRealProfileTask(MakeRealProfileState data) async {
   return compute<MakeRealProfileState, RealProfile>(_makeRealProfileTask, data);
 }
@@ -118,7 +105,6 @@ Future<RealProfile> _makeRealProfileTask(MakeRealProfileState data) async {
   final profilesPath = data.profilesPath;
   final profileId = data.profileId;
   final overrides = data.overrides;
-  final addedRules = data.addedRules;
   final appendSystemDns = data.appendSystemDns;
   final defaultUA = data.defaultUA;
   String getProvidersFilePathInner(String type, String key) {
@@ -333,37 +319,6 @@ Future<RealProfile> _makeRealProfileTask(MakeRealProfileState data) async {
     if (rawConfig['rules'] != null) {
       rules = List<String>.from(rawConfig['rules']);
     }
-    if (addedRules.isNotEmpty) {
-      final hasMatchPlaceholder = addedRules.any(
-        (item) => item.ruleTarget?.toUpperCase() == 'MATCH',
-      );
-      String? replacementTarget = data.matchTarget?.trim();
-      if (replacementTarget?.isEmpty == true) {
-        replacementTarget = null;
-      }
-
-      if (hasMatchPlaceholder && replacementTarget == null) {
-        replacementTarget = lastMatchTarget(rules);
-      }
-      final List<String> finalAddedRules;
-
-      if (replacementTarget?.isNotEmpty == true) {
-        finalAddedRules = [];
-        for (int i = 0; i < addedRules.length; i++) {
-          final parsed = addedRules[i];
-          if (parsed.ruleTarget?.toUpperCase() == 'MATCH') {
-            finalAddedRules.add(
-              parsed.copyWith(ruleTarget: replacementTarget).rawValue,
-            );
-          } else {
-            finalAddedRules.add(addedRules[i].rawValue);
-          }
-        }
-      } else {
-        finalAddedRules = addedRules.map((e) => e.rawValue).toList();
-      }
-      rules = [...finalAddedRules, ...rules];
-    }
   } else {
     rules = data.rules.map((item) => item.rawValue).toList();
   }
@@ -518,15 +473,6 @@ Future<MigrationData> migrateLegacyConfig({
   configMap['appSettingProps'] = appSettingProps;
   configMap['proxiesStyleProps'] = configMap['proxiesStyle'];
   final Map<String, int> idMap = {};
-  final List rawRules = configMap['rules'] as List<dynamic>? ?? [];
-  final List<Rule> rules = [];
-  final List<DisabledRule> disabledRules = [];
-  for (final rawRule in rawRules) {
-    final id = idMap.updateCacheValue(rawRule['id'], () => snowflake.id);
-    rawRule['id'] = id;
-    final value = rawRule['value'] ?? '';
-    rules.add(Rule.parse(value, id: id));
-  }
   final List rawProfiles = configMap['profiles'] as List<dynamic>? ?? [];
   final List<Profile> profiles = [];
   for (final rawProfile in rawProfiles) {
@@ -538,26 +484,6 @@ Future<MigrationData> migrateLegacyConfig({
     rawProfile['id'] = profileId;
     final overwrite = rawProfile['overwrite'] as Map?;
     if (overwrite != null) {
-      final standardOverwrite = overwrite['standardOverwrite'] as Map?;
-      if (standardOverwrite != null) {
-        final addedRules = standardOverwrite['addedRules'] as List? ?? [];
-        for (final addRule in addedRules) {
-          final id = idMap.updateCacheValue(addRule['id'], () => snowflake.id);
-          final value = addRule['value'] ?? '';
-          rules.add(Rule.parse(value, id: id).copyWith(profileId: profileId));
-        }
-        final disabledRuleIds = standardOverwrite['disabledRuleIds'] as List?;
-        if (disabledRuleIds != null) {
-          for (final disabledRuleId in disabledRuleIds) {
-            final newDisabledRuleId = idMap[disabledRuleId];
-            if (newDisabledRuleId != null) {
-              disabledRules.add(
-                DisabledRule(profileId: profileId, ruleId: newDisabledRuleId),
-              );
-            }
-          }
-        }
-      }
       rawProfile['extendType'] = ExtendType.standard.name;
     }
     final rawUrl = rawProfile['url'];
@@ -577,10 +503,5 @@ Future<MigrationData> migrateLegacyConfig({
   configMap['currentProfileId'] = currentProfileId != null
       ? idMap[currentProfileId]
       : null;
-  return MigrationData(
-    configMap: configMap,
-    profiles: profiles,
-    rules: rules,
-    disabledRules: disabledRules,
-  );
+  return MigrationData(configMap: configMap, profiles: profiles);
 }

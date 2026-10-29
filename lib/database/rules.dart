@@ -54,41 +54,12 @@ class DisabledRules extends Table {
 class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
   RulesDao(super.attachedDatabase);
 
-  Selectable<Rule> queryGlobalRules() {
-    return _ownedBy(null).map((item) => item.toRule());
-  }
-
   Selectable<Rule> queryProfileRules(int profileId) {
     return _ownedBy(profileId).map((item) => item.toRule());
   }
 
   Selectable<int> profileRulesCount(int profileId) {
     return _ownedBy(profileId).count;
-  }
-
-  Selectable<int> queryDisabledRuleIds(int profileId) {
-    final query = selectOnly(disabledRules)
-      ..addColumns([disabledRules.ruleId])
-      ..where(disabledRules.profileId.equals(profileId));
-    return query.map((row) => row.read(disabledRules.ruleId)!);
-  }
-
-  /// The profile's own rules come before the global ones it keeps.
-  Selectable<Rule> queryAddedRules(int profileId) {
-    final disabledIds = selectOnly(disabledRules)
-      ..addColumns([disabledRules.ruleId])
-      ..where(disabledRules.profileId.equals(profileId));
-    final query = rules.select()
-      ..where(
-        (t) =>
-            (t.profileId.isNull() | t.profileId.equals(profileId)) &
-            t.id.isNotInQuery(disabledIds),
-      )
-      ..orderBy([
-        (t) => OrderingTerm.asc(t.profileId.isNull()),
-        (t) => OrderingTerm(expression: t.order, nulls: NullsOrder.last),
-      ]);
-    return query.map((item) => item.toRule());
   }
 
   SimpleSelectStatement<$RulesTable, RawRule> _ownedBy(int? profileId) {
@@ -128,18 +99,6 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
       ),
       deleteFilter: (t) => t.profileId.equals(profileId),
       preDelete: true,
-    );
-  }
-
-  Future<int> putDisabled(int profileId, int ruleId) {
-    return disabledRules.insertOnConflictUpdate(
-      DisabledRule(profileId: profileId, ruleId: ruleId).toCompanion(),
-    );
-  }
-
-  Future<int> delDisabled(int profileId, int ruleId) {
-    return disabledRules.remove(
-      (t) => t.profileId.equals(profileId) & t.ruleId.equals(ruleId),
     );
   }
 

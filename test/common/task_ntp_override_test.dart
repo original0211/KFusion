@@ -30,7 +30,6 @@ Future<YamlMap?> _ntpOf({
       appendSystemDns: false,
       proxyGroups: const [],
       rules: const [],
-      addedRules: const [],
       defaultUA: 'FlClash-Test',
     ),
   );

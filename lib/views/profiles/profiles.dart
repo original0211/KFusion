@@ -7,7 +7,6 @@ import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/profiles/custom/custom.dart';
-import 'package:kfusion/views/profiles/extend/extend.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -387,14 +386,7 @@ List<CommonPopupMenuItem> profileMenuItems(
           previewProfile(context, profile);
         },
       ),
-    ] else
-      CommonPopupMenuItem(
-        glyph: AppGlyphs.puzzle,
-        label: appLocalizations.extend,
-        onPressed: () {
-          BaseNavigator.push(context, ExtendView(profileId: profile.id));
-        },
-      ),
+    ],
     if (isUrl)
       CommonPopupMenuItem(
         glyph: AppGlyphs.sync,

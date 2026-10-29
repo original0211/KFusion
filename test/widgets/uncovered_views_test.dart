@@ -6,14 +6,11 @@ import 'package:dio/dio.dart';
 import 'package:kfusion/common/l10n_labels.dart';
 import 'package:kfusion/common/request.dart';
 import 'package:kfusion/enum/enum.dart';
-import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/views/about.dart';
-import 'package:kfusion/views/config/rules.dart';
-import 'package:kfusion/views/profiles/extend/standard.dart';
 import 'package:kfusion/views/proxies/setting.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -41,36 +38,6 @@ class _PendingAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
-}
-
-class _TestGlobalRules extends GlobalRules {
-  _TestGlobalRules(this.initial);
-
-  final List<Rule> initial;
-
-  @override
-  Stream<List<Rule>> build() => Stream.value(initial);
-}
-
-class _TestProfileAddedRules extends ProfileRules {
-  _TestProfileAddedRules(this.initial);
-
-  final List<Rule> initial;
-
-  @override
-  Stream<List<Rule>> build(int profileId) => Stream.value(initial);
-
-  @override
-  void order(int oldIndex, int newIndex) {}
-}
-
-class _TestProfileDisabledRuleIds extends ProfileDisabledRuleIds {
-  _TestProfileDisabledRuleIds(this.initial);
-
-  final List<int> initial;
-
-  @override
-  Stream<List<int>> build(int profileId) => Stream.value(initial);
 }
 
 ProviderContainer _containerFor(
@@ -232,181 +199,6 @@ void main() {
 
     expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(find.text('The app is already up to date'), findsOneWidget);
-    expect(tester.takeException(), null);
-  });
-
-  testWidgets('standard extension renders added rules and selection state', (
-    tester,
-  ) async {
-    final profile = Profile.normal();
-    final addedRules = List.generate(
-      6,
-      (index) => Rule(
-        id: 300 + index,
-        content: 'added$index.com',
-        ruleTarget: 'DIRECT',
-        order: index.toString(),
-      ),
-    );
-    final globalRules = List.generate(
-      3,
-      (index) => Rule(
-        id: 400 + index,
-        content: 'global$index.com',
-        ruleTarget: 'DIRECT',
-        order: index.toString(),
-      ),
-    );
-    final container = _containerFor(
-      tester,
-      profiles: [profile],
-      overrides: [
-        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
-        profileRulesProvider.overrideWith2(
-          (_) => _TestProfileAddedRules(addedRules),
-        ),
-        globalRulesProvider.overrideWith(() => _TestGlobalRules(globalRules)),
-        profileDisabledRuleIdsProvider.overrideWith2(
-          (_) => _TestProfileDisabledRuleIds(const []),
-        ),
-        clashConfigProvider(
-          profile.id,
-        ).overrideWithValue(const AsyncData(ClashConfig())),
-      ],
-    );
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: TestApp(
-          child: ProfileIdProvider(
-            profileId: profile.id,
-            child: const Scaffold(
-              body: CustomScrollView(slivers: [StandardContent()]),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byType(StandardContent), findsOneWidget);
-    expect(find.text('added0.com'), findsOneWidget);
-    expect(tester.takeException(), null);
-
-    final scrollables = find.byType(Scrollable);
-    if (scrollables.evaluate().isNotEmpty) {
-      for (var index = 0; index < 4; index++) {
-        await tester.drag(scrollables.first, const Offset(0, -400));
-        await tester.pump();
-      }
-    }
-    expect(tester.takeException(), null);
-  });
-
-  testWidgets('standard extension picks a MATCH-TARGET from the profile', (
-    tester,
-  ) async {
-    final profile = Profile.normal();
-    final container = _containerFor(
-      tester,
-      profiles: [profile],
-      overrides: [
-        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
-        profileRulesProvider.overrideWith2(
-          (_) => _TestProfileAddedRules(const []),
-        ),
-        globalRulesProvider.overrideWith(() => _TestGlobalRules(const [])),
-        profileDisabledRuleIdsProvider.overrideWith2(
-          (_) => _TestProfileDisabledRuleIds(const []),
-        ),
-        clashConfigProvider(profile.id).overrideWithValue(
-          const AsyncData(
-            ClashConfig(
-              proxies: [Proxy(name: 'HK', type: 'ss')],
-              proxyGroups: [
-                ProxyGroup(id: 1, name: 'Proxy', type: GroupType.Selector),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: TestApp(
-          child: ProfileIdProvider(
-            profileId: profile.id,
-            child: const Scaffold(
-              body: CustomScrollView(slivers: [StandardContent()]),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-    final l10n = AppLocalizations.current;
-    expect(find.text(l10n.followProfile), findsOneWidget);
-
-    await tester.tap(find.text(l10n.matchTarget));
-    await tester.pumpAndSettle();
-    expect(find.byType(SelectionSheet<String>), findsOneWidget);
-    expect(find.text('Proxy'), findsOneWidget);
-
-    await tester.tap(find.text('HK'));
-    await tester.pumpAndSettle();
-    expect(find.byType(SelectionSheet<String>), findsNothing);
-    expect(container.read(profilesProvider).first.matchTarget, 'HK');
-    expect(find.text('HK'), findsOneWidget);
-    expect(tester.takeException(), null);
-  });
-
-  testWidgets('the global added rules page opens where they are added in a '
-      'sheet over itself', (tester) async {
-    final profile = Profile.normal();
-    final container = _containerFor(
-      tester,
-      profiles: [profile],
-      overrides: [
-        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
-        profileRulesProvider.overrideWith2(
-          (_) => _TestProfileAddedRules(const []),
-        ),
-        globalRulesProvider.overrideWith(() => _TestGlobalRules(const [])),
-        profileDisabledRuleIdsProvider.overrideWith2(
-          (_) => _TestProfileDisabledRuleIds(const []),
-        ),
-        clashConfigProvider(
-          profile.id,
-        ).overrideWithValue(const AsyncData(ClashConfig())),
-      ],
-    );
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: TestApp(
-          child: ProfileIdProvider(
-            profileId: profile.id,
-            child: const Scaffold(
-              body: CustomScrollView(slivers: [StandardContent()]),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-    final l10n = AppLocalizations.current;
-
-    await tester.tap(find.text(l10n.controlGlobalAddedRules));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.goToConfigureAddedRules));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(AddedRulesView), findsOneWidget);
-    expect(find.text(l10n.editGlobalRules), findsOneWidget);
     expect(tester.takeException(), null);
   });
 }

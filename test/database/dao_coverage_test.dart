@@ -103,14 +103,17 @@ void main() {
   });
 
   test('rule queries fail on a row they cannot read', () async {
+    await database.profilesDao.putAll([
+      const Profile(id: 1, autoUpdateDuration: Duration.zero).toCompanion(),
+    ]);
     await database.customStatement(
-      'INSERT INTO rules (id, rule_action, content, rule_target) '
-      "VALUES (1, 'DOMAIN', 'example.com', 'DIRECT'), "
-      "(2, 'FUTURE', 'example.org', 'DIRECT')",
+      'INSERT INTO rules (id, profile_id, rule_action, content, rule_target) '
+      "VALUES (1, 1, 'DOMAIN', 'example.com', 'DIRECT'), "
+      "(2, 1, 'FUTURE', 'example.org', 'DIRECT')",
     );
 
     await expectLater(
-      database.rulesDao.queryGlobalRules().get(),
+      database.rulesDao.queryProfileRules(1).get(),
       throwsA(anything),
     );
   });
@@ -366,7 +369,7 @@ void main() {
   );
 
   test(
-    'rules DAO keeps global and profile rules apart, disables, orders and renames',
+    'rules DAO keeps global and profile rules apart, orders and renames',
     () async {
       const profile = Profile(id: 1, autoUpdateDuration: Duration.zero);
       const global = Rule(
@@ -397,7 +400,6 @@ void main() {
       await database.rulesDao.putRule(added, profileId: profile.id);
       await database.rulesDao.putRule(ruleSet, profileId: profile.id);
 
-      expect(await database.rulesDao.queryGlobalRules().get(), [global]);
       expect(await database.rulesDao.queryProfileRules(profile.id).get(), [
         added.copyWith(profileId: profile.id),
         ruleSet.copyWith(profileId: profile.id),
@@ -405,28 +407,6 @@ void main() {
       expect(
         await database.rulesDao.profileRulesCount(profile.id).getSingle(),
         2,
-      );
-      expect(
-        (await database.rulesDao.queryAddedRules(profile.id).get()).map(
-          (rule) => rule.id,
-        ),
-        [added.id, ruleSet.id, global.id],
-      );
-
-      await database.rulesDao.putDisabled(profile.id, global.id);
-      expect(await database.rulesDao.queryDisabledRuleIds(profile.id).get(), [
-        global.id,
-      ]);
-      expect(
-        (await database.rulesDao.queryAddedRules(profile.id).get()).map(
-          (rule) => rule.id,
-        ),
-        isNot(contains(global.id)),
-      );
-      expect(await database.rulesDao.delDisabled(profile.id, global.id), 1);
-      expect(
-        await database.rulesDao.queryDisabledRuleIds(profile.id).get(),
-        isEmpty,
       );
 
       await database.rulesDao.order(ruleId: ruleSet.id, order: '0');
@@ -452,7 +432,9 @@ void main() {
         await database.rulesDao.queryProfileRules(profile.id).get(),
         isEmpty,
       );
-      expect(await database.rulesDao.queryGlobalRules().get(), [global]);
+      expect((await database.rules.all().get()).map((row) => row.id), [
+        global.id,
+      ]);
     },
   );
 
@@ -520,7 +502,9 @@ void main() {
     await database.profilesDao.putAll([gone.toCompanion(), kept.toCompanion()]);
     await database.rulesDao.putRule(global);
     await database.rulesDao.putRule(own, profileId: gone.id);
-    await database.rulesDao.putDisabled(gone.id, global.id);
+    await database.disabledRules.put(
+      DisabledRule(profileId: gone.id, ruleId: global.id).toCompanion(),
+    );
     await database.rulesDao.putRule(other, profileId: kept.id);
     for (final profile in [gone, kept]) {
       await database.proxyGroups.put(
@@ -546,7 +530,9 @@ void main() {
     const rule = Rule(id: 10, content: 'global.example', ruleTarget: 'A');
     await database.profiles.put(profile.toCompanion());
     await database.rulesDao.putRule(rule);
-    await database.rulesDao.putDisabled(profile.id, rule.id);
+    await database.disabledRules.put(
+      DisabledRule(profileId: profile.id, ruleId: rule.id).toCompanion(),
+    );
 
     await database.rulesDao.delRules([rule.id]);
 
@@ -1006,9 +992,10 @@ void main() {
         .get();
     expect(restoredRules.single.id, rule.id);
     expect(restoredRules.single.order, isNot(equals(null)));
-    expect(await database.rulesDao.queryDisabledRuleIds(profile.id).get(), [
-      global.id,
-    ]);
+    expect(
+      (await database.disabledRules.all().get()).map((row) => row.ruleId),
+      [global.id],
+    );
     final restoredGroups = await database.proxyGroupsDao
         .query(profile.id)
         .get();

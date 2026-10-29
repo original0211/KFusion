@@ -301,7 +301,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Ajouter un réglage",
     ),
     "addSsid": MessageLookupByLibrary.simpleMessage("Ajouter un SSID"),
-    "addedRules": MessageLookupByLibrary.simpleMessage("Règles ajoutées"),
     "additionalParameters": MessageLookupByLibrary.simpleMessage(
       "Paramètres supplémentaires",
     ),
@@ -552,9 +551,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "content": MessageLookupByLibrary.simpleMessage("Contenu"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Le contenu ne peut pas être vide",
-    ),
-    "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Gérer les règles ajoutées globales",
     ),
     "copy": MessageLookupByLibrary.simpleMessage("Copier"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
@@ -832,9 +828,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "duration": MessageLookupByLibrary.simpleMessage("Durée"),
     "edit": MessageLookupByLibrary.simpleMessage("Modifier"),
-    "editGlobalRules": MessageLookupByLibrary.simpleMessage(
-      "Modifier les règles globales",
-    ),
     "editProxy": MessageLookupByLibrary.simpleMessage("Modifier le proxy"),
     "editProxyGroup": MessageLookupByLibrary.simpleMessage(
       "Modifier le groupe de proxys",
@@ -896,8 +889,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportSuccess": MessageLookupByLibrary.simpleMessage(
       "Exportation réussie",
     ),
-    "extend": MessageLookupByLibrary.simpleMessage("Extension"),
-    "extendMode": MessageLookupByLibrary.simpleMessage("Mode d’extension"),
     "externalController": MessageLookupByLibrary.simpleMessage(
       "Contrôleur externe",
     ),
@@ -938,7 +929,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Recherche de processus",
     ),
     "floating": MessageLookupByLibrary.simpleMessage("Flottante"),
-    "followProfile": MessageLookupByLibrary.simpleMessage("Suivre le profil"),
     "followSystem": MessageLookupByLibrary.simpleMessage("Suivre le système"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("Police"),
     "fontSize": MessageLookupByLibrary.simpleMessage("Taille"),
@@ -966,9 +956,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "global": MessageLookupByLibrary.simpleMessage("Global"),
     "go": MessageLookupByLibrary.simpleMessage("Aller"),
     "goDownload": MessageLookupByLibrary.simpleMessage("Télécharger"),
-    "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Aller à la configuration des règles ajoutées",
-    ),
     "grid": MessageLookupByLibrary.simpleMessage("Grille"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Mettre les modifications en cache ?",
@@ -1068,9 +1055,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Saisissez le contenu de la règle",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Ce système masque la liste des apps installées tant que l’autorisation n’est pas accordée. Accordez-la pour configurer le proxy par app.",
     ),
@@ -1731,10 +1719,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "saveChanges": MessageLookupByLibrary.simpleMessage(
       "Enregistrer les modifications ?",
     ),
-    "script": MessageLookupByLibrary.simpleMessage("Script"),
-    "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Mode script : réécrit tout le profil avec un script d’extension",
-    ),
     "search": MessageLookupByLibrary.simpleMessage("Rechercher"),
     "seconds": MessageLookupByLibrary.simpleMessage("secondes"),
     "secondsCount": m71,
@@ -1909,9 +1893,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "stackMode": MessageLookupByLibrary.simpleMessage("Mode de pile"),
     "stackTrace": MessageLookupByLibrary.simpleMessage("Trace de pile"),
     "standard": MessageLookupByLibrary.simpleMessage("Standard"),
-    "standardModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Mode standard : ajoute des règles par-dessus le profil",
-    ),
     "start": MessageLookupByLibrary.simpleMessage("Démarrer"),
     "startFromScratch": MessageLookupByLibrary.simpleMessage("Partir de zéro"),
     "startVpn": MessageLookupByLibrary.simpleMessage("Démarrage du VPN…"),

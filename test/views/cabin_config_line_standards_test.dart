@@ -1,10 +1,7 @@
 import 'dart:io';
 
-import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/form/form_row.dart';
-import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
-import 'package:kfusion/views/config/rules.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/network.dart';
@@ -15,7 +12,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../helpers/app_paths.dart';
 import '../helpers/test_app.dart';
-import '../helpers/test_database_providers.dart';
 import '../helpers/test_profiles.dart';
 
 ProviderContainer _container(
@@ -97,62 +93,6 @@ void main() {
           .where((item) => item.subtitle != null)
           .length;
       expect(subtitled, greaterThanOrEqualTo(2));
-    });
-  });
-
-  group('added rules target colors (cabin batch 3, #24)', () {
-    testWidgets('direct reads success, reject warning, unknown target error', (
-      tester,
-    ) async {
-      final container = ProviderContainer(
-        overrides: [
-          globalRulesProvider.overrideWith(
-            () => TestGlobalRules(const [
-              Rule(
-                id: 1,
-                ruleAction: RuleAction.DOMAIN_SUFFIX,
-                content: 'example.com',
-                ruleTarget: 'DIRECT',
-                order: '1',
-              ),
-              Rule(
-                id: 2,
-                ruleAction: RuleAction.IP_CIDR,
-                content: '203.0.113.0/24',
-                ruleTarget: 'REJECT',
-                order: '2',
-              ),
-              Rule(
-                id: 3,
-                ruleAction: RuleAction.GEOIP,
-                content: 'CN',
-                ruleTarget: 'no-such-policy',
-                order: '3',
-              ),
-            ]),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      addTearDown(() async {
-        await tester.pumpWidget(const SizedBox());
-        await tester.pump(const Duration(seconds: 3));
-      });
-      globalState.container = container;
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: AddedRulesView()),
-        ),
-      );
-      await tester.pump();
-      final context = tester.element(find.byType(AddedRulesView));
-      final scheme = Theme.of(context).colorScheme;
-      Color? targetColor(String target) =>
-          tester.widget<Text>(find.text(target)).style?.color;
-      expect(targetColor('DIRECT'), scheme.success);
-      expect(targetColor('REJECT'), scheme.warning);
-      expect(targetColor('no-such-policy'), scheme.error);
     });
   });
 }

@@ -554,24 +554,11 @@ mixin RuleListMixin on OptimisticMixin<List<Rule>> {
 }
 
 @riverpod
-class GlobalRules extends _$GlobalRules
-    with AsyncNotifierMixin, OptimisticMixin, RuleListMixin {
-  @override
-  Stream<List<Rule>> build() {
-    final query = database.rulesDao.queryGlobalRules();
-    return settled(query.watch(), query.get);
-  }
-
-  @override
-  Future<void> persistRule(Rule rule) => database.rulesDao.putRule(rule);
-}
-
-@riverpod
 Stream<int> profileGroupsCount(Ref ref, int profileId) {
   return database.proxyGroupsDao.profileGroupsCount(profileId).watchSingle();
 }
 
-/// What the standard extension adds to a profile, or a custom profile's rules.
+/// A custom profile's own rules.
 @riverpod
 class ProfileRules extends _$ProfileRules
     with AsyncNotifierMixin, OptimisticMixin, RuleListMixin {
@@ -960,41 +947,5 @@ class ProxyDialers extends _$ProxyDialers
         ),
       ),
     );
-  }
-}
-
-@riverpod
-class ProfileDisabledRuleIds extends _$ProfileDisabledRuleIds
-    with AsyncNotifierMixin, OptimisticMixin {
-  @override
-  List<int> get value => state.value ?? [];
-
-  @override
-  Stream<List<int>> build(int profileId) {
-    final query = database.rulesDao.queryDisabledRuleIds(profileId);
-    return settled(query.watch(), query.get);
-  }
-
-  @override
-  bool updateShouldNotify(
-    AsyncValue<List<int>> previous,
-    AsyncValue<List<int>> next,
-  ) {
-    return !intListEquality.equals(previous.value, next.value);
-  }
-
-  void del(int ruleId) {
-    optimistic(
-      value.where((item) => item != ruleId).toList(),
-      () => database.rulesDao.delDisabled(profileId, ruleId),
-    );
-  }
-
-  void put(int ruleId) {
-    final next = List<int>.from(value);
-    if (!next.contains(ruleId)) {
-      next.insert(0, ruleId);
-    }
-    optimistic(next, () => database.rulesDao.putDisabled(profileId, ruleId));
   }
 }

@@ -784,8 +784,6 @@ void main() {
     final profile = Profile.normal().copyWith(extendType: ExtendType.script);
     _profiles(container).replace([profile]);
     expect(container.read(profileProvider(profile.id)), profile);
-    expect(container.read(extendTypeProvider(profile.id)), ExtendType.script);
-    expect(container.read(extendTypeProvider(-1)), ExtendType.standard);
 
     expect(
       container.read(accessControlStateProvider),

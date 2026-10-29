@@ -44,7 +44,6 @@ Future<YamlMap?> _snifferOf({
       appendSystemDns: false,
       proxyGroups: const [],
       rules: const [],
-      addedRules: const [],
       defaultUA: 'FlClash-Test',
     ),
   );

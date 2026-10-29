@@ -484,14 +484,8 @@ class SetupAction extends _$SetupAction {
         bypassPrivateRoute: networkSetting.bypassPrivateRoute,
         keepEmptyDnsOverrides: setupState.profileType != ProfileType.custom,
         appendSystemDns: appendSystemDns,
-        addedRules: setupState.addedRules,
         defaultUA: defaultUA,
         authentication: networkSetting.authentication.credentials,
-        matchTarget:
-            profileBase == null ||
-                setupState.matchTarget?.trim().isNotEmpty == true
-            ? setupState.matchTarget
-            : lastMatchTarget(profileBase.base.matchRules),
         safeMode: ref.read(safeModeProvider),
       ),
     );

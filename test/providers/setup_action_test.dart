@@ -1030,10 +1030,8 @@ void main() {
       profileId: null,
       profileLastUpdateDate: null,
       profileType: ProfileType.file,
-      extendType: ExtendType.standard,
       rules: [],
       proxyGroups: [],
-      addedRules: [],
       overrides: ProfileOverrides(),
     );
 
@@ -1224,7 +1222,7 @@ void main() {
       await leaveEditor();
       verifyNever(() => core.getProfileBase(any()));
 
-      setupState = setupState.copyWith(matchTarget: 'DIRECT');
+      setupState = setupState.copyWith(profileLastUpdateDate: 1);
       scoped.invalidate(setupStateProvider);
       await leaveEditor();
       verify(() => core.getProfileBase(any())).called(1);
@@ -1345,10 +1343,8 @@ void main() {
           profilesProvider.overrideWith(() => TestProfiles([profile])),
           currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
           setupStateProvider.overrideWith(
-            (_, profileId) => nullProfileSetupState.copyWith(
-              profileId: profileId,
-              addedRules: [Rule.parse('DOMAIN,added.test,MATCH')],
-            ),
+            (_, profileId) =>
+                nullProfileSetupState.copyWith(profileId: profileId),
           ),
           coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
           setupActionProvider.overrideWith(SetupAction.new),
@@ -1363,10 +1359,10 @@ void main() {
       final base = pushed.single.base!;
       expect(base.path, await appPath.getProfilePath(profile.id.toString()));
       final overlay = loadYaml(base.overlay) as YamlMap;
-      expect(overlay['rules'], ['DOMAIN,added.test,Proxy']);
+      expect(overlay['rules'], isEmpty);
       expect(overlay['mixed-port'], isNot(1));
       expect(await configFile.readAsString(), 'previous');
-      expect(globalState.lastConfigCounts, (groups: 2, proxies: 3, rules: 6));
+      expect(globalState.lastConfigCounts, (groups: 2, proxies: 3, rules: 5));
 
       await setupAction.applyProfile();
       expect(pushed, hasLength(1));

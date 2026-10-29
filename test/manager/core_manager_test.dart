@@ -31,10 +31,8 @@ const _nullProfileSetupState = SetupState(
   profileId: null,
   profileLastUpdateDate: null,
   profileType: ProfileType.file,
-  extendType: ExtendType.standard,
   rules: [],
   proxyGroups: [],
-  addedRules: [],
   overrides: ProfileOverrides(),
 );
 

@@ -45,7 +45,6 @@ Future<YamlMap> _dnsOf({
       appendSystemDns: false,
       proxyGroups: const [],
       rules: const [],
-      addedRules: const [],
       defaultUA: 'FlClash-Test',
     ),
   );
@@ -163,7 +162,6 @@ proxies:
         appendSystemDns: false,
         proxyGroups: const [],
         rules: const [],
-        addedRules: const [],
         defaultUA: 'FlClash-Test',
       ),
     );

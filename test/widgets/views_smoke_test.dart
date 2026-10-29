@@ -19,7 +19,6 @@ import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/config/on_demand.dart';
 import 'package:kfusion/views/config/filters.dart';
-import 'package:kfusion/views/config/rules.dart';
 import 'package:kfusion/views/config/user_agents.dart';
 import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/profiles/custom/custom.dart';
@@ -59,7 +58,6 @@ void main() {
     'backup and restore': const BackupAndRestore(),
     'hotkeys': const HotKeyView(),
     'access control': const AccessView(),
-    'added rules': const AddedRulesView(),
     'user agents': const UserAgentsView(),
     'filters': const FiltersView(),
   };
@@ -74,7 +72,6 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           profilesProvider.overrideWith(TestProfiles.new),
-          globalRulesProvider.overrideWith(TestGlobalRules.new),
           iconSetsProvider.overrideWith(TestIconSets.new),
           clashProvidersProvider.overrideWith(TestClashProviders.new),
         ],

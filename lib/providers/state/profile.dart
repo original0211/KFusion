@@ -23,15 +23,6 @@ Profile? profile(Ref ref, int? profileId) {
 }
 
 @riverpod
-ExtendType extendType(Ref ref, int? profileId) {
-  return ref.watch(
-    profileProvider(
-      profileId,
-    ).select((state) => state?.extendType ?? ExtendType.standard),
-  );
-}
-
-@riverpod
 Future<ClashConfig> clashConfig(Ref ref, int profileId) async {
   final type = ref.read(profileProvider(profileId))?.type;
   if (type == ProfileType.custom) {
@@ -48,7 +39,6 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
   final profile = ref.watch(profileProvider(profileId));
   final profileLastUpdateDate = profile?.lastUpdateDate?.millisecondsSinceEpoch;
   final profileType = profile?.type ?? ProfileType.file;
-  final extendType = profile?.extendType ?? ExtendType.standard;
   final overrides = profileType == ProfileType.custom
       ? ref.watch(
           patchClashConfigProvider.select(
@@ -71,7 +61,6 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
   final allProfileProviders = ref.watch(profileProvidersProvider);
   List<ProxyGroup> proxyGroups = [];
   List<Rule> rules = [];
-  List<Rule> addedRules = [];
   List<ClashProvider> clashProviders = [];
   Map<String, int> profileProviders = const {};
   List<CustomProxy> appProxies = [];
@@ -88,8 +77,6 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
             in await database.proxyDialersDao.query(profileId).get())
           dialer.proxyId: dialer.target,
       };
-    } else if (extendType == ExtendType.standard) {
-      addedRules = await database.rulesDao.queryAddedRules(profileId).get();
     }
   }
   return SetupState(
@@ -102,13 +89,7 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
     profileId: profileId,
     profileLastUpdateDate: profileLastUpdateDate,
     profileType: profileType,
-    extendType: extendType,
-    addedRules: addedRules,
     overrides: overrides,
-    matchTarget:
-        profileType != ProfileType.custom && extendType == ExtendType.standard
-        ? profile?.matchTarget
-        : null,
   );
 }
 

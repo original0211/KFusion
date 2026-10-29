@@ -225,12 +225,10 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required bool appendSystemDns,
     required List<ProxyGroup> proxyGroups,
     required List<Rule> rules,
-    required List<Rule> addedRules,
     required String defaultUA,
     @Default([]) List<String> authentication,
     @Default({}) Map<String, dynamic> injectedProxyProviders,
     @Default({}) Map<String, dynamic> injectedRuleProviders,
-    String? matchTarget,
     @Default(false) bool safeMode,
   }) = _MakeRealProfileState;
 }
@@ -255,15 +253,12 @@ abstract class SetupState with _$SetupState {
     required int? profileId,
     required int? profileLastUpdateDate,
     required ProfileType profileType,
-    required ExtendType extendType,
     required List<Rule> rules,
     required List<ProxyGroup> proxyGroups,
-    required List<Rule> addedRules,
     required ProfileOverrides overrides,
     @Default([]) List<ClashProvider> clashProviders,
     @Default({}) Map<String, int> profileProviders,
     @Default([]) List<CustomProxy> appProxies,
     @Default({}) Map<int, String> proxyDialers,
-    String? matchTarget,
   }) = _SetupState;
 }

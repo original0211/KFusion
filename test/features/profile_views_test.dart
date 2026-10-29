@@ -9,7 +9,6 @@ import 'package:kfusion/views/config/tun.dart';
 import 'package:kfusion/views/profiles/add.dart';
 import 'package:kfusion/views/profiles/custom/custom.dart';
 import 'package:kfusion/views/profiles/custom/providers.dart';
-import 'package:kfusion/views/profiles/extend/extend.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,34 +109,6 @@ void main() {
       1,
     );
   }
-
-  testWidgets('unmounting ExtendView applies the profile without using ref', (
-    tester,
-  ) async {
-    setViewport(tester);
-    final profile = Profile.normal();
-    final container = ProviderContainer(
-      overrides: [
-        profilesProvider.overrideWith(() => TestProfiles([profile])),
-        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
-        profileRulesProvider.overrideWith2((_) => _TestProfileRules([])),
-        clashConfigProvider(profile.id).overrideWithValue(
-          const AsyncData(
-            ClashConfig(
-              proxies: [Proxy(name: 'DIRECT', type: 'Direct')],
-            ),
-          ),
-        ),
-        setupActionProvider.overrideWith(_RecordingSetupAction.new),
-      ],
-    );
-
-    await expectAppliesOnUnmount(
-      tester,
-      container,
-      ExtendView(profileId: profile.id),
-    );
-  });
 
   testWidgets(
     'unmounting an edited CustomProfileView stamps and applies the profile '

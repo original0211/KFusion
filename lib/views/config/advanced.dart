@@ -5,8 +5,6 @@ import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/network.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'rules.dart';
-
 class AdvancedConfigView extends StatelessWidget {
   const AdvancedConfigView({super.key});
 
@@ -26,11 +24,6 @@ class AdvancedConfigView extends StatelessWidget {
         title: const Text('DNS'),
         leading: const GlyphIcon(AppGlyphs.dns),
         widget: const DnsView(),
-      ),
-      ListItem.open(
-        title: Text(appLocalizations.addedRules),
-        leading: const GlyphIcon(AppGlyphs.rules),
-        widget: const AddedRulesView(),
       ),
     ];
     return BaseScaffold(

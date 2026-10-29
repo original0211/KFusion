@@ -3292,83 +3292,6 @@ final class ProfileFamily extends $Family
   String toString() => r'profileProvider';
 }
 
-@ProviderFor(extendType)
-final extendTypeProvider = ExtendTypeFamily._();
-
-final class ExtendTypeProvider
-    extends $FunctionalProvider<ExtendType, ExtendType, ExtendType>
-    with $Provider<ExtendType> {
-  ExtendTypeProvider._({
-    required ExtendTypeFamily super.from,
-    required int? super.argument,
-  }) : super(
-         retry: null,
-         name: r'extendTypeProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$extendTypeHash();
-
-  @override
-  String toString() {
-    return r'extendTypeProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $ProviderElement<ExtendType> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  ExtendType create(Ref ref) {
-    final argument = this.argument as int?;
-    return extendType(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ExtendType value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ExtendType>(value),
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is ExtendTypeProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$extendTypeHash() => r'166b866a116caa0e93de80b9a59e23697508d219';
-
-final class ExtendTypeFamily extends $Family
-    with $FunctionalFamilyOverride<ExtendType, int?> {
-  ExtendTypeFamily._()
-    : super(
-        retry: null,
-        name: r'extendTypeProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  ExtendTypeProvider call(int? profileId) =>
-      ExtendTypeProvider._(argument: profileId, from: this);
-
-  @override
-  String toString() => r'extendTypeProvider';
-}
-
 @ProviderFor(clashConfig)
 final clashConfigProvider = ClashConfigFamily._();
 
@@ -3498,7 +3421,7 @@ final class SetupStateProvider
   }
 }
 
-String _$setupStateHash() => r'dc7ec467cbc106fcf0336c3f4006b807091f2730';
+String _$setupStateHash() => r'c83f9371caeff1dfa149cfd50039ceb88162665e';
 
 final class SetupStateFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<SetupState>, int?> {

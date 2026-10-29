@@ -52,7 +52,6 @@ void main() {
         appendSystemDns: false,
         proxyGroups: const [],
         rules: const [],
-        addedRules: const [],
         defaultUA: 'FlClash',
       ),
     );
@@ -99,7 +98,6 @@ void main() {
         appendSystemDns: false,
         proxyGroups: const [],
         rules: const [],
-        addedRules: const [],
         defaultUA: 'FlClash',
       ),
     );
@@ -135,7 +133,6 @@ void main() {
         appendSystemDns: false,
         proxyGroups: const [],
         rules: const [],
-        addedRules: const [],
         defaultUA: 'FlClash',
       ),
     );

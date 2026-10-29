@@ -284,7 +284,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "addRule": MessageLookupByLibrary.simpleMessage("Add rule"),
     "addSettingEntry": MessageLookupByLibrary.simpleMessage("Add setting"),
     "addSsid": MessageLookupByLibrary.simpleMessage("Add SSID"),
-    "addedRules": MessageLookupByLibrary.simpleMessage("Added rules"),
     "additionalParameters": MessageLookupByLibrary.simpleMessage(
       "Additional parameters",
     ),
@@ -511,9 +510,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "content": MessageLookupByLibrary.simpleMessage("Content"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Content cannot be empty",
-    ),
-    "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Control global added rules",
     ),
     "copy": MessageLookupByLibrary.simpleMessage("Copy"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
@@ -785,9 +781,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "duration": MessageLookupByLibrary.simpleMessage("Duration"),
     "edit": MessageLookupByLibrary.simpleMessage("Edit"),
-    "editGlobalRules": MessageLookupByLibrary.simpleMessage(
-      "Edit global rules",
-    ),
     "editProxy": MessageLookupByLibrary.simpleMessage("Edit proxy"),
     "editProxyGroup": MessageLookupByLibrary.simpleMessage("Edit proxy group"),
     "editRule": MessageLookupByLibrary.simpleMessage("Edit rule"),
@@ -841,8 +834,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportFile": MessageLookupByLibrary.simpleMessage("Export file"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("Export logs"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Export successful"),
-    "extend": MessageLookupByLibrary.simpleMessage("Extend"),
-    "extendMode": MessageLookupByLibrary.simpleMessage("Extend mode"),
     "externalController": MessageLookupByLibrary.simpleMessage(
       "External controller",
     ),
@@ -881,7 +872,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "filters": MessageLookupByLibrary.simpleMessage("Filters"),
     "findProcessMode": MessageLookupByLibrary.simpleMessage("Find process"),
     "floating": MessageLookupByLibrary.simpleMessage("Floating"),
-    "followProfile": MessageLookupByLibrary.simpleMessage("Follow profile"),
     "followSystem": MessageLookupByLibrary.simpleMessage("Follow system"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("Font family"),
     "fontSize": MessageLookupByLibrary.simpleMessage("Size"),
@@ -909,9 +899,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "global": MessageLookupByLibrary.simpleMessage("Global"),
     "go": MessageLookupByLibrary.simpleMessage("Go"),
     "goDownload": MessageLookupByLibrary.simpleMessage("Download"),
-    "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Go to added rules configuration",
-    ),
     "grid": MessageLookupByLibrary.simpleMessage("Grid"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Cache the changes?",
@@ -1001,9 +988,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Enter the rule content",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -1608,10 +1596,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "saturation": MessageLookupByLibrary.simpleMessage("Saturation"),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("Save the changes?"),
-    "script": MessageLookupByLibrary.simpleMessage("Script"),
-    "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Script mode: rewrites the whole profile with an extension script",
-    ),
     "search": MessageLookupByLibrary.simpleMessage("Search"),
     "seconds": MessageLookupByLibrary.simpleMessage("seconds"),
     "secondsCount": m71,
@@ -1775,9 +1759,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "stackMode": MessageLookupByLibrary.simpleMessage("Stack mode"),
     "stackTrace": MessageLookupByLibrary.simpleMessage("Stack trace"),
     "standard": MessageLookupByLibrary.simpleMessage("Standard"),
-    "standardModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Standard mode: adds rules on top of the profile",
-    ),
     "start": MessageLookupByLibrary.simpleMessage("Start"),
     "startFromScratch": MessageLookupByLibrary.simpleMessage(
       "Start from scratch",

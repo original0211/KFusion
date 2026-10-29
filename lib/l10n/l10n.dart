@@ -285,11 +285,6 @@ class AppLocalizations {
     return Intl.message('Theme', name: 'theme', desc: '', args: []);
   }
 
-  /// `Extend`
-  String get extend {
-    return Intl.message('Extend', name: 'extend', desc: '', args: []);
-  }
-
   /// `Runtime config`
   String get runtimeConfig {
     return Intl.message(
@@ -3010,16 +3005,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Follow profile`
-  String get followProfile {
-    return Intl.message(
-      'Follow profile',
-      name: 'followProfile',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Source IP`
   String get sourceIp {
     return Intl.message('Source IP', name: 'sourceIp', desc: '', args: []);
@@ -3535,11 +3520,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Script`
-  String get script {
-    return Intl.message('Script', name: 'script', desc: '', args: []);
-  }
-
   /// `Color`
   String get color {
     return Intl.message('Color', name: 'color', desc: '', args: []);
@@ -3830,46 +3810,6 @@ class AppLocalizations {
     return Intl.message('Edit rule', name: 'editRule', desc: '', args: []);
   }
 
-  /// `Extend mode`
-  String get extendMode {
-    return Intl.message('Extend mode', name: 'extendMode', desc: '', args: []);
-  }
-
-  /// `Standard mode: adds rules on top of the profile`
-  String get standardModeDesc {
-    return Intl.message(
-      'Standard mode: adds rules on top of the profile',
-      name: 'standardModeDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Script mode: rewrites the whole profile with an extension script`
-  String get scriptModeDesc {
-    return Intl.message(
-      'Script mode: rewrites the whole profile with an extension script',
-      name: 'scriptModeDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Added rules`
-  String get addedRules {
-    return Intl.message('Added rules', name: 'addedRules', desc: '', args: []);
-  }
-
-  /// `Control global added rules`
-  String get controlGlobalAddedRules {
-    return Intl.message(
-      'Control global added rules',
-      name: 'controlGlobalAddedRules',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Quick actions`
   String get quickActions {
     return Intl.message(
@@ -3945,26 +3885,6 @@ class AppLocalizations {
     return Intl.message(
       'LAN direct',
       name: 'rulePresetLanDirect',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Go to added rules configuration`
-  String get goToConfigureAddedRules {
-    return Intl.message(
-      'Go to added rules configuration',
-      name: 'goToConfigureAddedRules',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Edit global rules`
-  String get editGlobalRules {
-    return Intl.message(
-      'Edit global rules',
-      name: 'editGlobalRules',
       desc: '',
       args: [],
     );
@@ -7756,8 +7676,7 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',

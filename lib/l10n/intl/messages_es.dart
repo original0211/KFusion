@@ -294,7 +294,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "addRule": MessageLookupByLibrary.simpleMessage("Añadir regla"),
     "addSettingEntry": MessageLookupByLibrary.simpleMessage("Añadir ajuste"),
     "addSsid": MessageLookupByLibrary.simpleMessage("Añadir SSID"),
-    "addedRules": MessageLookupByLibrary.simpleMessage("Reglas añadidas"),
     "additionalParameters": MessageLookupByLibrary.simpleMessage(
       "Parámetros adicionales",
     ),
@@ -549,9 +548,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "content": MessageLookupByLibrary.simpleMessage("Contenido"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "El contenido no puede estar vacío",
-    ),
-    "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Controlar las reglas añadidas globales",
     ),
     "copy": MessageLookupByLibrary.simpleMessage("Copiar"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
@@ -825,9 +821,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "duration": MessageLookupByLibrary.simpleMessage("Duración"),
     "edit": MessageLookupByLibrary.simpleMessage("Editar"),
-    "editGlobalRules": MessageLookupByLibrary.simpleMessage(
-      "Editar reglas globales",
-    ),
     "editProxy": MessageLookupByLibrary.simpleMessage("Editar proxy"),
     "editProxyGroup": MessageLookupByLibrary.simpleMessage(
       "Editar grupo de proxies",
@@ -895,8 +888,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportSuccess": MessageLookupByLibrary.simpleMessage(
       "Exportación completada",
     ),
-    "extend": MessageLookupByLibrary.simpleMessage("Extensión"),
-    "extendMode": MessageLookupByLibrary.simpleMessage("Modo de extensión"),
     "externalController": MessageLookupByLibrary.simpleMessage(
       "Controlador externo",
     ),
@@ -937,7 +928,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "filters": MessageLookupByLibrary.simpleMessage("Filtros"),
     "findProcessMode": MessageLookupByLibrary.simpleMessage("Buscar proceso"),
     "floating": MessageLookupByLibrary.simpleMessage("Flotante"),
-    "followProfile": MessageLookupByLibrary.simpleMessage("Seguir perfil"),
     "followSystem": MessageLookupByLibrary.simpleMessage("Seguir el sistema"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("Familia de fuente"),
     "fontSize": MessageLookupByLibrary.simpleMessage("Tamaño"),
@@ -963,9 +953,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "global": MessageLookupByLibrary.simpleMessage("Global"),
     "go": MessageLookupByLibrary.simpleMessage("Ir"),
     "goDownload": MessageLookupByLibrary.simpleMessage("Descargar"),
-    "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
-      "Ir a la configuración de las reglas añadidas",
-    ),
     "grid": MessageLookupByLibrary.simpleMessage("Cuadrícula"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "¿Guardar los cambios en la caché?",
@@ -1063,9 +1050,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Introduce el contenido de la regla",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Se denegó el permiso de lista de apps, por lo que no se pueden mostrar las apps instaladas. Concédelo manualmente en los ajustes del sistema.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Se denegó el permiso de lista de apps, por lo que no se pueden mostrar las apps instaladas. Concédelo manualmente en los ajustes del sistema.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Este sistema oculta la lista de apps instaladas hasta que se concede el permiso. Autorízalo para configurar el proxy por app.",
     ),
@@ -1724,10 +1712,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "saveChanges": MessageLookupByLibrary.simpleMessage(
       "¿Guardar los cambios?",
     ),
-    "script": MessageLookupByLibrary.simpleMessage("Script"),
-    "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Modo script: reescribe todo el perfil con un script de extensión",
-    ),
     "search": MessageLookupByLibrary.simpleMessage("Buscar"),
     "seconds": MessageLookupByLibrary.simpleMessage("segundos"),
     "secondsCount": m71,
@@ -1898,9 +1882,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "stackMode": MessageLookupByLibrary.simpleMessage("Modo de pila"),
     "stackTrace": MessageLookupByLibrary.simpleMessage("Seguimiento de pila"),
     "standard": MessageLookupByLibrary.simpleMessage("Estándar"),
-    "standardModeDesc": MessageLookupByLibrary.simpleMessage(
-      "Modo estándar: añade reglas sobre el perfil",
-    ),
     "start": MessageLookupByLibrary.simpleMessage("Iniciar"),
     "startFromScratch": MessageLookupByLibrary.simpleMessage(
       "Empezar desde cero",

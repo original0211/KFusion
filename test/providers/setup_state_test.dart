@@ -93,8 +93,6 @@ void main() {
 
     final state = await container.read(setupStateProvider(profile.id).future);
 
-    expect(state.matchTarget, isNull);
-    expect(state.addedRules, isEmpty);
     expect(state.rules.map((rule) => rule.id), [11]);
   });
 
