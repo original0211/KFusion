@@ -257,8 +257,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "additionalPrefix": MessageLookupByLibrary.simpleMessage("이름 접두사"),
     "additionalSuffix": MessageLookupByLibrary.simpleMessage("이름 접미사"),
     "address": MessageLookupByLibrary.simpleMessage("주소"),
-    "addressHelp": MessageLookupByLibrary.simpleMessage("WebDAV 서버 주소"),
-    "addressTip": MessageLookupByLibrary.simpleMessage("올바른 WebDAV 주소를 입력하세요"),
     "advanced": MessageLookupByLibrary.simpleMessage("고급"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("고급 구성"),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
@@ -331,7 +329,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "batteryOptimizationDesc": MessageLookupByLibrary.simpleMessage(
       "배터리 최적화를 무시하면 앱이 백그라운드에서 계속 실행됩니다.",
     ),
-    "bind": MessageLookupByLibrary.simpleMessage("연결"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("블랙리스트 모드"),
     "brightness": MessageLookupByLibrary.simpleMessage("밝기"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("우회 도메인"),
@@ -415,7 +412,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "connectionFailed": MessageLookupByLibrary.simpleMessage("연결 실패"),
     "connectionStats": MessageLookupByLibrary.simpleMessage("연결 통계"),
     "connections": MessageLookupByLibrary.simpleMessage("연결"),
-    "connectivity": MessageLookupByLibrary.simpleMessage("연결 상태: "),
     "content": MessageLookupByLibrary.simpleMessage("내용"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage("내용을 입력하세요"),
     "copy": MessageLookupByLibrary.simpleMessage("복사"),
@@ -1042,7 +1038,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "nextMatch": MessageLookupByLibrary.simpleMessage("다음 결과"),
     "noData": MessageLookupByLibrary.simpleMessage("데이터 없음"),
-    "noInfo": MessageLookupByLibrary.simpleMessage("정보 없음"),
     "noLongerRemind": MessageLookupByLibrary.simpleMessage("다시 알리지 않음"),
     "noNetworkApp": MessageLookupByLibrary.simpleMessage("네트워크 미사용 앱"),
     "noResolve": MessageLookupByLibrary.simpleMessage("IP 확인 안 함"),
@@ -1096,7 +1091,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "peers": MessageLookupByLibrary.simpleMessage("피어"),
     "pickFromAlbum": MessageLookupByLibrary.simpleMessage("앨범에서 선택"),
     "pinWindow": MessageLookupByLibrary.simpleMessage("창 고정"),
-    "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage("WebDAV를 연결하세요"),
     "pleaseUploadValidQrcode": MessageLookupByLibrary.simpleMessage(
       "올바른 QR 코드를 업로드하세요",
     ),
@@ -1594,7 +1588,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "VPN은 VpnService를 통해 모든 시스템 트래픽을 자동으로 라우팅합니다.",
     ),
-    "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV 구성"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("화이트리스트 모드"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage("시스템에 기록"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(

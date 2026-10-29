@@ -466,7 +466,6 @@ Future<MigrationData> migrateLegacyConfig({
     final vpnPropsRaw = configMap['vpnProps'] as Map;
     vpnPropsRaw['accessControlProps'] = vpnPropsRaw['accessControl'];
   }
-  configMap['davProps'] = configMap['dav'];
   final appSettingProps =
       configMap['appSetting'] as Map<String, dynamic>? ?? {};
   appSettingProps['restoreStrategy'] = appSettingProps['recoveryStrategy'];

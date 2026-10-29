@@ -307,12 +307,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "additionalPrefix": MessageLookupByLibrary.simpleMessage("Préfixe du nom"),
     "additionalSuffix": MessageLookupByLibrary.simpleMessage("Suffixe du nom"),
     "address": MessageLookupByLibrary.simpleMessage("Adresse"),
-    "addressHelp": MessageLookupByLibrary.simpleMessage(
-      "Adresse du serveur WebDAV",
-    ),
-    "addressTip": MessageLookupByLibrary.simpleMessage(
-      "Veuillez saisir une adresse WebDAV valide",
-    ),
     "advanced": MessageLookupByLibrary.simpleMessage("Avancé"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Configuration avancée",
@@ -421,7 +415,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "batteryOptimizationDesc": MessageLookupByLibrary.simpleMessage(
       "Ignorer l’optimisation de la batterie maintient l’app active en arrière-plan.",
     ),
-    "bind": MessageLookupByLibrary.simpleMessage("Lier"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("Mode liste noire"),
     "brightness": MessageLookupByLibrary.simpleMessage("Luminosité"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("Domaines contournés"),
@@ -547,7 +540,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Statistiques de connexion",
     ),
     "connections": MessageLookupByLibrary.simpleMessage("Connexions"),
-    "connectivity": MessageLookupByLibrary.simpleMessage("Connectivité : "),
     "content": MessageLookupByLibrary.simpleMessage("Contenu"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Le contenu ne peut pas être vide",
@@ -1307,7 +1299,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "nextMatch": MessageLookupByLibrary.simpleMessage("Résultat suivant"),
     "noData": MessageLookupByLibrary.simpleMessage("Aucune donnée"),
-    "noInfo": MessageLookupByLibrary.simpleMessage("Aucune information"),
     "noLongerRemind": MessageLookupByLibrary.simpleMessage(
       "Ne plus me le rappeler",
     ),
@@ -1385,9 +1376,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choisir dans l’album",
     ),
     "pinWindow": MessageLookupByLibrary.simpleMessage("Épingler la fenêtre"),
-    "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
-      "Veuillez lier un WebDAV",
-    ),
     "pleaseUploadValidQrcode": MessageLookupByLibrary.simpleMessage(
       "Veuillez importer un code QR valide",
     ),
@@ -2011,9 +1999,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "Le VPN fait passer automatiquement tout le trafic du système par VpnService.",
-    ),
-    "webDAVConfiguration": MessageLookupByLibrary.simpleMessage(
-      "Configuration WebDAV",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Mode liste blanche"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage(

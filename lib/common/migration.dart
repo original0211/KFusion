@@ -140,12 +140,11 @@ class Migration {
         config = Config.realFromJson(configMap);
       }
       if (config != null) {
-        final storedDavPassword = _getStoredDavPassword(configMap);
-        final hasPlainTextDavPassword =
-            storedDavPassword != null &&
-            storedDavPassword == config.davProps?.password;
-        if (hasPlainTextDavPassword && !await _store.saveConfig(config)) {
-          throw StateError('Failed to obfuscate the legacy WebDAV password');
+        // A stored WebDAV segment is credential residue once the feature is
+        // gone; rewriting the parsed config drops it from the store.
+        if (_hasStoredDavSettings(configMap) &&
+            !await _store.saveConfig(config)) {
+          throw StateError('Failed to clear the stored WebDAV settings');
         }
         return config;
       }
@@ -211,13 +210,8 @@ Config _keepGlassLook(Config config) =>
 bool _isV0(Map<String, Object?>? configMap) =>
     configMap?['proxiesStyle'] != null;
 
-String? _getStoredDavPassword(Map<String, Object?>? configMap) {
-  final dav = configMap?['davProps'] ?? configMap?['dav'];
-  if (dav is! Map) {
-    return null;
-  }
-  final password = dav['password'];
-  return password is String && password.isNotEmpty ? password : null;
+bool _hasStoredDavSettings(Map<String, Object?>? configMap) {
+  return configMap?['davProps'] != null || configMap?['dav'] != null;
 }
 
 final migration = Migration(store: const _AppMigrationStore());

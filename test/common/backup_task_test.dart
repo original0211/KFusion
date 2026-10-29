@@ -353,7 +353,7 @@ void main() {
             'accessControl': <String, Object?>{'acceptList': <String>[]},
             'isAccessControl': true,
             'vpnProps': <String, Object?>{},
-            'dav': {'uri': 'https://dav.example'},
+            'dav': {'uri': 'https://dav.example', 'password': 'secret'},
             'appSetting': {'recoveryStrategy': 'compatible'},
             'proxiesStyle': {'cardType': 'expand'},
           },
@@ -366,7 +366,7 @@ void main() {
       final vpnProps = configMap['vpnProps']! as Map;
       expect((vpnProps['accessControl'] as Map)['enable'], isTrue);
       expect(vpnProps['accessControlProps'], vpnProps['accessControl']);
-      expect((configMap['davProps'] as Map)['uri'], 'https://dav.example');
+      expect(configMap.containsKey('davProps'), isFalse);
       expect(
         (configMap['appSettingProps'] as Map)['restoreStrategy'],
         'compatible',

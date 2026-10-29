@@ -106,25 +106,6 @@ void main() {
     });
   });
 
-  group('DavSetting provider', () {
-    test('default is null', () {
-      expect(container.read(davSettingProvider), null);
-    });
-
-    test('can update WebDAV settings', () {
-      const davProps = DAVProps(
-        uri: 'https://dav.example.com',
-        user: 'user',
-        password: 'secret',
-      );
-
-      container.read(davSettingProvider.notifier).update((_) => davProps);
-
-      expect(container.read(davSettingProvider), davProps);
-      expect(container.read(configProvider).davProps?.password, 'secret');
-    });
-  });
-
   group('ExcludeSSIDs provider', () {
     test('reorders with final insertion index semantics', () {
       container
@@ -234,7 +215,7 @@ void main() {
     test('produces correct overrides', () {
       const config = Config(themeProps: ThemeProps(), currentProfileId: 7);
       final overrides = buildConfigOverrides(config);
-      expect(overrides.length, 11);
+      expect(overrides.length, 10);
 
       final overrideContainer = ProviderContainer(overrides: overrides);
       addTearDown(overrideContainer.dispose);

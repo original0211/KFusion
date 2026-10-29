@@ -355,19 +355,6 @@ void main() {
       expect(target.read(patchClashConfigProvider).mixedPort, 7899);
     });
 
-    test('keeps the bound WebDAV account when the backup has none', () async {
-      final configMap = configMapOf(buildContainer());
-      const dav = DAVProps(uri: 'https://dav.example', user: 'me');
-      final target = buildContainer();
-      target.read(davSettingProvider.notifier).value = dav;
-
-      await actionOf(
-        target,
-      ).applyRestore(MigrationData(configMap: configMap), RestoreOption.all);
-
-      expect(target.read(davSettingProvider), dav);
-    });
-
     test('keeps the picked apps when the backup lists none', () async {
       final configMap = configMapOf(buildContainer());
       const picked = AccessControlProps(

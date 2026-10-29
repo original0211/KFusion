@@ -419,9 +419,6 @@ _Config _$ConfigFromJson(Map<String, dynamic> json) => _Config(
       : AppSettingProps.safeFromJson(
           json['appSettingProps'] as Map<String, Object?>?,
         ),
-  davProps: json['davProps'] == null
-      ? null
-      : DAVProps.fromJson(json['davProps'] as Map<String, dynamic>),
   networkProps: json['networkProps'] == null
       ? defaultNetworkProps
       : NetworkProps.fromJson(json['networkProps'] as Map<String, dynamic>?),
@@ -455,7 +452,6 @@ Map<String, dynamic> _$ConfigToJson(_Config instance) => <String, dynamic>{
   'currentProfileId': instance.currentProfileId,
   'hotKeyActions': instance.hotKeyActions,
   'appSettingProps': instance.appSettingProps,
-  'davProps': instance.davProps,
   'networkProps': instance.networkProps,
   'vpnProps': instance.vpnProps,
   'themeProps': instance.themeProps,
