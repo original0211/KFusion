@@ -4,7 +4,11 @@ import 'package:kfusion/ui/shape.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SelectionCheck extends StatelessWidget {
-  const SelectionCheck({super.key});
+  const SelectionCheck({super.key, this.color});
+
+  /// A surface whose palette rules its selection marks (the Hara core
+  /// switch card) passes its own color; null keeps the scheme primary.
+  final Color? color;
 
   static const size = 24.0;
 
@@ -14,7 +18,7 @@ class SelectionCheck extends StatelessWidget {
       AppGlyphs.check,
       size: size,
       fill: 1,
-      color: context.colorScheme.primary,
+      color: color ?? context.colorScheme.primary,
     );
   }
 }

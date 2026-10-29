@@ -113,6 +113,12 @@ void main() {
     expect(find.text('mihomo'), findsOneWidget);
     expect(find.text('sing-box'), findsOneWidget);
     expect(find.byType(SelectionCheck), findsOneWidget);
+    // The card's mark reads in palette ink; the scheme primary stays the
+    // default only for surfaces that do not pass a color.
+    expect(
+      tester.widget<SelectionCheck>(find.byType(SelectionCheck)).color,
+      HaraPalette.light.ink,
+    );
     expect(find.text('下载 sing-box'), findsNothing);
     expectAllInsideCard(tester);
   });

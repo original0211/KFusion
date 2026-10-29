@@ -395,7 +395,7 @@ class CoreSwitchCard extends StatelessWidget {
               ),
               if (selected) ...[
                 const SizedBox(width: 8),
-                const SelectionCheck(),
+                SelectionCheck(color: palette.ink),
               ],
             ],
           ),
