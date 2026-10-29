@@ -1,10 +1,8 @@
 import 'package:kfusion/common/common.dart';
-import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/access.dart';
-import 'package:kfusion/views/dashboard/dashboard.dart';
 import 'package:kfusion/views/logs.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -292,9 +290,7 @@ void main() {
 class _DashboardTestApp extends StatelessWidget {
   final Widget child;
 
-  const _DashboardTestApp({
-    this.child = const DashboardView(platform: SupportPlatform.Android),
-  });
+  const _DashboardTestApp({this.child = const SizedBox.shrink()});
 
   @override
   Widget build(BuildContext context) {

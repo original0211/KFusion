@@ -4,7 +4,6 @@ export 'advanced_gate.dart';
 export 'backup_and_restore.dart';
 export 'connection/connections.dart';
 export 'connection/requests.dart';
-export 'dashboard/dashboard.dart';
 export 'developer.dart';
 export 'disclaimer.dart';
 export 'dns_queries.dart';

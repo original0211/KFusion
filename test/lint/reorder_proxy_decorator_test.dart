@@ -8,10 +8,7 @@ final _reorderableList = RegExp(
   r'SuperSliverReorderableList)\(',
 );
 
-const _allowed = {
-  'lib/ui/super_reorderable_list.dart',
-  'lib/views/dashboard/edit.dart',
-};
+const _allowed = {'lib/ui/super_reorderable_list.dart'};
 
 int _lineOf(String source, int offset) =>
     '\n'.allMatches(source.substring(0, offset)).length + 1;

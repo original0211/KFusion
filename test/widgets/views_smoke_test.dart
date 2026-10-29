@@ -45,7 +45,6 @@ Finder _portField(String label) => find.descendant(
 
 void main() {
   final cases = <String, Widget>{
-    'dashboard': const DashboardView(),
     'proxies': const ProxiesView(),
     'profiles': const ProfilesView(),
     'requests': const RequestsView(),
