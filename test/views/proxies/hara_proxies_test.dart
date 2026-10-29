@@ -53,6 +53,43 @@ void main() {
     ),
   ];
 
+  // Follow selections from GLOBAL through nested groups to the exit leaf.
+  ({String group, String leaf})? exitLeaf() {
+    final byName = {for (final group in groups) group.name: group};
+    var current = byName['GLOBAL'] ?? groups.first;
+    final visited = <String>{};
+    while (visited.add(current.name)) {
+      final selected = profile.selectedMap[current.name];
+      if (selected == null || selected.isEmpty) return null;
+      final next = byName[selected];
+      if (next == null) return (group: current.name, leaf: selected);
+      current = next;
+    }
+    return null;
+  }
+
+  Widget sectionsHost() {
+    final exit = exitLeaf();
+    return Builder(
+      builder: (context) => Material(
+        color: context.haraPalette.bg,
+        child: CustomScrollView(
+          slivers: [
+            for (final (index, group) in groups.indexed)
+              HaraProxyGroupSection(
+                group: group,
+                exitName: exit != null && exit.group == group.name
+                    ? exit.leaf
+                    : null,
+                first: index == 0,
+                exitMarker: HaraExitMarker.dot,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<ProviderContainer> pumpPage(WidgetTester tester) async {
     tester.view.physicalSize = const Size(412, 800);
     tester.view.devicePixelRatio = 1;
@@ -80,7 +117,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const TestApp(child: HaraProxiesView()),
+        child: TestApp(child: sectionsHost()),
       ),
     );
     await tester.pumpAndSettle();

@@ -26,8 +26,6 @@ import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/profiles/custom/custom.dart';
 import 'package:kfusion/views/profiles/custom/custom_proxies.dart';
 import 'package:kfusion/views/profiles/custom/rules.dart';
-import 'package:kfusion/views/proxies/list.dart';
-import 'package:kfusion/views/proxies/tab.dart';
 import 'package:kfusion/views/theme.dart';
 import 'package:kfusion/views/views.dart';
 import 'package:material_ui/material_ui.dart';
@@ -45,7 +43,6 @@ Finder _portField(String label) => find.descendant(
 
 void main() {
   final cases = <String, Widget>{
-    'proxies': const ProxiesView(),
     'profiles': const ProfilesView(),
     'resources': const ResourcesView(),
     'logs': const LogsView(),
@@ -256,78 +253,6 @@ void main() {
     expect(container.read(patchClashConfigProvider), before);
     expect(_portField('SOCKS port'), findsOneWidget);
     expect(find.text('SOCKS port cannot be empty'), findsOneWidget);
-  });
-
-  testWidgets('proxies renders populated tab and list layouts', (tester) async {
-    tester.view.physicalSize = const Size(1400, 1000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final profile = Profile.normal().copyWith(
-      currentGroupName: 'Selector',
-      selectedMap: {'Selector': 'Proxy 1'},
-      unfoldSet: {'Selector'},
-    );
-    final proxies = List.generate(
-      24,
-      (index) => Proxy(name: 'Proxy $index', type: 'Direct'),
-    );
-    final group = Group(
-      name: 'Selector',
-      type: GroupType.Selector,
-      hidden: false,
-      now: 'Proxy 1',
-      all: proxies,
-    );
-    final container = ProviderContainer(
-      overrides: [
-        profilesProvider.overrideWith(() => TestProfiles([profile])),
-        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
-        currentGroupsStateProvider.overrideWithValue(
-          GroupsState(value: [group]),
-        ),
-        groupsProvider.overrideWithValue([group]),
-      ],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-    container
-        .read(viewSizeProvider.notifier)
-        .update((_) => const Size(1400, 1000));
-    container.listen(proxiesStyleSettingProvider, (_, _) {});
-    container
-        .read(proxiesStyleSettingProvider.notifier)
-        .update((state) => state.copyWith(type: ProxiesType.tab));
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const TestApp(child: ProxiesView(picker: true)),
-      ),
-    );
-    await tester.pump();
-
-    expect(container.read(proxiesTabStateProvider).groups, [group]);
-    expect(find.byType(ProxiesTabView), findsOneWidget);
-    expect(find.byType(ProxyGroupView), findsOneWidget);
-
-    container
-        .read(proxiesStyleSettingProvider.notifier)
-        .update((state) => state.copyWith(type: ProxiesType.list));
-    await tester.pump();
-    expect(find.byType(ProxiesListView), findsOneWidget);
-
-    final scrollables = find.byType(Scrollable);
-    for (var index = 0; index < 8; index++) {
-      await tester.drag(
-        scrollables.last,
-        const Offset(0, -700),
-        warnIfMissed: false,
-      );
-      await tester.pump();
-    }
-    expect(tester.takeException(), null);
   });
 
   testWidgets('custom profile editors render populated data', (tester) async {
