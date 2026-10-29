@@ -289,7 +289,7 @@ void main() {
   });
 
   group('tools and index pages (cabin batch 4, #6/#16/#17)', () {
-    testWidgets('settings sections head shared cabin rows', (tester) async {
+    testWidgets('settings sections head the page rows', (tester) async {
       final container = _container(tester);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -298,13 +298,9 @@ void main() {
         ),
       );
       await tester.pump();
-      final headers = tester
-          .widgetList<ListHeader>(find.byType(ListHeader))
-          .map((header) => header.title)
-          .toList();
-      expect(headers, contains('Startup and background'));
+      expect(find.text('Startup and background'), findsOneWidget);
       expect(find.byType(CoreSwitchItem), findsOneWidget);
-      expect(find.byType(DecorationListItem), findsWidgets);
+      expect(find.byType(DecorationListItem), findsNothing);
     });
 
     testWidgets('the advanced index lists four cabin rows', (tester) async {
