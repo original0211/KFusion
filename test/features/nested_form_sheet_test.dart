@@ -16,6 +16,18 @@ import '../helpers/test_app.dart';
 
 const _group = ProxyGroup(id: 1, name: 'g', type: GroupType.Selector);
 
+class _ProbeGroup extends Notifier<ProxyGroup> {
+  @override
+  ProxyGroup build() => _group;
+
+  void update(ProxyGroup Function(ProxyGroup state) change) {
+    state = change(state);
+  }
+}
+
+final _probeGroupProvider =
+    NotifierProvider.autoDispose<_ProbeGroup, ProxyGroup>(_ProbeGroup.new);
+
 class _ProbeForm extends ConsumerStatefulWidget {
   final void Function(BuildContext context) onSave;
 
@@ -36,7 +48,7 @@ class _ProbeFormState extends ConsumerState<_ProbeForm> {
   Widget build(BuildContext context) {
     final isBottomSheet =
         SheetProvider.of(context)?.type == SheetType.bottomSheet;
-    final name = ref.watch(proxyGroupProvider.select((state) => state.name));
+    final name = ref.watch(_probeGroupProvider.select((state) => state.name));
     final height = isBottomSheet
         ? ref.read(viewSizeProvider).height * 0.6
         : double.maxFinite;
@@ -52,7 +64,7 @@ class _ProbeFormState extends ConsumerState<_ProbeForm> {
             Text(name),
             FilledButton(
               onPressed: () {
-                ref.read(proxyGroupProvider.notifier).update((state) {
+                ref.read(_probeGroupProvider.notifier).update((state) {
                   return state.copyWith(name: 'changed');
                 });
               },
@@ -90,10 +102,7 @@ class _NestedSheetHarness {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     container = ProviderContainer(
-      overrides: [
-        viewSizeProvider.overrideWithBuild((_, _) => size),
-        proxyGroupProvider.overrideWithBuild((_, _) => _group),
-      ],
+      overrides: [viewSizeProvider.overrideWithBuild((_, _) => size)],
     );
     addTearDown(container.dispose);
     globalState.container = container;
@@ -109,7 +118,7 @@ class _NestedSheetHarness {
                     context: context,
                     props: nestedPagedSheetProps,
                     builder: (_) => NestedFormSheet<ProxyGroup>(
-                      currentOf: (ref) => ref.read(proxyGroupProvider),
+                      currentOf: (ref) => ref.read(_probeGroupProvider),
                       formBuilder: (_) => _ProbeForm(
                         onSave: (context) {
                           saveCalls++;
@@ -233,7 +242,7 @@ void main() {
     final l = AppLocalizations.current;
 
     harness.container
-        .read(proxyGroupProvider.notifier)
+        .read(_probeGroupProvider.notifier)
         .update((state) => state.copyWith(name: 'changed'));
     unawaited(
       Navigator.of(

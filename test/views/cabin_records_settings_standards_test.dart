@@ -5,7 +5,6 @@ import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/views/config/advanced.dart';
-import 'package:kfusion/views/config/custom_resources.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/logs.dart';
@@ -308,19 +307,7 @@ void main() {
       expect(find.byType(DecorationListItem), findsNWidgets(2));
     });
 
-    testWidgets('the custom resources index lists four cabin rows', (
-      tester,
-    ) async {
-      final container = _container(tester);
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: CustomResourcesView()),
-        ),
-      );
-      await tester.pump();
-      expect(find.byType(DecorationListItem), findsNWidgets(4));
-    });
+    ;
   });
 
   group('resources (cabin batch 4, #10)', () {

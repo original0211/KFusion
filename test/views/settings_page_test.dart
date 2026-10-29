@@ -85,7 +85,6 @@ void main() {
     for (final label in [
       'Advanced configuration',
       'General',
-      'Custom profile resources',
       'Proxy settings',
       'Resources',
       'Logs',
@@ -128,7 +127,6 @@ void main() {
     for (final label in [
       'Advanced configuration',
       'General',
-      'Custom profile resources',
       'Proxy settings',
       'Resources',
       'Logs',

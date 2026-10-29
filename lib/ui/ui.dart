@@ -53,7 +53,6 @@ export 'scroll_behavior.dart';
 export 'search_field.dart';
 export 'segmented_control.dart';
 export 'selection_mark.dart';
-export 'setting.dart';
 export 'shape.dart';
 export 'sheet.dart';
 export 'sheet_header.dart';

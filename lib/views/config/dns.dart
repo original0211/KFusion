@@ -3,8 +3,6 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
-import 'package:kfusion/pages/editor.dart';
-import 'package:kfusion/providers/state.dart';
 import 'package:kfusion/views/config/override.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:flutter/foundation.dart' show mapEquals;
@@ -110,12 +108,6 @@ _DnsState _patchDns(PatchClashConfig config) =>
 PatchClashConfig _setPatchDns(PatchClashConfig config, _DnsState state) =>
     config.copyWith(dns: state.model, dnsOverrideKeys: state.keys);
 
-_DnsState _profileDns(ProfileOverrides overrides) =>
-    (model: overrides.dns, keys: overrides.dnsOverrideKeys);
-
-ProfileOverrides _setProfileDns(ProfileOverrides overrides, _DnsState state) =>
-    overrides.copyWith(dns: state.model, dnsOverrideKeys: state.keys);
-
 String _patchDnsDescription(AppLocalizations l) => l.dnsOverrideDesc;
 
 class DnsView extends OverrideView<DnsOverrideKey, Dns> {
@@ -129,20 +121,6 @@ class DnsView extends OverrideView<DnsOverrideKey, Dns> {
             description: _patchDnsDescription,
           ),
           keys: DnsOverrideKey.normalProfileKeys,
-        ),
-      );
-
-  DnsView.profile(int profileId, {super.key})
-    : super(
-        spec: _ProfileDnsOverrideSpec(
-          ProfileOverrideTarget(
-            profileId,
-            get: _profileDns,
-            set: _setProfileDns,
-            issues: customProfileIssuesProvider(
-              profileId,
-            ).select((state) => state.dns),
-          ),
         ),
       );
 }
@@ -325,24 +303,6 @@ class _DnsOverrideSpec extends OverrideSpec<DnsOverrideKey, Dns> {
       itemMaxLength: TextInputLimits.domain,
     ),
   };
-}
-
-class _ProfileDnsOverrideSpec extends _DnsOverrideSpec
-    with OverrideQuickEdit<DnsOverrideKey, Dns> {
-  const _ProfileDnsOverrideSpec(super.target);
-
-  @override
-  String overrideYaml(Dns model, Set<DnsOverrideKey> keys) =>
-      model.overrideYaml(keys);
-
-  @override
-  _DnsState applyOverrideYaml(Dns model, String content) {
-    final result = model.applyOverrideYaml(content);
-    return (model: result.dns, keys: result.keys);
-  }
-
-  @override
-  EditorSchema get schema => EditorSchema.dns;
 }
 
 class _PolicyField extends ValueOverrideField<Dns, Map<String, String>> {

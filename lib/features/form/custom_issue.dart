@@ -5,8 +5,6 @@ import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'form_row.dart';
-
 extension CustomIssueExt on CustomIssue {
   String getMessage(BuildContext context) {
     final appLocalizations = context.appLocalizations;
@@ -58,25 +56,6 @@ extension CustomIssuesExt on Iterable<CustomIssue> {
   }
 }
 
-Future<void> showSaveBlocked(BuildContext context, String reason) {
-  return dialogs.showMessage(
-    title: context.appLocalizations.cannotSave,
-    message: TextSpan(text: reason),
-    cancelable: false,
-  );
-}
-
-class CustomIssueButton extends StatelessWidget {
-  final List<CustomIssue> issues;
-
-  const CustomIssueButton({super.key, required this.issues});
-
-  @override
-  Widget build(BuildContext context) {
-    return InfoMessageButton(message: issues.getMessage(context));
-  }
-}
-
 class CustomIssuesBanner extends StatelessWidget {
   final List<CustomIssue> issues;
 
@@ -86,22 +65,6 @@ class CustomIssuesBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return ErrorBanner(
       message: issues.isEmpty ? null : issues.getMessage(context),
-    );
-  }
-}
-
-class SliverCustomIssuesBanner extends StatelessWidget {
-  final List<CustomIssue> issues;
-
-  const SliverCustomIssuesBanner({super.key, required this.issues});
-
-  @override
-  Widget build(BuildContext context) {
-    return PinnedHeaderSliver(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(16, context.contentTopPadding, 16, 0),
-        child: CustomIssuesBanner(issues: issues),
-      ),
     );
   }
 }

@@ -835,45 +835,6 @@ sealed class CustomIssue with _$CustomIssue {
 }
 
 @freezed
-abstract class CustomProfileIssues with _$CustomProfileIssues {
-  const factory CustomProfileIssues({
-    @Default({}) Map<int, List<CustomIssue>> proxyGroups,
-    @Default({}) Map<int, List<CustomIssue>> rules,
-    @Default({}) Map<int, List<CustomIssue>> dialers,
-    @Default([]) List<CustomIssue> dns,
-    @Default([]) List<CustomIssue> ntp,
-  }) = _CustomProfileIssues;
-}
-
-@freezed
-abstract class CustomProfileData with _$CustomProfileData {
-  const factory CustomProfileData({
-    @Default([]) List<ProxyGroup> proxyGroups,
-    @Default({}) Set<String> proxyProviders,
-    @Default({}) Set<String> ruleProviders,
-    @Default({}) Set<String> ruleTargets,
-    @Default({}) Set<String> proxies,
-    @Default({}) Map<String, String> dialers,
-  }) = _CustomProfileData;
-}
-
-final _namedProxies = Expando<Set<String>>();
-
-extension CustomProfileDataExt on CustomProfileData {
-  Set<String> get namedProxies => _namedProxies[this] ??= Set.unmodifiable({
-    for (final group in proxyGroups)
-      for (final name in group.proxies ?? const <String>[])
-        if (proxies.contains(name)) name,
-  });
-
-  /// A local proxy reaches the config only when a group names it.
-  bool isRuleTarget(String? name) =>
-      ruleTargets.contains(name) ||
-      name == GroupName.GLOBAL.name ||
-      namedProxies.contains(name);
-}
-
-@freezed
 abstract class Sniffer with _$Sniffer {
   const factory Sniffer({
     @Default(false) bool enable,

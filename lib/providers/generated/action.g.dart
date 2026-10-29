@@ -450,7 +450,7 @@ final class ProfilesActionProvider
   }
 }
 
-String _$profilesActionHash() => r'e3c06a661c5721fa437e8730ef4fc906111cee16';
+String _$profilesActionHash() => r'253fe98153d374a2f4820fdf0494e7b36a0c80d7';
 
 abstract class _$ProfilesAction extends $Notifier<void> {
   void build();
@@ -503,7 +503,7 @@ final class ClashProvidersActionProvider
 }
 
 String _$clashProvidersActionHash() =>
-    r'eddc52e010d900fbf17a95f466e92217eb2a9987';
+    r'622f642e67a4e0dd1c1f836cb15d306a66fe02a0';
 
 abstract class _$ClashProvidersAction extends $Notifier<void> {
   void build();
@@ -555,7 +555,7 @@ final class IconSetsActionProvider
   }
 }
 
-String _$iconSetsActionHash() => r'2568fa51c9ac71e3f0b5c990db458ddc7337ee88';
+String _$iconSetsActionHash() => r'59981cf709137302f92ccfcca33f6c5683a27f3e';
 
 abstract class _$IconSetsAction extends $Notifier<void> {
   void build();

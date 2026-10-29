@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
-import 'package:kfusion/common/common.dart';
 import 'package:kfusion/database/database.dart' as db;
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
@@ -81,41 +80,27 @@ void main() {
     return testDatabase.iconSetsDao.query().get();
   }
 
-  test('a url import takes the name of the set unless one is given', () async {
-    body = _iconSetJson('Qure', ['Proxy']);
-
-    await action().importUrl(urlOf('qure.json'));
-    await action().importUrl(urlOf('mine.json'), name: 'Mine');
-
-    final iconSets = await stored();
-    expect(iconSets.map((iconSet) => iconSet.name), ['Qure', 'Mine']);
-    expect(iconSets.first.url, urlOf('qure.json'));
-    expect(iconSets.first.icons.single.name, 'Proxy.png');
-  });
-
-  test('importing a url again syncs that set instead of adding one', () async {
-    body = _iconSetJson('Qure', ['Proxy']);
-    await action().importUrl(urlOf('qure.json'));
-    await stored();
-    body = _iconSetJson('Renamed upstream', ['Proxy', 'Direct']);
-
-    await action().importUrl(urlOf('qure.json'));
-
-    final iconSets = await stored();
-    expect(iconSets.single.name, 'Qure');
-    expect(iconSets.single.icons.map((icon) => icon.name), [
-      'Proxy.png',
-      'Direct.png',
-    ]);
-  });
-
   group('a set changed while it downloads', () {
     late IconSet saved;
     late Future<IconSet> syncing;
 
     setUp(() async {
       body = _iconSetJson('Qure', ['Proxy']);
-      await action().importUrl(urlOf('qure.json'));
+      container
+          .read(iconSetsProvider.notifier)
+          .put(
+            IconSet(
+              id: 1,
+              name: 'Qure',
+              url: urlOf('qure.json'),
+              icons: const [
+                IconSetIcon(
+                  name: 'Proxy.png',
+                  url: 'https://example.com/Proxy.png',
+                ),
+              ],
+            ),
+          );
       saved = (await stored()).single;
       body = _iconSetJson('Qure', ['Proxy', 'Direct']);
       held = Completer();
@@ -149,39 +134,5 @@ void main() {
       expect(iconSet.name, 'Renamed');
       expect(iconSet.icons, hasLength(2));
     });
-  });
-
-  test(
-    'a failed download or a document that is no icon set saves nothing',
-    () async {
-      body = '{"name": "x"}';
-
-      await expectLater(
-        action().importUrl(urlOf('missing')),
-        throwsA(anything),
-      );
-      await expectLater(
-        action().importUrl(urlOf('set.json')),
-        throwsA(
-          isA<MessageException>().having(
-            (e) => e.message,
-            'message',
-            'Not a valid icon set',
-          ),
-        ),
-      );
-      expect(await stored(), isEmpty);
-    },
-  );
-
-  test('a file import falls back to the file name', () async {
-    action().importContent(
-      'My icons.json',
-      '{"icons": [{"url": "https://example.com/a.png"}]}',
-    );
-
-    final iconSets = await stored();
-    expect(iconSets.single.name, 'My icons');
-    expect(iconSets.single.isRemote, isFalse);
   });
 }

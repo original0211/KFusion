@@ -6,7 +6,6 @@ import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
-import 'package:kfusion/views/profiles/custom/custom.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -319,10 +318,6 @@ Future<void> syncProfile(WidgetRef ref, Profile profile) async {
 }
 
 void editProfileEntry(BuildContext context, Profile profile) {
-  if (profile.type == ProfileType.custom) {
-    BaseNavigator.push(context, CustomProfileView(profileId: profile.id));
-    return;
-  }
   showExtend(context, builder: (context) => EditProfileView(profile: profile));
 }
 
@@ -364,13 +359,12 @@ List<CommonPopupMenuItem> profileMenuItems(
   final isUrl = profile.type == ProfileType.url;
   final isCustom = profile.type == ProfileType.custom;
   return [
-    CommonPopupMenuItem(
-      glyph: AppGlyphs.edit,
-      // A custom profile's editor group is an advanced surface: its menu
-      // door says so, where a plain profile keeps the plain edit door.
-      label: isCustom ? appLocalizations.advancedEdit : appLocalizations.edit,
-      onPressed: () => editProfileEntry(context, profile),
-    ),
+    if (!isCustom)
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.edit,
+        label: appLocalizations.edit,
+        onPressed: () => editProfileEntry(context, profile),
+      ),
     if (isCustom) ...[
       CommonPopupMenuItem(
         glyph: AppGlyphs.textShort,

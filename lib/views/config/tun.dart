@@ -81,15 +81,7 @@ _TunState _patchTun(PatchClashConfig config) =>
 PatchClashConfig _setPatchTun(PatchClashConfig config, _TunState state) =>
     config.copyWith(tunOverride: state.model, tunOverrideKeys: state.keys);
 
-_TunState _profileTun(ProfileOverrides overrides) =>
-    (model: overrides.tun, keys: overrides.tunOverrideKeys);
-
-ProfileOverrides _setProfileTun(ProfileOverrides overrides, _TunState state) =>
-    overrides.copyWith(tun: state.model, tunOverrideKeys: state.keys);
-
 String _patchTunDescription(AppLocalizations l) => l.tunOverrideDesc;
-
-String _profileTunDescription(AppLocalizations l) => l.profileTunSettingsDesc;
 
 OverrideSpec<TunOverrideKey, ProfileTun> appTunOverrideSpec({
   required bool isLinux,
@@ -103,22 +95,6 @@ OverrideSpec<TunOverrideKey, ProfileTun> appTunOverrideSpec({
   isLinux: isLinux,
   isWindows: isWindows,
 );
-
-class TunView extends OverrideView<TunOverrideKey, ProfileTun> {
-  TunView(int profileId, {super.key, bool? isLinux, bool? isWindows})
-    : super(
-        spec: _TunOverrideSpec(
-          ProfileOverrideTarget(
-            profileId,
-            get: _profileTun,
-            set: _setProfileTun,
-            description: _profileTunDescription,
-          ),
-          isLinux: isLinux ?? system.isLinux,
-          isWindows: isWindows ?? system.isWindows,
-        ),
-      );
-}
 
 ListOverrideField<ProfileTun> _numbersField(
   List<int> Function(ProfileTun tun) select,

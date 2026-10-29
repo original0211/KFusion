@@ -205,51 +205,6 @@ void main() {
     expect(setup.applies, 1);
   });
 
-  test('a rule set a rule still references is deleted', () async {
-    await ruleSetIn(profileId, 'Ad block', id: 30);
-    await testDatabase.clashProvidersDao.putAll([rules.toCompanion()]);
-    await pumpEventQueue();
-
-    action().delProvider(rules);
-    await pumpEventQueue();
-
-    expect(await testDatabase.clashProvidersDao.query().get(), isEmpty);
-    expect(setup.applies, 0);
-  });
-
-  test('a rule set names every custom profile whose rules use it', () async {
-    await ruleSetIn(profileId, 'Ad block', id: 30);
-    await ruleSetIn(standardProfileId, 'Ad block', id: 31);
-    await ruleSetIn(otherCustomId, 'Ad block', id: 32);
-
-    expect((await action().profilesUsing(rules)).map((profile) => profile.id), [
-      profileId,
-      otherCustomId,
-    ]);
-  });
-
-  test('a rule set only a custom profile\'s DNS names is in use, and its '
-      'changes reapply', () async {
-    container
-        .read(profilesProvider.notifier)
-        .updateProfile(
-          profileId,
-          (profile) => profile.copyWith(
-            overrides: const ProfileOverrides(
-              dns: Dns(nameserverPolicy: {'rule-set:Ad block': '223.5.5.5'}),
-              dnsOverrideKeys: {DnsOverrideKey.nameserverPolicy},
-            ),
-          ),
-        );
-
-    expect((await action().profilesUsing(rules)).map((profile) => profile.id), [
-      profileId,
-    ]);
-    await action().putProvider(rules);
-    await pumpEventQueue();
-    expect(setup.forced, [false]);
-  });
-
   test('renaming a rule set renames it in every custom profile', () async {
     await ruleSetIn(profileId, 'Ad block', id: 30);
     await ruleSetIn(otherCustomId, 'Ad block', id: 31);
@@ -286,59 +241,6 @@ void main() {
           .forceDomain,
       ['rule-set:Renamed'],
     );
-  });
-
-  group('what a delete names', () {
-    ProfilesAction profiles() =>
-        container.read(profilesActionProvider.notifier);
-
-    Future<void> targetIn(int owner, String target, {required int id}) =>
-        testDatabase.rulesDao.putRule(
-          Rule(id: id, content: 'x', ruleTarget: target, order: 'a'),
-          profileId: owner,
-        );
-
-    test('a local proxy is used by the custom profiles naming it where no '
-        'group of theirs takes the name', () async {
-      await targetIn(profileId, 'HK', id: 30);
-      await targetIn(standardProfileId, 'HK', id: 31);
-      await targetIn(otherCustomId, 'HK', id: 32);
-      await testDatabase.proxyGroups.put(
-        const ProxyGroup(
-          id: 40,
-          name: 'HK',
-          type: GroupType.Selector,
-          proxies: ['DIRECT'],
-        ).toCompanion(otherCustomId),
-      );
-
-      expect(
-        (await profiles().proxyUsers({'HK'})).map((profile) => profile.id),
-        [profileId],
-      );
-      expect(await profiles().proxyUsers({'US'}), isEmpty);
-    });
-
-    test('a group is in use while the rest of its profile names it', () async {
-      Future<void> group(int id, String name, List<String> proxies) =>
-          testDatabase.proxyGroups.put(
-            ProxyGroup(
-              id: id,
-              name: name,
-              type: GroupType.Selector,
-              proxies: proxies,
-            ).toCompanion(profileId),
-          );
-      await group(40, 'Auto', ['DIRECT']);
-      await group(41, 'Parent', ['Auto']);
-      await group(42, 'Ruled', ['DIRECT']);
-      await targetIn(profileId, 'Ruled', id: 30);
-
-      expect(await profiles().groupsInUse(profileId, {40}), {'Auto'});
-      expect(await profiles().groupsInUse(profileId, {40, 41}), isEmpty);
-      expect(await profiles().groupsInUse(profileId, {42}), {'Ruled'});
-      expect(await profiles().groupsInUse(otherCustomId, {40}), isEmpty);
-    });
   });
 
   test('a rule set no rule references does not reapply', () async {
@@ -500,17 +402,6 @@ void main() {
       await updating;
       await pumpEventQueue();
     }
-
-    test('stays deleted, its cache too', () async {
-      action().delProvider(saved);
-      await pumpEventQueue();
-
-      await download();
-
-      expect(await testDatabase.clashProvidersDao.query().get(), isEmpty);
-      expect(File(await saved.path).existsSync(), isFalse);
-      expect(setup.forced, [true]);
-    });
 
     test('keeps its new name', () async {
       container
@@ -708,7 +599,6 @@ void main() {
         await action().applyIfReferenced(ProviderKind.proxy, {
           'Elsewhere',
         }, force: true);
-        await action().applyIfProxiesNamed({'Unnamed'});
         await action().applyIfReferenced(ProviderKind.proxy, {
           'Home',
         }, force: true);

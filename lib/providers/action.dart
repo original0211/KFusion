@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:kfusion/common/app_data.dart';
 import 'package:kfusion/common/boot_guard.dart';
@@ -20,7 +19,6 @@ import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' show basename, join;

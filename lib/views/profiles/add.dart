@@ -5,14 +5,11 @@ import 'package:kfusion/pages/scan.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
-import 'package:kfusion/views/profiles/custom/custom.dart';
 import 'package:kfusion/views/profiles/universal_import.dart';
 import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-const _customOpenPause = Duration(milliseconds: 150);
 
 /// The link import form behind the add page's link entry, shared with the
 /// profiles page's own add rows.
@@ -105,28 +102,6 @@ class AddProfileView extends ConsumerWidget {
     await showAddProfileFromLinkForm(context, ref);
   }
 
-  Future<void> _toAddCustom(BuildContext context, WidgetRef ref) async {
-    final profilesAction = ref.read(profilesActionProvider.notifier);
-    final label = context.appLocalizations.unnamed;
-    Widget editor() => CustomProfileView(
-      profileId: profilesAction.addCustomProfile(label),
-      isNew: true,
-    );
-    final navigator = Navigator.of(context);
-    if (!origin.mounted || Navigator.of(origin) == navigator) {
-      unawaited(BaseNavigator.pushReplacement(context, editor()));
-      return;
-    }
-    // The sheet sits above origin's navigator: a page opened there before the
-    // sheet has gone fades in beneath it.
-    navigator.pop();
-    await whenRouteSettled(context);
-    await Future<void>.delayed(_customOpenPause);
-    if (origin.mounted) {
-      unawaited(BaseNavigator.push(origin, editor()));
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
@@ -154,12 +129,6 @@ class AddProfileView extends ConsumerWidget {
               title: Text(appLocalizations.link),
               subtitle: Text(appLocalizations.linkDesc),
               onTap: () => _toAdd(ref),
-            ),
-            ListItem(
-              leading: const GlyphIcon(AppGlyphs.customize),
-              title: Text(appLocalizations.customProfile),
-              subtitle: Text(appLocalizations.customProfileDesc),
-              onTap: () => _toAddCustom(context, ref),
             ),
             ListItem(
               leading: GlyphIcon(

@@ -9,7 +9,6 @@ import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/config/on_demand.dart';
-import 'package:kfusion/views/config/providers.dart';
 import 'package:kfusion/views/config/user_agents.dart';
 import 'package:kfusion/widgets/config_item.dart';
 import 'package:material_ui/material_ui.dart';
@@ -21,18 +20,6 @@ import 'package:wifi_ssid/wifi_ssid.dart';
 import '../helpers/app_paths.dart';
 import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
-
-class _TestClashProviders extends ClashProviders {
-  _TestClashProviders(this.initial);
-
-  final List<ClashProvider> initial;
-
-  @override
-  Stream<List<ClashProvider>> build() => Stream.value(initial);
-
-  @override
-  void order(int oldIndex, int newIndex) {}
-}
 
 class _TestExcludeSSIDs extends ExcludeSSIDs {
   @override
@@ -168,34 +155,7 @@ void main() {
   });
 
   group('grouped list subpages', () {
-    testWidgets('a rule provider behavior chip stays on the neutral step', (
-      tester,
-    ) async {
-      final container = _container(tester, [
-        clashProvidersProvider.overrideWith(
-          () => _TestClashProviders(const [
-            ClashProvider(
-              id: 1,
-              label: 'cn-rules',
-              url: 'https://example.com/cn.yaml',
-            ),
-          ]),
-        ),
-      ]);
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: ClashProvidersView()),
-        ),
-      );
-      await tester.pump();
-      final chip = tester.widget<TonalChip>(find.byType(TonalChip));
-      final scheme = _schemeOf(tester, find.byType(TonalChip));
-      expect(chip.foregroundColor, scheme.onSurfaceVariant);
-      expect(chip.color, isNot(scheme.primary));
-      expect(chip.color, isNot(scheme.error));
-      expect(chip.color, isNot(scheme.tertiary));
-    });
+    ;
 
     testWidgets('only the current user agent row carries the selection check', (
       tester,

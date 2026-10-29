@@ -1,9 +1,7 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:collection/collection.dart';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/database/database.dart';
 import 'package:kfusion/enum/enum.dart';
@@ -25,4 +23,3 @@ part 'state/system.dart';
 part 'state/theme.dart';
 part 'state/profile.dart';
 part 'state/custom.dart';
-part 'state/custom_import.dart';

@@ -2,7 +2,6 @@ import 'package:kfusion/common/common.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/config/advanced.dart';
-import 'package:kfusion/views/config/custom_resources.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/developer.dart';
 import 'package:kfusion/views/font_family.dart';
@@ -36,11 +35,6 @@ class AdvancedGateView extends ConsumerWidget {
         leading: const GlyphIcon(AppGlyphs.settings),
         title: Text(appLocalizations.general),
         widget: const GeneralView(),
-      ),
-      ListItem.open(
-        leading: const GlyphIcon(AppGlyphs.customize),
-        title: Text(appLocalizations.customProfileResources),
-        widget: const CustomResourcesView(),
       ),
       ListItem.open(
         leading: const GlyphIcon(AppGlyphs.sliders),

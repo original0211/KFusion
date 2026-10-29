@@ -150,15 +150,6 @@ class ClashProvidersAction extends _$ClashProvidersAction {
     }
   }
 
-  void delProvider(ClashProvider provider) {
-    ref.read(clashProvidersProvider.notifier).del(provider.id);
-    unawaited(_clearCache(provider));
-  }
-
-  Future<List<Profile>> profilesUsing(ClashProvider provider) {
-    return profilesReferencing(ProviderKind.rule, provider.label);
-  }
-
   Future<List<Profile>> profilesReferencing(
     ProviderKind kind,
     String name,
@@ -217,11 +208,6 @@ class ClashProvidersAction extends _$ClashProvidersAction {
   }) => _applyIf(
     (profileId) => _isReferenced(profileId, kind, labels),
     force: force,
-  );
-
-  Future<void> applyIfProxiesNamed(Set<String> names) => _applyIf(
-    (profileId) async => (await database.proxyGroupsDao.query(profileId).get())
-        .any((group) => group.proxies?.any(names.contains) ?? false),
   );
 
   Future<void> _applyIf(

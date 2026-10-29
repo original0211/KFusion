@@ -5,8 +5,6 @@ import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/pages/editor.dart';
 import 'package:kfusion/providers/config.dart';
-import 'package:kfusion/providers/database.dart';
-import 'package:kfusion/providers/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -106,72 +104,6 @@ class PatchOverrideTarget<K extends OverrideKey, M>
     ref
         .read(patchClashConfigProvider.notifier)
         .update((config) => set(config, update(get(config))));
-  }
-}
-
-class ProfileOverrideTarget<K extends OverrideKey, M>
-    extends OverrideTarget<K, M> {
-  const ProfileOverrideTarget(
-    this.profileId, {
-    required this.get,
-    required this.set,
-    this.issues,
-    ConfigLabel? description,
-  }) : _description = description;
-
-  final int profileId;
-
-  @override
-  final ProviderListenable<List<CustomIssue>>? issues;
-  final OverrideState<K, M> Function(ProfileOverrides overrides) get;
-  final ProfileOverrides Function(
-    ProfileOverrides overrides,
-    OverrideState<K, M> state,
-  )
-  set;
-
-  final ConfigLabel? _description;
-
-  @override
-  ConfigLabel get description => _description ?? _profileSettingsDesc;
-
-  static String _profileSettingsDesc(AppLocalizations l) =>
-      l.profileSettingsDesc;
-
-  @override
-  ConfigLabel get entries =>
-      (l) => l.settingEntries;
-
-  @override
-  ConfigLabel get addEntry =>
-      (l) => l.addSettingEntry;
-
-  ProfileOverrides _of(Profile? profile) =>
-      profile?.overrides ?? const ProfileOverrides();
-
-  @override
-  ProviderListenable<T> select<T>(
-    T Function(OverrideState<K, M> state) select,
-  ) =>
-      profileProvider(profileId).select((profile) => select(get(_of(profile))));
-
-  @override
-  OverrideState<K, M> read(WidgetRef ref) =>
-      get(_of(ref.read(profileProvider(profileId))));
-
-  @override
-  void update(
-    WidgetRef ref,
-    OverrideState<K, M> Function(OverrideState<K, M> state) update,
-  ) {
-    ref
-        .read(profilesProvider.notifier)
-        .updateProfile(
-          profileId,
-          (profile) => profile.copyWith(
-            overrides: set(profile.overrides, update(get(profile.overrides))),
-          ),
-        );
   }
 }
 

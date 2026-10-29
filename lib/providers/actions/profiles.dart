@@ -79,53 +79,6 @@ class ProfilesAction extends _$ProfilesAction {
     ];
   }
 
-  /// Where a profile's own group takes a name, the name stands for that group.
-  Future<List<Profile>> proxyUsers(Set<String> names) async {
-    final (ruleTargets, dialerTargets) = await (
-      database.rulesDao.targetsNaming(names),
-      database.proxyDialersDao.targetsNaming(names),
-    ).wait;
-    final users = <Profile>[];
-    for (final profile in ref.read(profilesProvider)) {
-      if (profile.type != ProfileType.custom) {
-        continue;
-      }
-      final groups = await database.proxyGroupsDao.query(profile.id).get();
-      final inUse = proxyNamesInUse(
-        names.difference({for (final group in groups) group.name}),
-        groups: groups,
-        ruleTargets: ruleTargets[profile.id] ?? const {},
-        dialerTargets: dialerTargets[profile.id] ?? const {},
-        overrides: profile.overrides,
-      );
-      if (inUse.isNotEmpty) {
-        users.add(profile);
-      }
-    }
-    return users;
-  }
-
-  Future<Set<String>> groupsInUse(int profileId, Set<int> groupIds) async {
-    final groups = await database.proxyGroupsDao.query(profileId).get();
-    final names = {
-      for (final group in groups)
-        if (groupIds.contains(group.id)) group.name,
-    };
-    final (ruleTargets, dialerTargets) = await (
-      database.rulesDao.targetsNaming(names),
-      database.proxyDialersDao.targetsNaming(names),
-    ).wait;
-    return proxyNamesInUse(
-      names,
-      groups: groups.where((group) => !groupIds.contains(group.id)),
-      ruleTargets: ruleTargets[profileId] ?? const {},
-      dialerTargets: dialerTargets[profileId] ?? const {},
-      overrides:
-          ref.read(profilesProvider).getProfile(profileId)?.overrides ??
-          const ProfileOverrides(),
-    );
-  }
-
   Future<void> updateProfiles() async {
     for (final id in [
       for (final profile in ref.read(profilesProvider)) profile.id,
@@ -209,12 +162,6 @@ class ProfilesAction extends _$ProfilesAction {
     }
   }
 
-  int addCustomProfile(String label) {
-    final profile = Profile.custom(label: label);
-    putProfile(profile);
-    return profile.id;
-  }
-
   /// Creates a file profile from rendered Clash YAML, as the universal
   /// import does. The core validates the file before it is stored, so a
   /// broken render never becomes a profile.
@@ -251,127 +198,6 @@ class ProfilesAction extends _$ProfilesAction {
     ref
         .read(profilesProvider.notifier)
         .put(profile.copyWith(lastUpdateDate: DateTime.now()));
-  }
-
-  Future<CustomProfileImport> readCustomImport(
-    int profileId,
-    Uint8List bytes,
-  ) async {
-    final profiles = ref.read(profilesProvider);
-    final (ruleProviders, proxies, groupNames) = await (
-      database.clashProvidersDao.query().get(),
-      database.customProxiesDao.query().get(),
-      database.proxyGroupsDao.names(except: profileId).get(),
-    ).wait;
-    final CustomImportApp app = (
-      profileLabels: {
-        for (final profile in profiles) ...[profile.label, profile.realLabel],
-      },
-      profileSources: {
-        for (final profile in profiles)
-          if (profile.type == ProfileType.url)
-            (url: profile.url, ageSecretKey: profile.ageSecretKey):
-                profile.realLabel,
-      },
-      ruleProviderLabels: {
-        for (final provider in ruleProviders) provider.label,
-      },
-      ruleProviderSources: {
-        for (final provider in ruleProviders)
-          if (provider.isRemote)
-            (url: provider.url, ageSecretKey: ''): provider.label,
-      },
-      proxies: [for (final proxy in proxies) proxy.definition],
-      groupNames: groupNames.toSet(),
-    );
-    try {
-      return await compute(readCustomProfileImport, (bytes: bytes, app: app));
-    } on CustomImportException catch (error) {
-      final appLocalizations = currentAppLocalizations;
-      throw MessageException(switch (error.issue) {
-        CustomImportIssue.unreadable => appLocalizations.importConfigInvalid,
-        CustomImportIssue.ruleType => appLocalizations.failedItem(
-          error.item,
-          appLocalizations.ruleTextInvalid,
-        ),
-        CustomImportIssue.entry => appLocalizations.failedItem(
-          error.item,
-          error.detail,
-        ),
-      });
-    }
-  }
-
-  /// [config] replaces what [profileId] holds. The providers it adds are saved
-  /// before the groups and rules naming them, and loaded afterwards; the
-  /// future completes once they have loaded.
-  Future<void> importCustomProfile(int profileId, CustomProfileImport config) {
-    final profiles = ref.read(profilesProvider.notifier);
-    final clashProviders = ref.read(clashProvidersProvider.notifier);
-    final loads = <({String label, Future<void> Function() load})>[];
-    for (final (:label, :url, :ageSecretKey, :content)
-        in config.proxyProviders) {
-      final profile = Profile.normal(
-        label: label,
-        url: url,
-      ).copyWith(ageSecretKey: ageSecretKey);
-      profiles.put(profile);
-      loads.add((
-        label: label,
-        load: url.isNotEmpty
-            ? () => updateProfile(profile, showLoading: true)
-            : () async => profiles.put(
-                await profile.saveFile(
-                  utf8.encode(content),
-                  validate: (path, key) => _core.validateProfile(path, key),
-                ),
-              ),
-      ));
-    }
-    for (final (:label, :url, ageSecretKey: _, :content)
-        in config.ruleProviders) {
-      final provider = ClashProvider.create(label: label, url: url);
-      clashProviders.put(provider);
-      loads.add((
-        label: label,
-        load: url.isNotEmpty
-            ? () => ref
-                  .read(resourcesActionProvider.notifier)
-                  .updateRuleProvider(provider)
-            : () => ref
-                  .read(clashProvidersActionProvider.notifier)
-                  .putProvider(provider, content: utf8.encode(content)),
-      ));
-    }
-    final customProxies = ref.read(customProxiesProvider.notifier);
-    customProxies.putAll([
-      for (final definition in config.proxies)
-        CustomProxy.fromDefinition(definition),
-    ]);
-    final proxyIds = {
-      for (final proxy in customProxies.value) proxy.name: proxy.id,
-    };
-    ref.read(proxyGroupsProvider(profileId).notifier).setAll([
-      for (final group in config.proxyGroups) group.copyWith(id: snowflake.id),
-    ]);
-    ref.read(profileRulesProvider(profileId).notifier).setAll([
-      for (final rule in config.rules) rule.copyWith(id: snowflake.id),
-    ]);
-    ref.read(proxyDialersProvider(profileId).notifier).setAll({
-      for (final MapEntry(:key, :value) in config.dialers.entries)
-        ?proxyIds[key]: value,
-    });
-    profiles.updateProfile(
-      profileId,
-      (profile) => profile.copyWith(overrides: config.overrides),
-    );
-    return globalState.batchRun(
-      loads,
-      (item) => item.load(),
-      label: (item) => item.label,
-      concurrency: maxConcurrentImports,
-      tag: null,
-    );
   }
 
   void _showProfiles() {
