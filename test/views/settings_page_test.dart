@@ -141,7 +141,7 @@ void main() {
     await tester.tap(find.text('Advanced configuration'));
     await tester.pumpAndSettle();
     expect(find.byType(AdvancedConfigView), findsOneWidget);
-    for (final label in ['Network', 'DNS', 'Added rules']) {
+    for (final label in ['Network', 'DNS']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
   });

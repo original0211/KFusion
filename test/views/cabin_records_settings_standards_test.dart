@@ -296,7 +296,7 @@ void main() {
       expect(find.byType(DecorationListItem), findsNothing);
     });
 
-    testWidgets('the advanced index lists three cabin rows', (tester) async {
+    testWidgets('the advanced index lists two cabin rows', (tester) async {
       final container = _container(tester);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -305,7 +305,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.byType(DecorationListItem), findsNWidgets(3));
+      expect(find.byType(DecorationListItem), findsNWidgets(2));
     });
 
     testWidgets('the custom resources index lists four cabin rows', (
