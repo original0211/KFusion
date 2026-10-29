@@ -7,6 +7,7 @@ export 'compute.dart';
 export 'constant.dart';
 export 'context.dart';
 export 'converter.dart';
+export 'country_name.dart';
 export 'datetime.dart';
 export 'dialog.dart';
 export 'exception.dart';

@@ -524,10 +524,19 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     final exitType = exitIp == null
         ? null
         : ref.watch(ipQualityProvider(exitIp)).value?.type;
+    // The country rides the same probe answer as the address itself, so
+    // it resolves locally and lands with the IP, unlike the type.
+    final exitCountry = exitIp == null
+        ? null
+        : countryName(ipInfo!.countryCode, Localizations.localeOf(context));
     final shownIp = hideIp ? '*****' : (ipInfo?.ip ?? '');
     final exitRow = valueOf(
       showValues && ipInfo != null,
-      exitType == null ? shownIp : '$shownIp · ${exitType.label(context)}',
+      [
+        shownIp,
+        ?exitCountry,
+        if (exitType != null) exitType.label(context),
+      ].join(' · '),
     );
     final kernelRow = valueOf(showValues, _coreName(runningCore ?? activeKind));
     // The counters are mihomo-fed; under sing-box they would misreport zero.

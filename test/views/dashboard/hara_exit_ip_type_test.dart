@@ -33,16 +33,30 @@ const _residential = IpQuality(
   asn: 64500,
 );
 
+const _stamp = RouteStamp(
+  coreEpoch: 1,
+  picksVersion: 1,
+  hostEpoch: 1,
+  proxied: true,
+  chains: [_node],
+);
+
 const _freshEntry = ProbeEntry<IpInfo>(
   phase: ProbePhase.fresh,
   value: IpInfo(ip: _ip, countryCode: 'GB'),
-  stamp: RouteStamp(
-    coreEpoch: 1,
-    picksVersion: 1,
-    hostEpoch: 1,
-    proxied: true,
-    chains: [_node],
-  ),
+  stamp: _stamp,
+);
+
+const _japanEntry = ProbeEntry<IpInfo>(
+  phase: ProbePhase.fresh,
+  value: IpInfo(ip: _ip, countryCode: 'JP'),
+  stamp: _stamp,
+);
+
+const _unlistedEntry = ProbeEntry<IpInfo>(
+  phase: ProbePhase.fresh,
+  value: IpInfo(ip: _ip, countryCode: 'AQ'),
+  stamp: _stamp,
 );
 
 class _RecordingSetupAction extends SetupAction {
@@ -68,9 +82,10 @@ class _QualityStub {
 Widget _app({
   required ProbeEntry<IpInfo> entry,
   required _QualityStub quality,
+  Locale locale = const Locale('en'),
 }) {
   return TestApp(
-    locale: const Locale('en'),
+    locale: locale,
     overrides: [
       profilesProvider.overrideWithValue(const [_profile]),
       currentProfileIdProvider.overrideWithBuild((_, _) => 1),
@@ -99,8 +114,8 @@ Future<void> _pumpConnected(WidgetTester tester, Widget app) async {
   await tester.pump();
 }
 
-Finder _exitValue(String text) => find.descendant(
-  of: find.ancestor(of: find.text('Exit'), matching: find.byType(Row)),
+Finder _exitValue(String text, {String label = 'Exit'}) => find.descendant(
+  of: find.ancestor(of: find.text(label), matching: find.byType(Row)),
   matching: find.text(text),
 );
 
@@ -109,18 +124,18 @@ void main() {
     await mockPreferences();
   });
 
-  testWidgets('the exit row appends the type once the quality lands', (
+  testWidgets('the exit row shows country and type once quality lands', (
     tester,
   ) async {
     final quality = _QualityStub((_) async => _residential);
     await _pumpConnected(tester, _app(entry: _freshEntry, quality: quality));
 
-    expect(_exitValue('$_ip · Residential'), findsOneWidget);
+    expect(_exitValue('$_ip · United Kingdom · Residential'), findsOneWidget);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the exit row shows the bare IP while the quality is pending', (
+  testWidgets('the country lands with the IP while quality is pending', (
     tester,
   ) async {
     final pending = Completer<IpQuality>();
@@ -128,13 +143,13 @@ void main() {
     final quality = _QualityStub((_) => pending.future);
     await _pumpConnected(tester, _app(entry: _freshEntry, quality: quality));
 
-    expect(_exitValue(_ip), findsOneWidget);
-    expect(find.textContaining('·'), findsNothing);
+    expect(_exitValue('$_ip · United Kingdom'), findsOneWidget);
+    expect(find.textContaining('Residential'), findsNothing);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a failed quality lookup leaves the bare IP and no error', (
+  testWidgets('a failed quality lookup keeps the country, drops the type', (
     tester,
   ) async {
     final quality = _QualityStub(
@@ -142,10 +157,74 @@ void main() {
     );
     await _pumpConnected(tester, _app(entry: _freshEntry, quality: quality));
 
-    expect(_exitValue(_ip), findsOneWidget);
-    expect(find.textContaining('·'), findsNothing);
+    expect(_exitValue('$_ip · United Kingdom'), findsOneWidget);
+    expect(find.textContaining('Residential'), findsNothing);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('an unlisted country code drops the country segment', (
+    tester,
+  ) async {
+    final quality = _QualityStub((_) async => _residential);
+    await _pumpConnected(tester, _app(entry: _unlistedEntry, quality: quality));
+
+    expect(_exitValue('$_ip · Residential'), findsOneWidget);
+    expect(quality.calls, [_ip]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the country and type follow the app language', (tester) async {
+    final quality = _QualityStub((_) async => _residential);
+    await _pumpConnected(
+      tester,
+      _app(
+        entry: _japanEntry,
+        quality: quality,
+        locale: const Locale('zh', 'CN'),
+      ),
+    );
+
+    expect(_exitValue('$_ip · 日本 · 住宅', label: '出口'), findsOneWidget);
+    expect(quality.calls, [_ip]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hide ip masks the row and skips the quality lookup', (
+    tester,
+  ) async {
+    final quality = _QualityStub((_) async => _residential);
+    final container = ProviderContainer(
+      overrides: [
+        profilesProvider.overrideWithValue(const [_profile]),
+        currentProfileIdProvider.overrideWithBuild((_, _) => 1),
+        suspendProvider.overrideWithValue(false),
+        setupActionProvider.overrideWith(_RecordingSetupAction.new),
+        outboundIpProbeProvider.overrideWithBuild(
+          (_, _) => const RoutedProbeState({routedOutbound: _freshEntry}),
+        ),
+        ipQualityProvider.overrideWith(quality.call),
+      ],
+    );
+    addTearDown(container.dispose);
+    container
+        .read(appSettingProvider.notifier)
+        .update((state) => state.copyWith(hideIp: true));
+    await _pumpConnected(
+      tester,
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(locale: Locale('en'), child: HaraDashboard()),
+      ),
+    );
+
+    expect(_exitValue('*****'), findsOneWidget);
+    expect(find.textContaining('United Kingdom'), findsNothing);
+    expect(find.textContaining('Residential'), findsNothing);
+    expect(quality.calls, isEmpty);
+    expect(tester.takeException(), isNull);
+    // Flush the debounced sync the settings write schedules.
+    await tester.pump(const Duration(seconds: 15));
   });
 
   testWidgets('no exit IP means a dash and no quality lookup at all', (

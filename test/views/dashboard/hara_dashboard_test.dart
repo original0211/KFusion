@@ -181,7 +181,9 @@ void main() {
   testWidgets('connected shows one vermilion dot and live figures', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(412, 800);
+    // The test font draws every glyph a full em wide, so the exit row's
+    // appended country needs a wider surface than the other cases here.
+    tester.view.physicalSize = const Size(800, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -197,7 +199,7 @@ void main() {
     expect(find.byType(HaraDot), findsOneWidget);
     final ring = tester.widget<DiscRingMotif>(_ring());
     expect(ring.color, HaraPalette.light.ink.withValues(alpha: 0.78));
-    expect(find.text(_ip), findsOneWidget);
+    expect(find.text('$_ip · United Kingdom'), findsOneWidget);
     expect(find.text('mihomo'), findsOneWidget);
     expect(find.text('sing-box not running'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -246,7 +248,7 @@ void main() {
   testWidgets('scrolling pins the compact status row once connected', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(412, 400);
+    tester.view.physicalSize = const Size(800, 400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
