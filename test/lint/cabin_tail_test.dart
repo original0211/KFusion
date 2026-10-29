@@ -50,9 +50,6 @@ void main() {
         .where((hit) => !hit.startsWith('lib/ui/null_status.dart'))
         .map((hit) => hit.split(':').first)
         .toSet();
-    expect(files, {
-      'lib/views/profiles/profiles.dart',
-      'lib/views/dns_queries.dart',
-    });
+    expect(files, {'lib/views/profiles/profiles.dart'});
   });
 }

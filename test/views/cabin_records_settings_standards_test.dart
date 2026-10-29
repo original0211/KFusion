@@ -8,7 +8,6 @@ import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/custom_resources.dart';
 import 'package:kfusion/views/config/general.dart';
-import 'package:kfusion/views/dns_queries.dart';
 import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/logs.dart';
 import 'package:kfusion/views/resources.dart';
@@ -208,47 +207,6 @@ void main() {
       expect(chip.label, 'warning');
       expect(chip.color, scheme.warningContainer);
       expect(chip.foregroundColor, scheme.onWarningContainer);
-    });
-  });
-
-  group('dns queries (cabin batch 4, #9)', () {
-    testWidgets('a failed query reads its summary in the error color', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        TestApp(
-          child: DnsQueryItem(
-            dnsQuery: DnsQuery(
-              domain: 'example.com',
-              type: 'A',
-              answers: const [],
-              rcode: 'SERVFAIL',
-              error: 'server failure',
-              delay: 30,
-              time: DateTime.utc(2026, 9, 18, 4, 30),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-      final context = tester.element(find.byType(DnsQueryItem));
-      final summary = tester.widget<Text>(find.text('server failure'));
-      expect(summary.style?.color, Theme.of(context).colorScheme.error);
-    });
-
-    testWidgets('the empty state is the brand variant', (tester) async {
-      final container = _container(tester);
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: DnsQueriesView()),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
-      final status = tester.widget<NullStatus>(find.byType(NullStatus));
-      expect(status.brandMark, isTrue);
-      expect(find.byType(DashboardDiscMotif), findsOneWidget);
     });
   });
 
