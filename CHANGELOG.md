@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.35 (2026-10-29)
+
+**Features**
+
+- **ui** The delay test-all entry moves from the subscriptions header to the main screen: it now stands at the head of the node list, where the delays it refreshes are the ones being read, and the subscriptions header keeps only its update and sort actions. The test itself is unchanged — it still runs every group of the current profile through the same action, with the same testing state and the same write-back into the node rows; only the entry point moved. (397566a)
+
+**Bug Fixes**
+
+- **ui** The main screen's pinned compact bar no longer slides under the system status bar once the node list is scrolled: its content now honours the top safe-area inset, as the hero header already did, so the disc, the status dot and the current exit name stay fully visible below the status bar. The bar's background still spans the full width behind the status bar, and its appearance threshold, collapse geometry and scroll behaviour are unchanged. (3c98ac2)
+
 ## v0.2.34 (2026-10-29)
 
 **Features**
