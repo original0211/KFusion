@@ -42,6 +42,18 @@ const _groups = [
   ),
 ];
 
+class _RecordingProxiesAction extends ProxiesAction {
+  static final List<String> tested = [];
+
+  @override
+  Future<void> delayTestPageGroup(
+    String groupName, {
+    bool matchSearch = true,
+  }) async {
+    tested.add(groupName);
+  }
+}
+
 class _RecordingSetupAction extends SetupAction {
   final requests = <bool>[];
 
@@ -70,6 +82,7 @@ Widget _app({bool singBoxRunning = false}) {
         const GroupsState(value: _groups),
       ),
       suspendProvider.overrideWithValue(false),
+      proxiesActionProvider.overrideWith(_RecordingProxiesAction.new),
       setupActionProvider.overrideWith(_RecordingSetupAction.new),
       outboundIpProbeProvider.overrideWithBuild(
         (_, _) => const RoutedProbeState({}),
@@ -136,6 +149,18 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Current exit'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the node list head test-all entry delay-tests every group', (
+    tester,
+  ) async {
+    _RecordingProxiesAction.tested.clear();
+    await _pump(tester, _app());
+    expect(find.text('Test all delays'), findsOneWidget);
+    await tester.tap(find.text('Test all delays'));
+    await tester.pump();
+    expect(_RecordingProxiesAction.tested, ['GLOBAL', 'Home']);
     expect(tester.takeException(), isNull);
   });
 

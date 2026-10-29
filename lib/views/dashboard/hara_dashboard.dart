@@ -97,6 +97,14 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     ref.read(commonActionProvider.notifier).toggleRunning();
   }
 
+  void _testAll() {
+    final groups = ref.read(proxiesListStateProvider).groups;
+    final action = ref.read(proxiesActionProvider.notifier);
+    for (final group in groups) {
+      action.delayTestPageGroup(group.name);
+    }
+  }
+
   void _updateSticky() {
     final extent = _heroExtent;
     if (extent == null || !_scrollController.hasClients) return;
@@ -231,6 +239,10 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
                               ],
                             ),
                           ),
+                          if (groups.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: _testAllHead(context, palette),
+                            ),
                           for (final group in groups)
                             HaraProxyGroupSection(
                               group: group,
@@ -436,6 +448,30 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _testAllHead(BuildContext context, HaraPalette palette) {
+    final appLocalizations = context.appLocalizations;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: HaraSpace.groupGap),
+        InkWell(
+          customBorder: AppShape.hara,
+          onTap: _testAll,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: HaraSpace.addRowVertical,
+            ),
+            child: Text(
+              appLocalizations.actionDelayTest,
+              style: HaraText.pageAction(context, palette.dim),
+            ),
+          ),
+        ),
+        HaraHairline(color: palette.line),
+      ],
     );
   }
 

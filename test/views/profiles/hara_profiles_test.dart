@@ -11,24 +11,6 @@ import 'package:kfusion/views/profiles/hara_profiles.dart';
 import '../../helpers/test_app.dart';
 import '../../helpers/test_profiles.dart';
 
-class _RecordingProxiesAction extends ProxiesAction {
-  static final List<String> tested = [];
-
-  @override
-  Future<void> delayTestPageGroup(
-    String groupName, {
-    bool matchSearch = true,
-  }) async {
-    tested.add(groupName);
-  }
-}
-
-Group _group(String name, int count) => Group(
-  type: GroupType.Selector,
-  name: name,
-  all: [for (var i = 0; i < count; i++) Proxy(name: '$name-$i', type: 'ss')],
-);
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -61,10 +43,7 @@ void main() {
     ),
   ];
 
-  Future<ProviderContainer> pumpPage(
-    WidgetTester tester, {
-    List<Group>? testGroups,
-  }) async {
+  Future<ProviderContainer> pumpPage(WidgetTester tester) async {
     tester.view.physicalSize = const Size(412, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -73,12 +52,6 @@ void main() {
       overrides: [
         profilesProvider.overrideWith(() => TestProfiles(profiles)),
         currentProfileIdProvider.overrideWithBuild((_, _) => 1),
-        if (testGroups != null) ...[
-          proxiesActionProvider.overrideWith(_RecordingProxiesAction.new),
-          currentGroupsStateProvider.overrideWithValue(
-            GroupsState(value: testGroups),
-          ),
-        ],
       ],
     );
     addTearDown(container.dispose);
@@ -152,16 +125,12 @@ void main() {
     expect(find.text('Profiles'), findsNothing);
   });
 
-  testWidgets('the header test-all entry delay-tests every listed group', (
+  testWidgets('the header carries update and sort, and no test-all entry', (
     tester,
   ) async {
-    _RecordingProxiesAction.tested.clear();
-    await pumpPage(tester, testGroups: [_group('G0', 2), _group('G1', 1)]);
-    expect(find.text('Test all delays'), findsOneWidget);
+    await pumpPage(tester);
+    expect(find.text('Test all delays'), findsNothing);
     expect(find.text('Update'), findsOneWidget);
     expect(find.text('Sort profiles'), findsOneWidget);
-    await tester.tap(find.text('Test all delays'));
-    await tester.pump();
-    expect(_RecordingProxiesAction.tested, ['G0', 'G1']);
   });
 }
