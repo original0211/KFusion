@@ -150,36 +150,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Access restricted`
-  String get serviceRestricted {
-    return Intl.message(
-      'Access restricted',
-      name: 'serviceRestricted',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Available`
-  String get serviceAvailable {
-    return Intl.message(
-      'Available',
-      name: 'serviceAvailable',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Unavailable`
-  String get serviceUnavailable {
-    return Intl.message(
-      'Unavailable',
-      name: 'serviceUnavailable',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Check failed`
   String get serviceFailed {
     return Intl.message(
@@ -190,94 +160,9 @@ class AppLocalizations {
     );
   }
 
-  /// `Disallowed ISP`
-  String get serviceDisallowedIsp {
-    return Intl.message(
-      'Disallowed ISP',
-      name: 'serviceDisallowedIsp',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Blocked`
-  String get serviceBlocked {
-    return Intl.message('Blocked', name: 'serviceBlocked', desc: '', args: []);
-  }
-
-  /// `Region not supported`
-  String get serviceUnsupportedRegion {
-    return Intl.message(
-      'Region not supported',
-      name: 'serviceUnsupportedRegion',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Originals only`
-  String get serviceOriginalsOnly {
-    return Intl.message(
-      'Originals only',
-      name: 'serviceOriginalsOnly',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Coming soon`
-  String get serviceComingSoon {
-    return Intl.message(
-      'Coming soon',
-      name: 'serviceComingSoon',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Not checked`
-  String get servicePending {
-    return Intl.message(
-      'Not checked',
-      name: 'servicePending',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Manage services`
-  String get serviceManage {
-    return Intl.message(
-      'Manage services',
-      name: 'serviceManage',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Check`
   String get serviceCheck {
     return Intl.message('Check', name: 'serviceCheck', desc: '', args: []);
-  }
-
-  /// `Check all`
-  String get serviceCheckAll {
-    return Intl.message(
-      'Check all',
-      name: 'serviceCheckAll',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Checked at {time}`
-  String serviceCheckedAt(Object time) {
-    return Intl.message(
-      'Checked at $time',
-      name: 'serviceCheckedAt',
-      desc: '',
-      args: [time],
-    );
   }
 
   /// `Upload`
@@ -1353,11 +1238,6 @@ class AppLocalizations {
   /// `Inbound`
   String get inbound {
     return Intl.message('Inbound', name: 'inbound', desc: '', args: []);
-  }
-
-  /// `Intranet IP`
-  String get intranetIP {
-    return Intl.message('Intranet IP', name: 'intranetIP', desc: '', args: []);
   }
 
   /// `In use`
@@ -2750,11 +2630,6 @@ class AppLocalizations {
     return Intl.message('Remove', name: 'remove', desc: '', args: []);
   }
 
-  /// `No network`
-  String get noNetwork {
-    return Intl.message('No network', name: 'noNetwork', desc: '', args: []);
-  }
-
   /// `With IPv6 on, the VPN allows IPv6 inbound.`
   String get ipv6InboundDesc {
     return Intl.message(
@@ -2988,136 +2863,6 @@ class AppLocalizations {
   /// `Total`
   String get total {
     return Intl.message('Total', name: 'total', desc: '', args: []);
-  }
-
-  /// `Release memory`
-  String get releaseMemory {
-    return Intl.message(
-      'Release memory',
-      name: 'releaseMemory',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Heap in use`
-  String get memoryCoreHeapInuse {
-    return Intl.message(
-      'Heap in use',
-      name: 'memoryCoreHeapInuse',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Heap idle`
-  String get memoryCoreHeapIdle {
-    return Intl.message(
-      'Heap idle',
-      name: 'memoryCoreHeapIdle',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Goroutine stacks`
-  String get memoryCoreStack {
-    return Intl.message(
-      'Goroutine stacks',
-      name: 'memoryCoreStack',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Runtime overhead`
-  String get memoryCoreRuntime {
-    return Intl.message(
-      'Runtime overhead',
-      name: 'memoryCoreRuntime',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Core is not running`
-  String get memoryCoreNotRunning {
-    return Intl.message(
-      'Core is not running',
-      name: 'memoryCoreNotRunning',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Resident memory`
-  String get memoryAppResident {
-    return Intl.message(
-      'Resident memory',
-      name: 'memoryAppResident',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `App & shared`
-  String get memoryAppShared {
-    return Intl.message(
-      'App & shared',
-      name: 'memoryAppShared',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Estimated from process resident memory; it may differ from what the system reports.`
-  String get memoryEstimateDesc {
-    return Intl.message(
-      'Estimated from process resident memory; it may differ from what the system reports.',
-      name: 'memoryEstimateDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `The Core runs inside the app process. Its share is estimated from runtime stats, and the rest counts as app and shared memory.`
-  String get memoryEstimateSharedDesc {
-    return Intl.message(
-      'The Core runs inside the app process. Its share is estimated from runtime stats, and the rest counts as app and shared memory.',
-      name: 'memoryEstimateSharedDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Memory released`
-  String get memoryReleased {
-    return Intl.message(
-      'Memory released',
-      name: 'memoryReleased',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Released {size}`
-  String memoryReleasedSize(Object size) {
-    return Intl.message(
-      'Released $size',
-      name: 'memoryReleasedSize',
-      desc: '',
-      args: [size],
-    );
-  }
-
-  /// `Failed to release memory`
-  String get releaseMemoryFailed {
-    return Intl.message(
-      'Failed to release memory',
-      name: 'releaseMemoryFailed',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `Cancel`
@@ -3910,16 +3655,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Creation time`
-  String get creationTime {
-    return Intl.message(
-      'Creation time',
-      name: 'creationTime',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Process`
   String get process {
     return Intl.message('Process', name: 'process', desc: '', args: []);
@@ -3985,21 +3720,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Network type`
-  String get networkType {
-    return Intl.message(
-      'Network type',
-      name: 'networkType',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Proxy chain`
-  String get proxyChains {
-    return Intl.message('Proxy chain', name: 'proxyChains', desc: '', args: []);
-  }
-
   /// `Log`
   String get log {
     return Intl.message('Log', name: 'log', desc: '', args: []);
@@ -4050,16 +3770,6 @@ class AppLocalizations {
     return Intl.message(
       'Connection failed',
       name: 'connectionFailed',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Tap to connect`
-  String get tapToConnect {
-    return Intl.message(
-      'Tap to connect',
-      name: 'tapToConnect',
       desc: '',
       args: [],
     );
@@ -5948,31 +5658,11 @@ class AppLocalizations {
     );
   }
 
-  /// `Block connection`
-  String get blockConnection {
-    return Intl.message(
-      'Block connection',
-      name: 'blockConnection',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Close connections`
   String get closeConnections {
     return Intl.message(
       'Close connections',
       name: 'closeConnections',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Scroll to selected`
-  String get scrollToSelected {
-    return Intl.message(
-      'Scroll to selected',
-      name: 'scrollToSelected',
       desc: '',
       args: [],
     );
@@ -6333,24 +6023,9 @@ class AppLocalizations {
     return Intl.message('DNS queries', name: 'dnsQueries', desc: '', args: []);
   }
 
-  /// `Record type`
-  String get recordType {
-    return Intl.message('Record type', name: 'recordType', desc: '', args: []);
-  }
-
   /// `Answers`
   String get answers {
     return Intl.message('Answers', name: 'answers', desc: '', args: []);
-  }
-
-  /// `Response code`
-  String get responseCode {
-    return Intl.message(
-      'Response code',
-      name: 'responseCode',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `Error`
@@ -6366,16 +6041,6 @@ class AppLocalizations {
   /// `Cache`
   String get cache {
     return Intl.message('Cache', name: 'cache', desc: '', args: []);
-  }
-
-  /// `Yes`
-  String get yes {
-    return Intl.message('Yes', name: 'yes', desc: '', args: []);
-  }
-
-  /// `No`
-  String get no {
-    return Intl.message('No', name: 'no', desc: '', args: []);
   }
 
   /// `This external resource is not a text file`
@@ -6721,26 +6386,6 @@ class AppLocalizations {
   /// `Extra large`
   String get extraLarge {
     return Intl.message('Extra large', name: 'extraLarge', desc: '', args: []);
-  }
-
-  /// `Switch profile`
-  String get switchProfile {
-    return Intl.message(
-      'Switch profile',
-      name: 'switchProfile',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Last updated`
-  String get lastUpdated {
-    return Intl.message(
-      'Last updated',
-      name: 'lastUpdated',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `Filters`
@@ -7557,16 +7202,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Holds the start button and can't be removed`
-  String get currentOutboundDesc {
-    return Intl.message(
-      'Holds the start button and can\'t be removed',
-      name: 'currentOutboundDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Running`
   String get running {
     return Intl.message('Running', name: 'running', desc: '', args: []);
@@ -7575,51 +7210,6 @@ class AppLocalizations {
   /// `Not running`
   String get notRunning {
     return Intl.message('Not running', name: 'notRunning', desc: '', args: []);
-  }
-
-  /// `Peak {value}`
-  String trafficPeak(Object value) {
-    return Intl.message(
-      'Peak $value',
-      name: 'trafficPeak',
-      desc: '',
-      args: [value],
-    );
-  }
-
-  /// `Total {value}`
-  String trafficTotal(Object value) {
-    return Intl.message(
-      'Total $value',
-      name: 'trafficTotal',
-      desc: '',
-      args: [value],
-    );
-  }
-
-  /// `Quality`
-  String get ipQualityShort {
-    return Intl.message('Quality', name: 'ipQualityShort', desc: '', args: []);
-  }
-
-  /// `Unknown type`
-  String get ipTypeUnknown {
-    return Intl.message(
-      'Unknown type',
-      name: 'ipTypeUnknown',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Tap the icon to retry`
-  String get tapIconToRetry {
-    return Intl.message(
-      'Tap the icon to retry',
-      name: 'tapIconToRetry',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `Traffic takeover`
@@ -7632,130 +7222,9 @@ class AppLocalizations {
     );
   }
 
-  /// `Port {port}`
-  String portValue(Object port) {
-    return Intl.message(
-      'Port $port',
-      name: 'portValue',
-      desc: '',
-      args: [port],
-    );
-  }
-
-  /// `{count, plural, =1{1 issue} other{{count} issues}}`
-  String serviceAbnormalCount(num count) {
-    return Intl.plural(
-      count,
-      one: '1 issue',
-      other: '$count issues',
-      name: 'serviceAbnormalCount',
-      desc: '',
-      args: [count],
-    );
-  }
-
-  /// `All available`
-  String get serviceAllAvailable {
-    return Intl.message(
-      'All available',
-      name: 'serviceAllAvailable',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Shown on the dashboard`
-  String get serviceShownOnDashboard {
-    return Intl.message(
-      'Shown on the dashboard',
-      name: 'serviceShownOnDashboard',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `{count} timed out`
-  String groupTimeoutCount(Object count) {
-    return Intl.message(
-      '$count timed out',
-      name: 'groupTimeoutCount',
-      desc: '',
-      args: [count],
-    );
-  }
-
-  /// `groups`
-  String get groupCountUnit {
-    return Intl.message('groups', name: 'groupCountUnit', desc: '', args: []);
-  }
-
-  /// `{count, plural, =1{1 group} other{{count} groups}}`
-  String groupCount(num count) {
-    return Intl.plural(
-      count,
-      one: '1 group',
-      other: '$count groups',
-      name: 'groupCount',
-      desc: '',
-      args: [count],
-    );
-  }
-
-  /// `Groups show up here once the core starts`
-  String get proxyGroupsAfterStart {
-    return Intl.message(
-      'Groups show up here once the core starts',
-      name: 'proxyGroupsAfterStart',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `used`
-  String get usedShort {
-    return Intl.message('used', name: 'usedShort', desc: '', args: []);
-  }
-
-  /// `Updated {time}`
-  String profileUpdatedAt(Object time) {
-    return Intl.message(
-      'Updated $time',
-      name: 'profileUpdatedAt',
-      desc: '',
-      args: [time],
-    );
-  }
-
-  /// `Expires {date}, {days, plural, =1{1 day} other{{days} days}} left`
-  String profileExpiresIn(Object date, num days) {
-    return Intl.message(
-      'Expires $date, ${Intl.plural(days, one: '1 day', other: '$days days')} left',
-      name: 'profileExpiresIn',
-      desc: '',
-      args: [date, days],
-    );
-  }
-
-  /// `{days, plural, =1{1 day left} other{{days} days left}}`
-  String profileDaysLeft(num days) {
-    return Intl.plural(
-      days,
-      one: '1 day left',
-      other: '$days days left',
-      name: 'profileDaysLeft',
-      desc: '',
-      args: [days],
-    );
-  }
-
   /// `Target`
   String get target {
     return Intl.message('Target', name: 'target', desc: '', args: []);
-  }
-
-  /// `Exit`
-  String get outboundExit {
-    return Intl.message('Exit', name: 'outboundExit', desc: '', args: []);
   }
 
   /// `Duration`
@@ -7766,26 +7235,6 @@ class AppLocalizations {
   /// `Traffic`
   String get traffic {
     return Intl.message('Traffic', name: 'traffic', desc: '', args: []);
-  }
-
-  /// `Downloaded`
-  String get totalDownload {
-    return Intl.message(
-      'Downloaded',
-      name: 'totalDownload',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Uploaded`
-  String get totalUpload {
-    return Intl.message('Uploaded', name: 'totalUpload', desc: '', args: []);
-  }
-
-  /// `From`
-  String get initiatorShort {
-    return Intl.message('From', name: 'initiatorShort', desc: '', args: []);
   }
 
   /// `Result`
@@ -7808,59 +7257,9 @@ class AppLocalizations {
     );
   }
 
-  /// `Live connections, recent requests and DNS queries`
-  String get connectionStatsDesc {
-    return Intl.message(
-      'Live connections, recent requests and DNS queries',
-      name: 'connectionStatsDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Memory the app and the core use`
-  String get memoryInfoDesc {
-    return Intl.message(
-      'Memory the app and the core use',
-      name: 'memoryInfoDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Edit dashboard`
-  String get editDashboard {
-    return Intl.message(
-      'Edit dashboard',
-      name: 'editDashboard',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Done`
   String get done {
     return Intl.message('Done', name: 'done', desc: '', args: []);
-  }
-
-  /// `Available to add`
-  String get dashboardAddableSection {
-    return Intl.message(
-      'Available to add',
-      name: 'dashboardAddableSection',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `All cards have been added`
-  String get dashboardAddableEmpty {
-    return Intl.message(
-      'All cards have been added',
-      name: 'dashboardAddableEmpty',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `sing-box binary not found`
