@@ -71,13 +71,6 @@ void main() {
       matchTarget: 'Proxy',
     );
     await testDatabase.profilesDao.putAll([profile.toCompanion()]);
-    await testDatabase.scripts.put(
-      Script(
-        id: 5,
-        label: 'Script',
-        lastUpdateTime: DateTime(2026),
-      ).toCompanion(),
-    );
     await testDatabase.rulesDao.putRule(
       Rule.parse('DOMAIN,global.com,DIRECT', id: 10),
     );
@@ -100,7 +93,6 @@ void main() {
 
     final state = await container.read(setupStateProvider(profile.id).future);
 
-    expect(state.script, isNull);
     expect(state.matchTarget, isNull);
     expect(state.addedRules, isEmpty);
     expect(state.rules.map((rule) => rule.id), [11]);

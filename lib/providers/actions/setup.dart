@@ -450,15 +450,10 @@ class SetupAction extends _$SetupAction {
     );
     final appendSystemDns = networkSetting.appendSystemDns;
     final isCustom = setupState.profileType == ProfileType.custom;
-    final scriptContent =
-        !isCustom && setupState.extendType == ExtendType.script
-        ? await setupState.script?.content
-        : null;
-    final hasScript = scriptContent?.isNotEmpty == true;
-    final profileBase = !isCustom && !hasScript
+    final profileBase = !isCustom
         ? await _core.getProfileBase(profileId)
         : null;
-    Map<String, dynamic> rawConfig = isCustom
+    final Map<String, dynamic> rawConfig = isCustom
         ? {
             'proxies': appProxiesPayload(
               setupState.appProxies,
@@ -469,9 +464,6 @@ class SetupAction extends _$SetupAction {
         : profileBase?.base.config ?? await _core.getConfig(profileId);
     final proxyGroups = isCustom ? setupState.proxyGroups : <ProxyGroup>[];
     final rules = isCustom ? setupState.rules : <Rule>[];
-    if (hasScript) {
-      rawConfig = await handleEvaluate(scriptContent!, rawConfig);
-    }
     final directory = await appPath.profilesPath;
     final injected = await _resolveInjectedProviders(
       setupState,

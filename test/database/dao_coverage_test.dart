@@ -162,7 +162,6 @@ void main() {
   test(
     'generated table managers create, filter, order, and update rows',
     () async {
-      final date = DateTime.utc(2026, 7, 26);
       await database.managers.profiles.create(
         (row) => row(
           type: ProfileType.custom,
@@ -174,9 +173,6 @@ void main() {
           selectedMap: const {'Proxy': 'DIRECT'},
           unfoldSet: const {'Proxy'},
         ),
-      );
-      await database.managers.scripts.create(
-        (row) => row(label: 'Managed script', lastUpdateTime: date),
       );
       await database.managers.rules.create(
         (row) => row(
@@ -218,12 +214,6 @@ void main() {
         'Updated profile',
       );
 
-      expect(
-        await database.managers.scripts
-            .filter((row) => row.lastUpdateTime.equals(date))
-            .getSingle(),
-        isA<RawScript>(),
-      );
       expect(
         await database.managers.rules
             .filter((row) => row.content.equals('example.com'))
@@ -280,35 +270,6 @@ void main() {
           .withReferences((prefetch) => prefetch(profileId: true))
           .getSingle();
       expect((await groupWithReferences.$2.profileId.getSingle()).id, 1);
-    },
-  );
-
-  test(
-    'scripts DAO supports insert, update, lookup, filenames, and replacement',
-    () async {
-      final first = Script(
-        id: 10,
-        label: 'First',
-        lastUpdateTime: DateTime(2026),
-      );
-      final second = Script(
-        id: 11,
-        label: 'Second',
-        lastUpdateTime: DateTime(2026, 2),
-      );
-
-      await database.scripts.put(first.toCompanion());
-      expect(await database.scriptsDao.get(10).getSingle(), first);
-      expect(await database.scriptsDao.fileNames().get(), ['10.js']);
-
-      await database.scripts.put(
-        first.copyWith(label: 'Updated').toCompanion(),
-      );
-      expect((await database.scriptsDao.get(10).getSingle()).label, 'Updated');
-
-      await database.scriptsDao.setAll([second]);
-      expect(await database.scriptsDao.query().get(), [second]);
-      expect(await database.scriptsDao.get(10).getSingleOrNull(), null);
     },
   );
 
@@ -631,7 +592,6 @@ void main() {
           const [],
           const [],
           const [],
-          const [],
           customProxies: const [home, work],
           proxyDialers: const [
             ...dialers,
@@ -814,7 +774,6 @@ void main() {
     for (final isOverride in [false, true]) {
       await database.restore(
         [profile],
-        const [],
         [rule, orphan],
         const [
           DisabledRule(profileId: 1, ruleId: 404),
@@ -847,7 +806,6 @@ void main() {
       );
       await database.restore(
         [profile],
-        const [],
         [stale],
         const [],
         const [],
@@ -865,7 +823,6 @@ void main() {
       );
       await database.restore(
         [profile],
-        const [],
         rules,
         const [],
         const [],
@@ -896,7 +853,7 @@ void main() {
         name: 'Kept',
         type: GroupType.Selector,
       );
-      await database.restore([keptProfile], const [], [keptRule], const [], [
+      await database.restore([keptProfile], [keptRule], const [], [
         keptGroup,
       ], isOverride: true);
 
@@ -909,7 +866,6 @@ void main() {
       );
       await database.restore(
         [backupProfile],
-        const [],
         const [],
         const [],
         [backupGroup],
@@ -942,7 +898,6 @@ void main() {
       );
       await database.restore(
         [profile],
-        const [],
         [rule],
         const [],
         const [],
@@ -955,7 +910,7 @@ void main() {
         name: 'Group',
         type: GroupType.Selector,
       );
-      await database.restore(const [], const [], const [], const [], [group]);
+      await database.restore(const [], const [], const [], [group]);
 
       expect(
         (await database.rulesDao.queryProfileRules(1).get()).single.id,
@@ -1009,7 +964,6 @@ void main() {
       const [],
       const [],
       const [],
-      const [],
       clashProviders: const [rules],
       isOverride: true,
     );
@@ -1021,11 +975,6 @@ void main() {
       id: 1,
       type: ProfileType.custom,
       autoUpdateDuration: Duration.zero,
-    );
-    final script = Script(
-      id: 40,
-      label: 'Script',
-      lastUpdateTime: DateTime(2026),
     );
     const global = Rule(id: 45, content: 'global.example', ruleTarget: 'A');
     const rule = Rule(
@@ -1044,7 +993,6 @@ void main() {
 
     await database.restore(
       [profile],
-      [script],
       [global, rule],
       const [DisabledRule(profileId: 1, ruleId: 45)],
       [group],
@@ -1053,7 +1001,6 @@ void main() {
     expect(await database.profilesDao.query().get(), [
       profile.copyWith(order: 0),
     ]);
-    expect(await database.scriptsDao.query().get(), [script]);
     final restoredRules = await database.rulesDao
         .queryProfileRules(profile.id)
         .get();

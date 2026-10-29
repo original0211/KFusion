@@ -27,20 +27,16 @@ final class BackupException implements Exception {
 abstract final class BackupEntries {
   static String profile(Object id) => '$profilesDirectoryName/$id.yaml';
 
-  static String script(Object id) => 'scripts/$id.js';
-
   static String provider(ClashProvider provider) =>
       '$providersDirectoryName/$rulesProviderDirectoryName/${provider.fileName}';
 
   /// A remote provider's cache belongs to the Core and downloads again.
   static List<String> of({
     required Iterable<int> profileIds,
-    required Iterable<int> scriptIds,
     required Iterable<ClashProvider> providers,
   }) {
     return [
       ...profileIds.map(profile),
-      ...scriptIds.map(script),
       ...providers.where((item) => !item.isRemote).map(provider),
     ];
   }
@@ -48,7 +44,6 @@ abstract final class BackupEntries {
   static List<String> ofData(MigrationData data) {
     return of(
       profileIds: data.profiles.map((item) => item.id),
-      scriptIds: data.scripts.map((item) => item.id),
       providers: data.clashProviders,
     );
   }
@@ -167,7 +162,6 @@ Future<MigrationData> readBackupArchive({
     }
     final results = await Future.wait([
       database.profilesDao.query().get(),
-      database.scriptsDao.query().get(),
       (database.select(database.rules)..orderBy([
             (t) => OrderingTerm(expression: t.order, nulls: NullsOrder.last),
           ]))
@@ -189,13 +183,12 @@ Future<MigrationData> readBackupArchive({
     return MigrationData(
       configMap: configMap,
       profiles: results[0].cast<Profile>(),
-      scripts: results[1].cast<Script>(),
-      rules: results[2].cast<Rule>(),
-      disabledRules: results[3].cast<DisabledRule>(),
-      proxyGroups: results[4].cast<ProxyGroup>(),
-      clashProviders: results[5].cast<ClashProvider>(),
-      customProxies: results[6].cast<CustomProxy>(),
-      proxyDialers: results[7].cast<ProxyDialer>(),
+      rules: results[1].cast<Rule>(),
+      disabledRules: results[2].cast<DisabledRule>(),
+      proxyGroups: results[3].cast<ProxyGroup>(),
+      clashProviders: results[4].cast<ClashProvider>(),
+      customProxies: results[5].cast<CustomProxy>(),
+      proxyDialers: results[6].cast<ProxyDialer>(),
     );
   } finally {
     await database.close();

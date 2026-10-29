@@ -49,7 +49,6 @@ void main() {
   ProviderContainer createContainer({
     List<IconSet> iconSets = const [],
     List<ClashProvider> ruleProviders = const [],
-    List<Script> scripts = const [],
   }) {
     final container = ProviderContainer(
       overrides: [
@@ -57,7 +56,6 @@ void main() {
         clashProvidersProvider.overrideWith(
           () => TestClashProviders(ruleProviders),
         ),
-        scriptsProvider.overrideWith(() => TestScripts(scripts)),
       ],
     );
     addTearDown(container.dispose);
@@ -344,22 +342,9 @@ void main() {
       behavior: RuleProviderBehavior.domain,
     );
     const localProvider = ClashProvider(id: 4, label: 'Local set');
-    final remoteScript = Script(
-      id: 5,
-      label: 'Remote script',
-      url: 'https://example.com/script.js',
-      lastUpdateTime: DateTime.now(),
-    );
-    final localScript = Script(
-      id: 6,
-      label: 'Local script',
-      lastUpdateTime: DateTime.now(),
-    );
-
     final container = createContainer(
       iconSets: [remoteIconSet, localIconSet],
       ruleProviders: [remoteProvider, localProvider],
-      scripts: [remoteScript, localScript],
     );
     container.read(viewSizeProvider.notifier).update((_) => size);
 
@@ -369,16 +354,16 @@ void main() {
         child: const TestApp(child: ResourcesView()),
       ),
     );
-    await pumpUntilFound(tester, find.text('Remote script'));
+    await pumpUntilFound(tester, find.text('Remote icons'));
 
     final l10n = currentAppLocalizations;
-    for (final title in [l10n.iconSets, l10n.ruleProviders, l10n.script]) {
+    for (final title in [l10n.iconSets, l10n.ruleProviders]) {
       expect(find.text(title), findsOneWidget);
     }
-    for (final label in ['Remote icons', 'Remote set', 'Remote script']) {
+    for (final label in ['Remote icons', 'Remote set']) {
       expect(find.text(label), findsOneWidget);
     }
-    for (final label in ['Local icons', 'Local set', 'Local script']) {
+    for (final label in ['Local icons', 'Local set']) {
       expect(find.text(label), findsNothing);
     }
     final iconSetItem = find.ancestor(
@@ -439,11 +424,14 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     final container = createContainer(
-      scripts: [
-        Script(
+      iconSets: [
+        IconSet(
           id: 1,
-          label: 'Remote script',
-          url: 'https://example.com/script.js',
+          name: 'Remote icons',
+          url: 'https://example.com/icons.json',
+          icons: const [
+            IconSetIcon(name: 'a', url: 'https://example.com/a.png'),
+          ],
           lastUpdateTime: DateTime.now(),
         ),
       ],
@@ -471,7 +459,7 @@ void main() {
 
     final l10n = currentAppLocalizations;
     await pumpUntilFound(tester, find.text(GeoResource.MMDB.name));
-    expect(find.text('Remote script'), findsOneWidget);
+    expect(find.text('Remote icons'), findsOneWidget);
     expect(find.text(l10n.unknown), findsNWidgets(GeoResource.values.length));
     await tester.pumpAndSettle();
     expect(tester.takeException(), null);

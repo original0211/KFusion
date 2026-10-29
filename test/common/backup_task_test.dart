@@ -45,26 +45,21 @@ void main() {
   group('shakeOrphanFiles', () {
     test('reports only the files whose name is not a live id', () {
       final profiles = makeDir('profiles');
-      final scripts = makeDir('scripts');
       final providers = makeDir('providers');
       writeFile(join(profiles.path, '1.yaml'), 'keep');
       writeFile(join(profiles.path, '2.yaml'), 'drop');
-      writeFile(join(scripts.path, '10.js'), 'keep');
-      writeFile(join(scripts.path, '20.js'), 'drop');
       writeFile(join(providers.path, '1', 'proxies', 'abc'), 'keep');
       writeFile(join(providers.path, '2', 'proxies', 'abc'), 'drop');
 
       final orphans = shakeOrphanFiles(
         profileIds: [1],
-        scriptIds: [10],
         profilesDirPath: profiles.path,
         providersDirPath: providers.path,
-        scriptsDirPath: scripts.path,
         providerFileNames: const [],
         providerCacheDirPath: join(root.path, 'missing'),
       );
 
-      expect(orphans.map(basename), unorderedEquals(['2.yaml', '20.js', '2']));
+      expect(orphans.map(basename), unorderedEquals(['2.yaml', '2']));
       expect(
         orphans.singleWhere((path) => basename(path) == '2'),
         join(providers.path, '2'),
@@ -79,10 +74,8 @@ void main() {
 
       final orphans = shakeOrphanFiles(
         profileIds: const [],
-        scriptIds: const [],
         profilesDirPath: join(root.path, 'missing'),
         providersDirPath: providers.path,
-        scriptsDirPath: join(root.path, 'missing'),
         providerFileNames: const [],
         providerCacheDirPath: join(root.path, 'missing'),
       );
@@ -102,10 +95,8 @@ void main() {
 
       final orphans = shakeOrphanFiles(
         profileIds: [1],
-        scriptIds: const [],
         profilesDirPath: profiles.path,
         providersDirPath: join(root.path, 'missing'),
-        scriptsDirPath: join(root.path, 'missing'),
         providerFileNames: const [],
         providerCacheDirPath: join(root.path, 'missing'),
       );
@@ -121,10 +112,8 @@ void main() {
 
       final orphans = shakeOrphanFiles(
         profileIds: [1],
-        scriptIds: const [],
         profilesDirPath: profiles.path,
         providersDirPath: join(root.path, 'missing'),
-        scriptsDirPath: join(root.path, 'missing'),
         providerFileNames: const [],
         providerCacheDirPath: join(root.path, 'missing'),
       );
@@ -139,12 +128,10 @@ void main() {
 
       final orphans = shakeOrphanFiles(
         profileIds: const [],
-        scriptIds: const [],
         providerFileNames: const ['live'],
         profilesDirPath: join(root.path, 'missing'),
         providersDirPath: join(root.path, 'missing'),
         providerCacheDirPath: cache.path,
-        scriptsDirPath: join(root.path, 'missing'),
       );
 
       expect(orphans, [join(cache.path, 'rules', 'stale')]);
@@ -154,10 +141,8 @@ void main() {
       expect(
         shakeOrphanFiles(
           profileIds: const [],
-          scriptIds: const [],
           profilesDirPath: join(root.path, 'nope'),
           providersDirPath: join(root.path, 'nope'),
-          scriptsDirPath: join(root.path, 'nope'),
           providerFileNames: const [],
           providerCacheDirPath: join(root.path, 'missing'),
         ),
@@ -176,68 +161,10 @@ void main() {
     });
 
     Map<String, Object?> legacyConfig({
-      List<Object?> scripts = const [],
       List<Object?> rules = const [],
       List<Object?> profiles = const [],
       Map<String, Object?> extra = const {},
-    }) => {'scripts': scripts, 'rules': rules, 'profiles': profiles, ...extra};
-
-    test(
-      'rewrites script ids and writes the content into the target',
-      () async {
-        final data = await migrateLegacyConfig(
-          configMap: legacyConfig(
-            scripts: [
-              {'id': 'script-a', 'label': 'A', 'content': 'export default 1;'},
-            ],
-          ),
-          sourcePath: source.path,
-          targetPath: target.path,
-        );
-
-        final script = data.scripts.single;
-        expect(script.label, 'A');
-        expect(
-          File(
-            join(target.path, 'scripts', '${script.id}.js'),
-          ).readAsStringSync(),
-          'export default 1;',
-        );
-      },
-    );
-
-    test('skips a script entry that is missing a required field', () async {
-      final data = await migrateLegacyConfig(
-        configMap: legacyConfig(
-          scripts: [
-            {'id': 'no-content', 'label': 'A'},
-            {'id': 'ok', 'label': 'B', 'content': 'body'},
-          ],
-        ),
-        sourcePath: source.path,
-        targetPath: target.path,
-      );
-
-      expect(data.scripts.map((item) => item.label), ['B']);
-    });
-
-    test('falls back to scriptProps when the scripts list is empty', () async {
-      final data = await migrateLegacyConfig(
-        configMap: legacyConfig(
-          extra: {
-            'scriptProps': {
-              'scripts': [
-                {'id': 'nested', 'label': 'Nested', 'content': 'body'},
-              ],
-            },
-          },
-        ),
-        sourcePath: source.path,
-        targetPath: target.path,
-      );
-
-      expect(data.scripts.map((item) => item.label), ['Nested']);
-    });
+    }) => {'rules': rules, 'profiles': profiles, ...extra};
 
     test('copies the profile file under its new id', () async {
       writeFile(join(source.path, 'profiles', 'old-1.yaml'), 'proxies: []');
@@ -350,32 +277,37 @@ void main() {
       expect(data.profiles.single.type, ProfileType.url);
     });
 
-    test('points the profile at its remapped script id', () async {
-      writeFile(join(source.path, 'profiles', 'p1.yaml'), '');
+    test(
+      'a script overwrite degrades to an unbound standard profile',
+      () async {
+        writeFile(join(source.path, 'profiles', 'p1.yaml'), '');
 
-      final data = await migrateLegacyConfig(
-        configMap: legacyConfig(
-          scripts: [
-            {'id': 's1', 'label': 'S', 'content': 'body'},
-          ],
-          profiles: [
-            {
-              'id': 'p1',
-              'autoUpdateDuration': 0,
-              'overwrite': {
-                'type': 'script',
-                'scriptOverwrite': {'scriptId': 's1'},
-              },
+        final data = await migrateLegacyConfig(
+          configMap: legacyConfig(
+            extra: {
+              'scripts': [
+                {'id': 's1', 'label': 'S', 'content': 'body'},
+              ],
             },
-          ],
-        ),
-        sourcePath: source.path,
-        targetPath: target.path,
-      );
+            profiles: [
+              {
+                'id': 'p1',
+                'autoUpdateDuration': 0,
+                'overwrite': {
+                  'type': 'script',
+                  'scriptOverwrite': {'scriptId': 's1'},
+                },
+              },
+            ],
+          ),
+          sourcePath: source.path,
+          targetPath: target.path,
+        );
 
-      expect(data.profiles.single.scriptId, data.scripts.single.id);
-      expect(data.profiles.single.extendType, ExtendType.script);
-    });
+        expect(data.profiles.single.extendType, ExtendType.standard);
+        expect(data.profiles.single.scriptId, isNull);
+      },
+    );
 
     test('falls a custom overwrite back to a standard one', () async {
       writeFile(join(source.path, 'profiles', 'p1.yaml'), '');
@@ -491,9 +423,6 @@ void main() {
           autoUpdateDuration: Duration.zero,
         ).toCompanion(),
       ]);
-      await database.scriptsDao.setAll([
-        Script(id: 2, label: 'Script', lastUpdateTime: DateTime(2026)),
-      ]);
       await database.rulesDao.putRule(
         const Rule(id: 3, content: 'example.com', order: 'a'),
         profileId: 1,
@@ -508,7 +437,6 @@ void main() {
     }) async {
       entries ??= BackupEntries.of(
         profileIds: const [1],
-        scriptIds: const [2],
         providers: const [localProvider],
       );
       final archivePath = join(root.path, 'archive', '$uniqueId.zip');
@@ -552,7 +480,6 @@ void main() {
       await seedDatabase();
       writeFile(join(home.path, 'profiles', '1.yaml'), 'proxies: []');
       writeFile(join(home.path, 'profiles', '9.yaml'), 'not listed');
-      writeFile(join(home.path, 'scripts', '2.js'), 'body');
 
       final archivePath = await backup();
 
@@ -561,18 +488,12 @@ void main() {
           .files
           .map((file) => file.name)
           .toSet();
-      expect(names, {
-        backupDatabaseName,
-        configJsonName,
-        'profiles/1.yaml',
-        'scripts/2.js',
-      });
+      expect(names, {backupDatabaseName, configJsonName, 'profiles/1.yaml'});
     });
 
     test('restoring returns the rows and stages the files', () async {
       await seedDatabase();
       writeFile(join(home.path, 'profiles', '1.yaml'), 'proxies: []');
-      writeFile(join(home.path, 'scripts', '2.js'), 'body');
       writeFile(
         join(home.path, 'providers', 'rules', localProvider.fileName),
         'payload: []',
@@ -582,7 +503,6 @@ void main() {
       final data = await restore(archivePath);
 
       expect(data.profiles.single.label, 'Backed up');
-      expect(data.scripts.single.label, 'Script');
       expect(data.rules.single.content, 'example.com');
       expect(data.rules.single.profileId, 1);
       expect(data.clashProviders.single.label, 'Local rules');
@@ -593,7 +513,7 @@ void main() {
             BackupEntries.resolve(staging.path, entry),
           ).readAsStringSync(),
         ),
-        ['proxies: []', 'body', 'payload: []'],
+        ['proxies: []', 'payload: []'],
       );
     });
 
@@ -690,6 +610,44 @@ void main() {
       );
     });
 
+    test(
+      'a snapshot carrying a scripts table and file restores without them',
+      () async {
+        await seedDatabase();
+        final raw = db.Database(NativeDatabase(File(databasePath)));
+        await raw.customStatement(
+          'CREATE TABLE scripts ('
+          'id INTEGER NOT NULL PRIMARY KEY, '
+          'label TEXT NOT NULL, '
+          'last_update_time INTEGER NOT NULL, '
+          'url TEXT, "order" INTEGER)',
+        );
+        await raw.customStatement(
+          "INSERT INTO scripts (id, label, last_update_time) "
+          "VALUES (2, 'Script', 0)",
+        );
+        await raw.customStatement('PRAGMA user_version = 20');
+        await raw.close();
+        writeFile(join(home.path, 'profiles', '1.yaml'), 'proxies: []');
+        writeFile(join(home.path, 'scripts', '2.js'), 'body');
+        final archivePath = await backup(
+          entries: [
+            ...BackupEntries.of(
+              profileIds: const [1],
+              providers: const [localProvider],
+            ),
+            'scripts/2.js',
+          ],
+        );
+
+        final data = await restore(archivePath);
+
+        expect(data.profiles.single.label, 'Backed up');
+        expect(data.rules.single.content, 'example.com');
+        expect(BackupEntries.ofData(data), isNot(contains('scripts/2.js')));
+      },
+    );
+
     test('an archive without a database yields just the config', () async {
       final archivePath = await zipOf({
         configJsonName: utf8.encode(json.encode({'version': 1})),
@@ -699,7 +657,6 @@ void main() {
 
       expect(data.configMap?['version'], 1);
       expect(data.profiles, isEmpty);
-      expect(data.scripts, isEmpty);
     });
   });
 }

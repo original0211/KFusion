@@ -265,22 +265,6 @@ const _$KeyboardModifierEnumMap = {
   KeyboardModifier.shift: 'shift',
 };
 
-_Script _$ScriptFromJson(Map<String, dynamic> json) => _Script(
-  id: (json['id'] as num).toInt(),
-  label: json['label'] as String,
-  lastUpdateTime: DateTime.parse(json['lastUpdateTime'] as String),
-  url: json['url'] as String?,
-  order: (json['order'] as num?)?.toInt(),
-);
-
-Map<String, dynamic> _$ScriptToJson(_Script instance) => <String, dynamic>{
-  'id': instance.id,
-  'label': instance.label,
-  'lastUpdateTime': instance.lastUpdateTime.toIso8601String(),
-  'url': instance.url,
-  'order': instance.order,
-};
-
 _IconSetIcon _$IconSetIconFromJson(Map<String, dynamic> json) =>
     _IconSetIcon(name: json['name'] as String, url: json['url'] as String);
 

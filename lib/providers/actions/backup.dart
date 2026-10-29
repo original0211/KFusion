@@ -64,9 +64,8 @@ class BackupAction extends _$BackupAction {
   Future<String> _createArchive(String workDir) async {
     final databaseSnapshotPath = join(workDir, backupDatabaseName);
     await database.customStatement('VACUUM INTO ?', [databaseSnapshotPath]);
-    final (profileIds, scriptIds, providers) = await (
+    final (profileIds, providers) = await (
       database.profilesDao.query().map((item) => item.id).get(),
-      database.scriptsDao.query().map((item) => item.id).get(),
       database.clashProvidersDao.query().get(),
     ).wait;
     final configMap = ref.read(configProvider).toJson();
@@ -77,11 +76,7 @@ class BackupAction extends _$BackupAction {
       configMap: configMap,
       databaseSnapshotPath: databaseSnapshotPath,
       homeDirPath: await appPath.homeDirPath,
-      entries: BackupEntries.of(
-        profileIds: profileIds,
-        scriptIds: scriptIds,
-        providers: providers,
-      ),
+      entries: BackupEntries.of(profileIds: profileIds, providers: providers),
     ));
     return archivePath;
   }
@@ -106,7 +101,6 @@ class BackupAction extends _$BackupAction {
     try {
       await database.restore(
         data.profiles,
-        data.scripts,
         data.rules,
         data.disabledRules,
         data.proxyGroups,

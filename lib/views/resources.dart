@@ -19,13 +19,11 @@ import 'package:path/path.dart' hide context;
 typedef _RemoteResources = ({
   List<IconSet> iconSets,
   List<ClashProvider> ruleProviders,
-  List<Script> scripts,
 });
 
 const _RemoteResources _noResources = (
   iconSets: <IconSet>[],
   ruleProviders: <ClashProvider>[],
-  scripts: <Script>[],
 );
 
 class ResourcesView extends ConsumerStatefulWidget {
@@ -44,7 +42,6 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
     super.initState();
     ref.listenManual(iconSetsProvider, (_, _) => _refreshResources());
     ref.listenManual(clashProvidersProvider, (_, _) => _refreshResources());
-    ref.listenManual(scriptsProvider, (_, _) => _refreshResources());
     unawaited(_load());
   }
 
@@ -52,7 +49,6 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
     await Future.wait<Object>([
       ref.read(iconSetsProvider.future),
       ref.read(clashProvidersProvider.future),
-      ref.read(scriptsProvider.future),
     ]).catchError((Object _) => const <Object>[]);
     if (!mounted) {
       return;
@@ -63,8 +59,6 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
         type.updatingKey: _geoFileInfo(type),
       for (final provider in resources.ruleProviders)
         provider.updatingKey: provider.fileInfo,
-      for (final script in resources.scripts)
-        script.updatingKey: script.fileInfo,
     };
     final fileInfos = await Future.wait([
       for (final load in loads.values) load.catchError((Object _) => null),
@@ -87,10 +81,6 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
       for (final provider
           in ref.read(clashProvidersProvider).value ?? <ClashProvider>[])
         if (provider.isRemote) provider,
-    ],
-    scripts: [
-      for (final script in ref.read(scriptsProvider).value ?? <Script>[])
-        if (script.url != null) script,
     ],
   );
 
@@ -161,12 +151,11 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
       patchClashConfigProvider.select((state) => state.geoAutoUpdate),
     );
     final resources = _resources;
-    final (:iconSets, :ruleProviders, :scripts) = resources ?? _noResources;
+    final (:iconSets, :ruleProviders) = resources ?? _noResources;
     final resourceKeys = [
       for (final geoResource in GeoResource.values) geoResource.updatingKey,
       for (final iconSet in iconSets) iconSet.updatingKey,
       for (final provider in ruleProviders) provider.updatingKey,
-      for (final script in scripts) script.updatingKey,
     ];
     final isUpdating = ref.watch(
       updatingKeysProvider.select((keys) => resourceKeys.any(keys.contains)),
@@ -237,17 +226,6 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
                     provider,
                     preloaded: _fileInfos,
                     key: ValueKey(provider.id),
-                  ),
-              ],
-            ),
-            generateSection(
-              title: appLocalizations.script,
-              items: [
-                for (final script in scripts)
-                  _ScriptItem(
-                    script,
-                    preloaded: _fileInfos,
-                    key: ValueKey(script.id),
                   ),
               ],
             ),
@@ -539,33 +517,6 @@ class _RuleProviderItem extends ConsumerWidget {
         onSync: () => ref
             .read(resourcesActionProvider.notifier)
             .updateRuleProvider(provider),
-      ),
-    );
-  }
-}
-
-class _ScriptItem extends ConsumerWidget {
-  final Script script;
-  final Map<String, FileInfo?> preloaded;
-
-  const _ScriptItem(this.script, {required this.preloaded, super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isUpdating = ref.watch(isUpdatingProvider(script.updatingKey));
-    return _FileInfoBuilder(
-      source: script,
-      updatingKey: script.updatingKey,
-      preloaded: preloaded,
-      load: () => script.fileInfo,
-      builder: (context, fileInfo, _) => _ResourceItem(
-        title: script.label,
-        url: script.url,
-        chip: fileInfo?.size.traffic.show,
-        lastUpdateTime: script.lastUpdateTime,
-        isUpdating: isUpdating,
-        onSync: () =>
-            ref.read(resourcesActionProvider.notifier).updateScript(script),
       ),
     );
   }

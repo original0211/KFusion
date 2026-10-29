@@ -139,50 +139,6 @@ abstract class _$Profiles extends $Notifier<List<Profile>> {
   }
 }
 
-@ProviderFor(Scripts)
-final scriptsProvider = ScriptsProvider._();
-
-final class ScriptsProvider
-    extends $StreamNotifierProvider<Scripts, List<Script>> {
-  ScriptsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'scriptsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$scriptsHash();
-
-  @$internal
-  @override
-  Scripts create() => Scripts();
-}
-
-String _$scriptsHash() => r'f88f4a2c9960c884fbc2317f754f0f968340ade2';
-
-abstract class _$Scripts extends $StreamNotifier<List<Script>> {
-  Stream<List<Script>> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Script>>, List<Script>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Script>>, List<Script>>,
-              AsyncValue<List<Script>>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(ClashProviders)
 final clashProvidersProvider = ClashProvidersProvider._();
 

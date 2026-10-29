@@ -5,7 +5,7 @@ import 'package:kfusion/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('profile and script generated data classes preserve all fields', () {
+  test('profile generated data classes preserve all fields', () {
     final date = DateTime.utc(2026, 7, 26);
     final profile = RawProfile(
       id: 1,
@@ -102,43 +102,6 @@ void main() {
         overrides: const Variable('{}'),
       ).toColumns(false),
       hasLength(17),
-    );
-
-    final script = RawScript(id: 2, label: 'Script', lastUpdateTime: date);
-    expect(script.toColumns(true), hasLength(3));
-    expect(script.toCompanion(true).toColumns(true), hasLength(3));
-    final restoredScript = RawScript.fromJson(script.toJson());
-    expect(restoredScript.id, script.id);
-    expect(restoredScript.label, script.label);
-    expect(restoredScript.lastUpdateTime.isAtSameMomentAs(date), true);
-    expect(script.copyWith(label: 'Changed').label, 'Changed');
-    expect(
-      script
-          .copyWithCompanion(
-            ScriptsCompanion(
-              label: const Value('Companion'),
-              lastUpdateTime: Value(date.add(const Duration(days: 1))),
-            ),
-          )
-          .label,
-      'Companion',
-    );
-    expect(script.toString(), contains('Script'));
-    expect(script.hashCode, isNonZero);
-
-    final scriptCompanion = ScriptsCompanion.insert(
-      label: 'Inserted',
-      lastUpdateTime: date,
-    ).copyWith(id: const Value(3));
-    expect(scriptCompanion.toColumns(true), hasLength(3));
-    expect(scriptCompanion.toString(), contains('Inserted'));
-    expect(
-      ScriptsCompanion.custom(
-        id: const Variable(1),
-        label: const Variable('custom'),
-        lastUpdateTime: Variable(date),
-      ).toColumns(false),
-      hasLength(3),
     );
   });
 

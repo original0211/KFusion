@@ -240,7 +240,6 @@ abstract class MigrationData with _$MigrationData {
   const factory MigrationData({
     Map<String, Object?>? configMap,
     @Default([]) List<Rule> rules,
-    @Default([]) List<Script> scripts,
     @Default([]) List<Profile> profiles,
     @Default([]) List<DisabledRule> disabledRules,
     @Default([]) List<ProxyGroup> proxyGroups,
@@ -260,7 +259,6 @@ abstract class SetupState with _$SetupState {
     required List<Rule> rules,
     required List<ProxyGroup> proxyGroups,
     required List<Rule> addedRules,
-    required Script? script,
     required ProfileOverrides overrides,
     @Default([]) List<ClashProvider> clashProviders,
     @Default({}) Map<String, int> profileProviders,

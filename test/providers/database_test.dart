@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:drift/native.dart';
-// `Profiles`, `Scripts` and `ProxyGroups` name both a drift table and a
-// notifier, so the schema side is imported behind a prefix.
+// `Profiles` and `ProxyGroups` name both a drift table and a notifier,
+// so the schema side is imported behind a prefix.
 import 'package:kfusion/database/database.dart' as db;
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/l10n/l10n.dart';
@@ -382,127 +382,6 @@ void main() {
 
       await failure;
       expect(read().map((item) => item.id), [1, 2], reason: 'rolled back');
-    });
-  });
-
-  group('Scripts', () {
-    late Scripts notifier;
-
-    Script script(int id, String label) =>
-        Script(id: id, label: label, lastUpdateTime: DateTime(2026));
-
-    setUp(() async {
-      await keepAlive(scriptsProvider);
-      notifier = container.read(scriptsProvider.notifier);
-    });
-
-    List<Script> read() => notifier.value;
-
-    test('order persists the new positions and lists by them', () async {
-      notifier.put(script(1, 'First'));
-      await pumpEventQueue();
-      notifier.put(script(2, 'Second'));
-      await pumpEventQueue();
-      notifier.put(script(3, 'Third'));
-      await pumpEventQueue();
-
-      notifier.order(2, 0);
-      await pumpEventQueue();
-
-      expect(read().map((item) => item.label), ['Third', 'First', 'Second']);
-      final rows = await testDatabase.scriptsDao.query().get();
-      expect(rows.map((item) => item.label), ['Third', 'First', 'Second']);
-      expect(rows.map((item) => item.order), [0, 1, 2]);
-    });
-
-    test('a row written around the notifier during a write is read back '
-        'once the write settles', () async {
-      final landing = Completer<void>();
-      final write = notifier.optimisticAsync(read(), () => landing.future);
-      await testDatabase.scripts.put(script(1, 'Direct').toCompanion());
-      await pumpEventQueue();
-      expect(read(), isEmpty);
-
-      landing.complete();
-      await write;
-      await pumpEventQueue();
-
-      expect(read().map((item) => item.label), ['Direct']);
-    });
-
-    test('put appends a new script and replaces an existing one', () async {
-      notifier.put(script(1, 'First'));
-      await pumpEventQueue();
-      notifier.put(script(2, 'Second'));
-      await pumpEventQueue();
-
-      expect(read().map((item) => item.label), ['First', 'Second']);
-
-      notifier.put(script(1, 'Renamed'));
-      await pumpEventQueue();
-
-      final rows = await testDatabase.scriptsDao.query().get();
-      expect(
-        rows.map((item) => item.label),
-        containsAll(['Renamed', 'Second']),
-      );
-      expect(rows, hasLength(2));
-    });
-
-    test('put restores the previous list when the write fails', () async {
-      notifier.put(script(1, 'Kept'));
-      await pumpEventQueue();
-      await breakTable('scripts');
-
-      final failure = captureWriteFailure(
-        () => notifier.put(script(2, 'Lost')),
-      );
-      expect(read(), hasLength(2), reason: 'optimistic');
-
-      await failure;
-      expect(read().map((item) => item.label), ['Kept'], reason: 'rolled back');
-    });
-
-    test('del ignores an id that is not in state', () async {
-      notifier.put(script(1, 'Only'));
-      await pumpEventQueue();
-      await breakTable('scripts');
-
-      notifier.del(404);
-      await pumpEventQueue();
-
-      expect(read().map((item) => item.label), ['Only']);
-    });
-
-    test('del removes the row and rolls back a failed write', () async {
-      notifier.put(script(1, 'First'));
-      await pumpEventQueue();
-      notifier.put(script(2, 'Second'));
-      await pumpEventQueue();
-
-      notifier.del(1);
-      await pumpEventQueue();
-      expect(read().map((item) => item.id), [2]);
-
-      await breakTable('scripts');
-      final failure = captureWriteFailure(() => notifier.del(2));
-      expect(read(), isEmpty, reason: 'optimistic');
-
-      await failure;
-      expect(read().map((item) => item.id), [2], reason: 'rolled back');
-    });
-
-    test('put persists the source url and clears it again', () async {
-      const url = 'https://example.com/override.js';
-      notifier.put(script(1, 'Remote').copyWith(url: url));
-      await pumpEventQueue();
-
-      expect((await testDatabase.scriptsDao.get(1).getSingle()).url, url);
-
-      notifier.put(script(1, 'Remote'));
-      await pumpEventQueue();
-
-      expect((await testDatabase.scriptsDao.get(1).getSingle()).url, isNull);
     });
   });
 

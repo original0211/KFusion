@@ -23,10 +23,6 @@ class ResourcesAction extends _$ResourcesAction {
     );
   }
 
-  Future<void> updateScript(Script script) {
-    return ref.read(scriptsActionProvider.notifier).updateScript(script);
-  }
-
   Future<void> _track(String key, Future<Object?> Function() task) async {
     final updatingKeys = ref.read(updatingKeysProvider.notifier);
     final operation = updatingKeys.start(key);
@@ -63,9 +59,8 @@ class ResourcesAction extends _$ResourcesAction {
       }
     }
 
-    final (iconSets, scripts, providers) = await (
+    final (iconSets, providers) = await (
       database.iconSetsDao.query().get(),
-      database.scriptsDao.query().get(),
       database.clashProvidersDao.query().get(),
     ).wait;
     await Future.wait([
@@ -92,9 +87,6 @@ class ResourcesAction extends _$ResourcesAction {
             provider.label,
             () => updateRuleProvider(provider),
           ),
-      for (final script in scripts)
-        if (script.url != null)
-          update(script.updatingKey, script.label, () => updateScript(script)),
     ]);
     return failures;
   }
@@ -113,11 +105,6 @@ class ResourcesAction extends _$ResourcesAction {
       for (final iconSet in await database.iconSetsDao.query().get()) {
         if (iconSet.isRemote && isDue(iconSet.lastUpdateTime)) {
           await _tryUpdate(iconSet.name, () => updateIconSet(iconSet));
-        }
-      }
-      for (final script in await database.scriptsDao.query().get()) {
-        if (script.url != null && isDue(script.lastUpdateTime)) {
-          await _tryUpdate(script.label, () => updateScript(script));
         }
       }
       for (final provider in await database.clashProvidersDao.query().get()) {

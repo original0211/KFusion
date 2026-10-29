@@ -724,7 +724,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportSuccess": MessageLookupByLibrary.simpleMessage("エクスポートが完了しました"),
     "extend": MessageLookupByLibrary.simpleMessage("拡張"),
     "extendMode": MessageLookupByLibrary.simpleMessage("拡張モード"),
-    "extendScript": MessageLookupByLibrary.simpleMessage("拡張スクリプト"),
     "externalController": MessageLookupByLibrary.simpleMessage("外部コントローラー"),
     "externalControllerDesc": MessageLookupByLibrary.simpleMessage(
       "外部コントローラーを有効にすると、ポート 9090 でコアを制御できます。",
@@ -782,7 +781,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
       "追加ルール設定へ移動",
     ),
-    "goToConfigureScript": MessageLookupByLibrary.simpleMessage("スクリプト設定へ移動"),
     "grid": MessageLookupByLibrary.simpleMessage("グリッド"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("変更をキャッシュしますか？"),
     "hashByInUser": MessageLookupByLibrary.simpleMessage("インバウンドユーザーでハッシュ"),
@@ -1130,9 +1128,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "pickFromAlbum": MessageLookupByLibrary.simpleMessage("アルバムから選択"),
     "pinWindow": MessageLookupByLibrary.simpleMessage("最前面に固定"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage("WebDAVを連携してください"),
-    "pleaseEnterScriptName": MessageLookupByLibrary.simpleMessage(
-      "スクリプト名を入力してください",
-    ),
     "pleaseUploadValidQrcode": MessageLookupByLibrary.simpleMessage(
       "有効なQRコードをアップロードしてください",
     ),

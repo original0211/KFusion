@@ -712,7 +712,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportSuccess": MessageLookupByLibrary.simpleMessage("내보내기 완료"),
     "extend": MessageLookupByLibrary.simpleMessage("확장"),
     "extendMode": MessageLookupByLibrary.simpleMessage("확장 모드"),
-    "extendScript": MessageLookupByLibrary.simpleMessage("확장 스크립트"),
     "externalController": MessageLookupByLibrary.simpleMessage("외부 컨트롤러"),
     "externalControllerDesc": MessageLookupByLibrary.simpleMessage(
       "외부 컨트롤러를 사용하면 9090 포트로 코어를 제어할 수 있습니다.",
@@ -770,7 +769,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
       "추가한 규칙 구성으로 이동",
     ),
-    "goToConfigureScript": MessageLookupByLibrary.simpleMessage("스크립트 구성으로 이동"),
     "grid": MessageLookupByLibrary.simpleMessage("격자"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("변경 사항을 캐시하시겠습니까?"),
     "hashByInUser": MessageLookupByLibrary.simpleMessage("인바운드 사용자별 해시"),
@@ -1110,9 +1108,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "pickFromAlbum": MessageLookupByLibrary.simpleMessage("앨범에서 선택"),
     "pinWindow": MessageLookupByLibrary.simpleMessage("창 고정"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage("WebDAV를 연결하세요"),
-    "pleaseEnterScriptName": MessageLookupByLibrary.simpleMessage(
-      "스크립트 이름을 입력하세요",
-    ),
     "pleaseUploadValidQrcode": MessageLookupByLibrary.simpleMessage(
       "올바른 QR 코드를 업로드하세요",
     ),

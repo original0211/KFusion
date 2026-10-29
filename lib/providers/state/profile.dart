@@ -46,7 +46,6 @@ Future<ClashConfig> clashConfig(Ref ref, int profileId) async {
 @riverpod
 Future<SetupState> setupState(Ref ref, int? profileId) async {
   final profile = ref.watch(profileProvider(profileId));
-  final scriptId = profile?.scriptId;
   final profileLastUpdateDate = profile?.lastUpdateDate?.millisecondsSinceEpoch;
   final profileType = profile?.type ?? ProfileType.file;
   final extendType = profile?.extendType ?? ExtendType.standard;
@@ -77,7 +76,6 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
   Map<String, int> profileProviders = const {};
   List<CustomProxy> appProxies = [];
   Map<int, String> proxyDialers = const {};
-  Script? script;
   if (profileId != null) {
     if (profileType == ProfileType.custom) {
       rules = await database.rulesDao.queryProfileRules(profileId).get();
@@ -92,10 +90,6 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
       };
     } else if (extendType == ExtendType.standard) {
       addedRules = await database.rulesDao.queryAddedRules(profileId).get();
-    } else if (extendType == ExtendType.script) {
-      script = scriptId == null
-          ? null
-          : await database.scriptsDao.get(scriptId).getSingleOrNull();
     }
   }
   return SetupState(
@@ -110,7 +104,6 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
     profileType: profileType,
     extendType: extendType,
     addedRules: addedRules,
-    script: script,
     overrides: overrides,
     matchTarget:
         profileType != ProfileType.custom && extendType == ExtendType.standard

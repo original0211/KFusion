@@ -379,7 +379,6 @@ Future<RealProfile> _makeRealProfileTask(MakeRealProfileState data) async {
 
 typedef ShakingStoreArgs = ({
   Iterable<int> profileIds,
-  Iterable<int> scriptIds,
   Iterable<String> providerFileNames,
 });
 
@@ -396,24 +395,20 @@ Future<List<String>> _shakingProfileTask(
   BackgroundIsolateBinaryMessenger.ensureInitialized(data.token);
   return shakeOrphanFiles(
     profileIds: data.args.profileIds,
-    scriptIds: data.args.scriptIds,
     providerFileNames: data.args.providerFileNames,
     profilesDirPath: await appPath.profilesPath,
     providersDirPath: await appPath.getProvidersRootPath(),
     providerCacheDirPath: await appPath.providerCacheRootPath,
-    scriptsDirPath: await appPath.scriptsDirPath,
   );
 }
 
 @visibleForTesting
 List<String> shakeOrphanFiles({
   required Iterable<int> profileIds,
-  required Iterable<int> scriptIds,
   required Iterable<String> providerFileNames,
   required String profilesDirPath,
   required String providersDirPath,
   required String providerCacheDirPath,
-  required String scriptsDirPath,
 }) {
   final List<String> targets = [];
   void scanDirectory(
@@ -449,7 +444,6 @@ List<String> shakeOrphanFiles({
     Directory(join(providerCacheDirPath, rulesProviderDirectoryName)),
     providerFileNames.toSet().contains,
   );
-  scanDirectory(Directory(scriptsDirPath), isLiveId(scriptIds));
   return targets;
 }
 
@@ -523,30 +517,7 @@ Future<MigrationData> migrateLegacyConfig({
   appSettingProps['restoreStrategy'] = appSettingProps['recoveryStrategy'];
   configMap['appSettingProps'] = appSettingProps;
   configMap['proxiesStyleProps'] = configMap['proxiesStyle'];
-  List rawScripts = configMap['scripts'] as List<dynamic>? ?? [];
-  if (rawScripts.isEmpty) {
-    final scriptPropsJson = configMap['scriptProps'] as Map<String, dynamic>?;
-    if (scriptPropsJson != null) {
-      rawScripts = scriptPropsJson['scripts'] as List<dynamic>? ?? [];
-    }
-  }
   final Map<String, int> idMap = {};
-  final List<Script> scripts = [];
-  for (final rawScript in rawScripts) {
-    final id = rawScript['id'] as String?;
-    final content = rawScript['content'] as String?;
-    final label = rawScript['label'] as String?;
-    if (id == null || content == null || label == null) {
-      continue;
-    }
-    final newId = idMap.updateCacheValue(rawScript['id'], () => snowflake.id);
-    final path = BackupEntries.resolve(targetPath, BackupEntries.script(newId));
-    final file = File(path);
-    await file.safeWriteAsString(content);
-    scripts.add(
-      Script(id: newId, label: label, lastUpdateTime: DateTime.now()),
-    );
-  }
   final List rawRules = configMap['rules'] as List<dynamic>? ?? [];
   final List<Rule> rules = [];
   final List<DisabledRule> disabledRules = [];
@@ -587,14 +558,7 @@ Future<MigrationData> migrateLegacyConfig({
           }
         }
       }
-      final scriptOverwrite = overwrite['scriptOverwrite'] as Map?;
-      if (scriptOverwrite != null) {
-        final scriptId = scriptOverwrite['scriptId'] as String?;
-        rawProfile['scriptId'] = scriptId != null ? idMap[scriptId] : null;
-      }
-      rawProfile['extendType'] = overwrite['type'] == ExtendType.script.name
-          ? ExtendType.script.name
-          : ExtendType.standard.name;
+      rawProfile['extendType'] = ExtendType.standard.name;
     }
     final rawUrl = rawProfile['url'];
     rawProfile['type'] = rawUrl is String && rawUrl.isNotEmpty ? 'url' : 'file';
@@ -617,7 +581,6 @@ Future<MigrationData> migrateLegacyConfig({
     configMap: configMap,
     profiles: profiles,
     rules: rules,
-    scripts: scripts,
     disabledRules: disabledRules,
   );
 }

@@ -110,16 +110,6 @@ class AppPath {
     return join(await profilesPath, '$fileName.yaml');
   }
 
-  Future<String> get scriptsDirPath async {
-    final path = await homeDirPath;
-    return join(path, 'scripts');
-  }
-
-  Future<String> getScriptPath(String fileName) async {
-    final path = await scriptsDirPath;
-    return join(path, '$fileName.js');
-  }
-
   Future<String> get providerCacheRootPath async {
     final directory = await homeDirPath;
     return join(directory, providersDirectoryName);

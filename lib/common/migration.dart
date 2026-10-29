@@ -54,7 +54,6 @@ class _AppMigrationStore implements MigrationStore {
   Future<void> restore(MigrationData data) {
     return database.restore(
       data.profiles,
-      data.scripts,
       data.rules,
       data.disabledRules,
       data.proxyGroups,

@@ -136,7 +136,6 @@ const shareLinkSchemes = {
 const stringListEquality = ListEquality<String>();
 const intListEquality = ListEquality<int>();
 const ruleListEquality = ListEquality<Rule>();
-const scriptListEquality = ListEquality<Script>();
 const profileListEquality = ListEquality<Profile>();
 const proxyGroupsEquality = ListEquality<ProxyGroup>();
 const customProxiesEquality = ListEquality<CustomProxy>();

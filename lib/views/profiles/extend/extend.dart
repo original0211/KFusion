@@ -6,7 +6,6 @@ import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'script.dart';
 import 'standard.dart';
 
 class ExtendView extends ConsumerStatefulWidget {
@@ -91,6 +90,9 @@ class _Title extends ConsumerWidget {
     final appLocalizations = context.appLocalizations;
     final profileId = ProfileIdProvider.of(context)!.profileId;
     final extendType = ref.watch(extendTypeProvider(profileId));
+    final shownType = extendType == ExtendType.script
+        ? ExtendType.standard
+        : extendType;
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,9 +104,9 @@ class _Title extends ConsumerWidget {
             child: Wrap(
               spacing: 16,
               children: [
-                for (final type in ExtendType.values)
+                for (final type in const [ExtendType.standard])
                   CommonCard(
-                    isSelected: extendType == type,
+                    isSelected: shownType == type,
                     fillsSelection: true,
                     onPressed: () {
                       _handleChangeType(ref, profileId, type);
@@ -129,7 +131,7 @@ class _Title extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              _getDesc(context, extendType),
+              _getDesc(context, shownType),
               style: AppTextStyle.footnote
                   .of(context)
                   .copyWith(
@@ -151,8 +153,7 @@ class _Content extends ConsumerWidget {
     final profileId = ProfileIdProvider.of(context)!.profileId;
     final extendType = ref.watch(extendTypeProvider(profileId));
     return switch (extendType) {
-      ExtendType.standard => const StandardContent(),
-      ExtendType.script => const ScriptContent(),
+      ExtendType.standard || ExtendType.script => const StandardContent(),
     };
   }
 }

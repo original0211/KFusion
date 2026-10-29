@@ -3550,16 +3550,6 @@ class AppLocalizations {
     return Intl.message('Unnamed', name: 'unnamed', desc: '', args: []);
   }
 
-  /// `Please enter a script name`
-  String get pleaseEnterScriptName {
-    return Intl.message(
-      'Please enter a script name',
-      name: 'pleaseEnterScriptName',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Mixed port`
   String get mixedPort {
     return Intl.message('Mixed port', name: 'mixedPort', desc: '', args: []);
@@ -3955,26 +3945,6 @@ class AppLocalizations {
     return Intl.message(
       'LAN direct',
       name: 'rulePresetLanDirect',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Extend script`
-  String get extendScript {
-    return Intl.message(
-      'Extend script',
-      name: 'extendScript',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Go to script configuration`
-  String get goToConfigureScript {
-    return Intl.message(
-      'Go to script configuration',
-      name: 'goToConfigureScript',
       desc: '',
       args: [],
     );

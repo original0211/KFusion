@@ -36,7 +36,6 @@ part 'actions/store.dart';
 part 'actions/theme.dart';
 part 'actions/proxies.dart';
 part 'actions/profiles.dart';
-part 'actions/scripts.dart';
 part 'actions/clash_providers.dart';
 part 'actions/icon_sets.dart';
 part 'actions/geo_resource.dart';

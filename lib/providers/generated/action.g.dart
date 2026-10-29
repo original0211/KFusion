@@ -91,7 +91,7 @@ final class SetupActionProvider extends $NotifierProvider<SetupAction, void> {
   }
 }
 
-String _$setupActionHash() => r'd864262229e1d70a53e99032eecebf1d612b1bb4';
+String _$setupActionHash() => r'f8a9a715285bcec7c9fea3d6e8f335b714857484';
 
 abstract class _$SetupAction extends $Notifier<void> {
   void build();
@@ -142,7 +142,7 @@ final class BackupActionProvider extends $NotifierProvider<BackupAction, void> {
   }
 }
 
-String _$backupActionHash() => r'c0c2cd46ec5b246076902a297c356fde2ece3577';
+String _$backupActionHash() => r'e012a19aad6f3c0476c6819f6c8ac3afc1c37066';
 
 abstract class _$BackupAction extends $Notifier<void> {
   void build();
@@ -295,7 +295,7 @@ final class StoreActionProvider extends $NotifierProvider<StoreAction, void> {
   }
 }
 
-String _$storeActionHash() => r'e675a4866699b0669c25603d1fb08275871c0f20';
+String _$storeActionHash() => r'37bb3753c510ace243e7e1ff72e6bcc873c49858';
 
 abstract class _$StoreAction extends $Notifier<void> {
   void build();
@@ -453,58 +453,6 @@ final class ProfilesActionProvider
 String _$profilesActionHash() => r'e3c06a661c5721fa437e8730ef4fc906111cee16';
 
 abstract class _$ProfilesAction extends $Notifier<void> {
-  void build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-@ProviderFor(ScriptsAction)
-final scriptsActionProvider = ScriptsActionProvider._();
-
-final class ScriptsActionProvider
-    extends $NotifierProvider<ScriptsAction, void> {
-  ScriptsActionProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'scriptsActionProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$scriptsActionHash();
-
-  @$internal
-  @override
-  ScriptsAction create() => ScriptsAction();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
-  }
-}
-
-String _$scriptsActionHash() => r'f4ec8e120ae8163e4b7bb78636c30d75264de87d';
-
-abstract class _$ScriptsAction extends $Notifier<void> {
   void build();
   @$mustCallSuper
   @override
@@ -711,7 +659,7 @@ final class ResourcesActionProvider
   }
 }
 
-String _$resourcesActionHash() => r'4789f340b60eadbbc3bc124f296bbeaa35121ba6';
+String _$resourcesActionHash() => r'89f6ac7cccc93706ef5073700ed4a796517af61f';
 
 abstract class _$ResourcesAction extends $Notifier<void> {
   void build();

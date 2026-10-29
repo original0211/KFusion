@@ -35,7 +35,6 @@ const _nullProfileSetupState = SetupState(
   rules: [],
   proxyGroups: [],
   addedRules: [],
-  script: null,
   overrides: ProfileOverrides(),
 );
 

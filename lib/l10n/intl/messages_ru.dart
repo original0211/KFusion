@@ -884,7 +884,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Экспорт выполнен"),
     "extend": MessageLookupByLibrary.simpleMessage("Расширение"),
     "extendMode": MessageLookupByLibrary.simpleMessage("Режим расширения"),
-    "extendScript": MessageLookupByLibrary.simpleMessage("Скрипт расширения"),
     "externalController": MessageLookupByLibrary.simpleMessage(
       "Внешний контроллер",
     ),
@@ -955,9 +954,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "goDownload": MessageLookupByLibrary.simpleMessage("Скачать"),
     "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
       "Перейти к настройке добавленных правил",
-    ),
-    "goToConfigureScript": MessageLookupByLibrary.simpleMessage(
-      "Перейти к настройке скрипта",
     ),
     "grid": MessageLookupByLibrary.simpleMessage("Сетка"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
@@ -1364,9 +1360,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Привяжите WebDAV",
-    ),
-    "pleaseEnterScriptName": MessageLookupByLibrary.simpleMessage(
-      "Введите название скрипта",
     ),
     "pleaseUploadValidQrcode": MessageLookupByLibrary.simpleMessage(
       "Загрузите корректный QR-код",

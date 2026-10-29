@@ -3,7 +3,6 @@ import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/network.dart';
-import 'package:kfusion/views/config/scripts.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'rules.dart';
@@ -32,11 +31,6 @@ class AdvancedConfigView extends StatelessWidget {
         title: Text(appLocalizations.addedRules),
         leading: const GlyphIcon(AppGlyphs.rules),
         widget: const AddedRulesView(),
-      ),
-      ListItem.open(
-        title: Text(appLocalizations.script),
-        leading: const GlyphIcon(AppGlyphs.code),
-        widget: const ScriptsView(),
       ),
     ];
     return BaseScaffold(

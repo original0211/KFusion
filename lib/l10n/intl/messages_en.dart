@@ -843,7 +843,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Export successful"),
     "extend": MessageLookupByLibrary.simpleMessage("Extend"),
     "extendMode": MessageLookupByLibrary.simpleMessage("Extend mode"),
-    "extendScript": MessageLookupByLibrary.simpleMessage("Extend script"),
     "externalController": MessageLookupByLibrary.simpleMessage(
       "External controller",
     ),
@@ -912,9 +911,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "goDownload": MessageLookupByLibrary.simpleMessage("Download"),
     "goToConfigureAddedRules": MessageLookupByLibrary.simpleMessage(
       "Go to added rules configuration",
-    ),
-    "goToConfigureScript": MessageLookupByLibrary.simpleMessage(
-      "Go to script configuration",
     ),
     "grid": MessageLookupByLibrary.simpleMessage("Grid"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
@@ -1307,9 +1303,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "pinWindow": MessageLookupByLibrary.simpleMessage("Pin window"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Please bind WebDAV",
-    ),
-    "pleaseEnterScriptName": MessageLookupByLibrary.simpleMessage(
-      "Please enter a script name",
     ),
     "pleaseUploadValidQrcode": MessageLookupByLibrary.simpleMessage(
       "Please upload a valid QR code",

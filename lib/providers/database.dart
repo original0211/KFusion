@@ -323,57 +323,6 @@ class Profiles extends _$Profiles {
 }
 
 @riverpod
-class Scripts extends _$Scripts with AsyncNotifierMixin, OptimisticMixin {
-  @override
-  Stream<List<Script>> build() {
-    final query = database.scriptsDao.query();
-    return settled(query.watch(), query.get);
-  }
-
-  @override
-  List<Script> get value => state.value ?? [];
-
-  void put(Script script) {
-    final next = List<Script>.from(value);
-    final index = next.indexWhere((item) => item.id == script.id);
-    if (index != -1) {
-      next[index] = script;
-    } else {
-      next.add(script);
-    }
-    optimistic(next, () => database.scripts.put(script.toCompanion()));
-  }
-
-  void del(int id) {
-    final next = List<Script>.from(value);
-    final index = next.indexWhere((item) => item.id == id);
-    if (index == -1) return;
-    next.removeAt(index);
-    optimistic(next, () => database.scripts.remove((t) => t.id.equals(id)));
-  }
-
-  void order(int oldIndex, int newIndex) {
-    final next = value.copyAndReorder(oldIndex, newIndex);
-    final changed = <ScriptsCompanion>[];
-    next.forEachIndexed((index, item) {
-      if (item.order != index) {
-        next[index] = item.copyWith(order: index);
-        changed.add(item.toCompanion(index));
-      }
-    });
-    optimistic(next, () => database.scriptsDao.putAll(changed));
-  }
-
-  @override
-  bool updateShouldNotify(
-    AsyncValue<List<Script>> previous,
-    AsyncValue<List<Script>> next,
-  ) {
-    return !scriptListEquality.equals(previous.value, next.value);
-  }
-}
-
-@riverpod
 class ClashProviders extends _$ClashProviders
     with AsyncNotifierMixin, OptimisticMixin {
   @override
