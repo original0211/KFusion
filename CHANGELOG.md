@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.36 (2026-10-30)
+
+**Features**
+
+- The app is now Vessel: the display name, the repository and every user-facing brand string change from KFusion to Vessel, and the icon becomes the approved one-point mark — a fine ring carrying a single vermillion dot at 157 degrees — regenerated for the launcher in its adaptive and legacy sets, for the Windows icon and for the tray, with a monochrome variant for the About page hero and for the 16-pixel icon entry, where the dot's hue cannot survive. Nothing that identifies the app to the system moves: the Android applicationId, the package names, the signing certificate, the executable names and the Windows installer AppId are all unchanged, so an existing install upgrades in place and keeps its data. This release also completes the behaviour subtraction programme: the standard override and the global added-rules editor, WebDAV sync and the custom profile editor and custom resources are gone (stored data stays in place, inert), while custom profiles keep rendering read-only. (60806b9)
+
+**Bug Fixes**
+
+- The views smoke test no longer imports the action library that the custom profile editor's removal left unused in it; the stray import tripped the analyzer's fatal-warnings gate in CI. Test-only change — no application code is affected. (c4eeacb)
+
 ## v0.2.35 (2026-10-29)
 
 **Features**
