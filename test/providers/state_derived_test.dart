@@ -378,16 +378,18 @@ void main() {
     container
         .read(viewSizeProvider.notifier)
         .update((_) => const Size(1200, 800));
+    final desktop = container.read(navigationStateProvider);
+    expect(desktop.viewMode, ViewMode.desktop);
+    expect(desktop.navigationItems.map((item) => item.label), [
+      PageLabel.dashboard,
+      PageLabel.profiles,
+      PageLabel.tools,
+    ]);
+
     container
         .read(currentPageLabelProvider.notifier)
         .toPage(PageLabel.connections);
-    final desktop = container.read(navigationStateProvider);
-    expect(desktop.viewMode, ViewMode.desktop);
-    expect(desktop.currentIndex, greaterThan(0));
-    expect(
-      desktop.navigationItems[desktop.currentIndex].label,
-      PageLabel.connections,
-    );
+    expect(container.read(navigationStateProvider).currentIndex, 0);
 
     container
         .read(currentPageLabelProvider.notifier)
