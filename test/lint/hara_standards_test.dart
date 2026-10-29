@@ -18,6 +18,12 @@ const aSurfaces = <String>[
   'lib/views/profiles/singbox_degradations.dart',
   'lib/views/profiles/universal_import.dart',
   'lib/views/tools.dart',
+  'lib/views/about.dart',
+  'lib/views/access.dart',
+  'lib/views/backup_and_restore.dart',
+  'lib/views/disclaimer.dart',
+  'lib/views/hotkey.dart',
+  'lib/views/theme.dart',
 ];
 
 const tokenLayer = 'lib/ui/hara.dart';
@@ -78,7 +84,7 @@ void main() {
 
     test('color literals live only in the token layer', () {
       final literal = RegExp(
-        r'Color\(0x|Color\.fromARGB|Color\.fromRGBO|Colors\.\w+',
+        r'Color\(0x|Color\.fromARGB|Color\.fromRGBO|\bColors\.\w+',
       );
       final offenders = <String>[];
       for (final path in aSurfaces) {

@@ -72,9 +72,9 @@ void main() {
       await tester.pumpAndSettle();
 
       final finder = find.text(currentAppLocalizations.hotkeyNotSet).first;
-      final scheme = _schemeOf(tester, finder);
-      expect(tester.widget<Text>(finder).style?.color, scheme.onSurfaceVariant);
-      expect(tester.widget<Text>(finder).style?.color, isNot(scheme.outline));
+      final palette = tester.element(finder).haraPalette;
+      expect(tester.widget<Text>(finder).style?.color, palette.dim);
+      expect(tester.widget<Text>(finder).style?.color, isNot(palette.ink));
     });
 
     testWidgets('the intro glyph stays a neutral mark', (tester) async {
@@ -91,8 +91,8 @@ void main() {
         (widget) => widget is GlyphIcon && widget.glyph == AppGlyphs.keyboard,
       );
       expect(finder, findsOne);
-      final scheme = _schemeOf(tester, finder);
-      expect(tester.widget<GlyphIcon>(finder).color, scheme.onSurfaceVariant);
+      final palette = tester.element(finder).haraPalette;
+      expect(tester.widget<GlyphIcon>(finder).color, palette.sub);
     });
 
     testWidgets('key caps set their labels in tabular figures', (tester) async {

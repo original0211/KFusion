@@ -1,7 +1,6 @@
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/providers/app.dart';
-import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,41 +48,30 @@ class DisclaimerView extends StatelessWidget {
   static const _desktopGutter = 24.0;
   static const _desktopTopPadding = 48.0;
 
-  ListView _buildBody({
+  Widget _buildBody({
     required EdgeInsets padding,
     required List<Widget> children,
   }) {
-    return ListView(
-      padding: padding,
-      children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxContentWidth),
-            child: Builder(
-              builder: (context) {
-                final colorScheme = context.colorScheme;
-                return DecoratedBox(
-                  decoration: ShapeDecoration(
-                    color: context.raisedSurfaceLevel.colorOf(colorScheme),
-                    shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
-                    shadows: colorScheme.cabinPanelShadows,
+    return Builder(
+      builder: (context) {
+        return Material(
+          color: context.haraPalette.bg,
+          child: ListView(
+            padding: padding,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children,
                   ),
-                  child: SurfaceScope(
-                    level: SurfaceLevel.card,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: children,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -114,6 +102,7 @@ class DisclaimerView extends StatelessWidget {
           );
         }
         return Scaffold(
+          backgroundColor: context.haraPalette.bg,
           body: SafeArea(
             child: _ConsentLayout(
               maxWidth: _maxContentWidth,
@@ -131,7 +120,10 @@ class DisclaimerView extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
                       appLocalizations.disclaimer,
-                      style: AppTextStyle.title2.of(context, emphasized: true),
+                      style: HaraText.pageTitle(
+                        context,
+                        context.haraPalette.ink,
+                      ),
                     ),
                   ),
                   ...terms,
@@ -164,30 +156,10 @@ class _DisclaimerIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: context.raisedSurfaceLevel.colorOf(colorScheme),
-        shape: AppShape.xl,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GlyphIcon(AppGlyphs.gavel, size: 28, color: colorScheme.primary),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                text,
-                style: AppTextStyle.subheadline
-                    .of(context)
-                    .copyWith(color: colorScheme.onSurfaceVariant, height: 1.6),
-              ),
-            ),
-          ],
-        ),
-      ),
+    final palette = context.haraPalette;
+    return Text(
+      text,
+      style: HaraText.profileMeta(context, palette.sub).copyWith(height: 1.6),
     );
   }
 }
@@ -207,7 +179,7 @@ class _DisclaimerTerm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     return Padding(
       padding: const EdgeInsets.only(top: 28),
       child: Column(
@@ -215,26 +187,19 @@ class _DisclaimerTerm extends StatelessWidget {
         children: [
           Row(
             children: [
-              DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: context.raisedSurfaceLevel.colorOf(colorScheme),
-                  shape: AppShape.full,
-                ),
-                child: SizedBox.square(
-                  dimension: _badgeSize,
-                  child: Center(
-                    child: Text(
-                      '$index',
-                      style: AppTextStyle.caption1
-                          .of(context, emphasized: true)
-                          .copyWith(color: colorScheme.onSurfaceVariant),
-                    ),
-                  ),
+              SizedBox(
+                width: _badgeSize,
+                child: Text(
+                  '$index',
+                  style: HaraText.dataValue(context, palette.dim),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(title, style: AppTextStyle.headline.of(context)),
+                child: Text(
+                  title,
+                  style: HaraText.nodeName(context, palette.ink, current: true),
+                ),
               ),
             ],
           ),
@@ -253,9 +218,10 @@ class _TermParagraphs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = AppTextStyle.subheadline
-        .of(context)
-        .copyWith(color: context.colorScheme.onSurfaceVariant, height: 1.6);
+    final style = HaraText.profileMeta(
+      context,
+      context.haraPalette.sub,
+    ).copyWith(height: 1.6);
     final paragraphs = text.split('\n\n');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -359,9 +325,13 @@ class _ConsentBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.haraPalette;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SurfaceLevel.page.colorOf(context.colorScheme),
+        color: palette.bg,
+        border: Border(
+          top: BorderSide(color: palette.line, width: HaraSpace.hairline),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -417,18 +387,23 @@ class _RestateDialogState extends State<_RestateDialog> {
   }
 
   Widget _buildStatement(String statement) {
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: context.raisedSurfaceLevel.colorOf(context.colorScheme),
-        shape: AppShape.lg,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: SelectableText(
-          statement,
-          style: AppTextStyle.subheadline.of(context).copyWith(height: 1.6),
+    final palette = context.haraPalette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HaraHairline(color: palette.line),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: SelectableText(
+            statement,
+            style: HaraText.profileMeta(
+              context,
+              palette.ink,
+            ).copyWith(height: 1.6),
+          ),
         ),
-      ),
+        HaraHairline(color: palette.line),
+      ],
     );
   }
 
@@ -463,9 +438,7 @@ class _RestateDialogState extends State<_RestateDialog> {
         children: [
           Text(
             tip,
-            style: AppTextStyle.subheadline
-                .of(context)
-                .copyWith(color: context.colorScheme.onSurfaceVariant),
+            style: HaraText.profileMeta(context, context.haraPalette.sub),
           ),
           const SizedBox(height: 12),
           _buildStatement(statement),
@@ -510,7 +483,7 @@ class _RestateDialogState extends State<_RestateDialog> {
           statement: statement,
           canConfirm: restatement == _Restatement.complete,
           confirmation: FilledInputTheme(
-            borderRadius: AppRadius.lg,
+            borderRadius: AppRadius.hara,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,

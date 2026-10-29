@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show listEquals;
+import 'package:kfusion/common/common.dart';
 import 'package:kfusion/features/form/custom_issue.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/null_status.dart';
@@ -144,7 +145,9 @@ void main() {
     expect(chosen.style.color, SurfaceLevel.page.colorOf(scheme));
   });
 
-  testWidgets('the disclaimer body sits on a cabin panel', (tester) async {
+  testWidgets('the disclaimer body sits flat on the page field', (
+    tester,
+  ) async {
     final scheme = _scheme(Brightness.light);
     await tester.pumpWidget(
       TestApp(
@@ -166,8 +169,10 @@ void main() {
               listEquals(decoration.shadows, scheme.cabinPanelShadows),
         )
         .toList();
-    expect(panels, hasLength(1));
-    expect(panels.single.color, SurfaceLevel.card.colorOf(scheme));
-    expect((panels.single.shape as OutlinedBorder).side, scheme.cabinRimSide);
+    expect(panels, isEmpty);
+    expect(
+      find.text(currentAppLocalizations.disclaimerSoftwareTitle),
+      findsOneWidget,
+    );
   });
 }

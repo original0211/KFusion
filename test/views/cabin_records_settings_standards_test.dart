@@ -4,7 +4,6 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/custom_resources.dart';
 import 'package:kfusion/views/config/general.dart';
@@ -241,11 +240,9 @@ void main() {
       });
     });
 
-    testWidgets('the live preview plate carries the cabin rim', (tester) async {
+    testWidgets('the live preview sits flat on the page field', (tester) async {
       await pumpTheme(tester);
-      final context = tester.element(find.byType(ThemeLivePreview));
-      final scheme = Theme.of(context).colorScheme;
-      final plate = tester
+      final plates = tester
           .widgetList<DecoratedBox>(
             find.descendant(
               of: find.byType(ThemeLivePreview),
@@ -253,17 +250,13 @@ void main() {
             ),
           )
           .where((box) => box.decoration is ShapeDecoration)
-          .single;
-      final shape =
-          (plate.decoration as ShapeDecoration).shape
-              as RoundedSuperellipseBorder;
-      expect(shape.side.color, scheme.cabinRim);
+          .toList();
+      expect(plates, isEmpty);
     });
 
-    testWidgets('every swatch ring reads in the primary color', (tester) async {
+    testWidgets('every swatch ring reads in the palette ink', (tester) async {
       await pumpTheme(tester);
       final context = tester.element(find.byType(ThemeView));
-      final scheme = Theme.of(context).colorScheme;
       final rings = tester
           .widgetList<DecoratedBox>(find.byType(DecoratedBox))
           .where((box) {
@@ -276,7 +269,7 @@ void main() {
       for (final ring in rings) {
         final shape =
             (ring.decoration as ShapeDecoration).shape as CircleBorder;
-        expect(shape.side.color, scheme.primary);
+        expect(shape.side.color, context.haraPalette.ink);
       }
     });
 
@@ -374,7 +367,7 @@ void main() {
   });
 
   group('hotkey (cabin batch 4, #14)', () {
-    testWidgets('the intro plate carries the cabin rim', (tester) async {
+    testWidgets('the intro sits flat on the page field', (tester) async {
       final container = _container(tester);
       final subscription = container.listen(
         hotKeyActionsProvider,
@@ -400,7 +393,7 @@ void main() {
                 shape.borderRadius == AppRadius.xl &&
                 shape.side.color == scheme.cabinRim;
           });
-      expect(plates, isNotEmpty);
+      expect(plates, isEmpty);
     });
   });
 }

@@ -18,29 +18,232 @@ class ThemeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
+    final palette = context.haraPalette;
     return BaseScaffold(
       title: appLocalizations.theme,
-      body: ListView(
-        padding: EdgeInsets.only(top: context.appBarInset, bottom: 32),
-        children: const [
-          ThemeLivePreview(),
-          SizedBox(height: 16),
-          _ThemeModeItem(),
-          SizedBox(height: 16),
-          _PureBlackItem(),
-          SizedBox(height: 16),
-          _PrimaryColorItem(),
-          SizedBox(height: 16),
-          _NavigationBarItem(),
-          SizedBox(height: 16),
-          _CabinCoreCompactItem(),
-          _TabAnimationItem(),
-          SizedBox(height: 16),
-          _LiquidGlassItem(),
-          SizedBox(height: 16),
-          _SidebarBlurItem(),
-          _TextScaleFactorItem(),
+      body: Material(
+        color: palette.bg,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final side = max(
+              HaraSpace.pageInset,
+              (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+            );
+            return ListView(
+              padding: EdgeInsets.fromLTRB(side, context.appBarInset, side, 48),
+              children: const [
+                ThemeLivePreview(),
+                SizedBox(height: HaraSpace.groupGap),
+                _ThemeModeItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _PureBlackItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _PrimaryColorItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _NavigationBarItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _CabinCoreCompactItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _TabAnimationItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _LiquidGlassItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _SidebarBlurItem(),
+                SizedBox(height: HaraSpace.groupGap),
+                _TextScaleFactorItem(),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
+  }
+}
+
+/// A lone toggle between two groups: a top hairline, the label (and its
+/// description), and the A switch mark; the row tap flips the value.
+class _ThemeToggle extends StatelessWidget {
+  const _ThemeToggle({
+    required this.label,
+    this.desc,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String? desc;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final appLocalizations = context.appLocalizations;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HaraHairline(color: palette.line),
+        Semantics(
+          toggled: value,
+          child: _HaraRow(
+            onTap: () => onChanged(!value),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: HaraText.nodeName(
+                          context,
+                          palette.ink,
+                          current: false,
+                        ),
+                      ),
+                      if (desc != null) ...[
+                        const SizedBox(height: HaraSpace.profileMetaGap),
+                        Text(
+                          desc!,
+                          style: HaraText.profileMeta(context, palette.sub),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                HaraToggleMark(
+                  value: value,
+                  word: value
+                      ? appLocalizations.enabled
+                      : appLocalizations.disabled,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// An options row in the list row's own popup reading: the row tap opens
+/// the menu out of its end value, as the options row it replaces did.
+class _HaraOptionsRow<T> extends StatelessWidget {
+  const _HaraOptionsRow({
+    required this.label,
+    required this.options,
+    required this.value,
+    required this.textBuilder,
+    required this.onChanged,
+  });
+
+  final String label;
+  final List<T> options;
+  final T value;
+  final String Function(T value) textBuilder;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    PopupOpen? openMenu;
+    return _HaraRow(
+      onTap: () => openMenu?.call(),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: HaraText.nodeName(context, palette.ink, current: false),
+            ),
+          ),
+          CommonPopupBox(
+            targetBuilder: (open) {
+              openMenu = open;
+              return InkWell(
+                customBorder: AppShape.hara,
+                onTap: open,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      textBuilder(value),
+                      style: HaraText.statusNode(context, palette.sub),
+                    ),
+                    const SizedBox(width: 4),
+                    GlyphIcon(AppGlyphs.picker, color: palette.sub),
+                  ],
+                ),
+              );
+            },
+            popupBuilder: (_) => CommonPopupMenu(
+              items: [
+                for (final option in options)
+                  CommonPopupMenuItem(
+                    label: textBuilder(option),
+                    checked: option == value,
+                    onPressed: () => onChanged(option),
+                  ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// The reset affordance of a group header, as an ink text action.
+class _ResetAction extends StatelessWidget {
+  const _ResetAction({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Semantics(
+      button: true,
+      child: Tooltip(
+        message: context.appLocalizations.reset,
+        child: InkWell(
+          customBorder: AppShape.hara,
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Text(
+              context.appLocalizations.reset,
+              style: HaraText.action(context, palette.ink),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -236,52 +439,45 @@ class _PrimaryColorItem extends ConsumerWidget {
         ),
       ),
     );
+    final palette = context.haraPalette;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoHeader(
-          info: Info(
-            label: appLocalizations.themeColor,
-            glyph: AppGlyphs.palette,
-          ),
-          actions: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                appLocalizations.themeColor,
+                style: HaraText.sectionTitle(context, palette.sub),
+              ),
+            ),
             if (!themeColors.isDefault)
-              _ResetButton(onPressed: () => _handleReset(context, ref)),
+              _ResetAction(onPressed: () => _handleReset(context, ref)),
           ],
         ),
+        const SizedBox(height: HaraSpace.sectionTitleGap),
+        HaraHairline(color: palette.line),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 8,
-            children: [
-              _ColorSwatches(
-                colors: [null, ...themeColors.primaryColors],
-                selected: themeColors.primaryColor,
-                onSelect: (color) => _update(
-                  ref,
-                  (state) => state.copyWith(primaryColor: color),
-                ),
-                onEdit: (color) => _handleEdit(context, ref, color),
-                onDelete: (color) => _handleDelete(context, ref, color),
-                onAdd: () => _handleAdd(context, ref),
-              ),
-              generateSection(
-                items: [
-                  ListItem<ColorStyle>.options(
-                    title: Text(appLocalizations.colorStyle),
-                    options: ColorStyle.values,
-                    value: themeColors.colorStyle,
-                    textBuilder: (style) => style.label,
-                    onChanged: (style) => _update(
-                      ref,
-                      (state) => state.copyWith(colorStyle: style),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
           ),
+          child: _ColorSwatches(
+            colors: [null, ...themeColors.primaryColors],
+            selected: themeColors.primaryColor,
+            onSelect: (color) =>
+                _update(ref, (state) => state.copyWith(primaryColor: color)),
+            onEdit: (color) => _handleEdit(context, ref, color),
+            onDelete: (color) => _handleDelete(context, ref, color),
+            onAdd: () => _handleAdd(context, ref),
+          ),
+        ),
+        _HaraOptionsRow<ColorStyle>(
+          label: appLocalizations.colorStyle,
+          options: ColorStyle.values,
+          value: themeColors.colorStyle,
+          textBuilder: (style) => style.label,
+          onChanged: (style) =>
+              _update(ref, (state) => state.copyWith(colorStyle: style)),
         ),
       ],
     );
@@ -313,17 +509,12 @@ class _ColorSwatches extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
-    final colorScheme = context.colorScheme;
     final level = context.raisedSurfaceLevel;
     final systemColor = ref
         .watch(dynamicColorProvider)
         .seedOf(Theme.of(context).brightness);
-    return Container(
-      padding: const EdgeInsets.all(_inset),
-      decoration: ShapeDecoration(
-        color: level.colorOf(colorScheme),
-        shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _inset),
       child: SurfaceScope(
         level: level,
         child: LayoutBuilder(
@@ -414,8 +605,8 @@ class _ColorSwatchState extends State<_ColorSwatch> {
     final fill = color ?? widget.systemColor;
     final selected = widget.isSelected;
     final check = ThemeData.estimateBrightnessForColor(fill) == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? HaraPalette.light.bg
+        : HaraPalette.light.ink;
     final swatch = Semantics(
       button: true,
       selected: selected,
@@ -440,7 +631,7 @@ class _ColorSwatchState extends State<_ColorSwatch> {
                     decoration: ShapeDecoration(
                       shape: AppShape.circle.copyWith(
                         side: BorderSide(
-                          color: context.colorScheme.primary,
+                          color: context.haraPalette.ink,
                           width: _ColorSwatch._ring,
                         ),
                       ),
@@ -497,26 +688,22 @@ class _EyedropperBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     return Container(
       width: size,
       height: size,
       padding: const EdgeInsets.all(_gap),
       decoration: ShapeDecoration(
-        color: context.surfaceLevel.colorOf(colorScheme),
-        shape: AppShape.circle,
-      ),
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: context.raisedSurfaceLevel.colorOf(colorScheme),
-          shape: AppShape.circle,
+        color: palette.bg,
+        shape: AppShape.circle.copyWith(
+          side: BorderSide(color: palette.line, width: HaraSpace.hairline),
         ),
-        child: Center(
-          child: GlyphIcon(
-            AppGlyphs.eyedropper,
-            size: size - _gap * 2 - 4,
-            color: colorScheme.onSurface,
-          ),
+      ),
+      child: Center(
+        child: GlyphIcon(
+          AppGlyphs.eyedropper,
+          size: size - _gap * 2 - 4,
+          color: palette.ink,
         ),
       ),
     );
@@ -530,7 +717,7 @@ class _AddColorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     return Tooltip(
       message: context.appLocalizations.add,
       child: Semantics(
@@ -549,14 +736,14 @@ class _AddColorButton extends StatelessWidget {
                   width: _ColorSwatch.dot,
                   height: _ColorSwatch.dot,
                   decoration: ShapeDecoration(
-                    color: context.raisedSurfaceLevel.colorOf(colorScheme),
-                    shape: AppShape.circle,
+                    shape: AppShape.circle.copyWith(
+                      side: BorderSide(
+                        color: palette.line,
+                        width: HaraSpace.hairline,
+                      ),
+                    ),
                   ),
-                  child: GlyphIcon(
-                    AppGlyphs.add,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  child: GlyphIcon(AppGlyphs.add, size: 20, color: palette.ink),
                 ),
               ),
             ),
@@ -675,22 +862,14 @@ class _CabinCoreCompactItem extends ConsumerWidget {
     final compact = ref.watch(
       appSettingProvider.select((state) => state.cabinCoreCompact),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: generateSection(
-        items: [
-          ListItem.toggle(
-            leading: const GlyphIcon(AppGlyphs.status),
-            title: Text(appLocalizations.cabinCoreCompact),
-            value: compact,
-            onChanged: (value) {
-              ref
-                  .read(appSettingProvider.notifier)
-                  .update((state) => state.copyWith(cabinCoreCompact: value));
-            },
-          ),
-        ],
-      ),
+    return _ThemeToggle(
+      label: appLocalizations.cabinCoreCompact,
+      value: compact,
+      onChanged: (value) {
+        ref
+            .read(appSettingProvider.notifier)
+            .update((state) => state.copyWith(cabinCoreCompact: value));
+      },
     );
   }
 }
@@ -806,23 +985,15 @@ class _SidebarBlurItem extends ConsumerWidget {
     final sidebarBlur = ref.watch(
       themeSettingProvider.select((state) => state.sidebarBlur),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: generateSection(
-        items: [
-          ListItem.toggle(
-            leading: const GlyphIcon(AppGlyphs.blur),
-            title: Text(appLocalizations.sidebarBlur),
-            subtitle: Text(appLocalizations.sidebarBlurDesc),
-            value: sidebarBlur,
-            onChanged: (value) {
-              ref
-                  .read(themeSettingProvider.notifier)
-                  .update((state) => state.copyWith(sidebarBlur: value));
-            },
-          ),
-        ],
-      ),
+    return _ThemeToggle(
+      label: appLocalizations.sidebarBlur,
+      desc: appLocalizations.sidebarBlurDesc,
+      value: sidebarBlur,
+      onChanged: (value) {
+        ref
+            .read(themeSettingProvider.notifier)
+            .update((state) => state.copyWith(sidebarBlur: value));
+      },
     );
   }
 }
@@ -850,7 +1021,7 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     final textScale = ref.watch(
       themeSettingProvider.select((state) => state.textScale),
     );
@@ -859,149 +1030,110 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
     ).clamp(minTextScale, maxTextScale).toDouble();
     final scale = _draft ?? (textScale.enable ? textScale.scale : systemScale);
     final percent = '${(scale * 100).round()}%';
-    final level = context.raisedSurfaceLevel;
     final divisions =
         ((maxTextScale - minTextScale) / _TextScaleFactorItem._step).round();
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoHeader(
-          info: Info(
-            label: appLocalizations.textScale,
-            glyph: AppGlyphs.textSize,
-          ),
+        PreviewChoiceGroup<bool>(
+          info: Info(label: appLocalizations.textScale),
+          value: textScale.enable,
+          choices: [
+            PreviewChoice(value: false, label: appLocalizations.followSystem),
+            PreviewChoice(value: true, label: appLocalizations.custom),
+          ],
           actions: [
             if (textScale.enable && textScale.scale != 1)
-              _ResetButton(
+              _ResetAction(
                 onPressed: () => _update((state) => state.copyWith(scale: 1)),
               ),
           ],
+          onChanged: (value) =>
+              _update((state) => state.copyWith(enable: value)),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
           child: Column(
-            spacing: 8,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SegmentedControl<bool>(
-                segments: [
-                  (false, appLocalizations.followSystem),
-                  (true, appLocalizations.custom),
-                ],
-                value: textScale.enable,
-                onChanged: (value) =>
-                    _update((state) => state.copyWith(enable: value)),
-              ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                decoration: ShapeDecoration(
-                  color: level.colorOf(colorScheme),
-                  shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 12,
-                      children: [
-                        Expanded(
-                          child: AnimatedSize(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeOutCubic,
-                            alignment: Alignment.topLeft,
-                            child: MediaQuery(
-                              data: MediaQuery.of(
-                                context,
-                              ).copyWith(textScaler: TextScaler.linear(scale)),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                spacing: 4,
-                                children: [
-                                  Text(
-                                    'Aa',
-                                    style: AppTextStyle.title3.of(context),
-                                  ),
-                                  Text(
-                                    appLocalizations.textScalePreview,
-                                    style: AppTextStyle.subheadline
-                                        .of(context)
-                                        .copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                        ),
-                                  ),
-                                ],
-                              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topLeft,
+                      child: MediaQuery(
+                        data: MediaQuery.of(
+                          context,
+                        ).copyWith(textScaler: TextScaler.linear(scale)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 4,
+                          children: [
+                            Text(
+                              'Aa',
+                              style: HaraText.pageTitle(context, palette.ink),
                             ),
-                          ),
+                            Text(
+                              appLocalizations.textScalePreview,
+                              style: HaraText.profileMeta(context, palette.sub),
+                            ),
+                          ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: ShapeDecoration(
-                            color: level.next.colorOf(colorScheme),
-                            shape: AppShape.full,
-                          ),
-                          child: Text(
-                            percent,
-                            style: AppTextStyle.subheadline
-                                .of(context, emphasized: true)
-                                .copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    MediaQuery.withNoTextScaling(
-                      child: Row(
-                        spacing: 12,
-                        children: [
-                          ExcludeSemantics(
-                            child: Text(
-                              'A',
-                              style: AppTextStyle.footnote
-                                  .of(context)
-                                  .copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ),
-                          Expanded(
-                            child: SliderTheme(
-                              data: SliderDefaultsM3(context),
-                              child: Slider(
-                                padding: EdgeInsets.zero,
-                                min: minTextScale,
-                                max: maxTextScale,
-                                divisions: divisions,
-                                value: scale,
-                                label: percent,
-                                onChanged: textScale.enable
-                                    ? (value) => setState(() => _draft = value)
-                                    : null,
-                                onChangeEnd: (value) => _update(
-                                  (state) => state.copyWith(scale: value),
-                                ),
-                              ),
-                            ),
-                          ),
-                          ExcludeSemantics(
-                            child: Text(
-                              'A',
-                              style: AppTextStyle.title2
-                                  .of(context)
-                                  .copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ),
-                        ],
+                  ),
+                  Text(
+                    percent,
+                    style: HaraText.dataValue(context, palette.ink),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              MediaQuery.withNoTextScaling(
+                child: Row(
+                  spacing: 12,
+                  children: [
+                    ExcludeSemantics(
+                      child: Text(
+                        'A',
+                        style: HaraText.profileMeta(context, palette.sub),
+                      ),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderDefaultsM3(context).copyWith(
+                          activeTrackColor: palette.ink,
+                          inactiveTrackColor: palette.line,
+                          thumbColor: palette.ink,
+                          overlayColor: palette.ink.withValues(alpha: 0.08),
+                          valueIndicatorColor: palette.ink,
+                          valueIndicatorTextStyle: TextStyle(color: palette.bg),
+                        ),
+                        child: Slider(
+                          padding: EdgeInsets.zero,
+                          min: minTextScale,
+                          max: maxTextScale,
+                          divisions: divisions,
+                          value: scale,
+                          label: percent,
+                          onChanged: textScale.enable
+                              ? (value) => setState(() => _draft = value)
+                              : null,
+                          onChangeEnd: (value) =>
+                              _update((state) => state.copyWith(scale: value)),
+                        ),
+                      ),
+                    ),
+                    ExcludeSemantics(
+                      child: Text(
+                        'A',
+                        style: HaraText.pageTitle(context, palette.sub),
                       ),
                     ),
                   ],
@@ -1010,27 +1142,8 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
             ],
           ),
         ),
+        HaraHairline(color: palette.line),
       ],
-    );
-  }
-}
-
-class _ResetButton extends StatelessWidget {
-  const _ResetButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return TonalButtonTheme(
-      size: TonalButtonSize.section,
-      child: ElasticPress(
-        child: IconButton(
-          tooltip: context.appLocalizations.reset,
-          onPressed: onPressed,
-          icon: const GlyphIcon(AppGlyphs.reset),
-        ),
-      ),
     );
   }
 }
@@ -1121,7 +1234,7 @@ class _CustomColorPreview extends ConsumerWidget {
       child: SizedBox.fromSize(
         size: _screenSize * _scale,
         child: ClipRSuperellipse(
-          borderRadius: AppRadius.md,
+          borderRadius: AppRadius.hara,
           child: FittedBox(
             child: SizedBox.fromSize(
               size: _screenSize,
@@ -1137,12 +1250,8 @@ class _CustomColorPreview extends ConsumerWidget {
         ),
       ),
     );
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(12),
-      decoration: ShapeDecoration(
-        color: level.colorOf(context.colorScheme),
-        shape: AppShape.xl.copyWith(side: context.colorScheme.cabinRimSide),
-      ),
       child: SurfaceScope(
         level: level,
         child: Row(

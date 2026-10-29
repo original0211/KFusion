@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/l10n/l10n.dart';
@@ -8,23 +10,6 @@ import 'package:kfusion/widgets/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-
-Glyph _glyphOf(HotAction action) {
-  return switch (action) {
-    HotAction.view => AppGlyphs.eye,
-    HotAction.start => AppGlyphs.playPause(0),
-    HotAction.exit => AppGlyphs.close,
-    HotAction.mode => AppGlyphs.split,
-    HotAction.ruleMode => AppGlyphs.rules,
-    HotAction.globalMode => AppGlyphs.language,
-    HotAction.directMode => AppGlyphs.target,
-    HotAction.proxy => AppGlyphs.shuffle,
-    HotAction.tun => AppGlyphs.vpn,
-    HotAction.copyEnv => AppGlyphs.code,
-    HotAction.delayTest => AppGlyphs.bolt,
-    HotAction.updateProfiles => AppGlyphs.sync,
-  };
-}
 
 List<(String, List<HotAction>)> _sections(AppLocalizations appLocalizations) {
   return [
@@ -103,26 +88,88 @@ class HotKeyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
+    final palette = context.haraPalette;
     final labels = ShortcutLabels.host();
     return BaseScaffold(
       title: appLocalizations.hotkeyManagement,
-      body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-        ).copyWith(top: context.contentTopPadding, bottom: 20),
-        children: [
-          const _HotKeyIntro(),
-          for (final (title, actions) in _sections(appLocalizations))
-            generateSection(
-              title: title,
-              items: [
-                for (final action in actions)
-                  _HotKeyItem(action: action, labels: labels),
+      body: Material(
+        color: palette.bg,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final side = math.max(
+              HaraSpace.pageInset,
+              (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+            );
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                side,
+                context.contentTopPadding,
+                side,
+                48,
+              ),
+              children: [
+                const _HotKeyIntro(),
+                for (final (title, actions) in _sections(appLocalizations)) ...[
+                  const SizedBox(height: HaraSpace.groupGap),
+                  _section(
+                    context,
+                    title,
+                    rows: [
+                      for (final action in actions)
+                        _HotKeyItem(action: action, labels: labels),
+                    ],
+                  ),
+                ],
               ],
-            ),
-        ],
+            );
+          },
+        ),
       ),
     );
+  }
+}
+
+Widget _section(
+  BuildContext context,
+  String title, {
+  required List<Widget> rows,
+}) {
+  final palette = context.haraPalette;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(title, style: HaraText.sectionTitle(context, palette.sub)),
+      const SizedBox(height: HaraSpace.sectionTitleGap),
+      HaraHairline(color: palette.line),
+      ...rows,
+    ],
+  );
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
   }
 }
 
@@ -131,27 +178,19 @@ class _HotKeyIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: ShapeDecoration(
-        color: context.raisedSurfaceLevel.colorOf(colorScheme),
-        shape: AppShape.xl.copyWith(side: colorScheme.cabinRimSide),
-      ),
-      child: Row(
-        spacing: 14,
-        children: [
-          GlyphIcon(AppGlyphs.keyboard, color: colorScheme.onSurfaceVariant),
-          Expanded(
-            child: Text(
-              context.appLocalizations.hotkeyDesc,
-              style: AppTextStyle.subheadline
-                  .of(context)
-                  .copyWith(color: colorScheme.onSurfaceVariant),
-            ),
+    final palette = context.haraPalette;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 14,
+      children: [
+        GlyphIcon(AppGlyphs.keyboard, color: palette.sub),
+        Expanded(
+          child: Text(
+            context.appLocalizations.hotkeyDesc,
+            style: HaraText.profileMeta(context, palette.sub),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -165,35 +204,58 @@ class _HotKeyItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     final hotKeyAction = ref.watch(getHotKeyActionProvider(action));
     final failure = ref.watch(
       hotKeyFailuresProvider.select((state) => state[action]),
     );
     final key = hotKeyAction.key;
-    return DecorationListItem(
-      contentPadding: EdgeInsets.only(left: 16, right: key == null ? 16 : 6),
-      leading: GlyphIcon(_glyphOf(action)),
-      title: Text(action.label, maxLines: 2, overflow: TextOverflow.ellipsis),
-      subtitle: failure == null
-          ? null
-          : Tooltip(
-              message: failure,
-              child: Text(
-                appLocalizations.hotkeyUnavailable,
-                style: AppTextStyle.footnote
-                    .of(context)
-                    .copyWith(color: colorScheme.error),
-              ),
+    return _HaraRow(
+      onTap: () {
+        dialogs.showCommonDialog(
+          child: HotKeyRecorder(hotKeyAction: hotKeyAction, labels: labels),
+        );
+      },
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  action.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaraText.nodeName(
+                    context,
+                    palette.ink,
+                    current: false,
+                  ),
+                ),
+                if (failure != null) ...[
+                  const SizedBox(height: HaraSpace.profileMetaGap),
+                  Tooltip(
+                    message: failure,
+                    child: Text(
+                      appLocalizations.hotkeyUnavailable,
+                      style: HaraText.profileMeta(
+                        context,
+                        context.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-      trailing: key == null
-          ? Text(
+          ),
+          const SizedBox(width: 12),
+          if (key == null)
+            Text(
               appLocalizations.hotkeyNotSet,
-              style: AppTextStyle.subheadline
-                  .of(context)
-                  .copyWith(color: colorScheme.onSurfaceVariant),
+              style: HaraText.statusNode(context, palette.dim),
             )
-          : Row(
+          else
+            Row(
               mainAxisSize: MainAxisSize.min,
               spacing: 4,
               children: [
@@ -206,15 +268,16 @@ class _HotKeyItem extends ConsumerWidget {
                   onPressed: () {
                     _saveBinding(ref, HotKeyAction(action: action));
                   },
-                  icon: const GlyphIcon(AppGlyphs.close, size: 20),
+                  icon: GlyphIcon(
+                    AppGlyphs.close,
+                    size: 20,
+                    color: palette.sub,
+                  ),
                 ),
               ],
             ),
-      onPressed: () {
-        dialogs.showCommonDialog(
-          child: HotKeyRecorder(hotKeyAction: hotKeyAction, labels: labels),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -259,35 +322,36 @@ class _KeyCap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.haraPalette;
     final colorScheme = context.colorScheme;
     final side = isLarge ? 44.0 : 26.0;
     final foregroundColor = isError
         ? colorScheme.onErrorContainer
-        : colorScheme.onSurfaceVariant;
+        : isPlaceholder
+        ? palette.dim
+        : palette.sub;
     final textStyle = isLarge
-        ? AppTextStyle.headline.of(context)
-        : AppTextStyle.caption1.of(context, emphasized: true);
+        ? HaraText.profileName(
+            context,
+            foregroundColor,
+            current: false,
+          ).copyWith(fontFeatures: const [FontFeature.tabularFigures()])
+        : HaraText.payload(context, foregroundColor);
     return Container(
       constraints: BoxConstraints(minWidth: side, minHeight: side),
       padding: EdgeInsets.symmetric(horizontal: isLarge ? 12 : 7),
       decoration: ShapeDecoration(
-        color: isPlaceholder
-            ? Colors.transparent
-            : isError
-            ? colorScheme.errorContainer
-            : context.raisedSurfaceLevel.colorOf(colorScheme),
-        shape: isLarge ? AppShape.md : AppShape.sm,
+        color: isError ? colorScheme.errorContainer : HaraPalette.transparent,
+        shape: AppShape.hara.copyWith(
+          side: isError || isPlaceholder
+              ? BorderSide.none
+              : BorderSide(color: palette.line, width: HaraSpace.hairline),
+        ),
       ),
       child: Align(
         widthFactor: 1,
         heightFactor: 1,
-        child: Text(
-          label,
-          style: textStyle.copyWith(
-            color: foregroundColor,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
+        child: Text(label, style: textStyle),
       ),
     );
   }
@@ -407,26 +471,26 @@ class _HotKeyRecorderState extends ConsumerState<HotKeyRecorder> {
       content = Text(
         context.appLocalizations.pressKeyboard,
         textAlign: TextAlign.center,
-        style: AppTextStyle.body
-            .of(context)
-            .copyWith(color: colorScheme.onSurfaceVariant),
+        style: HaraText.nodeName(
+          context,
+          context.haraPalette.sub,
+          current: false,
+        ),
       );
     }
-    final level = context.raisedSurfaceLevel;
     return Container(
       constraints: const BoxConstraints(minHeight: 96),
       padding: const EdgeInsets.all(16),
       alignment: Alignment.center,
       decoration: ShapeDecoration(
-        color: level.colorOf(colorScheme),
-        shape: AppShape.md.copyWith(
+        shape: AppShape.hara.copyWith(
           side: BorderSide(
-            color: isError ? colorScheme.error : colorScheme.primary,
-            width: 2,
+            color: isError ? colorScheme.error : context.haraPalette.ink,
+            width: 1.2,
           ),
         ),
       ),
-      child: SurfaceScope(level: level, child: content),
+      child: content,
     );
   }
 
@@ -457,10 +521,7 @@ class _HotKeyRecorderState extends ConsumerState<HotKeyRecorder> {
     }
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: Text(
-        text,
-        style: AppTextStyle.subheadline.of(context).copyWith(color: color),
-      ),
+      child: Text(text, style: HaraText.profileMeta(context, color!)),
     );
   }
 

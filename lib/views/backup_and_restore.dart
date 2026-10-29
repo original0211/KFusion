@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/common/dav_client.dart';
@@ -144,119 +145,356 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
         .update((state) => state?.copyWith(fileName: value));
   }
 
+  Future<void> _editFileName(BuildContext context, String value) async {
+    final result = await showFloatingDialog<String>(
+      context: Navigator.of(context, rootNavigator: true).context,
+      child: InputDialog(
+        title: context.appLocalizations.file,
+        value: value,
+        resetValue: defaultDavFileName,
+        inputFormatters: TextInputLimits.limit(TextInputLimits.fileName),
+      ),
+    );
+    _handleChange(result, ref);
+  }
+
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
+    final palette = context.haraPalette;
     final dav = ref.watch(davSettingProvider);
     final isLoading = ref.watch(loadingProvider(LoadingTag.backup_restore));
     return CommonScaffold(
       isLoading: isLoading,
       title: appLocalizations.backupAndRestore,
-      body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-        ).copyWith(top: context.appBarInset, bottom: 16),
-        children: [
-          generateSection(
-            title: appLocalizations.remote,
-            items: [
-              if (dav == null)
-                ListItem(
-                  leading: const GlyphIcon(AppGlyphs.account),
-                  title: Text(appLocalizations.noInfo),
-                  subtitle: Text(appLocalizations.pleaseBindWebDAV),
-                  trailing: TonalButton(
-                    label: appLocalizations.bind,
-                    onPressed: () {
-                      _showAddWebDAV(dav);
-                    },
-                  ),
-                )
-              else ...[
-                ListItem(
-                  leading: const GlyphIcon(AppGlyphs.account),
-                  title: TooltipText(
-                    text: Text(
-                      dav.user,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+      body: Material(
+        color: palette.bg,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final side = math.max(
+              HaraSpace.pageInset,
+              (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+            );
+            return ListView(
+              padding: EdgeInsets.fromLTRB(side, context.appBarInset, side, 48),
+              children: [
+                _section(
+                  context,
+                  appLocalizations.remote,
+                  rows: [
+                    if (dav == null)
+                      _HaraRow(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    appLocalizations.noInfo,
+                                    style: HaraText.nodeName(
+                                      context,
+                                      palette.ink,
+                                      current: false,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: HaraSpace.profileMetaGap,
+                                  ),
+                                  Text(
+                                    appLocalizations.pleaseBindWebDAV,
+                                    style: HaraText.profileMeta(
+                                      context,
+                                      palette.sub,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _TextAction(
+                              label: appLocalizations.bind,
+                              onPressed: () => _showAddWebDAV(dav),
+                            ),
+                          ],
+                        ),
+                      )
+                    else ...[
+                      _HaraRow(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TooltipText(
+                                    text: Text(
+                                      dav.user,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaraText.nodeName(
+                                        context,
+                                        palette.ink,
+                                        current: false,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: HaraSpace.profileMetaGap,
+                                  ),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        appLocalizations.connectivity,
+                                        style: HaraText.profileMeta(
+                                          context,
+                                          palette.sub,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _DavConnectionIndicator(
+                                        connection: _davConnection,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _TextAction(
+                              label: appLocalizations.edit,
+                              onPressed: () => _showAddWebDAV(dav),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _HaraRow(
+                        onTap: () => _editFileName(context, dav.fileName),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              appLocalizations.file,
+                              style: HaraText.nodeName(
+                                context,
+                                palette.ink,
+                                current: false,
+                              ),
+                            ),
+                            const SizedBox(height: HaraSpace.profileMetaGap),
+                            Text(
+                              dav.fileName,
+                              style: HaraText.payload(context, palette.sub),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _HaraRow(
+                        onTap: _backupOnWebDAV,
+                        child: Text(
+                          appLocalizations.backup,
+                          style: HaraText.nodeName(
+                            context,
+                            palette.ink,
+                            current: false,
+                          ),
+                        ),
+                      ),
+                      _HaraRow(
+                        onTap: _restoreOnWebDAV,
+                        child: Text(
+                          appLocalizations.restore,
+                          style: HaraText.nodeName(
+                            context,
+                            palette.ink,
+                            current: false,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: HaraSpace.groupGap),
+                _section(
+                  context,
+                  appLocalizations.local,
+                  rows: [
+                    _HaraRow(
+                      onTap: _backupOnLocal,
+                      child: Text(
+                        appLocalizations.backup,
+                        style: HaraText.nodeName(
+                          context,
+                          palette.ink,
+                          current: false,
+                        ),
+                      ),
                     ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(appLocalizations.connectivity),
-                        _DavConnectionIndicator(connection: _davConnection),
-                      ],
+                    _HaraRow(
+                      onTap: _restoreOnLocal,
+                      child: Text(
+                        appLocalizations.restore,
+                        style: HaraText.nodeName(
+                          context,
+                          palette.ink,
+                          current: false,
+                        ),
+                      ),
                     ),
-                  ),
-                  trailing: TonalButton(
-                    label: appLocalizations.edit,
-                    onPressed: () {
-                      _showAddWebDAV(dav);
-                    },
-                  ),
+                  ],
                 ),
-                ListItem.input(
-                  title: Text(appLocalizations.file),
-                  subtitle: Text(dav.fileName),
-                  dialogTitle: appLocalizations.file,
-                  value: dav.fileName,
-                  resetValue: defaultDavFileName,
-                  maxLength: TextInputLimits.fileName,
-                  onChanged: (value) {
-                    _handleChange(value, ref);
-                  },
-                ),
-                ListItem(
-                  onTap: () {
-                    _backupOnWebDAV();
-                  },
-                  title: Text(appLocalizations.backup),
-                ),
-                ListItem(
-                  onTap: () {
-                    _restoreOnWebDAV();
-                  },
-                  title: Text(appLocalizations.restore),
+                const SizedBox(height: HaraSpace.groupGap),
+                _section(
+                  context,
+                  appLocalizations.options,
+                  rows: [
+                    _HaraBoundOptions<RestoreStrategy>(
+                      ConfigOptionsItem<RestoreStrategy>(
+                        title: (l) => l.restoreStrategy,
+                        options: RestoreStrategy.values,
+                        textBuilder: (strategy) => strategy.label,
+                        selector: appSettingProvider.select(
+                          (state) => state.restoreStrategy,
+                        ),
+                        onChanged: (ref, value) => ref
+                            .read(appSettingProvider.notifier)
+                            .update(
+                              (state) => state.copyWith(restoreStrategy: value),
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+Widget _section(
+  BuildContext context,
+  String title, {
+  required List<Widget> rows,
+}) {
+  final palette = context.haraPalette;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(title, style: HaraText.sectionTitle(context, palette.sub)),
+      const SizedBox(height: HaraSpace.sectionTitleGap),
+      HaraHairline(color: palette.line),
+      ...rows,
+    ],
+  );
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
           ),
-          generateSection(
-            title: appLocalizations.local,
-            items: [
-              ListItem(
-                onTap: () {
-                  _backupOnLocal();
-                },
-                title: Text(appLocalizations.backup),
-              ),
-              ListItem(
-                onTap: () {
-                  _restoreOnLocal();
-                },
-                title: Text(appLocalizations.restore),
-              ),
-            ],
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
+  }
+}
+
+/// A text action in a row's trailing slot.
+class _TextAction extends StatelessWidget {
+  const _TextAction({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        customBorder: AppShape.hara,
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(label, style: HaraText.action(context, palette.ink)),
+        ),
+      ),
+    );
+  }
+}
+
+/// An options row over an existing [ConfigOptionsItem]: the item's own
+/// selector, options and writer drive it; the row tap opens the popup
+/// menu out of its end value, as the options row it replaces did.
+class _HaraBoundOptions<T> extends ConsumerWidget {
+  const _HaraBoundOptions(this.item);
+
+  final ConfigOptionsItem<T> item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = context.haraPalette;
+    final appLocalizations = context.appLocalizations;
+    final value = ref.watch(item.selector);
+    PopupOpen? openMenu;
+    return _HaraRow(
+      onTap: () => openMenu?.call(),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              item.title(appLocalizations),
+              style: HaraText.nodeName(context, palette.ink, current: false),
+            ),
           ),
-          generateSection(
-            title: appLocalizations.options,
-            items: [
-              ConfigOptionsItem<RestoreStrategy>(
-                title: (l) => l.restoreStrategy,
-                options: RestoreStrategy.values,
-                textBuilder: (strategy) => strategy.label,
-                selector: appSettingProvider.select(
-                  (state) => state.restoreStrategy,
+          CommonPopupBox(
+            targetBuilder: (open) {
+              openMenu = open;
+              return InkWell(
+                customBorder: AppShape.hara,
+                onTap: open,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.textBuilder(value),
+                      style: HaraText.statusNode(context, palette.sub),
+                    ),
+                    const SizedBox(width: 4),
+                    GlyphIcon(AppGlyphs.picker, color: palette.sub),
+                  ],
                 ),
-                onChanged: (ref, value) => ref
-                    .read(appSettingProvider.notifier)
-                    .update((state) => state.copyWith(restoreStrategy: value)),
-              ),
-            ],
+              );
+            },
+            popupBuilder: (_) => CommonPopupMenu(
+              items: [
+                for (final option in item.options)
+                  CommonPopupMenuItem(
+                    label: item.textBuilder(option),
+                    checked: option == value,
+                    onPressed: () => item.onChanged(ref, option),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

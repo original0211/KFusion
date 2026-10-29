@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
@@ -314,6 +315,7 @@ class _AccessViewState extends ConsumerState<AccessView>
     required List<Package> packages,
     required Set<String> selected,
     required bool isSearching,
+    required double side,
   }) {
     return FutureBuilder(
       future: _completer.future,
@@ -333,7 +335,12 @@ class _AccessViewState extends ConsumerState<AccessView>
             controller: _controller,
             child: ListView.builder(
               controller: _controller,
-              padding: EdgeInsets.only(bottom: BottomInsetScope.of(context)),
+              padding: EdgeInsets.fromLTRB(
+                side,
+                0,
+                side,
+                BottomInsetScope.of(context),
+              ),
               scrollCacheExtent: arrivalScrollCacheExtent(routeSettled),
               itemCount: packages.length,
               itemExtent: 72,
@@ -374,59 +381,74 @@ class _AccessViewState extends ConsumerState<AccessView>
     required bool enable,
     required AccessControlMode mode,
     required int count,
+    required double side,
   }) {
     final appLocalizations = context.appLocalizations;
-    final level = context.raisedSurfaceLevel;
-    final backgroundColor = level.colorOf(context.colorScheme);
+    final palette = context.haraPalette;
+    final Widget row;
     if (!enable) {
-      return MaterialBanner(
-        backgroundColor: backgroundColor,
-        dividerColor: Colors.transparent,
-        leading: GlyphIcon(AppGlyphs.info, color: context.colorScheme.outline),
-        content: Text(
-          appLocalizations.accessControlDisabledDesc,
-          style: TextStyle(color: context.colorScheme.onSurfaceVariant),
-        ),
-        actions: [
-          SurfaceScope(
-            level: level,
-            child: TonalButton(
-              size: TonalButtonSize.compact,
-              label: appLocalizations.turnOn,
-              onPressed: () => _handleEnable(true),
+      row = Row(
+        children: [
+          Expanded(
+            child: Text(
+              appLocalizations.accessControlDisabledDesc,
+              style: HaraText.profileMeta(context, palette.sub),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Semantics(
+            button: true,
+            child: InkWell(
+              customBorder: AppShape.hara,
+              onTap: () => _handleEnable(true),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  appLocalizations.turnOn,
+                  style: HaraText.action(context, palette.ink),
+                ),
+              ),
             ),
           ),
         ],
       );
-    }
-    final describe = mode == AccessControlMode.acceptSelected
-        ? appLocalizations.accessControlAllowDesc
-        : appLocalizations.accessControlNotAllowDesc;
-    final textStyle = AppTextStyle.subheadline
-        .of(context, emphasized: true)
-        .copyWith(color: context.colorScheme.onPrimary);
-    return MaterialBanner(
-      backgroundColor: backgroundColor,
-      dividerColor: Colors.transparent,
-      content: Text(describe),
-      actions: [
-        Card.filled(
-          color: context.colorScheme.primary,
-          elevation: 0,
-          shape: AppShape.md,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(appLocalizations.selected, style: textStyle),
-                const SizedBox(width: 4),
-                Flexible(child: Text('$count', style: textStyle)),
-              ],
+    } else {
+      final describe = mode == AccessControlMode.acceptSelected
+          ? appLocalizations.accessControlAllowDesc
+          : appLocalizations.accessControlNotAllowDesc;
+      row = Row(
+        children: [
+          Expanded(
+            child: Text(
+              describe,
+              style: HaraText.profileMeta(context, palette.sub),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Text(
+            appLocalizations.selected,
+            style: HaraText.statusNode(context, palette.sub),
+          ),
+          const SizedBox(width: 4),
+          Text('$count', style: HaraText.dataValue(context, palette.ink)),
+        ],
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        side,
+        HaraSpace.nodeRowVertical,
+        side,
+        HaraSpace.nodeRowVertical,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          row,
+          const SizedBox(height: HaraSpace.nodeRowVertical),
+          HaraHairline(color: palette.line),
+        ],
+      ),
     );
   }
 
@@ -501,28 +523,40 @@ class _AccessViewState extends ConsumerState<AccessView>
             ),
         ],
         body: AppBarClearance(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildBannerBar(
-                enable: accessControl.enable,
-                mode: mode,
-                count: valueList.length,
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: needsInstalledAppsPermission
-                    ? _buildInstalledAppsPermissionStatus()
-                    : DisabledMask(
-                        status: !accessControl.enable,
-                        child: _buildContent(
-                          packages: viewPackages,
-                          selected: valueList.toSet(),
-                          isSearching: query.isNotEmpty,
-                        ),
-                      ),
-              ),
-            ],
+          child: Material(
+            color: context.haraPalette.bg,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final side = math.max(
+                  HaraSpace.pageInset,
+                  (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+                );
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildBannerBar(
+                      enable: accessControl.enable,
+                      mode: mode,
+                      count: valueList.length,
+                      side: side,
+                    ),
+                    Expanded(
+                      child: needsInstalledAppsPermission
+                          ? _buildInstalledAppsPermissionStatus()
+                          : DisabledMask(
+                              status: !accessControl.enable,
+                              child: _buildContent(
+                                packages: viewPackages,
+                                selected: valueList.toSet(),
+                                isSearching: query.isNotEmpty,
+                                side: side,
+                              ),
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -544,20 +578,56 @@ class PackageListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListItem.checkbox(
-      leading: PackageIcon(packageName: package.packageName, size: 48),
-      title: Text(
-        package.label,
-        style: const TextStyle(overflow: TextOverflow.ellipsis),
-        maxLines: 1,
+    final palette = context.haraPalette;
+    return Semantics(
+      toggled: value,
+      child: InkWell(
+        customBorder: AppShape.hara,
+        onTap: () => onChanged(!value),
+        child: SizedBox(
+          height: 72,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    PackageIcon(packageName: package.packageName, size: 48),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            package.label,
+                            style: HaraText.nodeName(
+                              context,
+                              palette.ink,
+                              current: value,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: HaraSpace.profileMetaGap),
+                          Text(
+                            package.packageName,
+                            style: HaraText.payload(context, palette.sub),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (value) SelectionCheck(color: palette.ink),
+                  ],
+                ),
+              ),
+              HaraHairline(color: palette.line),
+            ],
+          ),
+        ),
       ),
-      subtitle: Text(
-        package.packageName,
-        style: const TextStyle(overflow: TextOverflow.ellipsis),
-        maxLines: 1,
-      ),
-      value: value,
-      onChanged: onChanged,
     );
   }
 }
@@ -576,71 +646,236 @@ class AccessControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-      ).copyWith(top: context.contentTopPadding, bottom: 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          generateSection(
-            items: [
-              ConfigOptionsItem<AccessControlMode>(
-                title: (l) => l.mode,
-                options: AccessControlMode.values,
-                textBuilder: (mode) => switch (mode) {
-                  AccessControlMode.acceptSelected =>
-                    appLocalizations.whitelistMode,
-                  AccessControlMode.rejectSelected =>
-                    appLocalizations.blacklistMode,
-                },
-                selector: accessControlStateProvider.select(
-                  (state) => state.mode,
+    final palette = context.haraPalette;
+    return Material(
+      color: palette.bg,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = math.max(
+            HaraSpace.pageInset,
+            (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+          );
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              side,
+              context.contentTopPadding,
+              side,
+              32,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                HaraHairline(color: palette.line),
+                _HaraBoundOptions<AccessControlMode>(
+                  ConfigOptionsItem<AccessControlMode>(
+                    title: (l) => l.mode,
+                    options: AccessControlMode.values,
+                    textBuilder: (mode) => switch (mode) {
+                      AccessControlMode.acceptSelected =>
+                        appLocalizations.whitelistMode,
+                      AccessControlMode.rejectSelected =>
+                        appLocalizations.blacklistMode,
+                    },
+                    selector: accessControlStateProvider.select(
+                      (state) => state.mode,
+                    ),
+                    onChanged: _writer(
+                      (state, value) => state.copyWith(mode: value),
+                    ),
+                  ),
                 ),
-                onChanged: _writer(
-                  (state, value) => state.copyWith(mode: value),
+                _HaraBoundOptions<AccessSortType>(
+                  ConfigOptionsItem<AccessSortType>(
+                    title: (l) => l.sort,
+                    options: AccessSortType.values,
+                    textBuilder: (type) => switch (type) {
+                      AccessSortType.none => appLocalizations.defaultText,
+                      AccessSortType.name => appLocalizations.name,
+                      AccessSortType.time => appLocalizations.time,
+                    },
+                    selector: accessControlStateProvider.select(
+                      (state) => state.sort,
+                    ),
+                    onChanged: _writer(
+                      (state, value) => state.copyWith(sort: value),
+                    ),
+                  ),
                 ),
-              ),
-              ConfigOptionsItem<AccessSortType>(
-                title: (l) => l.sort,
-                options: AccessSortType.values,
-                textBuilder: (type) => switch (type) {
-                  AccessSortType.none => appLocalizations.defaultText,
-                  AccessSortType.name => appLocalizations.name,
-                  AccessSortType.time => appLocalizations.time,
-                },
-                selector: accessControlStateProvider.select(
-                  (state) => state.sort,
+                const SizedBox(height: HaraSpace.groupGap),
+                _section(
+                  context,
+                  appLocalizations.source,
+                  rows: [
+                    _HaraToggle(
+                      ConfigToggleItem(
+                        title: (l) => l.systemApp,
+                        selector: accessControlStateProvider.select(
+                          (state) => !state.isFilterSystemApp,
+                        ),
+                        onChanged: _writer(
+                          (state, value) =>
+                              state.copyWith(isFilterSystemApp: !value),
+                        ),
+                      ),
+                    ),
+                    _HaraToggle(
+                      ConfigToggleItem(
+                        title: (l) => l.noNetworkApp,
+                        selector: accessControlStateProvider.select(
+                          (state) => !state.isFilterNonInternetApp,
+                        ),
+                        onChanged: _writer(
+                          (state, value) =>
+                              state.copyWith(isFilterNonInternetApp: !value),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                onChanged: _writer(
-                  (state, value) => state.copyWith(sort: value),
-                ),
-              ),
-            ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+Widget _section(
+  BuildContext context,
+  String title, {
+  required List<Widget> rows,
+}) {
+  final palette = context.haraPalette;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(title, style: HaraText.sectionTitle(context, palette.sub)),
+      const SizedBox(height: HaraSpace.sectionTitleGap),
+      HaraHairline(color: palette.line),
+      ...rows,
+    ],
+  );
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
           ),
-          generateSection(
-            title: appLocalizations.source,
-            items: [
-              ConfigToggleItem(
-                title: (l) => l.systemApp,
-                selector: accessControlStateProvider.select(
-                  (state) => !state.isFilterSystemApp,
-                ),
-                onChanged: _writer(
-                  (state, value) => state.copyWith(isFilterSystemApp: !value),
-                ),
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
+  }
+}
+
+/// A toggle row over an existing [ConfigToggleItem]: the item's own
+/// selector and writer drive it; the row tap flips the value.
+class _HaraToggle extends ConsumerWidget {
+  const _HaraToggle(this.item);
+
+  final ConfigToggleItem item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = context.haraPalette;
+    final appLocalizations = context.appLocalizations;
+    final value = ref.watch(item.selector);
+    return Semantics(
+      toggled: value,
+      child: _HaraRow(
+        onTap: () => item.onChanged(ref, !value),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item.title(appLocalizations),
+                style: HaraText.nodeName(context, palette.ink, current: false),
               ),
-              ConfigToggleItem(
-                title: (l) => l.noNetworkApp,
-                selector: accessControlStateProvider.select(
-                  (state) => !state.isFilterNonInternetApp,
+            ),
+            HaraToggleMark(
+              value: value,
+              word: value
+                  ? appLocalizations.enabled
+                  : appLocalizations.disabled,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// An options row over an existing [ConfigOptionsItem]: the item's own
+/// selector, options and writer drive it; the row tap opens the popup
+/// menu out of its end value, as the options row it replaces did.
+class _HaraBoundOptions<T> extends ConsumerWidget {
+  const _HaraBoundOptions(this.item);
+
+  final ConfigOptionsItem<T> item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = context.haraPalette;
+    final appLocalizations = context.appLocalizations;
+    final value = ref.watch(item.selector);
+    PopupOpen? openMenu;
+    return _HaraRow(
+      onTap: () => openMenu?.call(),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              item.title(appLocalizations),
+              style: HaraText.nodeName(context, palette.ink, current: false),
+            ),
+          ),
+          CommonPopupBox(
+            targetBuilder: (open) {
+              openMenu = open;
+              return InkWell(
+                customBorder: AppShape.hara,
+                onTap: open,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.textBuilder(value),
+                      style: HaraText.statusNode(context, palette.sub),
+                    ),
+                    const SizedBox(width: 4),
+                    GlyphIcon(AppGlyphs.picker, color: palette.sub),
+                  ],
                 ),
-                onChanged: _writer(
-                  (state, value) =>
-                      state.copyWith(isFilterNonInternetApp: !value),
-                ),
-              ),
-            ],
+              );
+            },
+            popupBuilder: (_) => CommonPopupMenu(
+              items: [
+                for (final option in item.options)
+                  CommonPopupMenuItem(
+                    label: item.textBuilder(option),
+                    checked: option == value,
+                    onPressed: () => item.onChanged(ref, option),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

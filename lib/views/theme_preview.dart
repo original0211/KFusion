@@ -12,12 +12,12 @@ class PreviewChoice<T> {
   const PreviewChoice({
     required this.value,
     required this.label,
-    required this.pictogram,
+    this.pictogram,
   });
 
   final T value;
   final String label;
-  final Widget pictogram;
+  final Widget? pictogram;
 }
 
 class PreviewChoiceGroup<T> extends StatelessWidget {
@@ -27,37 +27,92 @@ class PreviewChoiceGroup<T> extends StatelessWidget {
     required this.choices,
     required this.value,
     required this.onChanged,
+    this.actions = const [],
   });
 
   final Info info;
   final List<PreviewChoice<T>> choices;
   final T value;
   final ValueChanged<T> onChanged;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.haraPalette;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoHeader(info: info),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: generateSection(
-            items: [
-              for (final choice in choices)
-                DecorationListItem(
-                  leading: ExcludeSemantics(child: choice.pictogram),
-                  title: Text(choice.label),
-                  isSelected: choice.value == value,
-                  trailing: choice.value == value
-                      ? const SelectionCheck()
-                      : null,
-                  onPressed: () => onChanged(choice.value),
-                ),
-            ],
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                info.label,
+                style: HaraText.sectionTitle(context, palette.sub),
+              ),
+            ),
+            ...actions,
+          ],
         ),
+        const SizedBox(height: HaraSpace.sectionTitleGap),
+        HaraHairline(color: palette.line),
+        for (final choice in choices)
+          _PreviewChoiceRow<T>(
+            choice: choice,
+            selected: choice.value == value,
+            onPressed: () => onChanged(choice.value),
+          ),
       ],
+    );
+  }
+}
+
+class _PreviewChoiceRow<T> extends StatelessWidget {
+  const _PreviewChoiceRow({
+    required this.choice,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final PreviewChoice<T> choice;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return InkWell(
+      customBorder: AppShape.hara,
+      onTap: onPressed,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: HaraSpace.nodeRowVertical,
+            ),
+            child: Row(
+              children: [
+                if (choice.pictogram != null) ...[
+                  ExcludeSemantics(child: choice.pictogram!),
+                  const SizedBox(width: 14),
+                ],
+                Expanded(
+                  child: Text(
+                    choice.label,
+                    style: HaraText.nodeName(
+                      context,
+                      palette.ink,
+                      current: selected,
+                    ),
+                  ),
+                ),
+                if (selected) SelectionCheck(color: palette.ink),
+              ],
+            ),
+          ),
+          HaraHairline(color: palette.line),
+        ],
+      ),
     );
   }
 }
@@ -208,13 +263,8 @@ class _ThemeLivePreviewState extends ConsumerState<ThemeLivePreview>
       ),
     );
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 24),
       alignment: Alignment.center,
-      decoration: ShapeDecoration(
-        color: context.raisedSurfaceLevel.colorOf(context.colorScheme),
-        shape: AppShape.xxl.copyWith(side: context.colorScheme.cabinRimSide),
-      ),
       child: LayoutBuilder(
         builder: (_, constraints) {
           final width = math.min(_phoneWidth, (constraints.maxWidth - 12) / 2);
