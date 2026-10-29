@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:kfusion/common/service_probe.dart' show routedOutbound;
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
+import 'package:kfusion/providers/ip_quality.dart';
 import 'package:kfusion/providers/outbound_ip.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/providers/route_state.dart';
@@ -39,6 +42,15 @@ Override _probe(ProbeEntry<IpInfo> entry) {
   return outboundIpProbeProvider.overrideWithBuild(
     (_, _) => RoutedProbeState({routedOutbound: entry}),
   );
+}
+
+// The exit row now reads the quality of a live IP; this suite asserts the
+// figures as they stand before any quality lands, so the lookup is held
+// pending rather than left to real network timers.
+final _qualityHeld = Completer<IpQuality>().future;
+
+Override _heldQuality() {
+  return ipQualityProvider.overrideWith((_, _) => _qualityHeld);
 }
 
 const _freshEntry = ProbeEntry<IpInfo>(
@@ -86,6 +98,7 @@ Widget _app({
       suspendProvider.overrideWithValue(false),
       setupActionProvider.overrideWith(_RecordingSetupAction.new),
       _probe(entry),
+      _heldQuality(),
       if (withGroups) ...[
         groupsProvider.overrideWithValue(_stickyGroups),
         currentGroupsStateProvider.overrideWithValue(

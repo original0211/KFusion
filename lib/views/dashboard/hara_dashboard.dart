@@ -7,7 +7,9 @@ import 'package:kfusion/core/core.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/core_kind.dart';
 import 'package:kfusion/features/config_hub/singbox_action.dart';
+import 'package:kfusion/features/ip_quality/labels.dart';
 import 'package:kfusion/models/models.dart';
+import 'package:kfusion/providers/ip_quality.dart';
 import 'package:kfusion/providers/outbound_ip.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/providers/routed_probe.dart';
@@ -518,9 +520,14 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
       '$delay',
       'ms',
     );
+    final exitIp = showValues && !hideIp ? ipInfo?.ip : null;
+    final exitType = exitIp == null
+        ? null
+        : ref.watch(ipQualityProvider(exitIp)).value?.type;
+    final shownIp = hideIp ? '*****' : (ipInfo?.ip ?? '');
     final exitRow = valueOf(
       showValues && ipInfo != null,
-      hideIp ? '*****' : (ipInfo?.ip ?? ''),
+      exitType == null ? shownIp : '$shownIp · ${exitType.label(context)}',
     );
     final kernelRow = valueOf(showValues, _coreName(runningCore ?? activeKind));
     // The counters are mihomo-fed; under sing-box they would misreport zero.
