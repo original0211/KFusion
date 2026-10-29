@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
@@ -7,13 +9,16 @@ import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/ui.dart';
+import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/theme.dart';
+import 'package:kfusion/views/tools.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/app_paths.dart';
 import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
 
@@ -48,6 +53,11 @@ ColorScheme _schemeOf(WidgetTester tester, Finder finder) {
 }
 
 void main() {
+  setUpAll(() async {
+    final dir = await Directory.systemTemp.createTemp('kfusion-line-std');
+    await useAppPaths(dir);
+  });
+
   group('hotkey standards', () {
     testWidgets('an unbound row reads its state in the variant tone', (
       tester,
@@ -186,9 +196,8 @@ void main() {
 
     tearDown(() => container.dispose());
 
-    testWidgets('cards on the theme page take the card corner档', (
-      tester,
-    ) async {
+    testWidgets('cards on the theme and settings pages take the card '
+        'corner档', (tester) async {
       tester.view.physicalSize = const Size(1400, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -217,14 +226,22 @@ void main() {
       );
       expect(strayShapes, findsNothing);
 
-      final fontCard = find.ancestor(
-        of: find.text('Aa').first,
-        matching: find.byType(Material),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(child: ToolsView()),
+        ),
       );
-      final fontShape =
-          tester.widget<Material>(fontCard.first).shape
+      await tester.pumpAndSettle();
+
+      final switchCard = find.descendant(
+        of: find.byType(CoreSwitchCard),
+        matching: find.byType(CommonCard),
+      );
+      final switchShape =
+          tester.widget<CommonCard>(switchCard.first).shape
               as RoundedSuperellipseBorder;
-      expect(fontShape.borderRadius, AppRadius.xl);
+      expect(switchShape.borderRadius, AppRadius.xl);
     });
   });
 }
