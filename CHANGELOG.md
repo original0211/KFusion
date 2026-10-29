@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.32 (2026-10-29)
+
+**Features**
+
+- **views** The dashboard and the proxies readings merge into one main screen: the contour ring, the status row, four figures (delay, exit, core and session traffic) and the mode row now sit above the grouped node list on a single scroll surface, and the status compacts into a pinned bar as the list scrolls. Navigation settles at three entries: main screen, subscriptions and settings. The running core is carried by the ring and the status row while the idle core is only named at the end of the brand row; while connected, the current exit row is marked with a text label instead of the vermilion dot, which stays unique to the connection status. (6ab08fb)
+- **profiles** The profiles screen becomes the subscriptions screen: it takes the settled title and gains a test-all-delays entry in its header, running the existing per-page delay test over every group. (bded3d7)
+- **dashboard** The main screen exit row appends the exit IP's type (residential, data center, mobile or business) as soon as the quality lookup knows it. Until then, and whenever the lookup fails, the row shows the address alone. (c1b5a7d)
+- **views** Settings settle into a half-page: the core switch card on top, the startup and takeover rows below it, the everyday entries (language, theme, backup, hotkeys and access control) as single rows, and the disclaimer and about at the foot. Everything else moves behind one Advanced gate (the advanced settings subtree, custom resources, proxy settings, resources, logs, fonts and the developer page) and keeps its existing face inside the gate; a custom profile's editors are reached as "advanced edit" from its row menu. (a61dee9)
+
 ## v0.2.31 (2026-10-29)
 
 **Features**
