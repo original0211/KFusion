@@ -46,6 +46,14 @@ class _HaraProfilesViewState extends ConsumerState<HaraProfilesView> {
     );
   }
 
+  void _testAll() {
+    final groups = ref.read(proxiesListStateProvider).groups;
+    final action = ref.read(proxiesActionProvider.notifier);
+    for (final group in groups) {
+      action.delayTestPageGroup(group.name);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = context.haraPalette;
@@ -128,7 +136,7 @@ class _HaraProfilesViewState extends ConsumerState<HaraProfilesView> {
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  localizations.profiles,
+                  localizations.subscriptions,
                   style: HaraText.pageTitle(context, palette.ink),
                 ),
               ),
@@ -142,6 +150,7 @@ class _HaraProfilesViewState extends ConsumerState<HaraProfilesView> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      action(localizations.actionDelayTest, _testAll),
                       action(localizations.update, () => _updateAll(profiles)),
                       action(
                         localizations.profilesSort,
