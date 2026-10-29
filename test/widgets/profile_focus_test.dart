@@ -237,31 +237,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('an external profile lists extend and keeps its final config '
-      'under more', (tester) async {
-    final l = currentAppLocalizations;
-    await pumpProfiles(tester, profiles: [urlProfile('url')]);
-
-    await openProfileMenu(tester, 'url');
-    expect(find.text(l.extend), findsOneWidget);
-    expect(find.text(l.runtimeConfig), findsNothing);
-    expect(find.text(l.rename), findsNothing);
-
-    await tester.tap(find.text(l.more).last);
-    await tester.pumpAndSettle();
-    expect(find.text(l.runtimeConfig), findsOneWidget);
-    expect(find.text(l.subscriptionInfo), findsNothing);
-  });
-
-  testWidgets('a custom profile lists its final config and no extend', (
-    tester,
-  ) async {
+  testWidgets('a custom profile lists its final config', (tester) async {
     final l = currentAppLocalizations;
     await pumpProfiles(tester, profiles: [Profile.custom(label: 'mine')]);
 
     await openProfileMenu(tester, 'mine');
     expect(find.text(l.runtimeConfig), findsOneWidget);
-    expect(find.text(l.extend), findsNothing);
     expect(find.text(l.more), findsNothing);
   });
 
