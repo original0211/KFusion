@@ -8426,6 +8426,41 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Main`
+  String get mainScreen {
+    return Intl.message('Main', name: 'mainScreen', desc: '', args: []);
+  }
+
+  /// `Subscriptions`
+  String get subscriptions {
+    return Intl.message(
+      'Subscriptions',
+      name: 'subscriptions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current exit`
+  String get currentExit {
+    return Intl.message(
+      'Current exit',
+      name: 'currentExit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{core} not running`
+  String coreNotRunning(Object core) {
+    return Intl.message(
+      '$core not running',
+      name: 'coreNotRunning',
+      desc: '',
+      args: [core],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

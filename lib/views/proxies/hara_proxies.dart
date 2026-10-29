@@ -10,6 +10,9 @@ import 'package:kfusion/views/proxies/card.dart';
 import 'package:kfusion/views/proxies/setting.dart';
 import 'package:material_ui/material_ui.dart';
 
+/// The main screen labels the exit leaf while connected (the status row owns the dot then); the proxies page always dots it.
+enum HaraExitMarker { dot, label }
+
 // The Hara A reading of the proxies page: a page title, text actions, and
 // hairline-separated single-line rows grouped under small section titles.
 // The page reads the same providers as the tab and list readings and writes
@@ -110,16 +113,17 @@ class _HaraProxiesViewState extends ConsumerState<HaraProxiesView> {
                       if (groups.isEmpty)
                         const SliverFillRemaining(
                           hasScrollBody: false,
-                          child: _HaraProxiesEmpty(),
+                          child: HaraProxiesEmpty(),
                         )
                       else
                         for (final (index, group) in groups.indexed)
-                          _HaraGroupSection(
+                          HaraProxyGroupSection(
                             group: group,
                             exitName: exit != null && exit.group == group.name
                                 ? exit.leaf
                                 : null,
                             first: index == 0,
+                            exitMarker: HaraExitMarker.dot,
                           ),
                       const SliverToBoxAdapter(
                         child: SizedBox(height: HaraSpace.modeToNavGap),
@@ -207,8 +211,8 @@ class _HaraProxiesViewState extends ConsumerState<HaraProxiesView> {
   }
 }
 
-class _HaraProxiesEmpty extends StatelessWidget {
-  const _HaraProxiesEmpty();
+class HaraProxiesEmpty extends StatelessWidget {
+  const HaraProxiesEmpty();
 
   @override
   Widget build(BuildContext context) {
@@ -230,16 +234,19 @@ class _HaraProxiesEmpty extends StatelessWidget {
   }
 }
 
-class _HaraGroupSection extends StatelessWidget {
-  const _HaraGroupSection({
+class HaraProxyGroupSection extends StatelessWidget {
+  const HaraProxyGroupSection({
+    super.key,
     required this.group,
     required this.exitName,
     required this.first,
+    required this.exitMarker,
   });
 
   final Group group;
   final String? exitName;
   final bool first;
+  final HaraExitMarker exitMarker;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +280,7 @@ class _HaraGroupSection extends StatelessWidget {
               group: group,
               proxy: proxy,
               isExit: proxy.name == exitName,
+              exitMarker: exitMarker,
             );
           },
         ),
@@ -286,11 +294,13 @@ class _HaraProxyRow extends ConsumerWidget {
     required this.group,
     required this.proxy,
     required this.isExit,
+    required this.exitMarker,
   });
 
   final Group group;
   final Proxy proxy;
   final bool isExit;
+  final HaraExitMarker exitMarker;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -301,6 +311,7 @@ class _HaraProxyRow extends ConsumerWidget {
       ).select((name) => name == proxy.name),
     );
     final isGroup = GroupType.values.any((type) => type.name == proxy.type);
+    final marked = isExit && selected;
     return InkWell(
       customBorder: AppShape.hara,
       onTap: () => selectGroupProxy(
@@ -318,7 +329,7 @@ class _HaraProxyRow extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                if (isExit && selected) ...[
+                if (marked && exitMarker == HaraExitMarker.dot) ...[
                   const HaraDot(size: HaraSpace.dotRow),
                   const SizedBox(width: HaraSpace.dotNameGap),
                 ],
@@ -333,6 +344,13 @@ class _HaraProxyRow extends ConsumerWidget {
                     maxLines: 1,
                   ),
                 ),
+                if (marked && exitMarker == HaraExitMarker.label) ...[
+                  Text(
+                    context.appLocalizations.currentExit,
+                    style: HaraText.inUse(context, palette.dim),
+                  ),
+                  const SizedBox(width: 16),
+                ],
                 if (isGroup)
                   _HaraRealSelected(group: group, proxy: proxy)
                 else

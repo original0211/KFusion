@@ -53,9 +53,30 @@ const _freshEntry = ProbeEntry<IpInfo>(
   ),
 );
 
+const _stickyGroups = [
+  Group(
+    name: 'GLOBAL',
+    type: GroupType.Selector,
+    all: [
+      Proxy(name: 'Home', type: 'Selector'),
+      Proxy(name: 'JP-03', type: 'Shadowsocks'),
+      Proxy(name: 'DIRECT', type: 'Direct'),
+    ],
+  ),
+  Group(
+    name: 'Home',
+    type: GroupType.Selector,
+    all: [
+      Proxy(name: 'JP-03', type: 'Shadowsocks'),
+      Proxy(name: 'HK-01', type: 'Shadowsocks'),
+    ],
+  ),
+];
+
 Widget _app({
   ProbeEntry<IpInfo> entry = const ProbeEntry(phase: ProbePhase.empty),
   List<Profile> profiles = const [_profile],
+  bool withGroups = false,
 }) {
   return TestApp(
     locale: const Locale('en'),
@@ -65,6 +86,12 @@ Widget _app({
       suspendProvider.overrideWithValue(false),
       setupActionProvider.overrideWith(_RecordingSetupAction.new),
       _probe(entry),
+      if (withGroups) ...[
+        groupsProvider.overrideWithValue(_stickyGroups),
+        currentGroupsStateProvider.overrideWithValue(
+          const GroupsState(value: _stickyGroups),
+        ),
+      ],
     ],
     child: const HaraDashboard(),
   );
@@ -106,17 +133,12 @@ void main() {
     expect(_statusText('Disconnected'), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
     expect(find.byType(HaraDot), findsNothing);
-    for (final key in [
-      'Delay',
-      'Exit',
-      'Connected',
-      'Download',
-      'Upload',
-      'Total traffic',
-    ]) {
+    expect(find.text('sing-box not running'), findsNothing);
+    expect(find.text('mihomo not running'), findsNothing);
+    for (final key in ['Delay', 'Exit', 'Core', 'Total traffic']) {
       expect(find.text(key), findsOneWidget, reason: key);
     }
-    expect(find.text('—'), findsNWidgets(6));
+    expect(find.text('—'), findsNWidgets(4));
     for (final mode in ['Rule', 'Global', 'Direct']) {
       expect(find.text(mode), findsOneWidget, reason: mode);
     }
@@ -163,7 +185,8 @@ void main() {
     final ring = tester.widget<DiscRingMotif>(_ring());
     expect(ring.color, HaraPalette.light.ink.withValues(alpha: 0.78));
     expect(find.text(_ip), findsOneWidget);
-    expect(find.text('00:00:00'), findsOneWidget);
+    expect(find.text('mihomo'), findsOneWidget);
+    expect(find.text('sing-box not running'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -214,7 +237,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(_app(entry: _freshEntry));
+    await tester.pumpWidget(_app(entry: _freshEntry, withGroups: true));
     await tester.pump();
     await tester.tap(_ring());
     await tester.pump();
@@ -226,7 +249,7 @@ void main() {
     );
     expect(smallRing(), findsNothing);
 
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 

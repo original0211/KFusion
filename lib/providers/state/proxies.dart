@@ -257,8 +257,12 @@ String? selectedProxyName(Ref ref, String groupName) {
 ({bool isProxies, int sortNum, ProxiesSortType sortType}) needUpdateGroups(
   Ref ref,
 ) {
+  // The node list lives on the main screen now; the proxies page label is
+  // kept for the picker's sheet, which shares the same arrival refresh.
   final isProxies = ref.watch(
-    currentPageLabelProvider.select((state) => state == PageLabel.proxies),
+    currentPageLabelProvider.select(
+      (state) => state == PageLabel.dashboard || state == PageLabel.proxies,
+    ),
   );
   final sortNum = ref.watch(sortNumProvider);
   final sortType = ref.watch(

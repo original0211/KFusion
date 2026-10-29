@@ -2,12 +2,16 @@ import 'package:kfusion/common/app_ports.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/ui/icons/app_glyphs.dart';
+import 'package:kfusion/views/dashboard/hara_dashboard.dart';
 import 'package:kfusion/views/views.dart';
 import 'package:material_ui/material_ui.dart';
 
 class Navigation implements NavigationPort {
   static Navigation? _instance;
 
+  // The primary shell carries three entries (main screen, subscriptions,
+  // settings); hasProxies no longer gates an entry now that the node list
+  // lives on the main screen, and stays only for the port signature.
   @override
   List<NavigationItem> getItems({
     bool openLogs = false,
@@ -18,16 +22,7 @@ class Navigation implements NavigationPort {
         glyph: AppGlyphs.dashboard,
         label: PageLabel.dashboard,
         builder: (_) =>
-            const DashboardView(key: GlobalObjectKey(PageLabel.dashboard)),
-      ),
-      NavigationItem(
-        glyph: AppGlyphs.proxies,
-        label: PageLabel.proxies,
-        builder: (_) =>
-            const ProxiesView(key: GlobalObjectKey(PageLabel.proxies)),
-        modes: hasProxies
-            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
-            : [],
+            const HaraDashboard(key: GlobalObjectKey(PageLabel.dashboard)),
       ),
       NavigationItem(
         glyph: AppGlyphs.profiles,
@@ -47,7 +42,7 @@ class Navigation implements NavigationPort {
         label: PageLabel.connections,
         builder: (_) =>
             const ConnectionsView(key: GlobalObjectKey(PageLabel.connections)),
-        modes: [NavigationItemMode.desktop, NavigationItemMode.moreFull],
+        modes: [NavigationItemMode.moreFull],
       ),
       NavigationItem(
         glyph: AppGlyphs.dns,
@@ -67,9 +62,7 @@ class Navigation implements NavigationPort {
         glyph: AppGlyphs.logs,
         label: PageLabel.logs,
         builder: (_) => const LogsView(key: GlobalObjectKey(PageLabel.logs)),
-        modes: openLogs
-            ? [NavigationItemMode.desktop, NavigationItemMode.more]
-            : [],
+        modes: openLogs ? [NavigationItemMode.more] : [],
       ),
       NavigationItem(
         glyph: AppGlyphs.tools,

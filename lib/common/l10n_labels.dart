@@ -19,6 +19,18 @@ extension PageLabelL10n on PageLabel {
       PageLabel.dns => appLocalizations.dnsQueries,
     };
   }
+
+  /// The three primary entries under their settled screen names; every
+  /// other label keeps its page name.
+  String get navLabel {
+    final appLocalizations = currentAppLocalizations;
+    return switch (this) {
+      PageLabel.dashboard => appLocalizations.mainScreen,
+      PageLabel.profiles => appLocalizations.subscriptions,
+      PageLabel.tools => appLocalizations.settings,
+      _ => label,
+    };
+  }
 }
 
 extension DnsQueryInitiatorL10n on DnsQueryInitiator {

@@ -81,7 +81,7 @@ class _HomeShell extends ConsumerWidget {
               child: HaraNavBar(
                 items: [
                   for (final item in navigationItems)
-                    HaraNavItem(label: item.label.label),
+                    HaraNavItem(label: item.label.navLabel),
                 ],
                 selectedIndex: state.currentIndex,
                 onSelected: (index) {

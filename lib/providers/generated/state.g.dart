@@ -2821,7 +2821,7 @@ final class NeedUpdateGroupsProvider
   }
 }
 
-String _$needUpdateGroupsHash() => r'90b7cb35c96bda157cf436e32f251e58721ef757';
+String _$needUpdateGroupsHash() => r'f71d950a50caecb4893b5d64072a465a00e6b997';
 
 @ProviderFor(navigationItemsState)
 final navigationItemsStateProvider = NavigationItemsStateProvider._();

@@ -5,12 +5,15 @@ import 'package:kfusion/common/common.dart';
 import 'package:kfusion/common/service_probe.dart';
 import 'package:kfusion/core/core.dart';
 import 'package:kfusion/enum/enum.dart';
+import 'package:kfusion/features/config_hub/core_kind.dart';
+import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/outbound_ip.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/providers/routed_probe.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/profiles/universal_import.dart';
+import 'package:kfusion/views/proxies/hara_proxies.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -20,10 +23,16 @@ import 'widgets/core_status_button.dart';
 const _pendingBudget = Duration(seconds: 45);
 const _stickyExtent = 48.0;
 
-/// The dashboard in the Hara A reading: one white field, the outline ring
-/// as the switch, a fixed list of figures and a text mode row. It reads the
-/// same providers the cabin core read and starts and stops the core through
-/// the same action; only the presentation is new.
+String _coreName(CoreKind kind) {
+  return switch (kind) {
+    CoreKind.mihomo => 'mihomo',
+    CoreKind.singbox => 'sing-box',
+  };
+}
+
+/// The main screen in the Hara A reading: the ring, status row, figures
+/// and mode row over the proxies reading's grouped node list, on one
+/// scroll surface. A running sing-box core is presented, not controlled.
 class HaraDashboard extends ConsumerStatefulWidget {
   const HaraDashboard({super.key});
 
@@ -96,18 +105,39 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
   _Phase _phase({
     required bool hasProfile,
     required bool isStart,
+    required bool singBoxRunning,
     required bool suspended,
     required ProbeEntry<IpInfo> entry,
   }) {
     if (!hasProfile) return _Phase.noProfile;
     if (_pending == true && !isStart) return _Phase.connecting;
     if (_pending == false && isStart) return _Phase.disconnecting;
+    if (singBoxRunning && !isStart) return _Phase.connected;
     if (!isStart) return _Phase.disconnected;
     if (suspended) return _Phase.suspended;
     if (shownPhase(entry) == ProbePhase.failed && entry.value == null) {
       return _Phase.error;
     }
     return _Phase.connected;
+  }
+
+  // The exit chain: follow group selections from GLOBAL (or the first
+  // group) down to the leaf that actually carries the traffic.
+  ({String group, String leaf})? _exitLeaf(List<Group> groups) {
+    if (groups.isEmpty) return null;
+    final byName = {for (final group in groups) group.name: group};
+    var current = byName['GLOBAL'] ?? groups.first;
+    final visited = <String>{};
+    while (visited.add(current.name)) {
+      final selected = ref.watch(selectedProxyNameProvider(current.name));
+      if (selected == null || selected.isEmpty) return null;
+      final next = byName[selected];
+      if (next == null) {
+        return (group: current.name, leaf: selected);
+      }
+      current = next;
+    }
+    return null;
   }
 
   @override
@@ -121,9 +151,17 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     final entry = ref.watch(
       outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
     );
+    final singBoxRunning =
+        ref.watch(singBoxActionProvider).value?.state == SingBoxState.running;
+    final runningCore = singBoxRunning
+        ? CoreKind.singbox
+        : (isStart ? CoreKind.mihomo : null);
+    final activeKind =
+        ref.watch(activeCoreKindProvider).value ?? CoreKind.mihomo;
     final phase = _phase(
       hasProfile: hasProfile,
       isStart: isStart,
+      singBoxRunning: singBoxRunning,
       suspended: suspended,
       entry: entry,
     );
@@ -133,6 +171,10 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     final delay = nodeName == null
         ? null
         : ref.watch(delayProvider(proxyName: nodeName));
+    final groups = ref.watch(
+      proxiesListStateProvider.select((state) => state.groups),
+    );
+    final exit = _exitLeaf(groups);
     final pinAllowed = phase == _Phase.connected || phase == _Phase.suspended;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final box = _heroKey.currentContext?.findRenderObject() as RenderBox?;
@@ -151,29 +193,26 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
               CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: side),
-                      child: KeyedSubtree(
-                        key: _heroKey,
-                        child: _hero(
-                          context,
-                          phase: phase,
-                          palette: palette,
-                          profile: profile,
-                          nodeName: nodeName,
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: side),
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: KeyedSubtree(
+                            key: _heroKey,
+                            child: _hero(
+                              context,
+                              phase: phase,
+                              palette: palette,
+                              profile: profile,
+                              nodeName: nodeName,
+                              runningCore: runningCore,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: side),
-                      child: phase == _Phase.noProfile
-                          ? const SizedBox.shrink()
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                        if (phase != _Phase.noProfile) ...[
+                          SliverToBoxAdapter(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 _dataList(
@@ -182,12 +221,30 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
                                   palette: palette,
                                   ipInfo: ipInfo,
                                   delay: delay,
+                                  runningCore: runningCore,
+                                  activeKind: activeKind,
                                 ),
                                 const SizedBox(height: HaraSpace.listToModeGap),
                                 _modeRow(context, palette),
-                                const SizedBox(height: HaraSpace.modeToNavGap),
                               ],
                             ),
+                          ),
+                          for (final group in groups)
+                            HaraProxyGroupSection(
+                              group: group,
+                              exitName: exit != null && exit.group == group.name
+                                  ? exit.leaf
+                                  : null,
+                              first: false,
+                              exitMarker: pinAllowed
+                                  ? HaraExitMarker.label
+                                  : HaraExitMarker.dot,
+                            ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: HaraSpace.modeToNavGap),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
@@ -224,6 +281,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     required HaraPalette palette,
     required Profile? profile,
     required String? nodeName,
+    required CoreKind? runningCore,
   }) {
     final appLocalizations = context.appLocalizations;
     final ringColor = switch (phase) {
@@ -251,6 +309,11 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
       _Phase.disconnected || _Phase.noProfile => profile?.realLabel,
       _ => nodeName ?? profile?.realLabel,
     };
+    final idleCore = switch (runningCore) {
+      CoreKind.mihomo => CoreKind.singbox,
+      CoreKind.singbox => CoreKind.mihomo,
+      null => null,
+    };
     return SafeArea(
       bottom: false,
       child: Column(
@@ -259,8 +322,25 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
           Row(
             children: [
               Text('KFUSION', style: HaraText.brand(context, palette.dim)),
-              const Spacer(),
-              if (coreLib == null) const CoreStatusButton(),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (idleCore != null) ...[
+                      Flexible(
+                        child: Text(
+                          appLocalizations.coreNotRunning(_coreName(idleCore)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaraText.statusNode(context, palette.dim),
+                        ),
+                      ),
+                      if (coreLib == null) const SizedBox(width: 12),
+                    ],
+                    if (coreLib == null) const CoreStatusButton(),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: HaraSpace.ringTopGap),
@@ -272,7 +352,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
               onTap: phase == _Phase.noProfile
                   ? () =>
                         BaseNavigator.push(context, const UniversalImportView())
-                  : _toggle,
+                  : (runningCore == CoreKind.singbox ? null : _toggle),
               child: DiscRingMotif(
                 size: HaraSpace.ringSize,
                 color: ringColor,
@@ -416,6 +496,8 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     required HaraPalette palette,
     required IpInfo? ipInfo,
     required int? delay,
+    required CoreKind? runningCore,
+    required CoreKind activeKind,
   }) {
     final appLocalizations = context.appLocalizations;
     final showValues =
@@ -425,8 +507,6 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    final runTime = ref.watch(runTimeProvider);
-    final latest = ref.watch(trafficsProvider).list.safeLast(const Traffic());
     final total = ref.watch(totalTrafficProvider);
     final dash = ('—', palette.dim, null as String?);
     (String, Color, String?) valueOf(bool ok, String value, [String? unit]) {
@@ -442,19 +522,18 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
       showValues && ipInfo != null,
       hideIp ? '*****' : (ipInfo?.ip ?? ''),
     );
-    final elapsedRow = valueOf(showValues, getTimeText(runTime));
-    final downShow = latest.down.traffic;
-    final downRow = valueOf(showValues, downShow.value, '${downShow.unit}/s');
-    final upShow = latest.up.traffic;
-    final upRow = valueOf(showValues, upShow.value, '${upShow.unit}/s');
+    final kernelRow = valueOf(showValues, _coreName(runningCore ?? activeKind));
+    // The counters are mihomo-fed; under sing-box they would misreport zero.
     final totalShow = (total.up + total.down).traffic;
-    final sessionRow = valueOf(showValues, totalShow.value, totalShow.unit);
+    final sessionRow = valueOf(
+      showValues && runningCore != CoreKind.singbox,
+      totalShow.value,
+      totalShow.unit,
+    );
     final rows = <(String, (String, Color, String?))>[
       (appLocalizations.delay, delayRow),
       (appLocalizations.ipExit, exitRow),
-      (appLocalizations.connected, elapsedRow),
-      (appLocalizations.download, downRow),
-      (appLocalizations.upload, upRow),
+      (appLocalizations.core, kernelRow),
       (appLocalizations.totalTraffic, sessionRow),
     ];
     return Column(

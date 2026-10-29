@@ -26,12 +26,12 @@ import '../helpers/test_app.dart';
 
 Finder _barItem(PageLabel label) => find.descendant(
   of: find.byType(HaraNavBar),
-  matching: find.text(label.label),
+  matching: find.text(label.navLabel),
 );
 
 Finder _railItem(PageLabel label) => find.descendant(
   of: find.byType(HaraNavRail),
-  matching: find.text(label.label),
+  matching: find.text(label.navLabel),
 );
 
 void main() {
@@ -263,7 +263,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(tester.getSize(sidebar).width, HaraSpace.railWidth);
-    expect(find.text('Tools'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
