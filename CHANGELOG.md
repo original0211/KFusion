@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.34 (2026-10-29)
+
+**Features**
+
+- **ui** The settings drill-down pages — theme, backup and restore, hotkeys, access control, about and the disclaimer — are read in the white Hara A language, completing the settings surface: the grouped cards, rims and rounded panels give way to hairline-separated rows on the plain white field, switches read as the ink-dot toggle mark, and selection checks and swatch rings render in palette ink instead of the seed primary. Every page keeps its composition, wiring and behaviour; only the surfaces moved. (3266d1d)
+
 ## v0.2.33 (2026-10-29)
 
 **Features**

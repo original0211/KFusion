@@ -2,6 +2,24 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.34",
+      "tag": "v0.2.34",
+      "date": "2026-10-29",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "3266d1d",
+              "scope": "ui",
+              "text": "The settings drill-down pages — theme, backup and restore, hotkeys, access control, about and the disclaimer — are read in the white Hara A language, completing the settings surface: the grouped cards, rims and rounded panels give way to hairline-separated rows on the plain white field, switches read as the ink-dot toggle mark, and selection checks and swatch rings render in palette ink instead of the seed primary. Every page keeps its composition, wiring and behaviour; only the surfaces moved."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.33",
       "tag": "v0.2.33",
       "date": "2026-10-29",
