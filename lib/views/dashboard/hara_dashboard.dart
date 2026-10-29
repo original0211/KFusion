@@ -529,15 +529,16 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     final exitCountry = exitIp == null
         ? null
         : countryName(ipInfo!.countryCode, Localizations.localeOf(context));
-    final shownIp = hideIp ? '*****' : (ipInfo?.ip ?? '');
-    final exitRow = valueOf(
-      showValues && ipInfo != null,
-      [
-        shownIp,
-        ?exitCountry,
-        if (exitType != null) exitType.label(context),
-      ].join(' · '),
-    );
+    final exitParts = [
+      ?exitCountry,
+      if (exitType != null) exitType.label(context),
+    ];
+    final exitRow = hideIp
+        ? valueOf(showValues && ipInfo != null, '*****')
+        : valueOf(
+            showValues && ipInfo != null && exitParts.isNotEmpty,
+            exitParts.join(' · '),
+          );
     final kernelRow = valueOf(showValues, _coreName(runningCore ?? activeKind));
     // The counters are mihomo-fed; under sing-box they would misreport zero.
     final totalShow = (total.up + total.down).traffic;

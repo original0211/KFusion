@@ -59,6 +59,12 @@ const _unlistedEntry = ProbeEntry<IpInfo>(
   stamp: _stamp,
 );
 
+const _noCountryEntry = ProbeEntry<IpInfo>(
+  phase: ProbePhase.fresh,
+  value: IpInfo(ip: _ip, countryCode: ''),
+  stamp: _stamp,
+);
+
 class _RecordingSetupAction extends SetupAction {
   @override
   Future<bool> setRunning(bool running, {bool initialize = false}) {
@@ -130,12 +136,13 @@ void main() {
     final quality = _QualityStub((_) async => _residential);
     await _pumpConnected(tester, _app(entry: _freshEntry, quality: quality));
 
-    expect(_exitValue('$_ip · United Kingdom · Residential'), findsOneWidget);
+    expect(_exitValue('United Kingdom · Residential'), findsOneWidget);
+    expect(find.textContaining(_ip), findsNothing);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the country lands with the IP while quality is pending', (
+  testWidgets('the country shows on its own while quality is pending', (
     tester,
   ) async {
     final pending = Completer<IpQuality>();
@@ -143,7 +150,7 @@ void main() {
     final quality = _QualityStub((_) => pending.future);
     await _pumpConnected(tester, _app(entry: _freshEntry, quality: quality));
 
-    expect(_exitValue('$_ip · United Kingdom'), findsOneWidget);
+    expect(_exitValue('United Kingdom'), findsOneWidget);
     expect(find.textContaining('Residential'), findsNothing);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
@@ -157,7 +164,7 @@ void main() {
     );
     await _pumpConnected(tester, _app(entry: _freshEntry, quality: quality));
 
-    expect(_exitValue('$_ip · United Kingdom'), findsOneWidget);
+    expect(_exitValue('United Kingdom'), findsOneWidget);
     expect(find.textContaining('Residential'), findsNothing);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
@@ -169,7 +176,35 @@ void main() {
     final quality = _QualityStub((_) async => _residential);
     await _pumpConnected(tester, _app(entry: _unlistedEntry, quality: quality));
 
-    expect(_exitValue('$_ip · Residential'), findsOneWidget);
+    expect(_exitValue('Residential'), findsOneWidget);
+    expect(quality.calls, [_ip]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a missing country code leaves the type on its own', (
+    tester,
+  ) async {
+    final quality = _QualityStub((_) async => _residential);
+    await _pumpConnected(
+      tester,
+      _app(entry: _noCountryEntry, quality: quality),
+    );
+
+    expect(_exitValue('Residential'), findsOneWidget);
+    expect(quality.calls, [_ip]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('no country and a pending type leave a dash', (tester) async {
+    final pending = Completer<IpQuality>();
+    addTearDown(() => pending.complete(_residential));
+    final quality = _QualityStub((_) => pending.future);
+    await _pumpConnected(
+      tester,
+      _app(entry: _noCountryEntry, quality: quality),
+    );
+
+    expect(_exitValue('—'), findsOneWidget);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
   });
@@ -185,7 +220,7 @@ void main() {
       ),
     );
 
-    expect(_exitValue('$_ip · 日本 · 住宅', label: '出口'), findsOneWidget);
+    expect(_exitValue('日本 · 住宅', label: '出口'), findsOneWidget);
     expect(quality.calls, [_ip]);
     expect(tester.takeException(), isNull);
   });

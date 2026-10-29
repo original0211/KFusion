@@ -199,7 +199,7 @@ void main() {
     expect(find.byType(HaraDot), findsOneWidget);
     final ring = tester.widget<DiscRingMotif>(_ring());
     expect(ring.color, HaraPalette.light.ink.withValues(alpha: 0.78));
-    expect(find.text('$_ip · United Kingdom'), findsOneWidget);
+    expect(find.text('United Kingdom'), findsOneWidget);
     expect(find.text('mihomo'), findsOneWidget);
     expect(find.text('sing-box not running'), findsOneWidget);
     expect(tester.takeException(), isNull);
