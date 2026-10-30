@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Vessel tray status, dark-taskbar variant: same geometry and
+     state reading as status_N.svg; states 2/3 take the light ring
+     (#EDEDEA) and the dark-field vermillion (#B03A30). States 1
+     (dim) and 4 (orange) are field-independent. -->
+<svg width="108" height="108" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <title>status_1_dark</title>
+  <path d="M34.20,120.57 A85.80,85.80 0 1 1 59.99,181.32" fill="none" stroke="#B4B4B0" stroke-width="20.40" stroke-linecap="butt"/>
+</svg>

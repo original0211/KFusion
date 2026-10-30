@@ -1,8 +1,11 @@
+import 'dart:ui' show Brightness, PlatformDispatcher;
+
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:tray/tray.dart';
+import 'package:win32_registry/win32_registry.dart';
 
 import 'app_localizations.dart';
 import 'l10n_labels.dart';
@@ -54,6 +57,7 @@ class AppTray implements TrayPort {
     required bool isStart,
     required bool tunEnable,
     required bool safeMode,
+    bool darkTaskbar = false,
   }) {
     final status = switch ((safeMode, isMacOS || !isStart, tunEnable)) {
       (true, _, _) => 4,
@@ -61,7 +65,28 @@ class AppTray implements TrayPort {
       (false, false, false) => 2,
       (false, false, true) => 3,
     };
-    return '$_trayIconDir/status_$status.$_trayIconSuffix';
+    final variant = isWindows && darkTaskbar ? '_dark' : '';
+    return '$_trayIconDir/status_$status$variant.$_trayIconSuffix';
+  }
+
+  // The taskbar follows the shell theme value, not the app one.
+  bool _isTaskbarDark() {
+    if (!isWindows) return false;
+    int? shellLight;
+    try {
+      final key = CURRENT_USER.open(
+        r'Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize',
+      );
+      try {
+        shellLight = key.getInt('SystemUsesLightTheme');
+      } finally {
+        key.close();
+      }
+    } catch (_) {
+      shellLight = null;
+    }
+    if (shellLight != null) return shellLight == 0;
+    return PlatformDispatcher.instance.platformBrightness == Brightness.dark;
   }
 
   @override
@@ -91,6 +116,7 @@ class AppTray implements TrayPort {
             isStart: trayState.isStart && !trayState.suspended,
             tunEnable: trayState.tunEnable,
             safeMode: trayState.safeMode,
+            darkTaskbar: _isTaskbarDark(),
           ),
           isTemplate: isMacOS,
           size: isMacOS ? 18 : 16,

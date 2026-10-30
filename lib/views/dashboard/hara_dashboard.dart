@@ -335,7 +335,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
           const SizedBox(height: HaraSpace.brandTopGap),
           Row(
             children: [
-              Text('KFUSION', style: HaraText.brand(context, palette.dim)),
+              Text(appName, style: HaraText.brand(context, palette.dim)),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,

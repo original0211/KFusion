@@ -158,7 +158,7 @@ class _Sidebar extends ConsumerWidget {
       version: version,
     );
     return HaraNavRail(
-      brand: 'KFUSION',
+      brand: appName,
       items: [
         for (final item in items) HaraNavItem(label: item.label.navLabel),
       ],

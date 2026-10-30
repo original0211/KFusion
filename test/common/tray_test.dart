@@ -54,6 +54,66 @@ void main() {
       }
     });
 
+    test('windows loads dark ico files on a dark taskbar', () {
+      expect(
+        windows.getTrayIcon(
+          isStart: false,
+          tunEnable: false,
+          safeMode: false,
+          darkTaskbar: true,
+        ),
+        'assets/images/tray/windows/status_1_dark.ico',
+      );
+      expect(
+        windows.getTrayIcon(
+          isStart: true,
+          tunEnable: false,
+          safeMode: false,
+          darkTaskbar: true,
+        ),
+        'assets/images/tray/windows/status_2_dark.ico',
+      );
+      expect(
+        windows.getTrayIcon(
+          isStart: true,
+          tunEnable: true,
+          safeMode: false,
+          darkTaskbar: true,
+        ),
+        'assets/images/tray/windows/status_3_dark.ico',
+      );
+      expect(
+        windows.getTrayIcon(
+          isStart: true,
+          tunEnable: false,
+          safeMode: true,
+          darkTaskbar: true,
+        ),
+        'assets/images/tray/windows/status_4_dark.ico',
+      );
+    });
+
+    test('a dark taskbar changes nothing off windows', () {
+      expect(
+        linux.getTrayIcon(
+          isStart: true,
+          tunEnable: false,
+          safeMode: false,
+          darkTaskbar: true,
+        ),
+        'assets/images/tray/unix/status_2.png',
+      );
+      expect(
+        macOS.getTrayIcon(
+          isStart: true,
+          tunEnable: false,
+          safeMode: false,
+          darkTaskbar: true,
+        ),
+        'assets/images/tray/macos/status_1.png',
+      );
+    });
+
     test('safe mode shows its own icon whatever the core is doing', () {
       for (final (isStart, tunEnable) in [
         (false, false),

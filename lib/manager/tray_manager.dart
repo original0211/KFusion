@@ -21,7 +21,8 @@ class TrayManager extends ConsumerStatefulWidget {
   ConsumerState<TrayManager> createState() => _TrayManagerState();
 }
 
-class _TrayManagerState extends ConsumerState<TrayManager> {
+class _TrayManagerState extends ConsumerState<TrayManager>
+    with WidgetsBindingObserver {
   StreamSubscription<TrayEvent>? _subscription;
   bool _isUpdating = false;
   bool _hasPendingUpdate = false;
@@ -29,6 +30,7 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _subscription = Tray.instance.events.listen(_handleTrayEvent);
     ref.listenManual(trayStateProvider, (prev, next) {
       if (prev != next) {
@@ -97,6 +99,13 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
     );
   }
 
+  @override
+  void didChangePlatformBrightness() {
+    if (system.isWindows) {
+      _requestUpdate();
+    }
+  }
+
   void _handleTrayEvent(TrayEvent event) {
     switch (event) {
       case TrayIconActivated():
@@ -115,6 +124,7 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     super.dispose();
   }

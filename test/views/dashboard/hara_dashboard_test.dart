@@ -138,7 +138,7 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pump();
 
-    expect(find.text('KFUSION'), findsOneWidget);
+    expect(find.text('Vessel'), findsOneWidget);
     final ring = tester.widget<DiscRingMotif>(_ring());
     expect(ring.size, HaraSpace.ringSize);
     expect(ring.strokeWidth, HaraSpace.ringStroke);
