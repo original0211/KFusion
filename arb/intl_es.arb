@@ -751,6 +751,7 @@
   "connectionStats": "Estadísticas de conexión",
   "done": "Hecho",
   "singBoxBinaryMissing": "No se encontró el binario de sing-box",
+  "unavailableUnderSingBox": "No disponible en sing-box",
   "singBoxDownloadHint": "sing-box no viene incluido. Descargue la compilación oficial fijada (unos 33 MB) en la carpeta de datos de la aplicación; se conserva tras las actualizaciones. También puede colocar sing-box.exe manualmente, consulte tools/singbox/README.md.",
   "singBoxDownload": "Descargar sing-box",
   "singBoxDownloadRetry": "Reintentar la descarga",

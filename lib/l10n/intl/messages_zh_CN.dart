@@ -1256,6 +1256,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "UDP 超时以秒为单位，仅在 gvisor、system 和 mixed 栈生效。",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("极致"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("sing-box 下不可用"),
     "undo": MessageLookupByLibrary.simpleMessage("撤销"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("统一延迟"),
     "unknown": MessageLookupByLibrary.simpleMessage("未知"),

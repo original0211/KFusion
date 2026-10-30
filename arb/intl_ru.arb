@@ -751,6 +751,7 @@
   "connectionStats": "Статистика подключений",
   "done": "Готово",
   "singBoxBinaryMissing": "Бинарный файл sing-box не найден",
+  "unavailableUnderSingBox": "Недоступно в sing-box",
   "singBoxDownloadHint": "sing-box не входит в комплект. Скачайте закреплённую официальную сборку (около 33 МБ) в папку данных приложения — она сохранится при обновлениях. Можно также разместить sing-box.exe вручную, см. tools/singbox/README.md.",
   "singBoxDownload": "Скачать sing-box",
   "singBoxDownloadRetry": "Повторить загрузку",

@@ -28,8 +28,21 @@ class HaraProxyGroupSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final palette = context.haraPalette;
-    final panel = ref.watch(singBoxPanelGroupsProvider).value ?? const {};
+    // Reconciliation runs only against a live panel table: without a
+    // sing-box bearer, and before the first successful fetch lands, the
+    // section keeps its legacy presentation.
+    final panelAsync = ref.watch(singBoxPanelGroupsProvider);
+    final bearing =
+        ref.watch(singBoxActionProvider).value?.state == SingBoxState.running &&
+        ref.read(singBoxActionProvider.notifier).api != null;
+    final table = bearing ? panelAsync.value : null;
+    final panel = table ?? const <String, SingBoxPanelGroup>{};
     final panelGroup = panel[group.name];
+    final absent = table != null && panelGroup == null;
+    final panelType = panelGroup?.type;
+    final indicator =
+        panelType != null && panelType != 'Selector' && panelType != 'URLTest';
+    final indicatorNow = indicator ? panelGroup?.now ?? '' : '';
     final autoChild = panelGroup == null
         ? null
         : singBoxPanelAutoChild(panel, group.name);
@@ -69,6 +82,45 @@ class HaraProxyGroupSection extends ConsumerWidget {
                     ),
                   ],
                 )
+              else if (absent)
+                Row(
+                  children: [
+                    Flexible(
+                      child: EmojiText(
+                        group.name,
+                        style: HaraText.sectionTitle(context, palette.dim),
+                        maxLines: 1,
+                      ),
+                    ),
+                    const SizedBox(width: HaraSpace.dotNameGap),
+                    Text(
+                      context.appLocalizations.unavailableUnderSingBox,
+                      style: HaraText.inUse(context, palette.dim),
+                    ),
+                  ],
+                )
+              else if (indicator)
+                Row(
+                  children: [
+                    Flexible(
+                      child: EmojiText(
+                        group.name,
+                        style: HaraText.sectionTitle(context, palette.dim),
+                        maxLines: 1,
+                      ),
+                    ),
+                    if (indicatorNow.isNotEmpty) ...[
+                      const SizedBox(width: HaraSpace.dotNameGap),
+                      Flexible(
+                        child: EmojiText(
+                          '→ $indicatorNow',
+                          style: HaraText.statusNode(context, palette.sub),
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ],
+                )
               else
                 EmojiText(
                   group.name,
@@ -96,10 +148,14 @@ class HaraProxyGroupSection extends ConsumerWidget {
             return _HaraProxyRow(
               group: group,
               proxy: proxy,
-              isExit: proxy.name == exitName && !autoMarked,
+              isExit: indicator
+                  ? proxy.name == indicatorNow
+                  : !absent && proxy.name == exitName && !autoMarked,
               exitMarker: exitMarker,
-              locked: nativeAuto,
-              forceSelected: nativeAuto && proxy.name == panelGroup?.now,
+              locked: nativeAuto || absent || indicator,
+              forceSelected: indicator
+                  ? proxy.name == indicatorNow
+                  : nativeAuto && proxy.name == panelGroup?.now,
             );
           },
         ),

@@ -228,5 +228,43 @@ void main() {
         expect(after[_parent]?.now, _child);
       },
     );
+
+    test(
+      'a failed panel fetch surfaces as an error, not an empty table',
+      () async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        addTearDown(() => server.close(force: true));
+        server.listen((request) async {
+          request.response.statusCode = 500;
+          await request.response.close();
+        });
+        final container = ProviderContainer(
+          overrides: [
+            singBoxActionProvider.overrideWith(
+              () => _BearerSingBoxAction(
+                SingBoxClashApi(port: server.port, secret: 'panel-secret'),
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        await container.read(singBoxActionProvider.future);
+        final subscription = container.listen(
+          singBoxPanelGroupsProvider,
+          (_, _) {},
+          fireImmediately: true,
+        );
+        addTearDown(subscription.close);
+
+        // Retries run in the background; the error state is the observable.
+        AsyncValue<Map<String, SingBoxPanelGroup>>? seen;
+        for (var i = 0; i < 100 && !(seen?.hasError ?? false); i++) {
+          seen = container.read(singBoxPanelGroupsProvider);
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+        expect(seen?.error, isA<HttpException>());
+        expect(seen?.hasValue, isFalse);
+      },
+    );
   });
 }

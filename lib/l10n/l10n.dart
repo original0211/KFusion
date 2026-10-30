@@ -6141,6 +6141,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Unavailable under sing-box`
+  String get unavailableUnderSingBox {
+    return Intl.message(
+      'Unavailable under sing-box',
+      name: 'unavailableUnderSingBox',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Vessel does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.`
   String get singBoxDownloadHint {
     return Intl.message(

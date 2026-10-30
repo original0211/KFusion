@@ -1702,6 +1702,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "El tiempo de espera UDP se indica en segundos y solo funciona con las pilas gvisor, system y mixed.",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("Ultra"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("No disponible en sing-box"),
     "undo": MessageLookupByLibrary.simpleMessage("Deshacer"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("Latencia unificada"),
     "unknown": MessageLookupByLibrary.simpleMessage("Desconocido"),

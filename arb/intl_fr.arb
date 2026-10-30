@@ -751,6 +751,7 @@
   "connectionStats": "Statistiques de connexion",
   "done": "Terminé",
   "singBoxBinaryMissing": "Binaire sing-box introuvable",
+  "unavailableUnderSingBox": "Indisponible sous sing-box",
   "singBoxDownloadHint": "sing-box n’est pas inclus. Téléchargez la version officielle épinglée (environ 33 Mo) dans le dossier de données de l’application ; elle survit aux mises à jour. Vous pouvez aussi placer sing-box.exe manuellement, voir tools/singbox/README.md.",
   "singBoxDownload": "Télécharger sing-box",
   "singBoxDownloadRetry": "Réessayer le téléchargement",

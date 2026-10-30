@@ -1072,11 +1072,9 @@ final singBoxPanelGroupsProvider =
       if (api == null) {
         return const {};
       }
-      try {
-        return parseSingBoxPanelGroups(await api.getProxies());
-      } catch (_) {
-        return const {};
-      }
+      // A failed fetch stays an error: flattened to an empty table it
+      // would read downstream as "the kernel has no groups".
+      return parseSingBoxPanelGroups(await api.getProxies());
     });
 
 Map<String, SingBoxPanelGroup> parseSingBoxPanelGroups(

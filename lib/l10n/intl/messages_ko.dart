@@ -1358,6 +1358,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "UDP 시간 제한은 초 단위이며 gvisor, system, mixed 스택에서만 작동합니다.",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("최고"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("sing-box에서 사용할 수 없음"),
     "undo": MessageLookupByLibrary.simpleMessage("실행 취소"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("통합 지연"),
     "unknown": MessageLookupByLibrary.simpleMessage("알 수 없음"),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kfusion/core/controller.dart';
 import 'package:kfusion/core/interface.dart';
+import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/models/models.dart';
@@ -16,6 +17,42 @@ import '../../helpers/test_app.dart';
 import '../../helpers/test_profiles.dart';
 
 class _MockCoreHandlerInterface extends Mock implements CoreHandlerInterface {}
+
+class _RecordingSingBoxApi extends SingBoxClashApi {
+  _RecordingSingBoxApi() : super(port: 0, secret: '');
+
+  final puts = <({String groupName, String proxyName})>[];
+
+  @override
+  Future<void> changeProxy(String groupName, String proxyName) async {
+    puts.add((groupName: groupName, proxyName: proxyName));
+  }
+
+  @override
+  Future<void> closeConnections() async {}
+}
+
+class _BearerSingBoxAction extends SingBoxAction {
+  _BearerSingBoxAction(this._api);
+
+  final SingBoxClashApi _api;
+
+  @override
+  Future<SingBoxStatus> build() async =>
+      const SingBoxStatus(state: SingBoxState.running);
+
+  @override
+  SingBoxClashApi? get api => _api;
+}
+
+class _IdleSingBoxAction extends SingBoxAction {
+  @override
+  Future<SingBoxStatus> build() async =>
+      const SingBoxStatus(state: SingBoxState.idle);
+
+  @override
+  SingBoxClashApi? get api => null;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -82,6 +119,9 @@ void main() {
     required List<Group> groups,
     required Map<String, SingBoxPanelGroup> panel,
     required String? exitName,
+    AsyncValue<Map<String, SingBoxPanelGroup>>? panelAsync,
+    SingBoxClashApi? api,
+    bool bearer = true,
   }) async {
     tester.view.physicalSize = const Size(412, 800);
     tester.view.devicePixelRatio = 1;
@@ -103,7 +143,14 @@ void main() {
         currentGroupsStateProvider.overrideWithValue(
           GroupsState(value: groups),
         ),
-        singBoxPanelGroupsProvider.overrideWithValue(AsyncData(panel)),
+        singBoxPanelGroupsProvider.overrideWithValue(
+          panelAsync ?? AsyncData(panel),
+        ),
+        singBoxActionProvider.overrideWith(
+          () => bearer
+              ? _BearerSingBoxAction(api ?? _RecordingSingBoxApi())
+              : _IdleSingBoxAction(),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -214,6 +261,145 @@ void main() {
     await tester.tap(find.text('N2'));
     await tester.pump();
     expect(container.read(selectedMapProvider), isEmpty);
+    await tester.pump(const Duration(seconds: 15));
+  });
+
+  const absentProfile = Profile(
+    id: 1,
+    label: 'Test',
+    type: ProfileType.url,
+    url: 'https://example.com/sub',
+    selectedMap: {},
+    autoUpdateDuration: Duration.zero,
+  );
+  const absentGroups = [
+    Group(
+      name: '🚀 节点选择',
+      type: GroupType.Selector,
+      now: 'DIRECT',
+      all: [
+        Proxy(name: '⚡ CF前置', type: 'URLTest'),
+        Proxy(name: 'DIRECT', type: 'Direct'),
+      ],
+    ),
+  ];
+  const absentPanel = <String, SingBoxPanelGroup>{
+    '⚡ CF前置': (type: 'Selector', now: 'CF-01', all: ['⚡ CF前置 · auto', 'CF-01']),
+    '⚡ CF前置 · auto': (type: 'URLTest', now: 'CF-01', all: ['CF-01']),
+  };
+
+  testWidgets('a group missing from the panel table is named and inert', (
+    tester,
+  ) async {
+    final api = _RecordingSingBoxApi();
+    final container = await pumpSection(
+      tester,
+      profile: absentProfile,
+      groups: absentGroups,
+      panel: absentPanel,
+      exitName: null,
+      api: api,
+    );
+    expect(find.text('Unavailable under sing-box'), findsOneWidget);
+    expect(find.byType(HaraDot), findsNothing);
+
+    await tester.tap(find.text('⚡ CF前置'));
+    await tester.pump();
+    await tester.tap(find.text('DIRECT'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    expect(api.puts, isEmpty);
+    expect(container.read(selectedMapProvider), isEmpty);
+  });
+
+  const globalGroups = [
+    Group(
+      name: 'GLOBAL',
+      type: GroupType.Fallback,
+      now: 'SG-01',
+      all: [
+        Proxy(name: 'IT-01', type: 'Http'),
+        Proxy(name: 'SG-01', type: 'Http'),
+      ],
+    ),
+  ];
+  const globalPanel = <String, SingBoxPanelGroup>{
+    'GLOBAL': (type: 'Fallback', now: 'IT-01', all: ['IT-01', 'SG-01']),
+  };
+
+  testWidgets('a Fallback panel entry reads as an exit indicator row', (
+    tester,
+  ) async {
+    final api = _RecordingSingBoxApi();
+    final container = await pumpSection(
+      tester,
+      profile: absentProfile,
+      groups: globalGroups,
+      panel: globalPanel,
+      // The mihomo-side exit is stale under the bearer; the panel now wins.
+      exitName: 'SG-01',
+      api: api,
+    );
+    expect(find.text('→ IT-01'), findsOneWidget);
+    expect(find.byType(HaraDot), findsOneWidget);
+    expect(
+      find.descendant(of: dotRow(), matching: find.text('IT-01')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('IT-01'));
+    await tester.pump();
+    await tester.tap(find.text('SG-01'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    expect(api.puts, isEmpty);
+    expect(container.read(selectedMapProvider), isEmpty);
+  });
+
+  testWidgets('a failed panel fetch keeps the legacy presentation', (
+    tester,
+  ) async {
+    final api = _RecordingSingBoxApi();
+    final container = await pumpSection(
+      tester,
+      profile: dualProfile,
+      groups: dualGroups,
+      panel: dualPanel,
+      panelAsync: AsyncError<Map<String, SingBoxPanelGroup>>(
+        StateError('panel down'),
+        StackTrace.empty,
+      ),
+      exitName: 'CF-01',
+      api: api,
+    );
+    // No table, no reconciliation: no synthetic auto row is derived.
+    expect(find.text('Auto'), findsNothing);
+
+    await tester.tap(find.text('CF-01'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    expect(api.puts, hasLength(1));
+    expect(api.puts.single.groupName, parent);
+    expect(api.puts.single.proxyName, 'CF-01');
+    expect(container.read(selectedMapProvider)[parent], 'CF-01');
+  });
+
+  testWidgets('without a sing-box bearer the panel table is ignored', (
+    tester,
+  ) async {
+    final container = await pumpSection(
+      tester,
+      profile: dualProfile,
+      groups: dualGroups,
+      panel: dualPanel,
+      exitName: 'CF-01',
+      bearer: false,
+    );
+    expect(find.text('Auto'), findsNothing);
+
+    await tester.tap(find.text('CF-01'));
+    await tester.pump();
+    expect(container.read(selectedMapProvider)[parent], 'CF-01');
     await tester.pump(const Duration(seconds: 15));
   });
 }

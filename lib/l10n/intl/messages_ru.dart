@@ -1659,6 +1659,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Тайм-аут UDP задаётся в секундах и действует только со стеками gvisor, system и mixed.",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("Максимум"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("Недоступно в sing-box"),
     "undo": MessageLookupByLibrary.simpleMessage("Отменить"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("Единая задержка"),
     "unknown": MessageLookupByLibrary.simpleMessage("Неизвестно"),

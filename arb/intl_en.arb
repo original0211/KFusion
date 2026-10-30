@@ -751,6 +751,7 @@
   "connectionStats": "Connection stats",
   "done": "Done",
   "singBoxBinaryMissing": "sing-box binary not found",
+  "unavailableUnderSingBox": "Unavailable under sing-box",
   "singBoxDownloadHint": "Vessel does not bundle sing-box. Download the pinned official build (about 33 MB) into the app data folder — it survives app updates. Placing sing-box.exe manually also works, see tools/singbox/README.md.",
   "singBoxDownload": "Download sing-box",
   "singBoxDownloadRetry": "Retry download",

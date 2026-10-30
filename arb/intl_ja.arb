@@ -751,6 +751,7 @@
   "connectionStats": "接続統計",
   "done": "完了",
   "singBoxBinaryMissing": "sing-box バイナリが見つかりません",
+  "unavailableUnderSingBox": "sing-box では利用できません",
   "singBoxDownloadHint": "sing-box は同梱されていません。ピン留めされた公式ビルド（約 33 MB）をアプリのデータフォルダーにダウンロードできます。アプリを更新しても残ります。tools/singbox/README.md の手順で sing-box.exe を手動配置することもできます。",
   "singBoxDownload": "sing-box をダウンロード",
   "singBoxDownloadRetry": "ダウンロードを再試行",

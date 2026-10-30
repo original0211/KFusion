@@ -1380,6 +1380,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "UDP タイムアウトは秒単位で、gvisor・system・mixed スタックでのみ有効です。",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("最高"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("sing-box では利用できません"),
     "undo": MessageLookupByLibrary.simpleMessage("元に戻す"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("統一遅延"),
     "unknown": MessageLookupByLibrary.simpleMessage("不明"),
