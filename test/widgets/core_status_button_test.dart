@@ -177,4 +177,73 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byGlyph(AppGlyphs.check), findsOneWidget);
   });
+
+  Future<ProviderContainer> pumpButton(
+    WidgetTester tester,
+    CoreStatus status,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    globalState.container = container;
+    container.read(coreStatusProvider.notifier).value = status;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TestApp(
+          includeNavigatorKey: false,
+          homeBuilder: (child) => Scaffold(body: Center(child: child)),
+          child: const CoreStatusButton(),
+        ),
+      ),
+    );
+    await tester.pump();
+    return container;
+  }
+
+  testWidgets('connected state wears a hairline ring, not a status fill', (
+    tester,
+  ) async {
+    await pumpButton(tester, CoreStatus.connected);
+
+    final style = tester.widget<IconButton>(find.byType(IconButton)).style!;
+    const states = <WidgetState>{};
+    expect(style.backgroundColor!.resolve(states), HaraPalette.transparent);
+    expect(style.foregroundColor!.resolve(states), HaraPalette.light.ink);
+    final side = style.side!.resolve(states)!;
+    expect(side.color, HaraPalette.light.line);
+    expect(side.width, HaraSpace.hairline);
+  });
+
+  testWidgets('disconnected state is a hairline pill in sub ink', (
+    tester,
+  ) async {
+    await pumpButton(tester, CoreStatus.disconnected);
+
+    final style = tester.widget<FilledButton>(find.byType(FilledButton)).style!;
+    const states = <WidgetState>{};
+    expect(style.backgroundColor!.resolve(states), HaraPalette.transparent);
+    expect(style.foregroundColor!.resolve(states), HaraPalette.light.sub);
+    final side = style.side!.resolve(states)!;
+    expect(side.color, HaraPalette.light.line);
+    expect(side.width, HaraSpace.hairline);
+  });
+
+  testWidgets('connecting state spins in ink inside the hairline pill', (
+    tester,
+  ) async {
+    final container = await pumpButton(tester, CoreStatus.connected);
+
+    container.read(coreStatusProvider.notifier).value = CoreStatus.connecting;
+    await tester.pump();
+
+    final loading = tester.widget<CommonCircleLoading>(
+      find.byType(CommonCircleLoading),
+    );
+    expect(loading.color, HaraPalette.light.ink);
+    final style = tester.widget<FilledButton>(find.byType(FilledButton)).style!;
+    expect(
+      style.foregroundColor!.resolve(const <WidgetState>{}),
+      HaraPalette.light.ink,
+    );
+  });
 }

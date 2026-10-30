@@ -5,6 +5,7 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/icons/icons.dart';
+import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,52 +87,36 @@ class _CoreStatusButtonState extends ConsumerState<CoreStatusButton> {
   Widget build(BuildContext context) {
     final coreStatus = _holdTimer != null ? CoreStatus.connecting : _status;
     final appLocalizations = context.appLocalizations;
-    final colorScheme = context.colorScheme;
-    final glass = TonalButtonTheme.glassOf(context);
-    ButtonStyle? tinted(Color? color) => glass && color != null
-        ? LiquidGlass.buttonStyle(
-            (_) => LiquidGlassStyle.tinted(colorScheme, color),
-          )
-        : null;
-    final statusColor = switch (coreStatus) {
-      CoreStatus.connecting => null,
-      CoreStatus.connected => colorScheme.successContainer,
-      CoreStatus.disconnected => colorScheme.errorContainer,
-    };
+    final palette = context.haraPalette;
+    final hairline = BorderSide(color: palette.line, width: HaraSpace.hairline);
     return Tooltip(
       message: appLocalizations.coreStatus,
       child: FadeScaleBox(
         alignment: Alignment.centerRight,
         child: coreStatus == CoreStatus.connected
             ? IconButton.filled(
-                style: ElasticPress.buttonStyle
-                    .merge(tinted(statusColor))
-                    .merge(
-                      IconButton.styleFrom(
-                        backgroundColor: context.colorScheme.successContainer,
-                        foregroundColor: context.colorScheme.onSuccessContainer,
-                      ),
-                    ),
+                style: ElasticPress.buttonStyle.merge(
+                  IconButton.styleFrom(
+                    backgroundColor: HaraPalette.transparent,
+                    foregroundColor: palette.ink,
+                    side: hairline,
+                  ),
+                ),
                 onPressed: _handleConnection,
                 icon: const GlyphIcon(AppGlyphs.check, fill: 1),
               )
             : FilledButton.icon(
                 key: ValueKey(coreStatus),
                 onPressed: _handleConnection,
-                style: ElasticPress.buttonStyle
-                    .merge(tinted(statusColor))
-                    .merge(
-                      FilledButton.styleFrom(
-                        backgroundColor: statusColor,
-                        foregroundColor: switch (coreStatus) {
-                          CoreStatus.connecting => null,
-                          CoreStatus.connected =>
-                            context.colorScheme.onSuccessContainer,
-                          CoreStatus.disconnected =>
-                            context.colorScheme.onErrorContainer,
-                        },
-                      ),
-                    ),
+                style: ElasticPress.buttonStyle.merge(
+                  FilledButton.styleFrom(
+                    backgroundColor: HaraPalette.transparent,
+                    foregroundColor: coreStatus == CoreStatus.disconnected
+                        ? palette.sub
+                        : palette.ink,
+                    side: hairline,
+                  ),
+                ),
                 icon: SizedBox(
                   height: globalState.measure.textHeight(
                     AppTextStyle.subheadline,
@@ -141,7 +126,7 @@ class _CoreStatusButtonState extends ConsumerState<CoreStatusButton> {
                   ),
                   child: switch (coreStatus) {
                     CoreStatus.connecting => CommonCircleLoading(
-                      color: context.colorScheme.onPrimary,
+                      color: palette.ink,
                     ),
                     CoreStatus.connected => const GlyphIcon(
                       AppGlyphs.check,
