@@ -2,6 +2,40 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.39",
+      "tag": "v0.2.39",
+      "date": "2026-10-30",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "24f5853",
+              "text": "The advanced gate and the configuration index behind it join the Hara A surface. The two pages trade the upstream grouped cards — rounded, sectioned, led by glyph icons and closed by chevrons — for the settings family's hairline rows: a flat field in the page background colour, a hairline at the head of the page and one under every row, ink labels on the shared type scale and a plain arrow on the rows that open. The gate also loses its footer line, whose copy still advertised the added-rules and scripts pages after those pages were removed. Where each row leads, the developer row's condition and every return value are exactly what they were — only the presentation changed."
+            },
+            {
+              "id": "5128520",
+              "text": "url-test groups can be pinned by hand under sing-box. The kernel's clash API accepts a member selection only on a selector group — a url-test group answered every tap with a Must be a Selector error — so the renderer now lays such a group out in two layers: the group becomes a selector whose first member is a synthesized auto child, tagged with the group name plus a · auto suffix, which carries the group's original test URL, interval and tolerance and stands as the default. The proxy panel grows a tappable Auto row at the head of the group: leave it selected and the group keeps choosing for itself, tap a member to pin it, tap Auto to hand the choice back. Group and member names are untouched, so saved selections carry over exactly as they were. Native sing-box configurations still pass through byte for byte; their url-test groups are marked automatic in the panel, cannot be tapped, and show the member the kernel currently prefers."
+            },
+            {
+              "id": "0d18ac3",
+              "text": "The general settings page and the on-demand page join the Hara A surface. Both trade the stock list items for the settings family's hairline rows: toggles, option rows opening the shared popup menu, input rows opening the shared input dialog and rows opening sub-pages all behave exactly as before, down to validation, normalisation and the conditions that show or hide a row. The on-demand page keeps its SSID selection, editing and reordering, and its authorisation button is untouched. What changed is the surface alone — a flat page background, hairline rules and the shared type scale, with no cards, rounded corners or shadows."
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "038e962",
+              "text": "The core status button in the dashboard header gives up its status colours. The button reports the mihomo core process on desktop — and is the one user-reachable way to restart that core — but it rendered connected as a solid disc in a saturated success green and disconnected as a pink error capsule, a foreign colour language beside the header's own status word, disc and core row, and one easily misread next to the idle core's not-running label. It now takes the Hara hairline: connected is a transparent button closed by a hairline ring with an ink check, the connecting and disconnected capsules are likewise transparent and hairline-closed with ink and sub-coloured text, and the spinner takes ink. Its size, hit area, state timing and the confirm-then-restart flow behind a tap are exactly what they were."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.38",
       "tag": "v0.2.38",
       "date": "2026-10-30",
