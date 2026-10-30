@@ -229,6 +229,25 @@ void main() {
     expect(rose.delayColor(-1), rose.error);
   });
 
+  test('the success container pair follows the same tone contract as the '
+      'warning pair', () {
+    ColorScheme of(Color seed, Brightness brightness) =>
+        seededColorScheme(seedColor: seed, brightness: brightness);
+
+    final light = of(const Color(0xFFE91E63), Brightness.light);
+    final dark = of(const Color(0xFFE91E63), Brightness.dark);
+
+    expect(_hct(light.successContainer).tone, closeTo(90, 1));
+    expect(_hct(light.onSuccessContainer).tone, closeTo(30, 1));
+    expect(_hct(dark.successContainer).tone, closeTo(30, 1));
+    expect(_hct(dark.onSuccessContainer).tone, closeTo(90, 1));
+
+    // The pair is seed-independent, like the roles it sits beside.
+    final blue = of(const Color(0xFF03A9F4), Brightness.light);
+    expect(blue.successContainer, light.successContainer);
+    expect(blue.onSuccessContainer, light.onSuccessContainer);
+  });
+
   test('the dark surface ladder is pinned to the design tones', () {
     final roles = <(Color Function(ColorScheme), double)>[
       ((scheme) => scheme.surface, 3.0),
