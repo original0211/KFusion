@@ -7,6 +7,9 @@
     tools:ignore="VectorRaster">
   <path
       android:fillType="evenOdd"
-      android:pathData="M24,120 A96,96 0 1,1 216,120 A96,96 0 1,1 24,120 Z M37.2,120 A82.8,82.8 0 1,1 202.8,120 A82.8,82.8 0 1,1 37.2,120 Z M30.2,154.93 A7.5,7.5 0 1,1 45.2,154.93 A7.5,7.5 0 1,1 30.2,154.93 Z"
+      android:pathData="M24,120 A96,96 0 1,1 216,120 A96,96 0 1,1 24,120 Z M37.2,120 A82.8,82.8 0 1,1 202.8,120 A82.8,82.8 0 1,1 37.2,120 Z"
+      android:fillColor="#FFFFFF"/>
+  <path
+      android:pathData="M30.2,154.93 A7.5,7.5 0 1,1 45.2,154.93 A7.5,7.5 0 1,1 30.2,154.93 Z"
       android:fillColor="#FFFFFF"/>
 </vector>
