@@ -95,12 +95,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(currentAppLocalizations.geoResources), findsOneWidget);
-    expect(find.byType(DecorationListItem), findsNWidgets(4));
-    expect(find.byType(ItemPositionProvider), findsNWidgets(4));
+    expect(find.byType(ContextMenuRegion), findsNWidgets(4));
+    expect(find.byType(DecorationListItem), findsNothing);
     expect(find.byType(Switch), findsNothing);
     expect(
       find.descendant(
-        of: find.byType(DecorationListItem),
+        of: find.byType(ContextMenuRegion),
         matching: find.byGlyph(AppGlyphs.more),
       ),
       findsNothing,
@@ -222,7 +222,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     final geoItem = find.ancestor(
       of: find.text(GeoResource.MMDB.name),
-      matching: find.byType(DecorationListItem),
+      matching: find.byType(ContextMenuRegion),
     );
     expect(
       find.descendant(of: geoItem, matching: find.byType(CommonCircleLoading)),
@@ -368,11 +368,11 @@ void main() {
     }
     final iconSetItem = find.ancestor(
       of: find.text('Remote icons'),
-      matching: find.byType(DecorationListItem),
+      matching: find.byType(ContextMenuRegion),
     );
     final iconCount = find.descendant(
       of: iconSetItem,
-      matching: find.widgetWithText(TonalChip, '2'),
+      matching: find.text('2'),
     );
     expect(iconCount, findsOneWidget);
     expect(
@@ -385,7 +385,7 @@ void main() {
       find.descendant(
         of: find.ancestor(
           of: find.text('Remote set'),
-          matching: find.byType(DecorationListItem),
+          matching: find.byType(ContextMenuRegion),
         ),
         matching: find.text(l10n.unknown),
       ),

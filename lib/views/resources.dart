@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
@@ -146,6 +147,7 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.haraPalette;
     final appLocalizations = context.appLocalizations;
     final autoUpdate = ref.watch(
       patchClashConfigProvider.select((state) => state.geoAutoUpdate),
@@ -199,37 +201,53 @@ class _ResourcesViewState extends ConsumerState<ResourcesView> {
         loadingStatus: const NullStatus(
           illustration: NullStatusIllustration.data,
         ),
-        child: ListView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-          ).copyWith(top: context.appBarInset, bottom: 16),
-          children: [
-            generateSection(
-              title: appLocalizations.geoResources,
-              items: [
-                for (final geoResource in GeoResource.values)
-                  _GeoResourceItem(geoResource, preloaded: _fileInfos),
-              ],
-            ),
-            generateSection(
-              title: appLocalizations.iconSets,
-              items: [
-                for (final iconSet in iconSets)
-                  _IconSetItem(iconSet, key: ValueKey(iconSet.id)),
-              ],
-            ),
-            generateSection(
-              title: appLocalizations.ruleProviders,
-              items: [
-                for (final provider in ruleProviders)
-                  _RuleProviderItem(
-                    provider,
-                    preloaded: _fileInfos,
-                    key: ValueKey(provider.id),
+        child: Material(
+          color: palette.bg,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final side = max(
+                HaraSpace.pageInset,
+                (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+              );
+              return ListView(
+                padding: EdgeInsets.fromLTRB(
+                  side,
+                  context.appBarInset,
+                  side,
+                  48,
+                ),
+                children: [
+                  _HaraSection(
+                    title: appLocalizations.geoResources,
+                    rows: [
+                      for (final geoResource in GeoResource.values)
+                        _GeoResourceItem(geoResource, preloaded: _fileInfos),
+                    ],
                   ),
-              ],
-            ),
-          ],
+                  const SizedBox(height: HaraSpace.groupGap),
+                  _HaraSection(
+                    title: appLocalizations.iconSets,
+                    rows: [
+                      for (final iconSet in iconSets)
+                        _IconSetItem(iconSet, key: ValueKey(iconSet.id)),
+                    ],
+                  ),
+                  const SizedBox(height: HaraSpace.groupGap),
+                  _HaraSection(
+                    title: appLocalizations.ruleProviders,
+                    rows: [
+                      for (final provider in ruleProviders)
+                        _RuleProviderItem(
+                          provider,
+                          preloaded: _fileInfos,
+                          key: ValueKey(provider.id),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -298,7 +316,6 @@ class _ResourceItem extends StatelessWidget {
 
   Widget _buildTrailing(BuildContext context) {
     final chip = this.chip;
-    final colorScheme = context.colorScheme;
     return AnimatedSwitcher(
       duration: context.motionDuration(commonDuration),
       layoutBuilder: (currentChild, previousChildren) => Stack(
@@ -309,31 +326,105 @@ class _ResourceItem extends StatelessWidget {
           ? const CommonCircleLoading(key: ValueKey('updating'), size: 24)
           : chip == null
           ? const SizedBox.shrink()
-          : TonalChip(
+          : Text(
+              chip,
               key: const ValueKey('chip'),
-              label: chip,
-              color: context.raisedSurfaceLevel.colorOf(colorScheme),
-              foregroundColor: colorScheme.onSurfaceVariant,
+              style: HaraText.profileMeta(context, context.haraPalette.sub),
             ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final subtitleStyle = context.listCaptionStyle;
+    final palette = context.haraPalette;
+    final subtitleStyle = HaraText.profileMeta(context, palette.sub);
     return ContextMenuRegion(
       menuItems: _menuItems(context),
-      child: DecorationListItem(
-        onPressed: onEdit,
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: lastUpdateTime != null || pending
-            ? LastUpdateTimeText(
-                lastUpdateDate: lastUpdateTime,
-                style: subtitleStyle,
-              )
-            : Text(context.appLocalizations.unknown, style: subtitleStyle),
-        trailing: _buildTrailing(context),
+      child: _HaraRow(
+        onTap: onEdit,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: HaraText.nodeName(
+                      context,
+                      palette.ink,
+                      current: false,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: HaraSpace.profileMetaGap),
+                  if (lastUpdateTime != null || pending)
+                    LastUpdateTimeText(
+                      lastUpdateDate: lastUpdateTime,
+                      style: subtitleStyle,
+                    )
+                  else
+                    Text(
+                      context.appLocalizations.unknown,
+                      style: subtitleStyle,
+                    ),
+                ],
+              ),
+            ),
+            _buildTrailing(context),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
+  }
+}
+
+/// A section of the page: a dim title, a hairline, and its rows.
+class _HaraSection extends StatelessWidget {
+  const _HaraSection({required this.title, required this.rows});
+
+  final String title;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: HaraText.sectionTitle(context, palette.dim)),
+        const SizedBox(height: HaraSpace.sectionTitleGap),
+        HaraHairline(color: palette.line),
+        ...rows,
+      ],
     );
   }
 }

@@ -80,12 +80,11 @@ void main() {
     }
 
     for (final brightness in Brightness.values) {
-      testWidgets('row card is a rimmed lg plate in $brightness', (
-        tester,
-      ) async {
+      testWidgets('row card is a hairline plate on the page field in '
+          '$brightness', (tester) async {
         await pumpItem(tester, brightness);
         final context = tester.element(find.byType(RecordListItem));
-        final scheme = Theme.of(context).colorScheme;
+        final palette = context.haraPalette;
         final decoration = _shapeDecorationOf(
           tester,
           find.descendant(
@@ -94,9 +93,10 @@ void main() {
           ),
         );
         final shape = decoration.shape as RoundedSuperellipseBorder;
-        expect(shape.borderRadius, AppRadius.lg);
-        expect(shape.side.color, scheme.cabinRim);
-        expect(decoration.color, SurfaceLevel.card.colorOf(scheme));
+        expect(shape.borderRadius, AppRadius.hara);
+        expect(shape.side.color, palette.line);
+        expect(shape.side.width, HaraSpace.hairline);
+        expect(decoration.color, palette.bg);
       });
     }
 
@@ -158,38 +158,41 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('the payload sits in a rimmed inset well', (tester) async {
+    testWidgets('the payload sits in a hairline well', (tester) async {
       await pumpLog(
         tester,
         const Log(payload: 'core started', dateTime: '2024-01-01 12:00:00'),
       );
       final context = tester.element(find.byType(LogItem));
-      final scheme = Theme.of(context).colorScheme;
-      final wells = tester
-          .widgetList<DecoratedBox>(find.byType(DecoratedBox))
-          .where(
-            (box) =>
-                box.decoration is ShapeDecoration &&
-                (box.decoration as ShapeDecoration).color ==
-                    SurfaceLevel.inset.colorOf(scheme),
+      final palette = context.haraPalette;
+      final boxes = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: find.byType(LogItem),
+              matching: find.byType(DecoratedBox),
+            ),
           )
+          .where((box) => box.decoration is ShapeDecoration)
           .toList();
-      expect(wells, hasLength(1));
-      final shape =
-          (wells.single.decoration as ShapeDecoration).shape
-              as RoundedSuperellipseBorder;
-      expect(shape.borderRadius, AppRadius.md);
-      expect(shape.side.color, scheme.cabinRim);
+      // The row plate and the payload well are the only two plates.
+      expect(boxes, hasLength(2));
+      final well = boxes.last;
+      final decoration = well.decoration as ShapeDecoration;
+      expect(decoration.color, isNull);
+      final shape = decoration.shape as RoundedSuperellipseBorder;
+      expect(shape.borderRadius, AppRadius.hara);
+      expect(shape.side.color, palette.line);
+      expect(shape.side.width, HaraSpace.hairline);
       expect(
         find.descendant(
-          of: find.byWidget(wells.single),
+          of: find.byWidget(well),
           matching: find.byType(SelectableText),
         ),
         findsOneWidget,
       );
     });
 
-    testWidgets('the level label carries its tone container', (tester) async {
+    testWidgets('the level label carries its tone as text', (tester) async {
       await pumpLog(
         tester,
         const Log(
@@ -200,10 +203,9 @@ void main() {
       );
       final context = tester.element(find.byType(LogItem));
       final scheme = Theme.of(context).colorScheme;
-      final chip = tester.widget<TonalChip>(find.byType(TonalChip));
-      expect(chip.label, 'warning');
-      expect(chip.color, scheme.warningContainer);
-      expect(chip.foregroundColor, scheme.onWarningContainer);
+      expect(find.byType(TonalChip), findsNothing);
+      final label = tester.widget<Text>(find.text('warning'));
+      expect(label.style?.color, scheme.warning);
     });
   });
 
@@ -312,7 +314,7 @@ void main() {
   });
 
   group('resources (cabin batch 4, #10)', () {
-    testWidgets('resource rows are shared cabin rows under section heads', (
+    testWidgets('resource rows are shared hara rows under section heads', (
       tester,
     ) async {
       final container = _container(
@@ -336,20 +338,12 @@ void main() {
           () => Future<void>.delayed(const Duration(milliseconds: 20)),
         );
         await tester.pump(const Duration(milliseconds: 50));
-        if (find.byType(DecorationListItem).evaluate().isNotEmpty) break;
+        if (find.byType(ContextMenuRegion).evaluate().isNotEmpty) break;
       }
-      final headers = tester
-          .widgetList<ListHeader>(find.byType(ListHeader))
-          .map((header) => header.title)
-          .toList();
-      expect(headers, contains('Geo'));
-      expect(find.byType(DecorationListItem), findsWidgets);
-      for (final chip in tester.widgetList<TonalChip>(find.byType(TonalChip))) {
-        final context = tester.element(find.byType(ResourcesView));
-        final scheme = Theme.of(context).colorScheme;
-        expect(chip.foregroundColor, scheme.onSurfaceVariant);
-        expect(chip.color, isNot(scheme.primary));
-      }
+      expect(find.text('Geo'), findsOneWidget);
+      expect(find.byType(DecorationListItem), findsNothing);
+      expect(find.byType(ContextMenuRegion), findsWidgets);
+      expect(find.byType(TonalChip), findsNothing);
     });
   });
 }

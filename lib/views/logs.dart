@@ -120,64 +120,67 @@ class _LogsViewState extends ConsumerState<LogsView>
       onKeywordsUpdate: _listController.updateKeywords,
       searchState: AppBarSearchState(onSearch: _listController.search),
       title: appLocalizations.logs,
-      body: ValueListenableBuilder<LogsState>(
-        valueListenable: _listController,
-        builder: (context, state, _) {
-          final logs = state.list;
-          return NullStatusSwitcher(
-            isEmpty: logs.isEmpty,
-            isSearching: state.isSearching,
-            nullStatus: NullStatus(
-              illustration: NullStatusIllustration.logs,
-              label: appLocalizations.nullTip(appLocalizations.logs),
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: FloatingScrollbar(
-                controller: _scrollController,
-                hintBuilder: (fraction) {
-                  final index = (fraction * (logs.length - 1)).round();
-                  return logs[index].dateTime;
-                },
-                child: ScrollToEndBox(
-                  onCancelToEnd: () {
-                    _listController.setAutoScrollToEnd(false);
-                  },
-                  onResumeToEnd: () {
-                    _listController.resumeAutoScrollToEnd(
-                      ref.read(logsProvider).list,
-                    );
-                  },
+      body: Material(
+        color: context.haraPalette.bg,
+        child: ValueListenableBuilder<LogsState>(
+          valueListenable: _listController,
+          builder: (context, state, _) {
+            final logs = state.list;
+            return NullStatusSwitcher(
+              isEmpty: logs.isEmpty,
+              isSearching: state.isSearching,
+              nullStatus: NullStatus(
+                illustration: NullStatusIllustration.logs,
+                label: appLocalizations.nullTip(appLocalizations.logs),
+              ),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: FloatingScrollbar(
                   controller: _scrollController,
-                  enable: state.autoScrollToEnd,
-                  child: SuperListView.separated(
-                    physics: _physics,
-                    reverse: true,
-                    shrinkWrap: true,
-                    controller: _scrollController,
-                    padding: EdgeInsets.only(
-                      top: context.contentTopPadding,
-                      bottom: 16 + BottomInsetScope.of(context),
-                    ),
-                    itemCount: logs.length,
-                    extentEstimation: recordListExtentEstimation,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: recordListGap),
-                    itemBuilder: (_, index) {
-                      final log = logs[index];
-                      return LogItem(
-                        log: log,
-                        onClick: (value) {
-                          context.commonScaffoldState?.addKeyword(value);
-                        },
+                  hintBuilder: (fraction) {
+                    final index = (fraction * (logs.length - 1)).round();
+                    return logs[index].dateTime;
+                  },
+                  child: ScrollToEndBox(
+                    onCancelToEnd: () {
+                      _listController.setAutoScrollToEnd(false);
+                    },
+                    onResumeToEnd: () {
+                      _listController.resumeAutoScrollToEnd(
+                        ref.read(logsProvider).list,
                       );
                     },
+                    controller: _scrollController,
+                    enable: state.autoScrollToEnd,
+                    child: SuperListView.separated(
+                      physics: _physics,
+                      reverse: true,
+                      shrinkWrap: true,
+                      controller: _scrollController,
+                      padding: EdgeInsets.only(
+                        top: context.contentTopPadding,
+                        bottom: 16 + BottomInsetScope.of(context),
+                      ),
+                      itemCount: logs.length,
+                      extentEstimation: recordListExtentEstimation,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: recordListGap),
+                      itemBuilder: (_, index) {
+                        final log = logs[index];
+                        return LogItem(
+                          log: log,
+                          onClick: (value) {
+                            context.commonScaffoldState?.addKeyword(value);
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -226,11 +229,12 @@ class _LogWell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
+    final palette = context.haraPalette;
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: SurfaceLevel.inset.colorOf(colorScheme),
-        shape: AppShape.md.copyWith(side: colorScheme.cabinRimSide),
+        shape: AppShape.hara.copyWith(
+          side: BorderSide(color: palette.line, width: HaraSpace.hairline),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

@@ -42,10 +42,7 @@ double recordListExtentEstimation(int? index, double crossAxisExtent) {
   };
 }
 
-/// The card row of a record list — requests, connections, DNS queries,
-/// resources: one record per row card at the lg corner with the cabin rim,
-/// never a ruled table row. A layout wide enough to read across columns
-/// takes `RecordTable` over the same [RecordTextStyles] instead.
+/// The row of a record list: one record per row on a flat hairline plate.
 class RecordListItem extends StatelessWidget {
   final Widget header;
   final Widget body;
@@ -60,33 +57,29 @@ class RecordListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = AppShape.lg.copyWith(side: context.colorScheme.cabinRimSide);
-    final level = context.raisedSurfaceLevel;
+    final palette = context.haraPalette;
+    final shape = AppShape.hara.copyWith(
+      side: BorderSide(color: palette.line, width: HaraSpace.hairline),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: level.colorOf(context.colorScheme),
-          shape: shape,
-        ),
+        decoration: ShapeDecoration(color: palette.bg, shape: shape),
         child: Material(
           type: MaterialType.transparency,
-          child: SurfaceScope(
-            level: level,
-            child: ListTileTheme.merge(
-              shape: shape,
-              child: ListItem(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-                minVerticalPadding: 0,
-                minTileHeight: 0,
-                horizontalTitleGap: 12,
-                tileTitleAlignment: ListTileTitleAlignment.top,
-                onTap: onTap,
-                title: header,
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: body,
-                ),
+          child: ListTileTheme.merge(
+            shape: shape,
+            child: ListItem(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              minVerticalPadding: 0,
+              minTileHeight: 0,
+              horizontalTitleGap: 12,
+              tileTitleAlignment: ListTileTitleAlignment.top,
+              onTap: onTap,
+              title: header,
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: body,
               ),
             ),
           ),
@@ -146,12 +139,15 @@ class RecordLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TonalChip(
-      label: label,
-      color: tone.labelContainerColor(context),
-      foregroundColor: tone.labelColor(context),
-      onPressed: onPressed,
+    final text = Text(
+      label,
+      style: TextStyle(
+        color: tone.accentColor(context),
+        fontWeight: FontWeight.w500,
+      ),
     );
+    if (onPressed == null) return text;
+    return GestureDetector(onTap: onPressed, child: text);
   }
 }
 

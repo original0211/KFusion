@@ -41,14 +41,17 @@ void main() {
     globalState.appEnv = 'dev';
   });
 
-  testWidgets('toggles developer mode through the header switch', (
-    tester,
-  ) async {
+  testWidgets('toggles developer mode through the header row', (tester) async {
     final container = _containerFor(tester);
     await _pumpDeveloperView(tester, container);
 
     final initial = container.read(appSettingProvider).developerMode;
-    await tester.tap(find.byType(Switch));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ListView),
+        matching: find.text(currentAppLocalizations.developerMode),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(container.read(appSettingProvider).developerMode, !initial);
