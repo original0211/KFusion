@@ -48,7 +48,7 @@ final class UpdateParamsProvider
   }
 }
 
-String _$updateParamsHash() => r'e46998c222b0902ef6a76c25fe83c094a6369036';
+String _$updateParamsHash() => r'66055ee984835dc31966636a8ee371207151d591';
 
 @ProviderFor(setupPatch)
 final setupPatchProvider = SetupPatchProvider._();
@@ -279,83 +279,6 @@ final class TrayTitleStateProvider
 
 String _$trayTitleStateHash() => r'aacf3779c879f7f1144484a80043679020bf8424';
 
-@ProviderFor(getHotKeyAction)
-final getHotKeyActionProvider = GetHotKeyActionFamily._();
-
-final class GetHotKeyActionProvider
-    extends $FunctionalProvider<HotKeyAction, HotKeyAction, HotKeyAction>
-    with $Provider<HotKeyAction> {
-  GetHotKeyActionProvider._({
-    required GetHotKeyActionFamily super.from,
-    required HotAction super.argument,
-  }) : super(
-         retry: null,
-         name: r'getHotKeyActionProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$getHotKeyActionHash();
-
-  @override
-  String toString() {
-    return r'getHotKeyActionProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $ProviderElement<HotKeyAction> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  HotKeyAction create(Ref ref) {
-    final argument = this.argument as HotAction;
-    return getHotKeyAction(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(HotKeyAction value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<HotKeyAction>(value),
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is GetHotKeyActionProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$getHotKeyActionHash() => r'4dc74ea7ffb25624ce70c7c8214806f3ef022223';
-
-final class GetHotKeyActionFamily extends $Family
-    with $FunctionalFamilyOverride<HotKeyAction, HotAction> {
-  GetHotKeyActionFamily._()
-    : super(
-        retry: null,
-        name: r'getHotKeyActionProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  GetHotKeyActionProvider call(HotAction hotAction) =>
-      GetHotKeyActionProvider._(argument: hotAction, from: this);
-
-  @override
-  String toString() => r'getHotKeyActionProvider';
-}
-
 @ProviderFor(shouldPatchSystemDns)
 final shouldPatchSystemDnsProvider = ShouldPatchSystemDnsProvider._();
 
@@ -514,7 +437,7 @@ final class VpnOptionsProvider
   }
 }
 
-String _$vpnOptionsHash() => r'c00e87278b32dd8977ed136aace10dccfe05508d';
+String _$vpnOptionsHash() => r'4a9222e21b81ccd0d993b6f54d4f6806b9461ead';
 
 @ProviderFor(AccessControlState)
 final accessControlStateProvider = AccessControlStateProvider._();

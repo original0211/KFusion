@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/singbox_action.dart';
-import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/state.dart';
 import 'package:flutter/services.dart';
@@ -47,12 +46,7 @@ class FlClashHttpOverrides extends HttpOverrides {
       final mixedPort = read(
         patchClashConfigProvider.select((state) => state.mixedPort),
       );
-      final authentication = read(
-        networkSettingProvider.select((state) => state.authentication),
-      );
-      final credentials = authentication.credentials;
-      final userInfo = credentials.isNotEmpty ? '${credentials.first}@' : '';
-      return 'PROXY ${userInfo}localhost:$mixedPort';
+      return 'PROXY localhost:$mixedPort';
     }
     if (!isStart && !suspend && _singBoxRunning(read)) {
       return 'PROXY localhost:$singBoxMixedPort';

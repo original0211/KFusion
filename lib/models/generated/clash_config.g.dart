@@ -890,7 +890,6 @@ _PatchClashConfig _$PatchClashConfigFromJson(Map<String, dynamic> json) =>
       geodataLoader:
           $enumDecodeNullable(_$GeodataLoaderEnumMap, json['geodata-loader']) ??
           GeodataLoader.memconservative,
-      globalUa: json['global-ua'] as String?,
       externalController:
           $enumDecodeNullable(
             _$ExternalControllerStatusEnumMap,
@@ -939,7 +938,6 @@ Map<String, dynamic> _$PatchClashConfigToJson(_PatchClashConfig instance) =>
           .toList(),
       'geox-url': _geoXUrlToJson(instance.geoXUrl),
       'geodata-loader': _$GeodataLoaderEnumMap[instance.geodataLoader]!,
-      'global-ua': instance.globalUa,
       'external-controller':
           _$ExternalControllerStatusEnumMap[instance.externalController]!,
       'secret': instance.secret,

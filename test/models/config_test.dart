@@ -133,8 +133,6 @@ void main() {
       expect(restored.autoCheckUpdate, true);
       expect(restored.sidebarExpanded, true);
       expect(restored.minimizeOnExit, true);
-      expect(restored.restoreStrategy, RestoreStrategy.compatible);
-      expect(restored.userAgents, defaultUserAgents);
       expect(restored.filters, defaultFilters);
       expect(restored.testUrl, defaultTestUrl);
     });
@@ -259,7 +257,6 @@ void main() {
         autoLaunch: true,
         closeConnections: false,
         testUrl: 'https://custom.test',
-        userAgents: ['CustomUA/1.0'],
         filters: [Filter(label: 'Asia', regex: 'hk`jp')],
       );
       final restored = roundTrip(
@@ -271,28 +268,7 @@ void main() {
       expect(restored.autoLaunch, true);
       expect(restored.closeConnections, false);
       expect(restored.testUrl, 'https://custom.test');
-      expect(restored.userAgents, ['CustomUA/1.0']);
       expect(restored.filters, [const Filter(label: 'Asia', regex: 'hk`jp')]);
-    });
-
-    test('a legacy custom user agent joins the presets', () {
-      expect(
-        AppSettingProps.fromJson({
-          'customUserAgent': ' CustomUA/1.0 ',
-        }).userAgents,
-        [...defaultUserAgents, 'CustomUA/1.0'],
-      );
-      expect(
-        AppSettingProps.fromJson({'customUserAgent': ''}).userAgents,
-        defaultUserAgents,
-      );
-      expect(
-        AppSettingProps.fromJson({
-          'customUserAgent': 'CustomUA/1.0',
-          'userAgents': <String>[],
-        }).userAgents,
-        isEmpty,
-      );
     });
 
     test('a legacy isAnimateToPage sets the tab animation', () {
@@ -588,7 +564,6 @@ void main() {
         defaultClashConfig.copyWith(keepAliveInterval: 60),
         defaultClashConfig.copyWith(interfaceName: 'wlan0'),
         defaultClashConfig.copyWith(routingMark: 6666),
-        defaultClashConfig.copyWith(globalUa: 'ua'),
         defaultClashConfig.copyWith(hosts: const {'a.test': '1.1.1.1'}),
         defaultClashConfig.copyWith(dns: defaultDns.copyWith(ipv6: true)),
         defaultClashConfig.copyWith(tunOverrideKeys: {TunOverrideKey.gso}),
@@ -785,7 +760,6 @@ void main() {
       expect(restored.currentProfileId, null);
       expect(restored.networkProps.systemProxy, true);
       expect(restored.vpnProps.enable, true);
-      expect(restored.hotKeyActions, isEmpty);
     });
 
     test('a legacy bypass-private route mode drops the routes it ignored', () {
@@ -886,10 +860,6 @@ void main() {
           'mode': 'future',
           'tun': {'enable': true, 'stack': 'future'},
         },
-        'hotKeyActions': [
-          {'action': 'future'},
-          {'action': 'mode', 'key': 1},
-        ],
       };
 
       expect(() => Config.strictFromJson(json), throwsA(anything));
@@ -908,9 +878,6 @@ void main() {
       expect(config.patchClashConfig.mode, Mode.rule);
       expect(config.patchClashConfig.tun.enable, true);
       expect(config.patchClashConfig.tun.stack, TunStack.mips);
-      expect(config.hotKeyActions, [
-        const HotKeyAction(action: HotAction.mode, key: 1),
-      ]);
     });
 
     test('realFromJson handles null', () {
@@ -919,7 +886,7 @@ void main() {
     });
 
     test('a fresh config ships valid, distinct default hotkeys', () {
-      final defaults = Config.realFromJson(null).hotKeyActions;
+      final defaults = defaultHotKeyActions;
 
       expect(
         defaults.map((action) => action.action),
@@ -949,7 +916,6 @@ void main() {
     test('full config round-trip', () {
       const config = Config(
         currentProfileId: 42,
-        hotKeyActions: [],
         appSettingProps: AppSettingProps(locale: 'en', autoLaunch: true),
         networkProps: NetworkProps(systemProxy: false),
         vpnProps: VpnProps(enable: false),

@@ -6,7 +6,6 @@ import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/general.dart';
-import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/logs.dart';
 import 'package:kfusion/views/resources.dart';
 import 'package:kfusion/views/theme.dart';
@@ -349,37 +348,6 @@ void main() {
         expect(chip.foregroundColor, scheme.onSurfaceVariant);
         expect(chip.color, isNot(scheme.primary));
       }
-    });
-  });
-
-  group('hotkey (cabin batch 4, #14)', () {
-    testWidgets('the intro sits flat on the page field', (tester) async {
-      final container = _container(tester);
-      final subscription = container.listen(
-        hotKeyActionsProvider,
-        (_, _) {},
-        fireImmediately: true,
-      );
-      addTearDown(subscription.close);
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: HotKeyView()),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final context = tester.element(find.byType(HotKeyView));
-      final scheme = Theme.of(context).colorScheme;
-      final plates = tester
-          .widgetList<DecoratedBox>(find.byType(DecoratedBox))
-          .where((box) {
-            if (box.decoration is! ShapeDecoration) return false;
-            final shape = (box.decoration as ShapeDecoration).shape;
-            return shape is RoundedSuperellipseBorder &&
-                shape.borderRadius == AppRadius.xl &&
-                shape.side.color == scheme.cabinRim;
-          });
-      expect(plates, isEmpty);
     });
   });
 }

@@ -1973,7 +1973,6 @@ abstract class PatchClashConfig with _$PatchClashConfig {
     @Default(GeodataLoader.memconservative)
     @JsonKey(name: 'geodata-loader')
     GeodataLoader geodataLoader,
-    @JsonKey(name: 'global-ua') String? globalUa,
     @Default(ExternalControllerStatus.close)
     @JsonKey(name: 'external-controller')
     ExternalControllerStatus externalController,
@@ -1998,7 +1997,7 @@ abstract class PatchClashConfig with _$PatchClashConfig {
 
 extension PatchClashConfigExt on PatchClashConfig {
   UpdateParams toUpdateParams({
-    required List<String> authentication,
+    List<String> authentication = const [],
     required bool skipCertVerify,
   }) {
     return UpdateParams(

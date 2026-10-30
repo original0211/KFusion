@@ -2,18 +2,12 @@ part of '../state.dart';
 
 @riverpod
 UpdateParams updateParams(Ref ref) {
-  final authentication = ref.watch(
-    networkSettingProvider.select((state) => state.authentication),
-  );
   final checkCertificate = ref.watch(
     appSettingProvider.select((state) => state.checkCertificate),
   );
   return ref.watch(
     patchClashConfigProvider.select(
-      (state) => state.toUpdateParams(
-        authentication: authentication.credentials,
-        skipCertVerify: !checkCertificate,
-      ),
+      (state) => state.toUpdateParams(skipCertVerify: !checkCertificate),
     ),
   );
 }
@@ -139,16 +133,6 @@ TrayTitleState trayTitleState(Ref ref) {
 }
 
 @riverpod
-HotKeyAction getHotKeyAction(Ref ref, HotAction hotAction) {
-  return ref.watch(
-    hotKeyActionsProvider.select((state) {
-      final index = state.indexWhere((item) => item.action == hotAction);
-      return index != -1 ? state[index] : HotKeyAction(action: hotAction);
-    }),
-  );
-}
-
-@riverpod
 bool shouldPatchSystemDns(Ref ref) {
   final autoSetSystemDns = ref.watch(
     networkSettingProvider.select((state) => state.autoSetSystemDns),
@@ -227,12 +211,7 @@ Future<List<String>> vpnRouteAddress(Ref ref) {
 @Riverpod(keepAlive: true)
 Future<VpnOptions> vpnOptions(Ref ref) async {
   final networkSetting = ref.watch(
-    networkSettingProvider.select(
-      (state) => (
-        bypassDomain: state.bypassDomain,
-        authenticated: state.authentication.credentials.isNotEmpty,
-      ),
-    ),
+    networkSettingProvider.select((state) => state.bypassDomain),
   );
   final clashConfig = ref.watch(
     patchClashConfigProvider.select(
@@ -246,16 +225,13 @@ Future<VpnOptions> vpnOptions(Ref ref) async {
   return VpnOptions(
     enable: vpnSetting.enable && !safeMode,
     stack: tun.stack.name,
-    // VpnService.setHttpProxy cannot carry credentials, so an authenticated
-    // mixed port is left to TUN instead of declared as the system proxy.
-    systemProxy:
-        vpnSetting.systemProxy && !networkSetting.authenticated && !safeMode,
+    systemProxy: vpnSetting.systemProxy && !safeMode,
     port: clashConfig.mixedPort,
     ipv6: vpnSetting.ipv6,
     dnsHijacking: vpnSetting.dnsHijacking,
     accessControlProps: vpnSetting.accessControlProps,
     allowBypass: vpnSetting.allowBypass,
-    bypassDomain: networkSetting.bypassDomain,
+    bypassDomain: networkSetting,
     routeAddress: await routeAddress,
     mtu: tun.mtu,
     congestionController: tun.congestionController,

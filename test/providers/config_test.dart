@@ -126,8 +126,8 @@ void main() {
   });
 
   group('HotKeyActions provider', () {
-    test('default is empty list', () {
-      expect(container.read(hotKeyActionsProvider), isEmpty);
+    test('default is the fixed key set', () {
+      expect(container.read(hotKeyActionsProvider), defaultHotKeyActions);
     });
 
     test('can update hotkey actions', () {
@@ -172,7 +172,6 @@ void main() {
       expect(config.vpnProps.enable, true);
       expect(config.networkProps.systemProxy, true);
       expect(config.currentProfileId, null);
-      expect(config.hotKeyActions, isEmpty);
       expect(config.patchClashConfig, const PatchClashConfig());
       expect(config.excludeSSIDs, isEmpty);
     });
@@ -215,7 +214,7 @@ void main() {
     test('produces correct overrides', () {
       const config = Config(themeProps: ThemeProps(), currentProfileId: 7);
       final overrides = buildConfigOverrides(config);
-      expect(overrides.length, 10);
+      expect(overrides.length, 9);
 
       final overrideContainer = ProviderContainer(overrides: overrides);
       addTearDown(overrideContainer.dispose);

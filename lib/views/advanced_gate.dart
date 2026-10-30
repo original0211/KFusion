@@ -4,7 +4,6 @@ import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/developer.dart';
-import 'package:kfusion/views/font_family.dart';
 import 'package:kfusion/views/logs.dart';
 import 'package:kfusion/views/proxies/setting.dart';
 import 'package:kfusion/views/resources.dart';
@@ -54,11 +53,6 @@ class AdvancedGateView extends ConsumerWidget {
         title: Text(appLocalizations.logs),
         widget: const LogsView(),
       ),
-      ListItem.open(
-        leading: const GlyphIcon(AppGlyphs.font),
-        title: Text(appLocalizations.fontFamily),
-        widget: const FontFamilyView(),
-      ),
       if (developerMode)
         ListItem.open(
           leading: const GlyphIcon(AppGlyphs.cpu),
@@ -75,10 +69,7 @@ class AdvancedGateView extends ConsumerWidget {
         children: [
           generateSection(
             items: items,
-            footer: [
-              appLocalizations.advancedConfigDesc,
-              appLocalizations.customProfileResourcesDesc,
-            ].join('\n'),
+            footer: appLocalizations.advancedConfigDesc,
           ),
         ],
       ),

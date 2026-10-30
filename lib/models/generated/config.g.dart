@@ -14,79 +14,73 @@ Map<String, dynamic> _$FilterToJson(_Filter instance) => <String, dynamic>{
   'regex': instance.regex,
 };
 
-_AppSettingProps _$AppSettingPropsFromJson(
-  Map<String, dynamic> json,
-) => _AppSettingProps(
-  locale: json['locale'] as String?,
-  dashboardWidgets: json['dashboardWidgets'] == null
-      ? defaultDashboardWidgets
-      : dashboardWidgetsFromJson(json['dashboardWidgets'] as List?),
-  onlyStatisticsProxy: json['onlyStatisticsProxy'] as bool? ?? false,
-  showNotificationStopAction:
-      json['showNotificationStopAction'] as bool? ?? true,
-  autoLaunch: json['autoLaunch'] as bool? ?? false,
-  silentLaunch: json['silentLaunch'] as bool? ?? false,
-  autoRun: json['autoRun'] as bool? ?? false,
-  openLogs: json['openLogs'] as bool? ?? false,
-  closeConnections: json['closeConnections'] as bool? ?? true,
-  testUrl: json['testUrl'] as String? ?? defaultTestUrl,
-  tabAnimation:
-      $enumDecodeNullable(
-        _$TabAnimationEnumMap,
-        _readTabAnimation(json, 'tabAnimation'),
-      ) ??
-      TabAnimation.slide,
-  floatingNavigationBar: json['floatingNavigationBar'] as bool? ?? true,
-  cabinCoreCompact: json['cabinCoreCompact'] as bool? ?? false,
-  autoCheckUpdate: json['autoCheckUpdate'] as bool? ?? true,
-  sidebarExpanded:
-      _readSidebarExpanded(json, 'sidebarExpanded') as bool? ?? true,
-  acceptedDisclaimerVersion:
-      (json['acceptedDisclaimerVersion'] as num?)?.toInt() ?? 0,
-  minimizeOnExit: json['minimizeOnExit'] as bool? ?? true,
-  hidden: json['hidden'] as bool? ?? false,
-  developerMode: json['developerMode'] as bool? ?? false,
-  restoreStrategy:
-      $enumDecodeNullable(_$RestoreStrategyEnumMap, json['restoreStrategy']) ??
-      RestoreStrategy.compatible,
-  showTrayTitle: json['showTrayTitle'] as bool? ?? true,
-  checkCertificate: json['checkCertificate'] as bool? ?? true,
-  userAgents:
-      (_readUserAgents(json, 'userAgents') as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-      defaultUserAgents,
-  filters:
-      (json['filters'] as List<dynamic>?)
-          ?.map((e) => Filter.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      defaultFilters,
-  hideIp: json['hideIp'] as bool? ?? false,
-  editorLineWrap: json['editorLineWrap'] as bool? ?? false,
-  editorFontSize:
-      $enumDecodeNullable(_$EditorFontSizeEnumMap, json['editorFontSize']) ??
-      EditorFontSize.standard,
-  serviceOrder:
-      (json['serviceOrder'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-      const [],
-  disabledServices:
-      (json['disabledServices'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-      const [],
-  tableColumnWidths:
-      (json['tableColumnWidths'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(
-          k,
-          (e as Map<String, dynamic>).map(
-            (k, e) => MapEntry(k, (e as num).toDouble()),
-          ),
-        ),
-      ) ??
-      const {},
-);
+_AppSettingProps _$AppSettingPropsFromJson(Map<String, dynamic> json) =>
+    _AppSettingProps(
+      locale: json['locale'] as String?,
+      dashboardWidgets: json['dashboardWidgets'] == null
+          ? defaultDashboardWidgets
+          : dashboardWidgetsFromJson(json['dashboardWidgets'] as List?),
+      onlyStatisticsProxy: json['onlyStatisticsProxy'] as bool? ?? false,
+      showNotificationStopAction:
+          json['showNotificationStopAction'] as bool? ?? true,
+      autoLaunch: json['autoLaunch'] as bool? ?? false,
+      silentLaunch: json['silentLaunch'] as bool? ?? false,
+      autoRun: json['autoRun'] as bool? ?? false,
+      openLogs: json['openLogs'] as bool? ?? false,
+      closeConnections: json['closeConnections'] as bool? ?? true,
+      testUrl: json['testUrl'] as String? ?? defaultTestUrl,
+      tabAnimation:
+          $enumDecodeNullable(
+            _$TabAnimationEnumMap,
+            _readTabAnimation(json, 'tabAnimation'),
+          ) ??
+          TabAnimation.slide,
+      floatingNavigationBar: json['floatingNavigationBar'] as bool? ?? true,
+      cabinCoreCompact: json['cabinCoreCompact'] as bool? ?? false,
+      autoCheckUpdate: json['autoCheckUpdate'] as bool? ?? true,
+      sidebarExpanded:
+          _readSidebarExpanded(json, 'sidebarExpanded') as bool? ?? true,
+      acceptedDisclaimerVersion:
+          (json['acceptedDisclaimerVersion'] as num?)?.toInt() ?? 0,
+      minimizeOnExit: json['minimizeOnExit'] as bool? ?? true,
+      hidden: json['hidden'] as bool? ?? false,
+      developerMode: json['developerMode'] as bool? ?? false,
+      showTrayTitle: json['showTrayTitle'] as bool? ?? true,
+      checkCertificate: json['checkCertificate'] as bool? ?? true,
+      filters:
+          (json['filters'] as List<dynamic>?)
+              ?.map((e) => Filter.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          defaultFilters,
+      hideIp: json['hideIp'] as bool? ?? false,
+      editorLineWrap: json['editorLineWrap'] as bool? ?? false,
+      editorFontSize:
+          $enumDecodeNullable(
+            _$EditorFontSizeEnumMap,
+            json['editorFontSize'],
+          ) ??
+          EditorFontSize.standard,
+      serviceOrder:
+          (json['serviceOrder'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      disabledServices:
+          (json['disabledServices'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      tableColumnWidths:
+          (json['tableColumnWidths'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+              k,
+              (e as Map<String, dynamic>).map(
+                (k, e) => MapEntry(k, (e as num).toDouble()),
+              ),
+            ),
+          ) ??
+          const {},
+    );
 
 Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
     <String, dynamic>{
@@ -111,10 +105,8 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
       'minimizeOnExit': instance.minimizeOnExit,
       'hidden': instance.hidden,
       'developerMode': instance.developerMode,
-      'restoreStrategy': _$RestoreStrategyEnumMap[instance.restoreStrategy]!,
       'showTrayTitle': instance.showTrayTitle,
       'checkCertificate': instance.checkCertificate,
-      'userAgents': instance.userAgents,
       'filters': instance.filters,
       'hideIp': instance.hideIp,
       'editorLineWrap': instance.editorLineWrap,
@@ -127,11 +119,6 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
 const _$TabAnimationEnumMap = {
   TabAnimation.slide: 'slide',
   TabAnimation.fade: 'fade',
-};
-
-const _$RestoreStrategyEnumMap = {
-  RestoreStrategy.compatible: 'compatible',
-  RestoreStrategy.override: 'override',
 };
 
 const _$EditorFontSizeEnumMap = {
@@ -238,21 +225,6 @@ Map<String, dynamic> _$VpnPropsToJson(_VpnProps instance) => <String, dynamic>{
   'accessControlProps': instance.accessControlProps,
 };
 
-_AuthenticationProps _$AuthenticationPropsFromJson(Map<String, dynamic> json) =>
-    _AuthenticationProps(
-      enable: json['enable'] as bool? ?? false,
-      username: json['username'] as String? ?? '',
-      password: json['password'] as String? ?? '',
-    );
-
-Map<String, dynamic> _$AuthenticationPropsToJson(
-  _AuthenticationProps instance,
-) => <String, dynamic>{
-  'enable': instance.enable,
-  'username': instance.username,
-  'password': instance.password,
-};
-
 _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
     _NetworkProps(
       systemProxy: json['systemProxy'] as bool? ?? true,
@@ -264,11 +236,6 @@ _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
       bypassPrivateRoute: json['bypassPrivateRoute'] as bool? ?? true,
       autoSetSystemDns: json['autoSetSystemDns'] as bool? ?? true,
       appendSystemDns: json['appendSystemDns'] as bool? ?? false,
-      authentication: json['authentication'] == null
-          ? defaultAuthenticationProps
-          : AuthenticationProps.fromJson(
-              json['authentication'] as Map<String, dynamic>?,
-            ),
     );
 
 Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
@@ -278,7 +245,6 @@ Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
       'bypassPrivateRoute': instance.bypassPrivateRoute,
       'autoSetSystemDns': instance.autoSetSystemDns,
       'appendSystemDns': instance.appendSystemDns,
-      'authentication': instance.authentication,
     };
 
 _ProxiesStyleProps _$ProxiesStylePropsFromJson(Map<String, dynamic> json) =>
@@ -372,7 +338,6 @@ _ThemeProps _$ThemePropsFromJson(Map<String, dynamic> json) => _ThemeProps(
   textScale: json['textScale'] == null
       ? const TextScale()
       : TextScale.fromJson(json['textScale'] as Map<String, dynamic>),
-  fontFamily: json['systemFontFamily'] as String?,
 );
 
 Map<String, dynamic> _$ThemePropsToJson(_ThemeProps instance) =>
@@ -385,7 +350,6 @@ Map<String, dynamic> _$ThemePropsToJson(_ThemeProps instance) =>
       'sidebarBlur': instance.sidebarBlur,
       'liquidGlass': _$LiquidGlassModeEnumMap[instance.liquidGlass]!,
       'textScale': instance.textScale,
-      'systemFontFamily': instance.fontFamily,
     };
 
 const _$ThemeModeEnumMap = {
@@ -409,11 +373,6 @@ const _$LiquidGlassModeEnumMap = {
 
 _Config _$ConfigFromJson(Map<String, dynamic> json) => _Config(
   currentProfileId: (json['currentProfileId'] as num?)?.toInt(),
-  hotKeyActions:
-      (json['hotKeyActions'] as List<dynamic>?)
-          ?.map((e) => HotKeyAction.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
   appSettingProps: json['appSettingProps'] == null
       ? defaultAppSettingProps
       : AppSettingProps.safeFromJson(
@@ -450,7 +409,6 @@ _Config _$ConfigFromJson(Map<String, dynamic> json) => _Config(
 
 Map<String, dynamic> _$ConfigToJson(_Config instance) => <String, dynamic>{
   'currentProfileId': instance.currentProfileId,
-  'hotKeyActions': instance.hotKeyActions,
   'appSettingProps': instance.appSettingProps,
   'networkProps': instance.networkProps,
   'vpnProps': instance.vpnProps,

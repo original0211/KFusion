@@ -8,12 +8,9 @@ import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/views/config/on_demand.dart';
-import 'package:kfusion/views/config/user_agents.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-part 'general/port_form.dart';
 
 class LogLevelItem extends ConsumerWidget {
   const LogLevelItem({super.key});
@@ -492,23 +489,6 @@ class CurrentProfileCoreKindItem extends ConsumerWidget {
   }
 }
 
-class UaItem extends ConsumerWidget {
-  const UaItem({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    final appLocalizations = context.appLocalizations;
-    final globalUa = ref.watch(
-      patchClashConfigProvider.select((state) => state.globalUa),
-    );
-    return ListItem.open(
-      title: Text(appLocalizations.userAgent),
-      subtitle: Text(globalUa ?? appLocalizations.defaultText),
-      widget: const UserAgentsView(),
-    );
-  }
-}
-
 class TestUrlItem extends ConsumerWidget {
   const TestUrlItem({super.key});
 
@@ -546,32 +526,6 @@ class TestUrlItem extends ConsumerWidget {
   }
 }
 
-class PortItem extends ConsumerWidget {
-  const PortItem({super.key});
-
-  Future<void> handleShowPortForm(BuildContext context) async {
-    await showFormSheet<void>(
-      context: context,
-      builder: (_) => const _PortForm(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context, ref) {
-    final appLocalizations = context.appLocalizations;
-    final mixedPort = ref.watch(
-      patchClashConfigProvider.select((state) => state.mixedPort),
-    );
-    return ListItem(
-      title: Text(appLocalizations.port),
-      subtitle: Text('$mixedPort'),
-      onTap: () {
-        handleShowPortForm(context);
-      },
-    );
-  }
-}
-
 class HostsItem extends ConsumerWidget {
   const HostsItem({super.key});
 
@@ -601,71 +555,6 @@ class HostsItem extends ConsumerWidget {
             .read(patchClashConfigProvider.notifier)
             .update((state) => state.copyWith(hosts: value));
       },
-    );
-  }
-}
-
-class AuthenticationItem extends ConsumerWidget {
-  const AuthenticationItem({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    return ConfigToggleItem(
-      title: (l) => l.authentication,
-      selector: networkSettingProvider.select(
-        (state) => state.authentication.enable,
-      ),
-      onChanged: (ref, value) =>
-          ref.read(networkSettingProvider.notifier).update((state) {
-            var authentication = state.authentication.copyWith(enable: value);
-            if (value && authentication.username.isEmpty) {
-              authentication = authentication.copyWith(
-                username: generateRandomSecret(8),
-                password: generateRandomSecret(16),
-              );
-            }
-            return state.copyWith(authentication: authentication);
-          }),
-    );
-  }
-}
-
-class AuthenticationAccountItem extends ConsumerWidget {
-  const AuthenticationAccountItem({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    return ConfigTextItem(
-      title: (l) => l.account,
-      maxLength: TextInputLimits.userName,
-      selector: networkSettingProvider.select(
-        (state) => state.authentication.username,
-      ),
-      // mihomo and the Dart proxy string both split user:pass on the first
-      // colon, so a colon in the username breaks authentication.
-      normalize: (value) => value.trim().replaceAll(':', ''),
-      onChanged: (ref, value) => ref
-          .read(networkSettingProvider.notifier)
-          .update((state) => state.copyWith.authentication(username: value)),
-    );
-  }
-}
-
-class AuthenticationPasswordItem extends ConsumerWidget {
-  const AuthenticationPasswordItem({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    return ConfigTextItem(
-      title: (l) => l.password,
-      maxLength: TextInputLimits.password,
-      selector: networkSettingProvider.select(
-        (state) => state.authentication.password,
-      ),
-      normalize: (value) => value.trim(),
-      onChanged: (ref, value) => ref
-          .read(networkSettingProvider.notifier)
-          .update((state) => state.copyWith.authentication(password: value)),
     );
   }
 }
@@ -768,12 +657,8 @@ class GeneralView extends ConsumerWidget {
     ];
   }
 
-  List<Widget> _inboundItems({
-    required bool authentication,
-    required bool externalController,
-  }) {
+  List<Widget> _inboundItems({required bool externalController}) {
     return [
-      const PortItem(),
       _clashToggle(
         title: (l) => l.allowLan,
         select: (state) => state.allowLan,
@@ -792,11 +677,6 @@ class GeneralView extends ConsumerWidget {
             .ensureControllerSecret(),
       ),
       if (externalController) const ExternalControllerSecretItem(),
-      const AuthenticationItem(),
-      if (authentication) ...const [
-        AuthenticationAccountItem(),
-        AuthenticationPasswordItem(),
-      ],
     ];
   }
 
@@ -835,7 +715,6 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _requestItems() {
     return [
-      const UaItem(),
       _appSettingToggle(
         title: (l) => l.checkCertificate,
         select: (state) => state.checkCertificate,
@@ -893,9 +772,6 @@ class GeneralView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final appLocalizations = context.appLocalizations;
-    final authentication = ref.watch(
-      networkSettingProvider.select((state) => state.authentication.enable),
-    );
     final externalController = ref.watch(
       patchClashConfigProvider.select(
         (state) => state.externalController == ExternalControllerStatus.open,
@@ -920,14 +796,8 @@ class GeneralView extends ConsumerWidget {
           ),
           generateSection(
             title: appLocalizations.inbound,
-            items: _inboundItems(
-              authentication: authentication,
-              externalController: externalController,
-            ),
-            footer: [
-              appLocalizations.externalControllerDesc,
-              appLocalizations.authenticationDesc,
-            ].join('\n'),
+            items: _inboundItems(externalController: externalController),
+            footer: appLocalizations.externalControllerDesc,
           ),
           generateSection(
             title: appLocalizations.connection,

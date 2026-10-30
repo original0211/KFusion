@@ -130,16 +130,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Outbound mode`
-  String get outboundMode {
-    return Intl.message(
-      'Outbound mode',
-      name: 'outboundMode',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Service status`
   String get serviceStatus {
     return Intl.message(
@@ -600,11 +590,6 @@ class AppLocalizations {
     return Intl.message('Theme color', name: 'themeColor', desc: '', args: []);
   }
 
-  /// `Preview`
-  String get preview {
-    return Intl.message('Preview', name: 'preview', desc: '', args: []);
-  }
-
   /// `Auto`
   String get auto {
     return Intl.message('Auto', name: 'auto', desc: '', args: []);
@@ -738,11 +723,6 @@ class AppLocalizations {
   /// `Selected`
   String get selected {
     return Intl.message('Selected', name: 'selected', desc: '', args: []);
-  }
-
-  /// `Port`
-  String get port {
-    return Intl.message('Port', name: 'port', desc: '', args: []);
   }
 
   /// `Log level`
@@ -910,36 +890,6 @@ class AppLocalizations {
     return Intl.message('Password', name: 'password', desc: '', args: []);
   }
 
-  /// `Authentication`
-  String get authentication {
-    return Intl.message(
-      'Authentication',
-      name: 'authentication',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Authentication asks for a username and password on the local proxy port.`
-  String get authenticationDesc {
-    return Intl.message(
-      'Authentication asks for a username and password on the local proxy port.',
-      name: 'authenticationDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `The system proxy is not applied while authentication is on.`
-  String get authenticationSystemProxyDesc {
-    return Intl.message(
-      'The system proxy is not applied while authentication is on.',
-      name: 'authenticationSystemProxyDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Check for updates`
   String get checkUpdate {
     return Intl.message(
@@ -1078,11 +1028,6 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
-  }
-
-  /// `User-Agent`
-  String get userAgent {
-    return Intl.message('User-Agent', name: 'userAgent', desc: '', args: []);
   }
 
   /// `Unified delay`
@@ -1555,16 +1500,6 @@ class AppLocalizations {
     return Intl.message(
       'UWP loopback exemption',
       name: 'loopback',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `External resources`
-  String get providers {
-    return Intl.message(
-      'External resources',
-      name: 'providers',
       desc: '',
       args: [],
     );
@@ -2340,71 +2275,6 @@ class AppLocalizations {
     return Intl.message('Agree', name: 'agree', desc: '', args: []);
   }
 
-  /// `Hotkey management`
-  String get hotkeyManagement {
-    return Intl.message(
-      'Hotkey management',
-      name: 'hotkeyManagement',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Global hotkeys work even while the window is hidden. Tap an action to record its key combination.`
-  String get hotkeyDesc {
-    return Intl.message(
-      'Global hotkeys work even while the window is hidden. Tap an action to record its key combination.',
-      name: 'hotkeyDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Not set`
-  String get hotkeyNotSet {
-    return Intl.message('Not set', name: 'hotkeyNotSet', desc: '', args: []);
-  }
-
-  /// `Press a key combination`
-  String get pressKeyboard {
-    return Intl.message(
-      'Press a key combination',
-      name: 'pressKeyboard',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Include at least one of {modifiers}`
-  String hotkeyNeedsModifier(Object modifiers) {
-    return Intl.message(
-      'Include at least one of $modifiers',
-      name: 'hotkeyNeedsModifier',
-      desc: '',
-      args: [modifiers],
-    );
-  }
-
-  /// `Already used by “{action}”. Saving moves it here.`
-  String hotkeyConflictWith(Object action) {
-    return Intl.message(
-      'Already used by “$action”. Saving moves it here.',
-      name: 'hotkeyConflictWith',
-      desc: '',
-      args: [action],
-    );
-  }
-
-  /// `Not registered, it may be taken by another app`
-  String get hotkeyUnavailable {
-    return Intl.message(
-      'Not registered, it may be taken by another app',
-      name: 'hotkeyUnavailable',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Remove`
   String get remove {
     return Intl.message('Remove', name: 'remove', desc: '', args: []);
@@ -2528,21 +2398,6 @@ class AppLocalizations {
   /// `No data`
   String get noData {
     return Intl.message('No data', name: 'noData', desc: '', args: []);
-  }
-
-  /// `Font family`
-  String get fontFamily {
-    return Intl.message('Font family', name: 'fontFamily', desc: '', args: []);
-  }
-
-  /// `Installed fonts`
-  String get installedFonts {
-    return Intl.message(
-      'Installed fonts',
-      name: 'installedFonts',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `Toggle`
@@ -2945,31 +2800,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Message test`
-  String get messageTest {
-    return Intl.message(
-      'Message test',
-      name: 'messageTest',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `This is a message.`
-  String get messageTestTip {
-    return Intl.message(
-      'This is a message.',
-      name: 'messageTestTip',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Crash test`
-  String get crashTest {
-    return Intl.message('Crash test', name: 'crashTest', desc: '', args: []);
-  }
-
   /// `Crash detected`
   String get crashDetected {
     return Intl.message(
@@ -3058,41 +2888,6 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
-  }
-
-  /// `Restore strategy`
-  String get restoreStrategy {
-    return Intl.message(
-      'Restore strategy',
-      name: 'restoreStrategy',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Override`
-  String get restoreStrategyOverride {
-    return Intl.message(
-      'Override',
-      name: 'restoreStrategyOverride',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Compatible`
-  String get restoreStrategyCompatible {
-    return Intl.message(
-      'Compatible',
-      name: 'restoreStrategyCompatible',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Logs test`
-  String get logsTest {
-    return Intl.message('Logs test', name: 'logsTest', desc: '', args: []);
   }
 
   /// `{label} cannot be empty`
@@ -3308,46 +3103,6 @@ class AppLocalizations {
   /// `Unnamed`
   String get unnamed {
     return Intl.message('Unnamed', name: 'unnamed', desc: '', args: []);
-  }
-
-  /// `Mixed port`
-  String get mixedPort {
-    return Intl.message('Mixed port', name: 'mixedPort', desc: '', args: []);
-  }
-
-  /// `SOCKS port`
-  String get socksPort {
-    return Intl.message('SOCKS port', name: 'socksPort', desc: '', args: []);
-  }
-
-  /// `Redir port`
-  String get redirPort {
-    return Intl.message('Redir port', name: 'redirPort', desc: '', args: []);
-  }
-
-  /// `TProxy port`
-  String get tproxyPort {
-    return Intl.message('TProxy port', name: 'tproxyPort', desc: '', args: []);
-  }
-
-  /// `{label} must be between 1024 and 49151`
-  String portTip(Object label) {
-    return Intl.message(
-      '$label must be between 1024 and 49151',
-      name: 'portTip',
-      desc: '',
-      args: [label],
-    );
-  }
-
-  /// `Please enter a different port`
-  String get portConflictTip {
-    return Intl.message(
-      'Please enter a different port',
-      name: 'portConflictTip',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `Import from file`
@@ -3645,16 +3400,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Are you sure you want to force crash the core?`
-  String get confirmForceCrashCore {
-    return Intl.message(
-      'Are you sure you want to force crash the core?',
-      name: 'confirmForceCrashCore',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Are you sure you want to clear all data?`
   String get confirmClearAllData {
     return Intl.message(
@@ -3850,16 +3595,6 @@ class AppLocalizations {
     return Intl.message(
       'This page has changes. Are you sure you want to reset?',
       name: 'resetPageChangesTip',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Custom profile resources hold proxies, rule providers, filters, and icon sets.`
-  String get customProfileResourcesDesc {
-    return Intl.message(
-      'Custom profile resources hold proxies, rule providers, filters, and icon sets.',
-      name: 'customProfileResourcesDesc',
       desc: '',
       args: [],
     );
@@ -4967,30 +4702,6 @@ class AppLocalizations {
     );
   }
 
-  /// `{count, plural, =1{1 proxy} other{{label} proxies}}`
-  String proxiesCount(num count, Object label) {
-    return Intl.plural(
-      count,
-      one: '1 proxy',
-      other: '$label proxies',
-      name: 'proxiesCount',
-      desc: '',
-      args: [count, label],
-    );
-  }
-
-  /// `{count, plural, =1{1 rule} other{{label} rules}}`
-  String rulesCount(num count, Object label) {
-    return Intl.plural(
-      count,
-      one: '1 rule',
-      other: '$label rules',
-      name: 'rulesCount',
-      desc: '',
-      args: [count, label],
-    );
-  }
-
   /// `{count, plural, =1{1 proxy group} other{{label} proxy groups}}`
   String proxyGroupsCount(num count, Object label) {
     return Intl.plural(
@@ -5501,16 +5212,6 @@ class AppLocalizations {
   /// `Cache`
   String get cache {
     return Intl.message('Cache', name: 'cache', desc: '', args: []);
-  }
-
-  /// `This external resource is not a text file`
-  String get nonTextProviderFile {
-    return Intl.message(
-      'This external resource is not a text file',
-      name: 'nonTextProviderFile',
-      desc: '',
-      args: [],
-    );
   }
 
   /// `No proxy could be read from the links`

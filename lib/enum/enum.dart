@@ -802,8 +802,6 @@ enum RuleProviderBehavior { domain, ipcidr, classical }
 
 enum RuleProviderFormat { yaml, text, mrs }
 
-enum RestoreStrategy { compatible, override }
-
 enum TabAnimation { slide, fade }
 
 enum LiquidGlassMode { none, standard, ultra }

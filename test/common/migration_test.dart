@@ -194,7 +194,6 @@ void main() {
         expect(theme.themeMode, ThemeMode.dark);
         expect(theme.pureBlack, isTrue);
         expect(theme.liquidGlass, LiquidGlassMode.ultra);
-        expect(theme.fontFamily, 'Beta Serif');
         expect(store.savedConfig, config);
         expect(store.version, Migration.currentVersion);
         expect(store.upgradeVersion, Migration.upgradeVersion);
@@ -234,6 +233,32 @@ void main() {
         expect(await upgrade('standard', 1), LiquidGlassMode.ultra);
         expect(await upgrade('none', 1), LiquidGlassMode.none);
         expect(await upgrade('standard', 2), LiquidGlassMode.standard);
+      });
+
+      test('resets changed ports to the fixed defaults once', () async {
+        final configMap = _createConfigMap();
+        (configMap['patchClashConfig']! as Map<String, Object?>).addAll({
+          'mixed-port': 8899,
+          'port': 8080,
+          'socks-port': 1080,
+          'redir-port': 8081,
+          'tproxy-port': 8082,
+        });
+        final store = _FakeMigrationStore(
+          configMap: configMap,
+          version: Migration.currentVersion,
+          upgradeVersion: 2,
+        );
+
+        final config = await Migration(store: store).run();
+
+        final patch = config.patchClashConfig;
+        expect(patch.mixedPort, defaultMixedPort);
+        expect(patch.port, 0);
+        expect(patch.socksPort, 0);
+        expect(patch.redirPort, 0);
+        expect(patch.tproxyPort, 0);
+        expect(store.upgradeVersion, Migration.upgradeVersion);
       });
 
       test('a new install only records it', () async {

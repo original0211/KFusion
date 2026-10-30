@@ -57,7 +57,7 @@ class CurrentProfileId extends _$CurrentProfileId
 class HotKeyActions extends _$HotKeyActions with AutoDisposeNotifierMixin {
   @override
   List<HotKeyAction> build() {
-    return [];
+    return defaultHotKeyActions;
   }
 }
 
@@ -95,7 +95,6 @@ Config _config(Ref ref) {
   final networkProps = ref.watch(networkSettingProvider);
   final themeProps = ref.watch(themeSettingProvider);
   final currentProfileId = ref.watch(currentProfileIdProvider);
-  final hotKeyActions = ref.watch(hotKeyActionsProvider);
   final proxiesStyleProps = ref.watch(proxiesStyleSettingProvider);
   final patchClashConfig = ref.watch(patchClashConfigProvider);
   final excludeSSIDs = ref.watch(excludeSSIDsProvider);
@@ -106,7 +105,6 @@ Config _config(Ref ref) {
     networkProps: networkProps,
     themeProps: themeProps,
     currentProfileId: currentProfileId,
-    hotKeyActions: hotKeyActions,
     proxiesStyleProps: proxiesStyleProps,
     patchClashConfig: patchClashConfig,
     excludeSSIDs: excludeSSIDs,
@@ -120,7 +118,6 @@ void writeConfig(Ref ref, Config config) {
   ref.read(networkSettingProvider.notifier).value = config.networkProps;
   ref.read(themeSettingProvider.notifier).value = config.themeProps;
   ref.read(currentProfileIdProvider.notifier).value = config.currentProfileId;
-  ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
   ref.read(proxiesStyleSettingProvider.notifier).value =
       config.proxiesStyleProps;
   ref.read(patchClashConfigProvider.notifier).value = config.patchClashConfig
@@ -138,7 +135,6 @@ List<Override> buildConfigOverrides(Config config) {
     currentProfileIdProvider.overrideWithBuild(
       (_, _) => config.currentProfileId,
     ),
-    hotKeyActionsProvider.overrideWithBuild((_, _) => config.hotKeyActions),
     proxiesStyleSettingProvider.overrideWithBuild(
       (_, _) => config.proxiesStyleProps,
     ),

@@ -485,14 +485,6 @@ class HotKeyFailures extends _$HotKeyFailures with AutoDisposeNotifierMixin {
 }
 
 @Riverpod(keepAlive: true)
-class HotKeyRecording extends _$HotKeyRecording with AutoDisposeNotifierMixin {
-  @override
-  bool build() {
-    return false;
-  }
-}
-
-@Riverpod(keepAlive: true)
 class SystemUiOverlayStyleState extends _$SystemUiOverlayStyleState
     with AutoDisposeNotifierMixin {
   @override

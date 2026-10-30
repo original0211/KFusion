@@ -257,7 +257,7 @@ Future<RealProfile> _makeRealProfileTask(MakeRealProfileState data) async {
   injectUnconfinedProviders('rule-providers', data.injectedRuleProviders);
   rawConfig['profile']['store-selected'] = false;
   rawConfig['geox-url'] = realPatchConfig.geoXUrl.raw;
-  rawConfig['global-ua'] = realPatchConfig.globalUa ?? defaultUA;
+  rawConfig['global-ua'] = defaultUA;
   if (rawConfig['hosts'] == null) {
     rawConfig['hosts'] = {};
   }
@@ -468,7 +468,6 @@ Future<MigrationData> migrateLegacyConfig({
   }
   final appSettingProps =
       configMap['appSetting'] as Map<String, dynamic>? ?? {};
-  appSettingProps['restoreStrategy'] = appSettingProps['recoveryStrategy'];
   configMap['appSettingProps'] = appSettingProps;
   configMap['proxiesStyleProps'] = configMap['proxiesStyle'];
   final Map<String, int> idMap = {};

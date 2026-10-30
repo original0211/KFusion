@@ -1,12 +1,6 @@
-import 'dart:async';
-
 import 'package:kfusion/common/common.dart';
-import 'package:kfusion/enum/enum.dart';
-import 'package:kfusion/models/common.dart';
 import 'package:kfusion/providers/action.dart';
-import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/providers/config.dart';
-import 'package:kfusion/state.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,46 +13,6 @@ class DeveloperView extends ConsumerWidget {
     return generateSection(
       title: appLocalizations.options,
       items: [
-        ListItem(
-          title: Text(appLocalizations.messageTest),
-          onTap: () {
-            for (final level in MessageLevel.values) {
-              context.showNotifier(
-                '${level.name}: ${appLocalizations.messageTestTip}',
-                level: level,
-              );
-            }
-          },
-        ),
-        ListItem(
-          title: Text(appLocalizations.logsTest),
-          onTap: () {
-            for (int i = 0; i < 1000; i++) {
-              ref
-                  .read(logsProvider.notifier)
-                  .add(
-                    Log.app(
-                      '[$i]${generateRandomString(maxLength: 200, minLength: 20)}',
-                    ),
-                  );
-            }
-          },
-        ),
-        if (globalState.canCrashCore)
-          ListItem(
-            title: Text(appLocalizations.crashTest),
-            onTap: () async {
-              final coreAction = ref.read(coreActionProvider.notifier);
-              final res = await dialogs.showMessage(
-                message: TextSpan(text: appLocalizations.confirmForceCrashCore),
-                destructive: true,
-              );
-              if (res != true) {
-                return;
-              }
-              unawaited(coreAction.crash());
-            },
-          ),
         ListItem(
           title: Text(appLocalizations.clearData),
           onTap: () async {

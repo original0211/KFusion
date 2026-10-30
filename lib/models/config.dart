@@ -30,8 +30,6 @@ const defaultBypassDomain = [
   '192.168.*',
 ];
 
-const defaultUserAgents = ['clash-verge/v2.4.2', 'ClashforWindows/0.19.23'];
-
 const defaultFilters = [
   Filter(
     label: 'Hong Kong',
@@ -81,7 +79,6 @@ const defaultFilters = [
 
 const defaultAppSettingProps = AppSettingProps();
 const defaultVpnProps = VpnProps();
-const defaultAuthenticationProps = AuthenticationProps();
 const defaultNetworkProps = NetworkProps();
 const defaultProxiesStyleProps = ProxiesStyleProps();
 const defaultWindowProps = WindowProps();
@@ -195,21 +192,6 @@ Object? _readTabAnimation(Map<dynamic, dynamic> json, String key) {
   return json['isAnimateToPage'] == false ? TabAnimation.fade.name : null;
 }
 
-Object? _readUserAgents(Map<dynamic, dynamic> json, String key) {
-  if (json.containsKey(key)) {
-    return json[key];
-  }
-  final legacy = json['customUserAgent'];
-  if (legacy is! String) {
-    return null;
-  }
-  final custom = legacy.trim();
-  if (custom.isEmpty || defaultUserAgents.contains(custom)) {
-    return null;
-  }
-  return [...defaultUserAgents, custom];
-}
-
 @freezed
 abstract class Filter with _$Filter {
   const factory Filter({required String label, required String regex}) =
@@ -246,12 +228,8 @@ abstract class AppSettingProps with _$AppSettingProps {
     @Default(true) bool minimizeOnExit,
     @Default(false) bool hidden,
     @Default(false) bool developerMode,
-    @Default(RestoreStrategy.compatible) RestoreStrategy restoreStrategy,
     @Default(true) bool showTrayTitle,
     @Default(true) bool checkCertificate,
-    @Default(defaultUserAgents)
-    @JsonKey(readValue: _readUserAgents)
-    List<String> userAgents,
     @Default(defaultFilters) List<Filter> filters,
     @Default(false) bool hideIp,
     @Default(false) bool editorLineWrap,
@@ -345,25 +323,6 @@ abstract class VpnProps with _$VpnProps {
 }
 
 @freezed
-abstract class AuthenticationProps with _$AuthenticationProps {
-  const factory AuthenticationProps({
-    @Default(false) bool enable,
-    @Default('') String username,
-    @Default('') String password,
-  }) = _AuthenticationProps;
-
-  factory AuthenticationProps.fromJson(Map<String, Object?>? json) =>
-      json == null
-      ? defaultAuthenticationProps
-      : _$AuthenticationPropsFromJson(json);
-}
-
-extension AuthenticationPropsExt on AuthenticationProps {
-  List<String> get credentials =>
-      enable && username.isNotEmpty ? ['$username:$password'] : [];
-}
-
-@freezed
 abstract class NetworkProps with _$NetworkProps {
   const factory NetworkProps({
     @Default(true) bool systemProxy,
@@ -371,7 +330,6 @@ abstract class NetworkProps with _$NetworkProps {
     @Default(true) bool bypassPrivateRoute,
     @Default(true) bool autoSetSystemDns,
     @Default(false) bool appendSystemDns,
-    @Default(defaultAuthenticationProps) AuthenticationProps authentication,
   }) = _NetworkProps;
 
   factory NetworkProps.fromJson(Map<String, Object?>? json) =>
@@ -466,9 +424,6 @@ abstract class ThemeProps with _$ThemeProps {
     @JsonKey(readValue: _readLiquidGlass)
     LiquidGlassMode liquidGlass,
     @Default(TextScale()) TextScale textScale,
-    // `fontFamily` held the names of a removed enum, which old configs may
-    // still carry.
-    @JsonKey(name: 'systemFontFamily') String? fontFamily,
   }) = _ThemeProps;
 
   factory ThemeProps.fromJson(Map<String, Object?> json) =>
@@ -486,7 +441,6 @@ abstract class ThemeProps with _$ThemeProps {
 abstract class Config with _$Config {
   const factory Config({
     int? currentProfileId,
-    @Default([]) List<HotKeyAction> hotKeyActions,
     @JsonKey(fromJson: AppSettingProps.safeFromJson)
     @Default(defaultAppSettingProps)
     AppSettingProps appSettingProps,
@@ -513,10 +467,7 @@ abstract class Config with _$Config {
 
   factory Config.realFromJson(Map<String, Object?>? json) {
     if (json == null) {
-      return Config(
-        themeProps: defaultThemeProps,
-        hotKeyActions: defaultHotKeyActions,
-      );
+      return const Config(themeProps: defaultThemeProps);
     }
     return Config.fromJson(json);
   }

@@ -141,30 +141,5 @@ void main() {
 
       expect(container.read(hotKeyFailuresProvider).keys, [HotAction.view]);
     });
-
-    testWidgets('releases every shortcut while one is being recorded', (
-      tester,
-    ) async {
-      final (container, registrations) = await pump(
-        tester,
-        respond: () async => [
-          HotKeyFailure(id: HotAction.view.index, reason: 'taken'),
-        ],
-      );
-
-      container.read(hotKeyRecordingProvider.notifier).value = true;
-      await tester.pumpAndSettle();
-
-      expect(registrations.last, isEmpty);
-      expect(container.read(hotKeyFailuresProvider), {
-        HotAction.view: 'taken',
-      }, reason: 'an empty registration says nothing about the bindings');
-
-      container.read(hotKeyRecordingProvider.notifier).value = false;
-      await tester.pumpAndSettle();
-
-      expect(registrations, hasLength(3));
-      expect(registrations.last.single.id, HotAction.view.index);
-    });
   });
 }

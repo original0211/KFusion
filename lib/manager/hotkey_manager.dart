@@ -82,11 +82,6 @@ class _HotKeyManagerState extends ConsumerState<HotKeyManager> {
         _scheduleUpdate();
       }
     }, fireImmediately: true);
-    ref.listenManual(hotKeyRecordingProvider, (prev, next) {
-      if (prev != next) {
-        _scheduleUpdate();
-      }
-    });
   }
 
   void _scheduleUpdate() {
@@ -158,20 +153,16 @@ class _HotKeyManagerState extends ConsumerState<HotKeyManager> {
     }
   }
 
-  /// While the recorder is open nothing is registered, so the OS hands the
-  /// recorder a combination that is already bound instead of running it.
   Future<void> _updateHotKeys() async {
     if (!mounted) {
       return;
     }
-    final isRecording = ref.read(hotKeyRecordingProvider);
     final specs = [
-      if (!isRecording)
-        for (final hotKeyAction in ref.read(hotKeyActionsProvider))
-          ?hotKeyAction.toHotKeySpec(),
+      for (final hotKeyAction in ref.read(hotKeyActionsProvider))
+        ?hotKeyAction.toHotKeySpec(),
     ];
     final failed = await _register(specs);
-    if (!isRecording && mounted) {
+    if (mounted) {
       ref.read(hotKeyFailuresProvider.notifier).value = failed;
     }
   }

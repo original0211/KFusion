@@ -1,7 +1,6 @@
 import 'package:kfusion/bootstrap.dart';
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/providers/app.dart';
-import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -33,30 +32,10 @@ void main() {
     globalState.isAttach = false;
   });
 
-  void setGlobalUa(String value) {
-    container
-        .read(patchClashConfigProvider.notifier)
-        .update((state) => state.copyWith(globalUa: value));
-  }
-
   group('user agent', () {
-    test('falls back to the package user agent when none is configured', () {
-      setGlobalUa('');
-
+    test('is the package user agent', () {
       expect(globalState.ua, _packageInfo.ua);
       expect(globalState.ua, contains('Vessel/v1.2.3'));
-    });
-
-    test('prefers the configured global user agent', () {
-      setGlobalUa('custom-agent/1.0');
-
-      expect(globalState.ua, 'custom-agent/1.0');
-    });
-
-    test('treats a blank configured user agent as unset', () {
-      setGlobalUa('   ');
-
-      expect(globalState.ua, _packageInfo.ua);
     });
   });
 

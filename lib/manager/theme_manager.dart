@@ -40,13 +40,11 @@ final _appThemes = <Brightness, ({Object inputs, ThemeData theme})>{};
 
 ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
   final locale = ref.watch(appSettingProvider.select((state) => state.locale));
-  final themeSetting = ref.watch(
-    themeSettingProvider.select(
-      (state) => (fontFamily: state.fontFamily, pureBlack: state.pureBlack),
-    ),
+  final pureBlack = ref.watch(
+    themeSettingProvider.select((state) => state.pureBlack),
   );
   final colorScheme = ref.watch(genColorSchemeProvider(brightness));
-  final plainDark = brightness == Brightness.dark && themeSetting.pureBlack
+  final plainDark = brightness == Brightness.dark && pureBlack
       ? ref.watch(genColorSchemeProvider(brightness, pureBlack: false))
       : null;
   final locales = [
@@ -55,7 +53,7 @@ ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
   ];
   final inputs = (
     platform: defaultTargetPlatform,
-    themeSetting: themeSetting,
+    pureBlack: pureBlack,
     colorScheme: colorScheme,
     plainDark: plainDark,
     locales: locales.join(','),
@@ -71,14 +69,12 @@ ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
     pageTransitionsTheme: _pageTransitionsTheme,
     actionIconTheme: _actionIconTheme,
     colorScheme: colorScheme,
-    fontFamily: themeSetting.fontFamily,
     fontFamilyFallback: appFontFamilyFallback(
       platform: defaultTargetPlatform,
       locales: locales,
-      fontFamily: themeSetting.fontFamily,
     ),
     extensions: [
-      HaraTheme(HaraPalette.of(brightness, pureBlack: themeSetting.pureBlack)),
+      HaraTheme(HaraPalette.of(brightness, pureBlack: pureBlack)),
       if (brightness == Brightness.dark)
         ElevatedColorScheme(
           // Plain dark is pure black a level up, with the seed's tint that a

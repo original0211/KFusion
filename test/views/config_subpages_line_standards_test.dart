@@ -9,7 +9,6 @@ import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/config/on_demand.dart';
-import 'package:kfusion/views/config/user_agents.dart';
 import 'package:kfusion/widgets/config_item.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -151,40 +150,6 @@ void main() {
         find.descendant(of: addRow, matching: find.byType(EntryButton)),
         findsOneWidget,
       );
-    });
-  });
-
-  group('grouped list subpages', () {
-    ;
-
-    testWidgets('only the current user agent row carries the selection check', (
-      tester,
-    ) async {
-      final container = _container(tester, []);
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) => state.copyWith(userAgents: const ['agent/1', 'agent/2']),
-          );
-      container
-          .read(patchClashConfigProvider.notifier)
-          .update((state) => state.copyWith(globalUa: 'agent/2'));
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: UserAgentsView()),
-        ),
-      );
-      await tester.pump();
-      expect(find.byType(SelectionCheck), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.widgetWithText(DecorationListItem, 'agent/2'),
-          matching: find.byType(SelectionCheck),
-        ),
-        findsOneWidget,
-      );
-      await tester.pump(const Duration(seconds: 1));
     });
   });
 

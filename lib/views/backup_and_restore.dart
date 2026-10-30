@@ -5,11 +5,8 @@ import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/providers/action.dart';
 import 'package:kfusion/providers/app.dart';
-import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/ui.dart';
-import 'package:kfusion/widgets/config_item.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -132,28 +129,6 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
                     ),
                   ],
                 ),
-                const SizedBox(height: HaraSpace.groupGap),
-                _section(
-                  context,
-                  appLocalizations.options,
-                  rows: [
-                    _HaraBoundOptions<RestoreStrategy>(
-                      ConfigOptionsItem<RestoreStrategy>(
-                        title: (l) => l.restoreStrategy,
-                        options: RestoreStrategy.values,
-                        textBuilder: (strategy) => strategy.label,
-                        selector: appSettingProvider.select(
-                          (state) => state.restoreStrategy,
-                        ),
-                        onChanged: (ref, value) => ref
-                            .read(appSettingProvider.notifier)
-                            .update(
-                              (state) => state.copyWith(restoreStrategy: value),
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             );
           },
@@ -204,66 +179,6 @@ class _HaraRow extends StatelessWidget {
     );
     if (onTap == null) return content;
     return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
-/// An options row over an existing [ConfigOptionsItem]: the item's own
-/// selector, options and writer drive it; the row tap opens the popup
-/// menu out of its end value, as the options row it replaces did.
-class _HaraBoundOptions<T> extends ConsumerWidget {
-  const _HaraBoundOptions(this.item);
-
-  final ConfigOptionsItem<T> item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final palette = context.haraPalette;
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    PopupOpen? openMenu;
-    return _HaraRow(
-      onTap: () => openMenu?.call(),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              item.title(appLocalizations),
-              style: HaraText.nodeName(context, palette.ink, current: false),
-            ),
-          ),
-          CommonPopupBox(
-            targetBuilder: (open) {
-              openMenu = open;
-              return InkWell(
-                customBorder: AppShape.hara,
-                onTap: open,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.textBuilder(value),
-                      style: HaraText.statusNode(context, palette.sub),
-                    ),
-                    const SizedBox(width: 4),
-                    GlyphIcon(AppGlyphs.picker, color: palette.sub),
-                  ],
-                ),
-              );
-            },
-            popupBuilder: (_) => CommonPopupMenu(
-              items: [
-                for (final option in item.options)
-                  CommonPopupMenuItem(
-                    label: item.textBuilder(option),
-                    checked: option == value,
-                    onPressed: () => item.onChanged(ref, option),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

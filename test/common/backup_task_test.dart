@@ -368,8 +368,8 @@ void main() {
       expect(vpnProps['accessControlProps'], vpnProps['accessControl']);
       expect(configMap.containsKey('davProps'), isFalse);
       expect(
-        (configMap['appSettingProps'] as Map)['restoreStrategy'],
-        'compatible',
+        (configMap['appSettingProps'] as Map).containsKey('restoreStrategy'),
+        isFalse,
       );
       expect(configMap['proxiesStyleProps'], configMap['proxiesStyle']);
     });

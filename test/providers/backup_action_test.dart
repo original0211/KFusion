@@ -186,38 +186,11 @@ void main() {
       expect(stored.map((item) => item.label), ['From backup']);
     });
 
-    test('an override restore drops profiles the backup omits', () async {
-      final container = buildContainer();
-      await testDatabase.profilesDao.putAll([
-        _profile(9, 'Pre-existing').toCompanion(0),
-      ]);
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.override),
-          );
-
-      await actionOf(container).applyRestore(
-        MigrationData(profiles: [_profile(1, 'From backup')]),
-        RestoreOption.onlyProfiles,
-      );
-
-      final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['From backup']);
-    });
-
     test('a compatible restore keeps profiles the backup omits', () async {
       final container = buildContainer();
       await testDatabase.profilesDao.putAll([
         _profile(9, 'Pre-existing').toCompanion(0),
       ]);
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.compatible),
-          );
 
       await actionOf(container).applyRestore(
         MigrationData(profiles: [_profile(1, 'From backup')]),
@@ -229,47 +202,6 @@ void main() {
         'Pre-existing',
         'From backup',
       });
-    });
-
-    test('a restore drops the cache of a provider it replaced', () async {
-      const dropped = ClashProvider(
-        id: 5,
-        label: 'Dropped',
-        url: 'https://example.com/dropped.yaml',
-      );
-      const kept = ClashProvider(id: 6, label: 'Kept');
-      await testDatabase.clashProvidersDao.putAll(
-        [dropped, kept].map((item) => item.toCompanion()),
-      );
-      for (final path in [
-        await dropped.path,
-        await dropped.compiledPath,
-        await kept.path,
-        await kept.compiledPath,
-      ]) {
-        File(path).createSync(recursive: true);
-      }
-      final container = buildContainer();
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.override),
-          );
-
-      await actionOf(container).applyRestore(
-        const MigrationData(clashProviders: [kept]),
-        RestoreOption.onlyProfiles,
-      );
-
-      expect(File(await dropped.path).existsSync(), isFalse);
-      expect(File(await dropped.compiledPath).existsSync(), isFalse);
-      expect(File(await kept.path).existsSync(), isTrue);
-      expect(
-        File(await kept.compiledPath).existsSync(),
-        isFalse,
-        reason: 'the restored source is compiled again on first use',
-      );
     });
 
     test('rows that fail to restore take their files back out', () async {
@@ -434,18 +366,12 @@ void main() {
   });
 
   group('a config with unreadable values', () {
-    test('restores the rest without keeping a dropped profile', () async {
+    test('restores the rest and keeps the profiles it already has', () async {
       final container = buildContainer();
       await testDatabase.profilesDao.putAll([
         _profile(9, 'Pre-existing').toCompanion(0),
       ]);
       container.read(currentProfileIdProvider.notifier).value = 9;
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.override),
-          );
 
       await actionOf(container).applyRestore(
         MigrationData(
@@ -459,7 +385,10 @@ void main() {
       );
 
       final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['From backup']);
+      expect(stored.map((item) => item.label).toSet(), {
+        'Pre-existing',
+        'From backup',
+      });
       expect(container.read(currentProfileIdProvider), isNull);
       expect(container.read(appSettingProvider).hideIp, true);
     });

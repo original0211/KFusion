@@ -10,7 +10,6 @@ import 'package:kfusion/views/advanced_gate.dart';
 import 'package:kfusion/views/backup_and_restore.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/config/network.dart';
-import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,11 +93,6 @@ class _ToolViewState extends ConsumerState<ToolsView> {
             label: appLocalizations.backupAndRestore,
             target: const BackupAndRestore(),
           ),
-          if (system.isDesktop)
-            _HaraOpenRow(
-              label: appLocalizations.hotkeyManagement,
-              target: const HotKeyView(),
-            ),
           if (system.isAndroid)
             _HaraOpenRow(
               label: appLocalizations.accessControl,

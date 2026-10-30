@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:kfusion/providers/app.dart';
-import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
@@ -41,9 +40,7 @@ class GlobalState {
     return _instance!;
   }
 
-  String get ua => container
-      .read(patchClashConfigProvider.select((state) => state.globalUa))
-      .takeFirstValid([packageInfo.ua]);
+  String get ua => packageInfo.ua;
 
   Future<T?> loadingRun<T>(
     FutureOr<T> Function() futureFunction, {

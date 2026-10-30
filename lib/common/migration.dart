@@ -90,11 +90,12 @@ class Migration {
 
   /// One-off setting changes for upgrades, apart from [currentVersion], which
   /// backups carry and an older app refuses when it is newer than its own.
-  static const upgradeVersion = 2;
+  static const upgradeVersion = 3;
 
   static const Map<int, Config Function(Config config)> _upgrades = {
     1: _resetThemeColors,
     2: _keepGlassLook,
+    3: _resetPorts,
   };
 
   Future<Config> run() async {
@@ -206,6 +207,18 @@ Config _keepGlassLook(Config config) =>
         ),
       )
     : config;
+
+// Ports are fixed at their defaults now that the port form is gone; values a
+// stored config changed come back to the defaults on upgrade.
+Config _resetPorts(Config config) => config.copyWith(
+  patchClashConfig: config.patchClashConfig.copyWith(
+    mixedPort: defaultMixedPort,
+    port: 0,
+    socksPort: 0,
+    redirPort: 0,
+    tproxyPort: 0,
+  ),
+);
 
 bool _isV0(Map<String, Object?>? configMap) =>
     configMap?['proxiesStyle'] != null;

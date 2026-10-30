@@ -751,11 +751,8 @@ void main() {
       ProviderScope.containerOf(tester.element(find.byType(ScanPage)))
           .read(themeSettingProvider.notifier)
           .update(
-            (state) => state.copyWith(
-              themeMode: ThemeMode.light,
-              pureBlack: true,
-              fontFamily: 'Inter',
-            ),
+            (state) =>
+                state.copyWith(themeMode: ThemeMode.light, pureBlack: true),
           );
       await pumpFrames(tester);
 
@@ -770,7 +767,6 @@ void main() {
       expect(theme.brightness, Brightness.dark);
       expect(theme.colorScheme.surface, Colors.black);
       expect(theme.extension<ElevatedColorScheme>(), isNotNull);
-      expect(theme.textTheme.bodyMedium!.fontFamily, 'Inter');
       expect(theme.actionIconTheme?.backButtonIconBuilder, isNotNull);
     });
   });

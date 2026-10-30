@@ -503,9 +503,6 @@ class VpnSections extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
-    final authenticationEnable = ref.watch(
-      networkSettingProvider.select((state) => state.authentication.enable),
-    );
     return Column(
       children: [
         generateSection(
@@ -522,8 +519,6 @@ class VpnSections extends ConsumerWidget {
             DNSHijackingItem(),
           ],
           footer: [
-            if (authenticationEnable)
-              appLocalizations.authenticationSystemProxyDesc,
             appLocalizations.bypassDomainDesc,
             appLocalizations.ipv6InboundDesc,
           ].join('\n'),

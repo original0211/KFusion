@@ -1,16 +1,15 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:kfusion/common/constant.dart';
 import 'package:kfusion/common/feature.dart';
-import 'package:kfusion/common/system_fonts.dart';
+
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/views/font_family.dart';
+
 import 'package:kfusion/views/theme.dart';
 import 'package:kfusion/views/theme_preview.dart';
 import 'package:kfusion/widgets/widgets.dart';
@@ -363,159 +362,6 @@ void main() {
         await tester.pumpAndSettle();
         expect(selected(), destination);
       }
-    });
-  });
-
-  group('font family', () {
-    setUp(() {
-      final reader = systemFontFamiliesReader;
-      addTearDown(() => systemFontFamiliesReader = reader);
-      systemFontFamiliesReader = () async => ['Alpha Sans', 'Beta Serif'];
-    });
-
-    Finder inPage(String text) => find.descendant(
-      of: find.byType(FontFamilyView),
-      matching: find.text(text),
-    );
-
-    final fontsIllustration = find.descendant(
-      of: find.byType(FontFamilyView),
-      matching: find.byKey(const ValueKey(NullStatusIllustration.fonts)),
-    );
-
-    String? previewFamilyOf(WidgetTester tester, String text) =>
-        DefaultTextStyle.of(tester.element(inPage(text))).style.fontFamily;
-
-    Future<void> pumpSettled(WidgetTester tester) async {
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pumpAndSettle();
-    }
-
-    // The group covers the font page itself, pumped directly.
-    Future<void> pumpFontFamilyView(WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1400, 2400);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const TestApp(child: FontFamilyView()),
-        ),
-      );
-    }
-
-    Future<void> openFonts(WidgetTester tester) async {
-      await pumpFontFamilyView(tester);
-      await tester.pumpAndSettle();
-      await pumpSettled(tester);
-    }
-
-    testWidgets('picks an installed font on its page and back to default', (
-      tester,
-    ) async {
-      expect(readTheme().fontFamily, isNull);
-
-      await openFonts(tester);
-      expect(inPage('Installed fonts'), findsOneWidget);
-      expect(previewFamilyOf(tester, 'Beta Serif'), 'Beta Serif');
-
-      await tester.tap(inPage('Beta Serif'));
-      await tester.pumpAndSettle();
-      expect(readTheme().fontFamily, 'Beta Serif');
-      expect(find.byType(FontFamilyView), findsOneWidget);
-
-      await tester.tap(inPage('Default'));
-      await tester.pumpAndSettle();
-      expect(readTheme().fontFamily, isNull);
-    });
-
-    testWidgets('lists the fonts as the page opens and gives the names '
-        'their fonts once it has settled', (tester) async {
-      var reads = 0;
-      systemFontFamiliesReader = () async {
-        reads++;
-        return ['Arrival Sans'];
-      };
-      await pumpFontFamilyView(tester);
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
-      await tester.pump(const Duration(milliseconds: 16));
-      expect(reads, 1);
-      expect(fontsIllustration, findsNothing);
-      expect(inPage('Arrival Sans'), findsOneWidget);
-
-      await pumpSettled(tester);
-      expect(previewFamilyOf(tester, 'Arrival Sans'), 'Arrival Sans');
-    });
-
-    testWidgets('shows the loading illustration while the fonts take long', (
-      tester,
-    ) async {
-      final families = Completer<List<String>>();
-      systemFontFamiliesReader = () => families.future;
-      await pumpFontFamilyView(tester);
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(fontsIllustration, findsNothing);
-
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(fontsIllustration, findsOneWidget);
-      expect(inPage('Default'), findsNothing);
-
-      families.complete(['Alpha Sans']);
-      await pumpSettled(tester);
-      expect(inPage('Alpha Sans'), findsOneWidget);
-      expect(fontsIllustration, findsNothing);
-    });
-
-    testWidgets('gives each name its own font one per frame', (tester) async {
-      const families = ['Preview One', 'Preview Two', 'Preview Three'];
-      var loaded = false;
-      systemFontFamiliesReader = () async {
-        loaded = true;
-        return families;
-      };
-      await pumpFontFamilyView(tester);
-      for (var i = 0; i < 20 && !loaded; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
-      await tester.pump(const Duration(seconds: 1));
-
-      int shown() => families
-          .where(
-            (family) =>
-                inPage(family).evaluate().isNotEmpty &&
-                previewFamilyOf(tester, family) == family,
-          )
-          .length;
-      final counts = [shown()];
-      while (counts.last < families.length && counts.length < 10) {
-        await tester.pump();
-        counts.add(shown());
-      }
-
-      expect(counts.first, lessThan(families.length));
-      expect(counts.last, families.length);
-      for (var i = 1; i < counts.length; i++) {
-        expect(counts[i] - counts[i - 1], lessThanOrEqualTo(1));
-      }
-    });
-
-    testWidgets('still offers the default when no font can be listed', (
-      tester,
-    ) async {
-      systemFontFamiliesReader = () async => throw const OSError('fc', 1);
-      await pumpThemeView(tester);
-
-      await openFonts(tester);
-
-      expect(inPage('Default'), findsOneWidget);
-      expect(inPage('Installed fonts'), findsNothing);
-      expect(fontsIllustration, findsNothing);
     });
   });
 

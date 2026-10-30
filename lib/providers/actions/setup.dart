@@ -316,10 +316,8 @@ class SetupAction extends _$SetupAction {
         await _restartCoreAfterAuthorization();
         return;
       }
-      final networkSetting = ref.read(networkSettingProvider);
       final message = await _core.updateConfig(
         _effectivePatchConfig(patchConfig).toUpdateParams(
-          authentication: networkSetting.authentication.credentials,
           skipCertVerify: !ref.read(appSettingProvider).checkCertificate,
         ),
       );
@@ -444,7 +442,6 @@ class SetupAction extends _$SetupAction {
         (state) => (
           appendSystemDns: state.appendSystemDns,
           bypassPrivateRoute: state.bypassPrivateRoute,
-          authentication: state.authentication,
         ),
       ),
     );
@@ -485,7 +482,7 @@ class SetupAction extends _$SetupAction {
         keepEmptyDnsOverrides: setupState.profileType != ProfileType.custom,
         appendSystemDns: appendSystemDns,
         defaultUA: defaultUA,
-        authentication: networkSetting.authentication.credentials,
+        authentication: const [],
         safeMode: ref.read(safeModeProvider),
       ),
     );

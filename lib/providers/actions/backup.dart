@@ -91,9 +91,6 @@ class BackupAction extends _$BackupAction {
     final config = option == RestoreOption.onlyProfiles || configMap == null
         ? null
         : Config.fromJson(configMap);
-    final isOverride =
-        ref.read(appSettingProvider).restoreStrategy ==
-        RestoreStrategy.override;
     final previousProviders = await database.clashProvidersDao.query().get();
     final putBack = stagingDirPath == null
         ? null
@@ -107,7 +104,7 @@ class BackupAction extends _$BackupAction {
         clashProviders: data.clashProviders,
         customProxies: data.customProxies,
         proxyDialers: data.proxyDialers,
-        isOverride: isOverride,
+        isOverride: false,
       );
     } catch (_) {
       await putBack?.call();

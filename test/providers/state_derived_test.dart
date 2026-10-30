@@ -768,19 +768,7 @@ void main() {
     expect(container.read(provider), isNot(same(first)));
   });
 
-  test('hotkey, profile, and extend providers expose defaults', () {
-    const action = HotKeyAction(
-      action: HotAction.start,
-      key: 1,
-      modifiers: {KeyboardModifier.control},
-    );
-    container.read(hotKeyActionsProvider.notifier).update((_) => [action]);
-    expect(container.read(getHotKeyActionProvider(HotAction.start)), action);
-    expect(
-      container.read(getHotKeyActionProvider(HotAction.tun)).action,
-      HotAction.tun,
-    );
-
+  test('profile and extend providers expose defaults', () {
     final profile = Profile.normal().copyWith(extendType: ExtendType.script);
     _profiles(container).replace([profile]);
     expect(container.read(profileProvider(profile.id)), profile);
@@ -911,40 +899,6 @@ void main() {
       '172.16.0.0/12',
       '::/0',
     ]);
-  });
-
-  // VpnService.setHttpProxy cannot carry credentials.
-  test('local authentication withholds the VPN system proxy', () async {
-    await AppLocalizations.load(const Locale('en'));
-    container.listen(sharedStateProvider, (_, _) {});
-    await container.read(vpnOptionsProvider.future);
-    expect(container.read(sharedStateProvider).vpnOptions?.systemProxy, true);
-
-    container
-        .read(networkSettingProvider.notifier)
-        .update(
-          (state) => state.copyWith(
-            authentication: const AuthenticationProps(
-              enable: true,
-              username: 'user',
-              password: 'pass',
-            ),
-          ),
-        );
-    await container.read(vpnOptionsProvider.future);
-    expect(container.read(sharedStateProvider).vpnOptions?.systemProxy, false);
-    expect(container.read(updateParamsProvider).authentication, ['user:pass']);
-
-    container
-        .read(networkSettingProvider.notifier)
-        .update(
-          (state) => state.copyWith(
-            authentication: const AuthenticationProps(enable: false),
-          ),
-        );
-    await container.read(vpnOptionsProvider.future);
-    expect(container.read(sharedStateProvider).vpnOptions?.systemProxy, true);
-    expect(container.read(updateParamsProvider).authentication, isEmpty);
   });
 
   test('the setup patch changes only with what a re-apply carries', () {

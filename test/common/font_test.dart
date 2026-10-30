@@ -3,15 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  List<String> fallback(
-    TargetPlatform platform,
-    List<Locale> locales, {
-    String? fontFamily,
-  }) => appFontFamilyFallback(
-    platform: platform,
-    locales: locales,
-    fontFamily: fontFamily,
-  );
+  List<String> fallback(TargetPlatform platform, List<Locale> locales) =>
+      appFontFamilyFallback(platform: platform, locales: locales);
 
   group('Han variant', () {
     test('follows a Chinese, Japanese or Korean UI language', () {
@@ -73,26 +66,7 @@ void main() {
     ]);
   });
 
-  test('puts the platform family behind a chosen one', () {
-    expect(
-      fallback(TargetPlatform.windows, const [
-        Locale('zh'),
-      ], fontFamily: 'LXGW WenKai'),
-      ['Segoe UI', 'Microsoft YaHei UI'],
-    );
-    expect(
-      fallback(TargetPlatform.macOS, const [Locale('en')], fontFamily: 'Menlo'),
-      ['.AppleSystemUIFont', 'PingFang SC'],
-    );
-  });
-
   test('leaves Android to its own locale-aware fallback', () {
     expect(fallback(TargetPlatform.android, const [Locale('en')]), isEmpty);
-    expect(
-      fallback(TargetPlatform.android, const [
-        Locale('en'),
-      ], fontFamily: 'serif'),
-      ['Roboto'],
-    );
   });
 }

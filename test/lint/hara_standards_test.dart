@@ -22,7 +22,6 @@ const aSurfaces = <String>[
   'lib/views/access.dart',
   'lib/views/backup_and_restore.dart',
   'lib/views/disclaimer.dart',
-  'lib/views/hotkey.dart',
   'lib/views/theme.dart',
 ];
 

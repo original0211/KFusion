@@ -38,8 +38,6 @@ Future<void> _pumpDeveloperView(
 
 void main() {
   setUpAll(() {
-    // canCrashCore reads appEnv, which only the real app bootstrap populates.
-    // 'dev' also enables the crash-test row.
     globalState.appEnv = 'dev';
   });
 
@@ -54,19 +52,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(container.read(appSettingProvider).developerMode, !initial);
-    expect(tester.takeException(), null);
-  });
-
-  testWidgets('logs test fills the log buffer', (tester) async {
-    final container = _containerFor(tester);
-    await _pumpDeveloperView(tester, container);
-
-    expect(container.read(logsProvider).list, isEmpty);
-
-    await tester.tap(find.text(currentAppLocalizations.logsTest));
-    await tester.pumpAndSettle();
-
-    expect(container.read(logsProvider).list, isNotEmpty);
     expect(tester.takeException(), null);
   });
 
@@ -88,16 +73,6 @@ void main() {
       find.text(currentAppLocalizations.confirmClearAllData),
       findsNothing,
     );
-    expect(tester.takeException(), null);
-  });
-
-  testWidgets('message test surfaces a notification', (tester) async {
-    final container = _containerFor(tester);
-    await _pumpDeveloperView(tester, container);
-
-    await tester.tap(find.text(currentAppLocalizations.messageTest));
-    await tester.pumpAndSettle();
-
     expect(tester.takeException(), null);
   });
 }

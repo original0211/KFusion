@@ -1,6 +1,4 @@
-import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/providers/app.dart';
-import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/views/config/advanced.dart';
@@ -8,8 +6,6 @@ import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/config/on_demand.dart';
-import 'package:kfusion/views/config/user_agents.dart';
-import 'package:kfusion/views/hotkey.dart';
 import 'package:kfusion/views/theme.dart';
 import 'package:kfusion/views/views.dart';
 import 'package:material_ui/material_ui.dart';
@@ -19,11 +15,6 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/test_app.dart';
 import '../helpers/test_database_providers.dart';
 import '../helpers/test_profiles.dart';
-
-Finder _portField(String label) => find.descendant(
-  of: find.widgetWithText(FormRow, label),
-  matching: find.byType(TextFormField),
-);
 
 void main() {
   final cases = <String, Widget>{
@@ -38,9 +29,7 @@ void main() {
     'on demand config': const OnDemandView(),
     'theme': const ThemeView(),
     'backup and restore': const BackupAndRestore(),
-    'hotkeys': const HotKeyView(),
     'access control': const AccessView(),
-    'user agents': const UserAgentsView(),
   };
 
   for (final entry in cases.entries) {
@@ -143,85 +132,4 @@ void main() {
       expect(tester.takeException(), null);
     });
   }
-
-  testWidgets('user agent item opens the page that applies a preset', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1000, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final container = ProviderContainer(
-      overrides: [profilesProvider.overrideWith(TestProfiles.new)],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-    container
-        .read(viewSizeProvider.notifier)
-        .update((_) => const Size(1000, 800));
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: TestApp(
-          child: Scaffold(body: ListView(children: const [UaItem()])),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.text('User-Agent'));
-    await tester.pumpAndSettle();
-    expect(find.byType(UserAgentsView), findsOneWidget);
-    expect(find.text('clash-verge/v2.4.2'), findsOneWidget);
-
-    await tester.tap(find.text('clash-verge/v2.4.2'));
-    await tester.pumpAndSettle();
-
-    expect(
-      container.read(patchClashConfigProvider).globalUa,
-      'clash-verge/v2.4.2',
-    );
-    expect(tester.takeException(), null);
-  });
-
-  testWidgets('the port form refuses an emptied port', (tester) async {
-    tester.view.physicalSize = const Size(1000, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final container = ProviderContainer(
-      overrides: [profilesProvider.overrideWith(TestProfiles.new)],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-    container
-        .read(viewSizeProvider.notifier)
-        .update((_) => const Size(1000, 800));
-    final before = container.read(patchClashConfigProvider);
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const TestApp(child: Scaffold(body: PortItem())),
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.text('Port').first);
-    await tester.pumpAndSettle();
-
-    await tester.enterText(_portField('SOCKS port'), '');
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.widgetWithText(TextButton, 'Save'));
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), null);
-    expect(container.read(patchClashConfigProvider), before);
-    expect(_portField('SOCKS port'), findsOneWidget);
-    expect(find.text('SOCKS port cannot be empty'), findsOneWidget);
-  });
 }

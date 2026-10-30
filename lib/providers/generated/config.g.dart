@@ -352,7 +352,7 @@ final class HotKeyActionsProvider
   }
 }
 
-String _$hotKeyActionsHash() => r'5512b83196646a49fa7307282315d9dccc658dc8';
+String _$hotKeyActionsHash() => r'c2272c3f36abf82186a92e9779bd94425f18f9e4';
 
 abstract class _$HotKeyActions extends $Notifier<List<HotKeyAction>> {
   List<HotKeyAction> build();
@@ -567,4 +567,4 @@ final class _ConfigProvider extends $FunctionalProvider<Config, Config, Config>
   }
 }
 
-String _$_configHash() => r'6fe85139ff38d6d932918bb5e6ed9aaf98855aec';
+String _$_configHash() => r'd30c420f353493b75d4a27b753c0288566fc1631';

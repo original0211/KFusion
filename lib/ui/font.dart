@@ -67,11 +67,9 @@ bool _isTraditional(Locale locale) => switch (locale.scriptCode) {
 List<String> appFontFamilyFallback({
   required TargetPlatform platform,
   required Iterable<Locale> locales,
-  String? fontFamily,
 }) {
   final base = Typography.material2021(platform: platform).black.bodyMedium!;
   return [
-    if (fontFamily != null) ?base.fontFamily,
     ...?base.fontFamilyFallback,
     ...?_hanFamilies[platform]?[_hanVariantOf(locales)],
   ];
