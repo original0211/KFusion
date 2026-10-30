@@ -6,12 +6,14 @@ import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/state.dart';
+import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
 
@@ -183,7 +185,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('IPv6'), findsOneWidget);
-    await tester.tap(find.byType(Switch).last);
+    await tester.tap(find.text('IPv6'));
     await tester.pump();
     expect(config().dns.ipv6, isTrue);
 
@@ -239,13 +241,17 @@ void main() {
     await tester.enterText(find.byType(TextField), '');
     await tester.tap(find.text(currentAppLocalizations.submit));
     await tester.pumpAndSettle();
-    final defaultNameserver = find.ancestor(
-      of: find.text('Default Nameserver'),
-      matching: find.byType(ConfigListEditItem),
+    await tester.tap(find.text('Default Nameserver'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pump();
+    await tester.tap(find.byGlyph(AppGlyphs.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(TextButton, currentAppLocalizations.delete),
     );
-    tester
-        .widget<ConfigListEditItem>(defaultNameserver)
-        .onChanged(tester.element(defaultNameserver) as WidgetRef, const []);
+    await tester.pumpAndSettle();
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     expect(config().dnsOverrideKeys, hasLength(3));

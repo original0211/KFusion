@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:kfusion/features/form/form_row.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/ui.dart';
@@ -55,44 +54,29 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('sections are headed panels of shared family rows', (
+    testWidgets('sections are headed hara sections of hairline rows', (
       tester,
     ) async {
       await pumpNetwork(tester);
-      final headers = tester
-          .widgetList<ListHeader>(find.byType(ListHeader))
-          .map((header) => header.title)
-          .toList();
-      expect(headers, containsAll(['System', 'Options', 'TUN', 'Outbound']));
-      expect(find.byType(DecorationListItem), findsWidgets);
-      expect(find.byType(FormRow), findsWidgets);
+      for (final title in ['System', 'Options', 'TUN', 'Outbound']) {
+        expect(find.text(title), findsWidgets);
+      }
+      expect(find.byType(HaraHairline), findsWidgets);
     });
 
-    testWidgets('section rows carry the cabin rim at rest', (tester) async {
+    testWidgets('section rows rest on the hara hairline', (tester) async {
       await pumpNetwork(tester);
-      final context = tester.element(find.byType(DecorationListItem).first);
-      final scheme = Theme.of(context).colorScheme;
-      final button = tester.widget<FilledButton>(
-        find
-            .descendant(
-              of: find.byType(DecorationListItem).first,
-              matching: find.byType(FilledButton),
-            )
-            .first,
-      );
-      final side = button.style?.side?.resolve(const <WidgetState>{});
-      expect(side?.color, scheme.cabinRim);
+      final context = tester.element(find.byType(HaraHairline).first);
+      final line = tester.widget<HaraHairline>(find.byType(HaraHairline).first);
+      expect(line.color, context.haraPalette.line);
     });
 
-    testWidgets('number rows surface their value as the subtitle', (
+    testWidgets('number rows surface their value under the label', (
       tester,
     ) async {
       await pumpNetwork(tester);
-      final subtitled = tester
-          .widgetList<ListItem>(find.byType(ListItem))
-          .where((item) => item.subtitle != null)
-          .length;
-      expect(subtitled, greaterThanOrEqualTo(2));
+      expect(find.text('15 seconds'), findsOneWidget);
+      expect(find.text('30 seconds'), findsOneWidget);
     });
   });
 }

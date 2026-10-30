@@ -112,11 +112,11 @@ void main() {
 
         expect(testCase.read(container), testCase.initial);
 
-        await tester.tap(find.byType(Switch));
+        await tester.tap(find.byWidget(testCase.widget));
         await tester.pumpAndSettle();
         expect(testCase.read(container), !testCase.initial);
 
-        await tester.tap(find.byType(Switch));
+        await tester.tap(find.byWidget(testCase.widget));
         await tester.pumpAndSettle();
         expect(testCase.read(container), testCase.initial);
       });
@@ -129,7 +129,7 @@ void main() {
       final initial = container.read(patchClashConfigProvider).tun.stack;
       final target = TunStack.values.firstWhere((item) => item != initial);
 
-      await tester.tap(find.byType(ListTile).first);
+      await tester.tap(find.text(currentAppLocalizations.stackMode));
       await tester.pumpAndSettle();
       await tester.tap(find.text(target.name).last);
       await tester.pumpAndSettle();
@@ -148,7 +148,7 @@ void main() {
         (item) => item != initial,
       );
 
-      await tester.tap(find.byType(ListTile).first);
+      await tester.tap(find.text(currentAppLocalizations.interfaceNameMode));
       await tester.pumpAndSettle();
       await tester.tap(find.text(_interfaceNameModeLabel(target)).last);
       await tester.pumpAndSettle();

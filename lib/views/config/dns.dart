@@ -344,15 +344,13 @@ class _PolicyItem extends ConsumerWidget {
     final appLocalizations = context.appLocalizations;
     final title = this.title(appLocalizations);
     final policy = ref.watch(model.selectModel(select));
-    return ListItem.open(
+    return _HaraOpenRow(
+      label: title,
+      subtitle: policy.isEmpty
+          ? appLocalizations.none
+          : appLocalizations.itemsCount(policy.length),
       leading: leading,
-      title: Text(title),
-      subtitle: Text(
-        policy.isEmpty
-            ? appLocalizations.none
-            : appLocalizations.itemsCount(policy.length),
-      ),
-      widget: MapEditView(
+      target: MapEditView(
         title: title,
         entries: policy,
         keyMaxLength: TextInputLimits.domain,
@@ -369,6 +367,109 @@ class _PolicyItem extends ConsumerWidget {
           model.modelWriter(update)(ref, next);
         }
       },
+    );
+  }
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
+  }
+}
+
+/// A row that opens a page: an ink label, its value under it when it has
+/// one, and a sub arrow. The open follows the list row it replaces —
+/// sheet push or open container — and the result reaches [onChanged]
+/// the same way.
+class _HaraOpenRow extends StatelessWidget {
+  const _HaraOpenRow({
+    required this.label,
+    this.subtitle,
+    this.leading,
+    required this.target,
+    this.onChanged,
+  });
+
+  final String label;
+  final String? subtitle;
+  final Widget? leading;
+  final Widget target;
+  final ValueChanged<dynamic>? onChanged;
+
+  Widget _content(BuildContext context) {
+    final palette = context.haraPalette;
+    return Row(
+      children: [
+        if (leading != null) ...[leading!, const SizedBox(width: 16)],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: HaraText.nodeName(context, palette.ink, current: false),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: HaraSpace.profileMetaGap),
+                Text(
+                  subtitle!,
+                  style: HaraText.profileMeta(context, palette.sub),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Text('→', style: HaraText.addRowArrow(context, palette.sub)),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    if (!context.isMobileView) {
+      return _HaraRow(
+        onTap: () async {
+          final result = await showExtend<dynamic>(
+            context,
+            props: const ExtendProps(forceFull: true),
+            builder: (_) => target,
+          );
+          onChanged?.call(result);
+        },
+        child: _content(context),
+      );
+    }
+    return OpenContainer<dynamic>(
+      clipBehavior: Clip.none,
+      closedColor: palette.bg,
+      closedShape: AppShape.hara,
+      closedBuilder: (context, action) {
+        return _HaraRow(onTap: action, child: _content(context));
+      },
+      onClosed: onChanged,
+      openBuilder: (_, _) => target,
     );
   }
 }

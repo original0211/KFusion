@@ -9,7 +9,6 @@ import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/network.dart';
 import 'package:kfusion/views/config/on_demand.dart';
-import 'package:kfusion/widgets/config_item.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,10 +66,6 @@ ProviderContainer _container(
   return container;
 }
 
-ColorScheme _schemeOf(WidgetTester tester, Finder finder) {
-  return Theme.of(tester.element(finder)).colorScheme;
-}
-
 void main() {
   setUpAll(() async {
     final home = Directory.systemTemp.createTempSync('pc5-standards-');
@@ -95,7 +90,7 @@ void main() {
       expect(find.text('Add override entry'), findsOneWidget);
     });
 
-    testWidgets('filled dns entries render as config family rows', (
+    testWidgets('filled dns entries render as hara family rows', (
       tester,
     ) async {
       final container = _container(tester, []);
@@ -117,21 +112,16 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.byType(ConfigToggleItem), findsOneWidget);
-      expect(
-        find.byWidgetPredicate((widget) => widget is ConfigOptionsItem),
-        findsOneWidget,
-      );
-      expect(find.byType(ConfigListEditItem), findsOneWidget);
+      expect(find.text('IPv6'), findsOneWidget);
+      expect(find.text('redir-host'), findsOneWidget);
+      expect(find.text('Nameserver'), findsWidgets);
       expect(find.byType(EntryButton), findsNWidgets(3));
       await tester.pump(const Duration(seconds: 1));
     });
   });
 
   group('network sample page', () {
-    testWidgets('the tun add row keeps the shared primary add form', (
-      tester,
-    ) async {
+    testWidgets('the tun add row takes the hara add form', (tester) async {
       final container = _container(tester, []);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -140,14 +130,10 @@ void main() {
         ),
       );
       await tester.pump();
-      final addRow = find.byWidgetPredicate(
-        (widget) => widget is FormRow && widget.key == const ValueKey(#add),
-      );
+      final addRow = find.byKey(const ValueKey(#add));
       expect(addRow, findsOneWidget);
-      final row = tester.widget<FormRow>(addRow);
-      expect(row.titleStyle?.color, _schemeOf(tester, addRow).primary);
       expect(
-        find.descendant(of: addRow, matching: find.byType(EntryButton)),
+        find.descendant(of: addRow, matching: find.text('→')),
         findsOneWidget,
       );
     });
