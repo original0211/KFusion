@@ -142,6 +142,25 @@ void main() {
       }
     });
 
+    // The dialog layer is a shared component: held by this pin, not aSurfaces.
+    test('the dialog layer stays off the glass and the pill', () {
+      final source = read('lib/ui/dialog.dart');
+      for (final token in const [
+        '_AlertGlass',
+        'LiquidGlassStyle',
+        'LiquidGlassRim',
+        'glassFillOf',
+        'glassMenuShadows',
+        'AppCorner.alert',
+        'AppShape.full',
+        'BoxShadow',
+      ]) {
+        expect(source.contains(token), isFalse, reason: 'dialog.dart: $token');
+      }
+      expect(source, contains('AppShape.hara'));
+      expect(source, contains('HaraHairline'));
+    });
+
     test('the disc mark keeps its settled values', () {
       expect(DiscGeometry.dotDirection, closeTo(157 * math.pi / 180, 1e-12));
       expect(DiscGeometry.dotDiameterRatio, 0.16);

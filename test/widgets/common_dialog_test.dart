@@ -114,7 +114,7 @@ void main() {
     expect(no.right, lessThan(yes.left));
   });
 
-  testWidgets('a destructive last action is red on the plain fill', (
+  testWidgets('a destructive last action is red text and no action is filled', (
     tester,
   ) async {
     await _pumpDialog(tester, ['Cancel', 'Delete'], destructive: true);
@@ -123,9 +123,26 @@ void main() {
     ).colorScheme;
 
     expect(_labelColor(tester, 'Delete'), colorScheme.destructive);
-    expect(_labelColor(tester, 'Cancel'), colorScheme.onSurface);
-    expect(_buttonFill(tester, 'Delete'), _buttonFill(tester, 'Cancel'));
-    expect(_buttonFill(tester, 'Delete'), isNot(colorScheme.primary));
+    expect(_labelColor(tester, 'Cancel'), HaraPalette.light.ink);
+    expect(_buttonFill(tester, 'Delete'), Colors.transparent);
+    expect(_buttonFill(tester, 'Cancel'), Colors.transparent);
+  });
+
+  testWidgets('the pane is the palette field with a hairline edge', (
+    tester,
+  ) async {
+    await _pumpDialog(tester, ['No', 'Yes']);
+
+    final dialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
+    expect(dialog.backgroundColor, HaraPalette.light.bg);
+    expect(dialog.elevation, 0);
+    expect(
+      find.descendant(
+        of: find.byType(CommonDialog),
+        matching: find.byType(HaraHairline),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a row follows the reading direction', (tester) async {
@@ -192,9 +209,7 @@ void main() {
     expect(find.byType(CommonDialog), findsNothing);
   });
 
-  testWidgets('on glass a pane lies under the surface and fades with it', (
-    tester,
-  ) async {
+  testWidgets('on glass the dialog keeps its own flat pane', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         builder: (_, child) => LiquidGlassScope(
@@ -219,18 +234,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(_dialogOpacity(tester), inExclusiveRange(0, 1));
-    expect(LiquidGlassHost.debugLastCapture!.panes, hasLength(1));
 
     await tester.pumpAndSettle();
-    final surface = find
-        .descendant(
-          of: find.byType(AlertDialog),
-          matching: find.byType(Material),
-        )
-        .first;
+    expect(find.byType(CommonDialog), findsOneWidget);
     expect(
-      LiquidGlassHost.debugLastCapture!.panes.single.pane,
-      rectMoreOrLessEquals(tester.getRect(surface)),
+      LiquidGlassHost.debugLastCapture?.panes ?? const [],
+      isEmpty,
+      reason: 'the dialog registers no glass pane of its own',
     );
   });
 
