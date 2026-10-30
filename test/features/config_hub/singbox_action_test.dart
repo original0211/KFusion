@@ -377,6 +377,10 @@ void main() {
   });
 
   group('syncModeToSingBox', () {
+    setUpAll(() {
+      HttpOverrides.global = null;
+    });
+
     Future<HttpServer> serve(
       void Function(String method, String path, String body) record, {
       int status = HttpStatus.noContent,
