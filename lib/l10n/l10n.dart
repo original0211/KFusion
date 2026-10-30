@@ -1965,6 +1965,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Testing delays…`
+  String get actionDelayTesting {
+    return Intl.message(
+      'Testing delays…',
+      name: 'actionDelayTesting',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Update profiles`
   String get actionUpdateProfiles {
     return Intl.message(

@@ -200,6 +200,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "account": MessageLookupByLibrary.simpleMessage("계정"),
     "action": MessageLookupByLibrary.simpleMessage("동작"),
     "actionDelayTest": MessageLookupByLibrary.simpleMessage("모든 지연 테스트"),
+    "actionDelayTesting": MessageLookupByLibrary.simpleMessage("지연 테스트 중…"),
     "actionDirectMode": MessageLookupByLibrary.simpleMessage("직접 모드"),
     "actionGlobalMode": MessageLookupByLibrary.simpleMessage("전역 모드"),
     "actionMode": MessageLookupByLibrary.simpleMessage("모드 전환"),

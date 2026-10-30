@@ -599,6 +599,16 @@ SingBoxRenderResult renderSingBox(
   }
   final ruleSets = <String, Map<String, Object?>>{};
   final rules = _templateRules(ruleSets);
+  // Panel mode switches only take effect for modes on sing-box's mode
+  // list, which is collected from clash_mode rules; the pair rides
+  // directly under the template's DNS hijack rule, so DNS is answered
+  // in every mode and the template rules below keep Rule mode.
+  final routeRules = <Map<String, Object?>>[
+    rules.first,
+    {'clash_mode': 'Global', 'outbound': primaryOutbound},
+    {'clash_mode': 'Direct', 'outbound': 'direct'},
+    ...rules.skip(1),
+  ];
   final dnsRuleSet = _asString(ruleSets['geosite-cn']?['tag'], 'geosite-cn');
   final inbounds = <Map<String, Object?>>[
     {
@@ -655,7 +665,7 @@ SingBoxRenderResult renderSingBox(
     'outbounds': outbounds,
     if (endpoints.isNotEmpty) 'endpoints': endpoints,
     'route': {
-      'rules': rules,
+      'rules': routeRules,
       'rule_set': ruleSets.values.toList(),
       'final': primaryOutbound,
       'auto_detect_interface': true,

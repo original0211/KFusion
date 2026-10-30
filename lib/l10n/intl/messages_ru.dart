@@ -226,6 +226,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "actionDelayTest": MessageLookupByLibrary.simpleMessage(
       "Проверить все задержки",
     ),
+    "actionDelayTesting": MessageLookupByLibrary.simpleMessage(
+      "Проверка задержек…",
+    ),
     "actionDirectMode": MessageLookupByLibrary.simpleMessage("Прямой режим"),
     "actionGlobalMode": MessageLookupByLibrary.simpleMessage(
       "Глобальный режим",
@@ -876,9 +879,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),

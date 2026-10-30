@@ -223,6 +223,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "account": MessageLookupByLibrary.simpleMessage("Account"),
     "action": MessageLookupByLibrary.simpleMessage("Action"),
     "actionDelayTest": MessageLookupByLibrary.simpleMessage("Test all delays"),
+    "actionDelayTesting": MessageLookupByLibrary.simpleMessage(
+      "Testing delays…",
+    ),
     "actionDirectMode": MessageLookupByLibrary.simpleMessage("Direct mode"),
     "actionGlobalMode": MessageLookupByLibrary.simpleMessage("Global mode"),
     "actionMode": MessageLookupByLibrary.simpleMessage("Switch mode"),
@@ -843,9 +846,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Enter the rule content",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),

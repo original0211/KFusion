@@ -192,6 +192,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "account": MessageLookupByLibrary.simpleMessage("账号"),
     "action": MessageLookupByLibrary.simpleMessage("操作"),
     "actionDelayTest": MessageLookupByLibrary.simpleMessage("测试全部延迟"),
+    "actionDelayTesting": MessageLookupByLibrary.simpleMessage("正在测速…"),
     "actionDirectMode": MessageLookupByLibrary.simpleMessage("直连模式"),
     "actionGlobalMode": MessageLookupByLibrary.simpleMessage("全局模式"),
     "actionMode": MessageLookupByLibrary.simpleMessage("切换模式"),

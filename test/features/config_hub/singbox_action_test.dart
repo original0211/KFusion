@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kfusion/core/singbox/singbox_runner.dart';
 import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
 
@@ -72,6 +73,85 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('proceeds when the post-stop verification passes', () async {
+      var verified = 0;
+      await ensureMihomoStopped(
+        mihomoRunning: () => true,
+        stopMihomo: () async => true,
+        verifyStopped: () async {
+          verified++;
+          return true;
+        },
+      );
+      expect(verified, 1);
+    });
+
+    test('aborts when the core answers but keeps the port', () async {
+      await expectLater(
+        ensureMihomoStopped(
+          mihomoRunning: () => true,
+          stopMihomo: () async => true,
+          verifyStopped: () async => false,
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            'mihomo 已应答停止，但运行状态或端口尚未释放，sing-box 未启动。',
+          ),
+        ),
+      );
+    });
+  });
+
+  group('portOccupiedDetail', () {
+    const binary = r'C:\Users\me\AppData\KFusion\sing-box.exe';
+
+    test('names an unidentified holder as unjudged', () async {
+      final detail = await portOccupiedDetail(
+        port: 7890,
+        singBoxBinary: binary,
+        findOwner: (_) async => null,
+      );
+      expect(detail, '端口 7890 仍被其他程序占用（未能判定属主），sing-box 未启动');
+    });
+
+    test('names a leftover sing-box of this app', () async {
+      final detail = await portOccupiedDetail(
+        port: 7890,
+        singBoxBinary: binary,
+        findOwner: (_) async => const PortOwnerInfo(
+          pid: 777,
+          imageName: 'sing-box.exe',
+          executablePath: binary,
+        ),
+      );
+      expect(detail, '端口 7890 仍被上次运行遗留的 sing-box（PID 777）占用，sing-box 未启动');
+    });
+
+    test('names the app mihomo core process', () async {
+      final detail = await portOccupiedDetail(
+        port: 7890,
+        singBoxBinary: binary,
+        findOwner: (_) async => const PortOwnerInfo(
+          pid: 888,
+          imageName: 'KFusionCore.exe',
+          executablePath: r'C:\Program Files\Vessel\KFusionCore.exe',
+        ),
+      );
+      expect(detail, '端口 7890 仍被本应用 mihomo 核心进程（PID 888）占用，sing-box 未启动');
+    });
+
+    test('names a foreign program by image and pid', () async {
+      final detail = await portOccupiedDetail(
+        port: 7890,
+        singBoxBinary: binary,
+        findOwner: (_) async =>
+            const PortOwnerInfo(pid: 999, imageName: 'other.exe'),
+      );
+      expect(detail, '端口 7890 仍被 other.exe（PID 999）占用，sing-box 未启动');
     });
   });
 

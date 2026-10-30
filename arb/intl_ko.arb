@@ -256,6 +256,7 @@
   "actionGlobalMode": "전역 모드",
   "actionDirectMode": "직접 모드",
   "actionDelayTest": "모든 지연 테스트",
+  "actionDelayTesting": "지연 테스트 중…",
   "actionUpdateProfiles": "프로필 업데이트",
   "disclaimer": "면책 조항",
   "disclaimerDesc": "Vessel(이하 “본 소프트웨어”)를 사용하기 전에 이 문서를 주의 깊게 읽고 모든 내용을 이해했는지 확인하세요. “동의”를 누르면 아래 모든 조항을 읽고 이해했으며 수락한 것으로 간주합니다. 동의하지 않으면 “종료”를 누르고 본 소프트웨어의 사용을 중단하세요.",

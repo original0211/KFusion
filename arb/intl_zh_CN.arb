@@ -256,6 +256,7 @@
   "actionGlobalMode": "全局模式",
   "actionDirectMode": "直连模式",
   "actionDelayTest": "测试全部延迟",
+  "actionDelayTesting": "正在测速…",
   "actionUpdateProfiles": "更新全部配置",
   "disclaimer": "免责声明",
   "disclaimerDesc": "在使用 Vessel（以下简称“本软件”）前，请仔细阅读并充分理解本声明的全部内容。点击“同意”即表示你已阅读、理解并接受以下全部条款；如不同意，请点击“退出”并停止使用本软件。",

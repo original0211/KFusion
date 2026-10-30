@@ -93,8 +93,26 @@ class SystemAction extends _$SystemAction {
 
   @protected
   Future<void> closeCore() async {
+    await stopSingBoxCore();
     await _core.close();
     commonPrint.log('exit');
+  }
+
+  /// The desktop sing-box child is spawned without a job object, so an
+  /// exit that skips it leaves an orphan holding the proxy port.
+  @protected
+  Future<void> stopSingBoxCore() async {
+    try {
+      final state = ref.read(singBoxActionProvider).value?.state;
+      if (state == SingBoxState.running || state == SingBoxState.starting) {
+        await ref.read(singBoxActionProvider.notifier).stop();
+      }
+    } catch (error) {
+      commonPrint.log(
+        'sing-box stop on exit failed: ${compactError(error)}',
+        logLevel: LogLevel.error,
+      );
+    }
   }
 
   @protected

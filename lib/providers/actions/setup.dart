@@ -343,6 +343,19 @@ class SetupAction extends _$SetupAction {
           .read(proxiesActionProvider.notifier)
           .updateCurrentGroupName(GroupName.GLOBAL.name);
     }
+    final api = bearingSingBoxApi(ref);
+    if (api != null) {
+      unawaited(() async {
+        try {
+          await api.patchMode(singBoxClashModeName(mode));
+        } catch (error) {
+          commonPrint.log(
+            'sing-box mode switch to ${mode.name} failed: $error',
+            logLevel: LogLevel.error,
+          );
+        }
+      }());
+    }
   }
 
   /// For leaving an editor: a profile whose inputs match the config the Core

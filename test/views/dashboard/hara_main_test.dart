@@ -6,6 +6,7 @@ import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/providers/routed_probe.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:kfusion/views/dashboard/hara_dashboard.dart';
+import 'package:kfusion/views/proxies/hara_proxies.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -66,9 +67,16 @@ class _RecordingSetupAction extends SetupAction {
 }
 
 class _RunningSingBoxAction extends SingBoxAction {
+  static var stopCalls = 0;
+
   @override
   Future<SingBoxStatus> build() async =>
       const SingBoxStatus(state: SingBoxState.running);
+
+  @override
+  Future<void> stop() async {
+    stopCalls++;
+  }
 }
 
 Widget _app({bool singBoxRunning = false}) {
@@ -176,9 +184,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a running sing-box is presented and the ring stays inert', (
+  testWidgets('a running sing-box stops from the ring like mihomo does', (
     tester,
   ) async {
+    _RunningSingBoxAction.stopCalls = 0;
     final container = await _pump(tester, _app(singBoxRunning: true));
 
     expect(find.text('Connected'), findsWidgets);
@@ -188,9 +197,64 @@ void main() {
 
     await tester.tap(find.byType(DiscRingMotif).first);
     await tester.pump();
+    expect(_RunningSingBoxAction.stopCalls, 1);
     final action =
         container.read(setupActionProvider.notifier) as _RecordingSetupAction;
     expect(action.requests, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the test-all head shows a testing state while tests run', (
+    tester,
+  ) async {
+    final container = await _pump(tester, _app());
+    expect(find.text('Test all delays'), findsOneWidget);
+
+    container.read(delayTestingGroupsProvider.notifier).start('Home');
+    await tester.pump();
+    expect(find.text('Testing delays…'), findsOneWidget);
+    expect(find.text('Test all delays'), findsNothing);
+
+    container.read(delayTestingGroupsProvider.notifier).stop('Home');
+    await tester.pump();
+    expect(find.text('Test all delays'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('test-all completion presents nodes fastest first', (
+    tester,
+  ) async {
+    final container = await _pump(tester, _app());
+    container.read(delayDataSourceProvider.notifier).setDelays(const [
+      Delay(
+        name: 'JP-03',
+        url: 'https://www.gstatic.com/generate_204',
+        value: 300,
+      ),
+      Delay(
+        name: 'HK-01',
+        url: 'https://www.gstatic.com/generate_204',
+        value: 50,
+      ),
+    ]);
+    container.read(sortNumProvider.notifier).add();
+    await tester.pump();
+
+    await tester.tap(find.text('Test all delays'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final home = find.byWidgetPredicate(
+      (widget) =>
+          widget is HaraProxyGroupSection && widget.group.name == 'Home',
+    );
+    final hk = find.descendant(of: home, matching: find.text('HK-01'));
+    final jp = find.descendant(of: home, matching: find.text('JP-03'));
+    expect(hk, findsOneWidget);
+    expect(jp, findsOneWidget);
+    expect(tester.getTopLeft(hk).dy, lessThan(tester.getTopLeft(jp).dy));
+    // The selection itself never moves; only the presentation order does.
+    expect(container.read(selectedMapProvider)['Home'], 'JP-03');
     expect(tester.takeException(), isNull);
   });
 }

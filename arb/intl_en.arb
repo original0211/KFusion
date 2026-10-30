@@ -256,6 +256,7 @@
   "actionGlobalMode": "Global mode",
   "actionDirectMode": "Direct mode",
   "actionDelayTest": "Test all delays",
+  "actionDelayTesting": "Testing delays…",
   "actionUpdateProfiles": "Update profiles",
   "disclaimer": "Disclaimer",
   "disclaimerDesc": "Before using Vessel (\"the Software\"), please read this statement carefully and make sure you understand all of it. Tapping \"Agree\" means you have read, understood, and accept every term below. If you do not agree, tap \"Exit\" and stop using the Software.",

@@ -97,6 +97,9 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
 
   @override
   Future<SingBoxStatus> build() async {
+    if (system.isWindows) {
+      unawaited(_reclaimStartupOrphans());
+    }
     if (system.isAndroid) {
       final running = await singBoxService?.isRunning() ?? false;
       if (running) {
@@ -311,7 +314,17 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
 
     Future<bool> stopCurrent() async {
       if (runningCore == CoreKind.singbox) {
-        return _boundedBool(_stopSingBoxMechanics());
+        return _boundedBool(() async {
+          if (!await _stopSingBoxMechanics()) {
+            return false;
+          }
+          if (!system.isWindows) {
+            return true;
+          }
+          return CoreSwitch(
+            portWaitTimeout: const Duration(seconds: 5),
+          ).awaitPortFree(_appliedMixedPort);
+        }());
       }
       if (runningCore == CoreKind.mihomo) {
         try {
@@ -329,6 +342,20 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
                 );
                 return false;
               }
+            },
+            verifyStopped: () async {
+              final settled = await waitForValue(
+                read: () async => ref.read(isStartProvider),
+                target: false,
+                timeout: const Duration(seconds: 5),
+                interval: const Duration(milliseconds: 200),
+              );
+              if (!settled) {
+                return false;
+              }
+              return CoreSwitch(
+                portWaitTimeout: const Duration(seconds: 5),
+              ).awaitPortFree(prepared?.mixedPort ?? singBoxMixedPort);
             },
           ).timeout(_stopTimeout);
           return true;
@@ -660,6 +687,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
           detail: probeDetail,
         );
       }
+      await _syncModeToSingBox(prepared);
       return const CoreSwitchStepResult.ok();
     }
     if (!system.isWindows) {
@@ -695,11 +723,17 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       await reclaimOrphanedSingBoxProcesses(
         executable: binary,
         configPath: configPath,
+        corroborationPort: prepared.mixedPort,
+        onEvent: (message) =>
+            commonPrint.log(message, logLevel: LogLevel.warning),
       );
       if (!await CoreSwitch().awaitPortFree(prepared.mixedPort)) {
         return CoreSwitchStepResult(
           failure: CoreSwitchFailure.startFailed,
-          detail: '端口 ${prepared.mixedPort} 仍被其他程序占用，sing-box 未启动',
+          detail: await portOccupiedDetail(
+            port: prepared.mixedPort,
+            singBoxBinary: binary,
+          ),
         );
       }
       final runner = SingBoxRunner(
@@ -732,6 +766,7 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
       _runner = runner;
       _appliedMixedPort = prepared.mixedPort;
       _api = SingBoxClashApi(port: prepared.apiPort, secret: prepared.secret);
+      await _syncModeToSingBox(prepared);
       return const CoreSwitchStepResult.ok();
     } on SingBoxBinaryException catch (error) {
       return CoreSwitchStepResult(
@@ -782,6 +817,74 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
     await _stopSingBoxMechanics();
     await ref.read(activeCoreKindProvider.notifier).set(CoreKind.mihomo);
     state = const AsyncData(SingBoxStatus(state: SingBoxState.idle));
+  }
+
+  var _startupReclaimDone = false;
+
+  /// Startup self-check for a sing-box left holding the mixed port.
+  Future<void> _reclaimStartupOrphans() async {
+    if (_startupReclaimDone) {
+      return;
+    }
+    _startupReclaimDone = true;
+    try {
+      final homeDir = await appPath.homeDirPath;
+      final binary = findSingBoxBinary(
+        singBoxCandidates(
+          executableDir: appPath.executableDirPath,
+          homeDir: homeDir,
+          storedPath: await Preferences().getSingBoxBinaryPath(),
+        ),
+      );
+      if (binary == null) {
+        return;
+      }
+      final configPath =
+          '$homeDir${Platform.pathSeparator}singbox'
+          '${Platform.pathSeparator}config.json';
+      final reclaimed = await reclaimOrphanedSingBoxProcesses(
+        executable: binary,
+        configPath: configPath,
+        corroborationPort: singBoxMixedPort,
+        onEvent: (message) =>
+            commonPrint.log(message, logLevel: LogLevel.warning),
+      );
+      if (reclaimed > 0) {
+        commonPrint.log('启动自检回收了 $reclaimed 个遗留 sing-box 进程');
+      }
+      final portFree = await CoreSwitch(
+        portWaitTimeout: const Duration(seconds: 2),
+      ).awaitPortFree(singBoxMixedPort);
+      if (!portFree) {
+        commonPrint.log(
+          '启动自检：${await portOccupiedDetail(port: singBoxMixedPort, singBoxBinary: binary)}',
+          logLevel: LogLevel.warning,
+        );
+      }
+    } catch (error) {
+      commonPrint.log(
+        '启动自检回收遗留 sing-box 失败：$error',
+        logLevel: LogLevel.warning,
+      );
+    }
+  }
+
+  /// A rendered config starts on sing-box's default mode, so the app's mode is pushed.
+  Future<void> _syncModeToSingBox(_PreparedSingBox prepared) async {
+    if (prepared.rendered == null) {
+      return;
+    }
+    final api = _api;
+    if (api == null) {
+      return;
+    }
+    try {
+      await api.patchMode(
+        singBoxClashModeName(ref.read(patchClashConfigProvider).mode),
+      );
+    } catch (error) {
+      commonPrint.log('sing-box 模式同步失败：$error', logLevel: LogLevel.warning);
+    }
   }
 
   Future<void> _handleCrash(int code, List<String> tail) async {
@@ -910,6 +1013,7 @@ Future<String> writeNativeSingBoxConfig(
 Future<void> ensureMihomoStopped({
   required bool Function() mihomoRunning,
   required Future<bool> Function() stopMihomo,
+  Future<bool> Function()? verifyStopped,
 }) async {
   if (!mihomoRunning()) {
     return;
@@ -917,6 +1021,54 @@ Future<void> ensureMihomoStopped({
   if (!await stopMihomo()) {
     throw StateError('mihomo 未能停止，sing-box 未启动，避免双核心同时运行。');
   }
+  if (verifyStopped != null && !await verifyStopped()) {
+    throw StateError('mihomo 已应答停止，但运行状态或端口尚未释放，sing-box 未启动。');
+  }
+}
+
+/// The panel client of the bearing core when it is sing-box;
+/// mihomo-addressed calls would land on a stopped listener instead.
+SingBoxClashApi? bearingSingBoxApi(Ref ref) {
+  if (ref.read(singBoxActionProvider).value?.state != SingBoxState.running) {
+    return null;
+  }
+  return ref.read(singBoxActionProvider.notifier).api;
+}
+
+/// The spelling sing-box's clash mode list carries for [mode].
+String singBoxClashModeName(Mode mode) {
+  return switch (mode) {
+    Mode.rule => 'Rule',
+    Mode.global => 'Global',
+    Mode.direct => 'Direct',
+  };
+}
+
+/// Names an occupied port's holder: this app's leftover sing-box,
+/// its mihomo core process, or a foreign program by image name.
+Future<String> portOccupiedDetail({
+  required int port,
+  required String singBoxBinary,
+  Future<PortOwnerInfo?> Function(int port)? findOwner,
+}) async {
+  final owner = await (findOwner ?? findListeningPortOwner)(port);
+  if (owner == null) {
+    return '端口 $port 仍被其他程序占用（未能判定属主），sing-box 未启动';
+  }
+  if (owner.executablePath.isNotEmpty &&
+      windowsPathsEqual(owner.executablePath, singBoxBinary)) {
+    return '端口 $port 仍被上次运行遗留的 sing-box（PID ${owner.pid}）占用，sing-box 未启动';
+  }
+  final imageName = owner.imageName.isNotEmpty
+      ? owner.imageName
+      : owner.executablePath.split('\\').last;
+  if (imageName.toLowerCase() == 'kfusioncore.exe') {
+    return '端口 $port 仍被本应用 mihomo 核心进程（PID ${owner.pid}）占用，sing-box 未启动';
+  }
+  if (imageName.isEmpty) {
+    return '端口 $port 仍被未知程序（PID ${owner.pid}）占用，sing-box 未启动';
+  }
+  return '端口 $port 仍被 $imageName（PID ${owner.pid}）占用，sing-box 未启动';
 }
 
 /// Polls [probe] until it answers; on timeout, the last error's text.

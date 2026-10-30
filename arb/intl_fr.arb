@@ -256,6 +256,7 @@
   "actionGlobalMode": "Mode global",
   "actionDirectMode": "Mode direct",
   "actionDelayTest": "Tester tous les délais",
+  "actionDelayTesting": "Test des délais…",
   "actionUpdateProfiles": "Mettre à jour les profils",
   "disclaimer": "Avertissement",
   "disclaimerDesc": "Avant d’utiliser Vessel (« le Logiciel »), veuillez lire attentivement cette déclaration et vous assurer de l’avoir comprise dans son intégralité. Appuyer sur « Accepter » signifie que vous avez lu, compris et accepté chacune des conditions ci-dessous. Si vous n’êtes pas d’accord, appuyez sur « Quitter » et cessez d’utiliser le Logiciel.",

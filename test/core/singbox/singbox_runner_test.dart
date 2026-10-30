@@ -326,6 +326,201 @@ void main() {
     expect(found, '/also-nope/sing-box');
     expect(findSingBoxBinary(['/nope/sing-box'], exists: (_) => false), isNull);
   });
+
+  group('clash_api control surface', () {
+    Future<
+      ({
+        int port,
+        List<({String method, String path, String body, String? auth})>
+        requests,
+      })
+    >
+    serveApi({
+      required int statusCode,
+      Map<String, Object?> responseBody = const {},
+    }) async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      final requests =
+          <({String method, String path, String body, String? auth})>[];
+      server.listen((request) async {
+        final body = await utf8.decoder.bind(request).join();
+        requests.add((
+          method: request.method,
+          path: request.uri.path,
+          body: body,
+          auth: request.headers.value('Authorization'),
+        ));
+        request.response.statusCode = statusCode;
+        if (responseBody.isNotEmpty) {
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(json.encode(responseBody));
+        }
+        await request.response.close();
+      });
+      return (port: server.port, requests: requests);
+    }
+
+    test('changeProxy PUTs the selection to the selector group', () async {
+      final api = await serveApi(statusCode: 204);
+      final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+      await client.changeProxy('节点选择', 'HK-01');
+      expect(api.requests, hasLength(1));
+      final request = api.requests.single;
+      expect(request.method, 'PUT');
+      expect(request.path, '/proxies/${Uri.encodeComponent('节点选择')}');
+      expect(json.decode(request.body), {'name': 'HK-01'});
+      expect(request.auth, 'Bearer s3cr3t');
+    });
+
+    test('changeProxy surfaces the panel error message', () async {
+      final api = await serveApi(
+        statusCode: 400,
+        responseBody: {'message': 'Selector update error: not found'},
+      );
+      final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+      await expectLater(
+        client.changeProxy('Home', 'NOPE'),
+        throwsA(
+          isA<HttpException>().having(
+            (e) => e.message,
+            'message',
+            contains('Selector update error: not found'),
+          ),
+        ),
+      );
+    });
+
+    test('patchMode PATCHes the configs mode', () async {
+      final api = await serveApi(statusCode: 204);
+      final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+      await client.patchMode('Global');
+      final request = api.requests.single;
+      expect(request.method, 'PATCH');
+      expect(request.path, '/configs');
+      expect(json.decode(request.body), {'mode': 'Global'});
+    });
+
+    test('closeConnections DELETEs all connections', () async {
+      final api = await serveApi(statusCode: 204);
+      final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+      await client.closeConnections();
+      final request = api.requests.single;
+      expect(request.method, 'DELETE');
+      expect(request.path, '/connections');
+    });
+  });
+
+  group('orphan reclaim resilience', () {
+    const executable = r'C:\Users\me\AppData\KFusion\sing-box.exe';
+    const configPath = r'C:\Users\me\AppData\KFusion\singbox\config.json';
+
+    test('an enumeration failure is reported, never silent', () async {
+      final events = <String>[];
+      final reclaimed = await reclaimOrphanedSingBoxProcesses(
+        executable: executable,
+        configPath: configPath,
+        listProcesses: () async => throw StateError('CIM unavailable'),
+        fallbackListProcesses: () async => const [],
+        onEvent: events.add,
+      );
+      expect(reclaimed, 0);
+      expect(events, hasLength(1));
+      expect(events.single, contains('CIM unavailable'));
+    });
+
+    test(
+      'a fallback orphan holding the port is reclaimed without a command line',
+      () async {
+        final killed = <int>[];
+        final reclaimed = await reclaimOrphanedSingBoxProcesses(
+          executable: executable,
+          configPath: configPath,
+          listProcesses: () async => throw StateError('CIM unavailable'),
+          fallbackListProcesses: () async => const [
+            SingBoxProcessInfo(
+              pid: 777,
+              executablePath: executable,
+              commandLine: '',
+              verified: false,
+            ),
+          ],
+          findPortOwner: (port) async => const PortOwnerInfo(
+            pid: 777,
+            imageName: 'sing-box.exe',
+            executablePath: executable,
+          ),
+          corroborationPort: 7890,
+          killProcess: (pid) async => killed.add(pid),
+          onEvent: (_) {},
+        );
+        expect(reclaimed, 1);
+        expect(killed, [777]);
+      },
+    );
+
+    test('an uncorroborated fallback process is left alone', () async {
+      final killed = <int>[];
+      final reclaimed = await reclaimOrphanedSingBoxProcesses(
+        executable: executable,
+        configPath: configPath,
+        listProcesses: () async => throw StateError('CIM unavailable'),
+        fallbackListProcesses: () async => const [
+          SingBoxProcessInfo(
+            pid: 777,
+            executablePath: executable,
+            commandLine: '',
+            verified: false,
+          ),
+        ],
+        findPortOwner: (port) async =>
+            const PortOwnerInfo(pid: 999, imageName: 'other.exe'),
+        corroborationPort: 7890,
+        killProcess: (pid) async => killed.add(pid),
+        onEvent: (_) {},
+      );
+      expect(reclaimed, 0);
+      expect(killed, isEmpty);
+    });
+  });
+
+  test('port owner lookup reads netstat and tasklist output', () async {
+    Future<ProcessResult> run(String executable, List<String> args) async {
+      if (executable == 'netstat') {
+        return ProcessResult(
+          1,
+          0,
+          '  TCP    127.0.0.1:7890         0.0.0.0:0              LISTENING       4321\r\n'
+              '  TCP    127.0.0.1:7891         0.0.0.0:0              LISTENING       5555\r\n',
+          '',
+        );
+      }
+      if (executable == 'tasklist') {
+        return ProcessResult(
+          2,
+          0,
+          '"sing-box.exe","4321","Console","1","9,876 K"\r\n',
+          '',
+        );
+      }
+      if (executable == 'powershell') {
+        return ProcessResult(
+          3,
+          0,
+          r'C:\Users\me\AppData\KFusion\sing-box.exe'
+              '\r\n',
+          '',
+        );
+      }
+      throw StateError('unexpected command $executable');
+    }
+
+    final owner = await findListeningPortOwner(7890, run: run);
+    expect(owner, isNotNull);
+    expect(owner!.pid, 4321);
+    expect(owner.imageName, 'sing-box.exe');
+    expect(owner.executablePath, r'C:\Users\me\AppData\KFusion\sing-box.exe');
+  });
 }
 
 class _OrderBackend implements CoreBackend {

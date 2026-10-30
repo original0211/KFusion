@@ -185,11 +185,17 @@ class ProxiesAction extends _$ProxiesAction {
     profilesAction.updateCurrentSelectedMap(groupName, proxyName);
     final ChangeProxyResult result;
     try {
-      result = await _core.changeProxy(
-        ChangeProxyParams(groupName: groupName, proxyName: proxyName),
-      );
-      if (result.message.isNotEmpty) {
-        throw MessageException(result.message);
+      final api = bearingSingBoxApi(ref);
+      if (api != null) {
+        await api.changeProxy(groupName, proxyName);
+        result = const ChangeProxyResult(changed: true);
+      } else {
+        result = await _core.changeProxy(
+          ChangeProxyParams(groupName: groupName, proxyName: proxyName),
+        );
+        if (result.message.isNotEmpty) {
+          throw MessageException(result.message);
+        }
       }
     } catch (error) {
       commonPrint.log(
@@ -207,7 +213,13 @@ class ProxiesAction extends _$ProxiesAction {
       return;
     }
     try {
-      if (ref.read(appSettingProvider).closeConnections) {
+      final api = bearingSingBoxApi(ref);
+      if (api != null) {
+        // The panel offers no tracker reset, only dropping connections.
+        if (ref.read(appSettingProvider).closeConnections) {
+          await api.closeConnections();
+        }
+      } else if (ref.read(appSettingProvider).closeConnections) {
         await _core.closeConnections();
       } else {
         await _core.resetConnections();
@@ -396,6 +408,34 @@ class ProxiesAction extends _$ProxiesAction {
     }
   }
 
+  Future<void> _runSingBoxDelayTest(
+    _DelayTestJob job,
+    _DelayTestTarget target,
+    SingBoxClashApi api,
+  ) async {
+    try {
+      final value = await api.delay(target.proxyName, target.testUrl);
+      if (!job.cancelled) {
+        setDelay(
+          Delay(name: target.proxyName, url: target.testUrl, value: value),
+        );
+      }
+    } on SocketException {
+      // An unanswered panel is a dead bearer, not a slow node.
+      job.cancelled = true;
+    } catch (_) {
+      if (!job.cancelled) {
+        setDelay(
+          Delay(
+            name: target.proxyName,
+            url: target.testUrl,
+            value: delayTimedOutValue,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _runDelayTest(_DelayTestJob job, _DelayTestTarget target) async {
     if (job.cancelled) {
       return;
@@ -405,9 +445,14 @@ class ProxiesAction extends _$ProxiesAction {
       _scheduleDelayFlush();
     }
     try {
-      final delay = await _core.getDelay(target.testUrl, target.proxyName);
-      if (delay != null && !job.cancelled) {
-        setDelay(delay);
+      final api = bearingSingBoxApi(ref);
+      if (api != null) {
+        await _runSingBoxDelayTest(job, target, api);
+      } else {
+        final delay = await _core.getDelay(target.testUrl, target.proxyName);
+        if (delay != null && !job.cancelled) {
+          setDelay(delay);
+        }
       }
     } catch (error) {
       if (error is CoreMethodException && error.isCoreUnavailable) {

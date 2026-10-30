@@ -150,7 +150,54 @@ class SingBoxClashApi {
     }
   }
 
+  Future<void> _send(String method, String path, {Object? body}) async {
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 2);
+    try {
+      final request = await client.openUrl(method, _uri(path));
+      request.headers.set('Authorization', 'Bearer $secret');
+      if (body != null) {
+        request.headers.set('Content-Type', 'application/json');
+        request.write(json.encode(body));
+      }
+      final response = await request.close();
+      final text = await response.transform(utf8.decoder).join();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException(_sendErrorMessage(path, response.statusCode, text));
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  String _sendErrorMessage(String path, int statusCode, String body) {
+    try {
+      final decoded = json.decode(body);
+      if (decoded is Map && decoded['message'] != null) {
+        return 'sing-box clash_api $path -> $statusCode: ${decoded['message']}';
+      }
+    } catch (_) {}
+    return 'sing-box clash_api $path -> $statusCode';
+  }
+
   Future<Map<String, Object?>> getProxies() => _get('/proxies');
+
+  /// Selects [proxyName] inside the selector [groupName] (PUT /proxies/{group}).
+  Future<void> changeProxy(String groupName, String proxyName) {
+    return _send(
+      'PUT',
+      '/proxies/${Uri.encodeComponent(groupName)}',
+      body: {'name': proxyName},
+    );
+  }
+
+  /// Sets the clash mode (PATCH /configs); sing-box honours only listed modes.
+  Future<void> patchMode(String mode) {
+    return _send('PATCH', '/configs', body: {'mode': mode});
+  }
+
+  /// Drops every live connection (DELETE /connections).
+  Future<void> closeConnections() => _send('DELETE', '/connections');
 
   Future<int> delay(String proxyName, String url) async {
     final data = await _get(
@@ -351,11 +398,20 @@ class SingBoxProcessInfo {
     required this.pid,
     required this.executablePath,
     required this.commandLine,
+    this.verified = true,
   });
 
   final int pid;
   final String executablePath;
   final String commandLine;
+
+  /// False when the listing channel could not read the command line.
+  final bool verified;
+}
+
+bool windowsPathsEqual(String a, String b) {
+  String normalize(String path) => path.replaceAll('/', '\\').toLowerCase();
+  return normalize(a) == normalize(b);
 }
 
 /// Only this app's own binary started on this app's own config qualifies.
@@ -365,62 +421,225 @@ bool isAppSingBoxProcess(
   required String configPath,
 }) {
   String normalize(String path) => path.replaceAll('/', '\\').toLowerCase();
-  return normalize(info.executablePath) == normalize(executable) &&
+  return windowsPathsEqual(info.executablePath, executable) &&
       normalize(info.commandLine).contains(normalize(configPath));
 }
 
-Future<List<SingBoxProcessInfo>> _listSingBoxProcesses() async {
+/// The process holding a listening TCP port, as far as the system tools can name it.
+class PortOwnerInfo {
+  const PortOwnerInfo({
+    required this.pid,
+    required this.imageName,
+    this.executablePath = '',
+  });
+
+  final int pid;
+  final String imageName;
+  final String executablePath;
+}
+
+typedef ProcessRunner =
+    Future<ProcessResult> Function(String executable, List<String> arguments);
+
+Future<ProcessResult> _runProcess(String executable, List<String> arguments) {
+  return Process.run(executable, arguments);
+}
+
+/// Identifies the listener on [port] through netstat, tasklist and
+/// Get-Process — channels that fail independently of the CIM listing.
+Future<PortOwnerInfo?> findListeningPortOwner(
+  int port, {
+  ProcessRunner? run,
+}) async {
+  final runner = run ?? _runProcess;
   try {
-    const script =
-        "Get-CimInstance Win32_Process "
-        "-Filter \"Name='sing-box.exe'\" | "
-        'Select-Object ProcessId, ExecutablePath, CommandLine | '
-        'ConvertTo-Json -Compress';
-    final result = await Process.run('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      script,
-    ]);
-    if (result.exitCode != 0) {
-      return const [];
+    final netstat = await runner('netstat', ['-ano', '-p', 'TCP']);
+    if (netstat.exitCode != 0) {
+      return null;
     }
-    final text = (result.stdout as String).trim();
-    if (text.isEmpty) {
-      return const [];
+    final pid = _listeningPid(netstat.stdout as String, port);
+    if (pid == null) {
+      return null;
     }
-    final decoded = json.decode(text);
-    final entries = decoded is List ? decoded : [decoded];
-    return [
-      for (final entry in entries)
-        if (entry is Map)
-          SingBoxProcessInfo(
-            pid: (entry['ProcessId'] as num?)?.toInt() ?? 0,
-            executablePath: entry['ExecutablePath']?.toString() ?? '',
-            commandLine: entry['CommandLine']?.toString() ?? '',
-          ),
-    ];
+    var imageName = '';
+    var executablePath = '';
+    try {
+      final tasklist = await runner('tasklist', [
+        '/FI',
+        'PID eq $pid',
+        '/FO',
+        'CSV',
+        '/NH',
+      ]);
+      imageName =
+          RegExp(
+            r'"([^"]+)"',
+          ).firstMatch((tasklist.stdout as String).trim())?.group(1) ??
+          '';
+    } catch (_) {}
+    try {
+      final process = await runner('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        '(Get-Process -Id $pid).Path',
+      ]);
+      if (process.exitCode == 0) {
+        executablePath = (process.stdout as String).trim();
+      }
+    } catch (_) {}
+    return PortOwnerInfo(
+      pid: pid,
+      imageName: imageName,
+      executablePath: executablePath,
+    );
   } catch (_) {
-    return const [];
+    return null;
   }
 }
 
+int? _listeningPid(String netstatOutput, int port) {
+  final pattern = RegExp(r':(\d+)\s+\S+\s+LISTENING\s+(\d+)');
+  for (final match in pattern.allMatches(netstatOutput)) {
+    if (int.tryParse(match.group(1)!) == port) {
+      return int.tryParse(match.group(2)!);
+    }
+  }
+  return null;
+}
+
+Future<List<SingBoxProcessInfo>> _listSingBoxProcesses() async {
+  const script =
+      "Get-CimInstance Win32_Process "
+      "-Filter \"Name='sing-box.exe'\" | "
+      'Select-Object ProcessId, ExecutablePath, CommandLine | '
+      'ConvertTo-Json -Compress';
+  final result = await Process.run('powershell', [
+    '-NoProfile',
+    '-NonInteractive',
+    '-Command',
+    script,
+  ]);
+  if (result.exitCode != 0) {
+    throw StateError(
+      'PowerShell 进程枚举失败（exit ${result.exitCode}）：'
+      '${(result.stderr as String).trim()}',
+    );
+  }
+  final text = (result.stdout as String).trim();
+  if (text.isEmpty) {
+    return const [];
+  }
+  final decoded = json.decode(text);
+  final entries = decoded is List ? decoded : [decoded];
+  return [
+    for (final entry in entries)
+      if (entry is Map)
+        SingBoxProcessInfo(
+          pid: (entry['ProcessId'] as num?)?.toInt() ?? 0,
+          executablePath: entry['ExecutablePath']?.toString() ?? '',
+          commandLine: entry['CommandLine']?.toString() ?? '',
+        ),
+  ];
+}
+
+/// The fallback listing for when CIM will not answer: tasklist finds
+/// the PIDs and Get-Process the paths, so entries come back unverified.
+Future<List<SingBoxProcessInfo>> _listSingBoxProcessesFallback() async {
+  final result = await Process.run('tasklist', [
+    '/FI',
+    'IMAGENAME eq sing-box.exe',
+    '/FO',
+    'CSV',
+    '/NH',
+  ]);
+  if (result.exitCode != 0) {
+    return const [];
+  }
+  final entries = <SingBoxProcessInfo>[];
+  final pidPattern = RegExp(r'^"[^"]+","(\d+)"', multiLine: true);
+  for (final match in pidPattern.allMatches(result.stdout as String)) {
+    final pid = int.parse(match.group(1)!);
+    var path = '';
+    try {
+      final process = await Process.run('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        '(Get-Process -Id $pid).Path',
+      ]);
+      if (process.exitCode == 0) {
+        path = (process.stdout as String).trim();
+      }
+    } catch (_) {}
+    entries.add(
+      SingBoxProcessInfo(
+        pid: pid,
+        executablePath: path,
+        commandLine: '',
+        verified: false,
+      ),
+    );
+  }
+  return entries;
+}
+
 /// Kills this app's leftover sing-box processes; never blocks the start.
+/// An enumeration failure is reported through [onEvent] and retried on
+/// the fallback channel; a fallback entry qualifies only while it
+/// holds [corroborationPort].
 Future<int> reclaimOrphanedSingBoxProcesses({
   required String executable,
   required String configPath,
   Future<List<SingBoxProcessInfo>> Function()? listProcesses,
   Future<void> Function(int pid)? killProcess,
+  void Function(String message)? onEvent,
+  Future<List<SingBoxProcessInfo>> Function()? fallbackListProcesses,
+  Future<PortOwnerInfo?> Function(int port)? findPortOwner,
+  int? corroborationPort,
 }) async {
-  final processes = await (listProcesses ?? _listSingBoxProcesses)();
+  List<SingBoxProcessInfo> processes;
+  try {
+    processes = await (listProcesses ?? _listSingBoxProcesses)();
+  } catch (error) {
+    onEvent?.call('sing-box 进程枚举失败（$error），改走回退枚举');
+    try {
+      processes =
+          await (fallbackListProcesses ?? _listSingBoxProcessesFallback)();
+    } catch (fallbackError) {
+      onEvent?.call('sing-box 回退枚举也失败（$fallbackError），本轮不回收遗留进程');
+      return 0;
+    }
+  }
   var reclaimed = 0;
+  PortOwnerInfo? owner;
+  var ownerLookedUp = false;
   for (final info in processes) {
-    if (info.pid <= 0 ||
-        !isAppSingBoxProcess(
-          info,
-          executable: executable,
-          configPath: configPath,
-        )) {
+    if (info.pid <= 0) {
+      continue;
+    }
+    var qualifies = isAppSingBoxProcess(
+      info,
+      executable: executable,
+      configPath: configPath,
+    );
+    if (!qualifies &&
+        !info.verified &&
+        corroborationPort != null &&
+        windowsPathsEqual(info.executablePath, executable)) {
+      if (!ownerLookedUp) {
+        ownerLookedUp = true;
+        try {
+          owner = await (findPortOwner ?? findListeningPortOwner)(
+            corroborationPort,
+          );
+        } catch (_) {
+          owner = null;
+        }
+      }
+      qualifies = owner?.pid == info.pid;
+    }
+    if (!qualifies) {
       continue;
     }
     try {

@@ -303,15 +303,21 @@ void main() {
     );
     final route = result.config['route'] as Map;
     final rules = route['rules'] as List;
-    expect(rules.length, 4);
+    expect(rules.length, 6);
     expect((rules[0] as Map)['protocol'], 'dns');
     expect((rules[0] as Map)['action'], 'hijack-dns');
-    expect((rules[1] as Map)['ip_is_private'], isTrue);
-    expect((rules[1] as Map)['outbound'], 'direct');
-    expect((rules[2] as Map)['rule_set'], ['geoip-cn']);
+    // The clash_mode pair rides under the DNS hijack: without them the
+    // panel mode switch would have no mode to select in sing-box.
+    expect((rules[1] as Map)['clash_mode'], 'Global');
+    expect((rules[1] as Map)['outbound'], route['final']);
+    expect((rules[2] as Map)['clash_mode'], 'Direct');
     expect((rules[2] as Map)['outbound'], 'direct');
-    expect((rules[3] as Map)['rule_set'], ['geosite-cn']);
+    expect((rules[3] as Map)['ip_is_private'], isTrue);
     expect((rules[3] as Map)['outbound'], 'direct');
+    expect((rules[4] as Map)['rule_set'], ['geoip-cn']);
+    expect((rules[4] as Map)['outbound'], 'direct');
+    expect((rules[5] as Map)['rule_set'], ['geosite-cn']);
+    expect((rules[5] as Map)['outbound'], 'direct');
     final ruleSetTags = {
       for (final def in route['rule_set'] as List)
         ((def as Map)['tag'] as String),

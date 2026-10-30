@@ -256,6 +256,7 @@
   "actionGlobalMode": "グローバルモード",
   "actionDirectMode": "ダイレクトモード",
   "actionDelayTest": "すべての遅延をテスト",
+  "actionDelayTesting": "遅延をテスト中…",
   "actionUpdateProfiles": "プロファイルを更新",
   "disclaimer": "免責事項",
   "disclaimerDesc": "Vessel（以下「本ソフトウェア」）をご利用になる前に、本声明の内容をよくお読みになり、十分にご理解ください。「同意する」をタップすると、以下のすべての条項を読み、理解し、承諾したものとみなされます。同意いただけない場合は「終了」をタップし、本ソフトウェアの使用を中止してください。",

@@ -34,7 +34,7 @@ String _coreName(CoreKind kind) {
 
 /// The main screen in the Hara A reading: the ring, status row, figures
 /// and mode row over the proxies reading's grouped node list, on one
-/// scroll surface. A running sing-box core is presented, not controlled.
+/// scroll surface. The ring stops whichever core is running.
 class HaraDashboard extends ConsumerStatefulWidget {
   const HaraDashboard({super.key});
 
@@ -56,6 +56,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     with ProbeStartHold<HaraDashboard> {
   late final OutboundIpProbe _probe;
   bool? _pending;
+  bool _sortByDelay = false;
   Timer? _pendingTimer;
   late final ScrollController _scrollController;
   final _sticky = ValueNotifier<bool>(false);
@@ -76,6 +77,20 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
         });
       }
     });
+    // The post-test delay order is handed back when its profile or the sort setting changes.
+    ref.listenManual(currentProfileIdProvider, (previous, next) {
+      if (mounted && previous != next && _sortByDelay) {
+        setState(() => _sortByDelay = false);
+      }
+    });
+    ref.listenManual(
+      proxiesStyleSettingProvider.select((state) => state.sortType),
+      (previous, next) {
+        if (mounted && previous != next && _sortByDelay) {
+          setState(() => _sortByDelay = false);
+        }
+      },
+    );
     _scrollController.addListener(_updateSticky);
   }
 
@@ -97,11 +112,18 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     ref.read(commonActionProvider.notifier).toggleRunning();
   }
 
-  void _testAll() {
+  void _toggleSingBox() {
+    ref.read(singBoxActionProvider.notifier).stop();
+  }
+
+  Future<void> _testAll() async {
     final groups = ref.read(proxiesListStateProvider).groups;
     final action = ref.read(proxiesActionProvider.notifier);
-    for (final group in groups) {
-      action.delayTestPageGroup(group.name);
+    await Future.wait([
+      for (final group in groups) action.delayTestPageGroup(group.name),
+    ]);
+    if (mounted) {
+      setState(() => _sortByDelay = true);
     }
   }
 
@@ -181,9 +203,21 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
     final delay = nodeName == null
         ? null
         : ref.watch(delayProvider(proxyName: nodeName));
-    final groups = ref.watch(
+    final listedGroups = ref.watch(
       proxiesListStateProvider.select((state) => state.groups),
     );
+    final delaySnapshot = ref.watch(delaysAtLastTestBatchProvider);
+    final selectedMap = ref.watch(selectedMapProvider);
+    final defaultTestUrl = ref.watch(realTestUrlProvider());
+    final groups = _sortByDelay
+        ? computeSort(
+            groups: listedGroups,
+            sortType: ProxiesSortType.delay,
+            delayMap: delaySnapshot,
+            selectedMap: selectedMap,
+            defaultTestUrl: defaultTestUrl,
+          )
+        : listedGroups;
     final exit = _exitLeaf(groups);
     final pinAllowed = phase == _Phase.connected || phase == _Phase.suspended;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -366,7 +400,9 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
               onTap: phase == _Phase.noProfile
                   ? () =>
                         BaseNavigator.push(context, const UniversalImportView())
-                  : (runningCore == CoreKind.singbox ? null : _toggle),
+                  : (runningCore == CoreKind.singbox
+                        ? _toggleSingBox
+                        : _toggle),
               child: DiscRingMotif(
                 size: HaraSpace.ringSize,
                 color: ringColor,
@@ -453,6 +489,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
 
   Widget _testAllHead(BuildContext context, HaraPalette palette) {
     final appLocalizations = context.appLocalizations;
+    final testing = ref.watch(delayTestingGroupsProvider).isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -465,7 +502,9 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
               vertical: HaraSpace.addRowVertical,
             ),
             child: Text(
-              appLocalizations.actionDelayTest,
+              testing
+                  ? appLocalizations.actionDelayTesting
+                  : appLocalizations.actionDelayTest,
               style: HaraText.pageAction(context, palette.dim),
             ),
           ),
