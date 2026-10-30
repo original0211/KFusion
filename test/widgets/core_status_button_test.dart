@@ -11,6 +11,20 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
 
+class _RecordingCoreAction extends CoreAction {
+  int restarts = 0;
+  bool fail = false;
+
+  @override
+  Future<bool> restartCore() async {
+    restarts++;
+    if (fail) {
+      throw StateError('restart failed');
+    }
+    return true;
+  }
+}
+
 void main() {
   testWidgets(
     'holds connecting for the minimum duration after a fast restart',
@@ -245,5 +259,72 @@ void main() {
       style.foregroundColor!.resolve(const <WidgetState>{}),
       HaraPalette.light.ink,
     );
+  });
+
+  Future<_RecordingCoreAction> pumpButtonWithAction(
+    WidgetTester tester,
+    CoreStatus status,
+  ) async {
+    final action = _RecordingCoreAction();
+    final container = ProviderContainer(
+      overrides: [coreActionProvider.overrideWith(() => action)],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+    container.read(coreStatusProvider.notifier).value = status;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: TestApp(
+          homeBuilder: (child) => Scaffold(body: Center(child: child)),
+          child: const CoreStatusButton(),
+        ),
+      ),
+    );
+    await tester.pump();
+    return action;
+  }
+
+  testWidgets('a tap on the connected ring asks, then restarts the core', (
+    tester,
+  ) async {
+    final action = await pumpButtonWithAction(tester, CoreStatus.connected);
+
+    await tester.tap(find.byType(IconButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm'), findsOneWidget);
+    expect(action.restarts, 0);
+
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(action.restarts, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('cancelling the prompt leaves the core alone', (tester) async {
+    final action = await pumpButtonWithAction(tester, CoreStatus.disconnected);
+
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Cancel'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(action.restarts, 0);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a failed restart is reported, not thrown', (tester) async {
+    final action = await pumpButtonWithAction(tester, CoreStatus.connected);
+    action.fail = true;
+
+    await tester.tap(find.byType(IconButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(action.restarts, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(seconds: 5));
   });
 }
