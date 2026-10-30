@@ -34,6 +34,32 @@ class _BearerSingBoxAction extends SingBoxAction {
 
 const _parent = '⚡ CF前置';
 const _child = '⚡ CF前置 · auto';
+const _outer = '🚀 节点选择';
+
+Map<String, Object?> _nestedPanelPayload({required String outerNow}) {
+  return {
+    'proxies': {
+      _outer: {
+        'type': 'Selector',
+        'now': outerNow,
+        'all': [_parent, 'direct', 'CF-01'],
+      },
+      _parent: {
+        'type': 'Selector',
+        'now': 'CF-02',
+        'all': [_child, 'CF-01', 'CF-02'],
+      },
+      _child: {
+        'type': 'URLTest',
+        'now': 'CF-01',
+        'all': ['CF-01', 'CF-02'],
+      },
+      'CF-01': {'type': 'Http', 'now': ''},
+      'CF-02': {'type': 'Shadowsocks', 'now': ''},
+      'direct': {'type': 'Direct', 'now': ''},
+    },
+  };
+}
 
 Map<String, Object?> _panelPayload({required String parentNow}) {
   return {
@@ -119,6 +145,17 @@ void main() {
         },
       });
       expect(singBoxPanelAutoChild(panel, 'G'), 'inner');
+    });
+
+    test('a nested selector parent derives no auto child', () {
+      final panel = parseSingBoxPanelGroups(
+        _nestedPanelPayload(outerNow: _parent),
+      );
+      expect(panel[_outer]?.type, 'Selector');
+      expect(panel[_outer]?.now, _parent);
+      expect(panel[_outer]?.all, [_parent, 'direct', 'CF-01']);
+      expect(singBoxPanelAutoChild(panel, _outer), isNull);
+      expect(singBoxPanelAutoChild(panel, _parent), _child);
     });
 
     test('returns null without a selector parent or a URLTest member', () {
@@ -226,6 +263,95 @@ void main() {
         final after = await container.read(singBoxPanelGroupsProvider.future);
         expect(getCount, 2);
         expect(after[_parent]?.now, _child);
+      },
+    );
+
+    test(
+      'changeProxy on a nested selector PUTs the member group name',
+      () async {
+        var outerNow = 'CF-01';
+        var getCount = 0;
+        final puts = <({String path, Object? body})>[];
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        addTearDown(() => server.close(force: true));
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          if (request.method == 'GET' && request.uri.path == '/proxies') {
+            getCount++;
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(
+              json.encode(_nestedPanelPayload(outerNow: outerNow)),
+            );
+          } else if (request.method == 'PUT') {
+            final decoded = json.decode(body) as Map;
+            puts.add((path: request.uri.path, body: decoded));
+            outerNow = decoded['name'].toString();
+            request.response.statusCode = 204;
+          } else {
+            request.response.statusCode = 204;
+          }
+          await request.response.close();
+        });
+        await AppLocalizations.load(const Locale('en'));
+        const profile = Profile(
+          id: 1,
+          label: 'Test',
+          type: ProfileType.url,
+          url: 'https://example.com/sub',
+          selectedMap: {_outer: 'CF-01'},
+          autoUpdateDuration: Duration.zero,
+        );
+        final container = ProviderContainer(
+          overrides: [
+            profilesProvider.overrideWith(() => TestProfiles([profile])),
+            currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+            groupsProvider.overrideWithValue(const [
+              Group(
+                name: _outer,
+                type: GroupType.Selector,
+                all: [
+                  Proxy(name: _parent, type: 'URLTest'),
+                  Proxy(name: 'DIRECT', type: 'Direct'),
+                  Proxy(name: 'CF-01', type: 'Http'),
+                ],
+              ),
+            ]),
+            coreStatusProvider.overrideWithBuild(
+              (_, _) => CoreStatus.disconnected,
+            ),
+            coreHandlerProvider.overrideWithValue(
+              CoreController.scoped(_MockCoreHandlerInterface()),
+            ),
+            singBoxActionProvider.overrideWith(
+              () => _BearerSingBoxAction(
+                SingBoxClashApi(port: server.port, secret: 'panel-secret'),
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        await container.read(singBoxActionProvider.future);
+
+        final before = await container.read(singBoxPanelGroupsProvider.future);
+        expect(before[_outer]?.now, 'CF-01');
+        expect(singBoxPanelAutoChild(before, _outer), isNull);
+        expect(getCount, 1);
+
+        await container
+            .read(proxiesActionProvider.notifier)
+            .changeProxy(groupName: _outer, proxyName: _parent);
+
+        expect(puts, hasLength(1));
+        expect(
+          puts.single.path,
+          '/proxies/%F0%9F%9A%80%20%E8%8A%82%E7%82%B9%E9%80%89%E6%8B%A9',
+        );
+        expect(puts.single.body, {'name': _parent});
+        expect(container.read(selectedMapProvider)[_outer], _parent);
+
+        final after = await container.read(singBoxPanelGroupsProvider.future);
+        expect(getCount, 2);
+        expect(after[_outer]?.now, _parent);
       },
     );
 

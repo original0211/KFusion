@@ -393,6 +393,16 @@ void main() {
       expect(request.auth, 'Bearer s3cr3t');
     });
 
+    test('changeProxy sends DIRECT under its sing-box tag', () async {
+      final api = await serveApi(statusCode: 204);
+      final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+      await client.changeProxy('节点选择', 'DIRECT');
+      expect(api.requests, hasLength(1));
+      final request = api.requests.single;
+      expect(request.method, 'PUT');
+      expect(json.decode(request.body), {'name': 'direct'});
+    });
+
     test(
       'changeProxy sends a flag-prefixed node name as UTF-8 bytes',
       () async {

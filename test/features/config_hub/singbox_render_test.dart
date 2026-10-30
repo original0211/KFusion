@@ -491,7 +491,7 @@ void main() {
     expect(tags, isNot(contains('🏠 HK-家宽-01')));
     expect(tags, isNot(contains('🏠 家宽节点')));
     expect(tags, isNot(contains('🏠 家宽自动')));
-    expect(tags, isNot(contains('🚀 节点选择')));
+    expect(tags, contains('🚀 节点选择'));
     final front = outbounds.firstWhere(
       (outbound) => outbound['tag'] == '⚡ CF前置',
     );
@@ -503,8 +503,13 @@ void main() {
     );
     expect(frontAuto['type'], 'urltest');
     expect(frontAuto['outbounds'], ['CF-01', 'CF-02']);
+    final outer = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == '🚀 节点选择',
+    );
+    expect(outer['type'], 'selector');
+    expect(outer['outbounds'], ['⚡ CF前置', 'CF-01']);
     final route = result.config['route'] as Map;
-    expect(route['final'], '⚡ CF前置');
+    expect(route['final'], '🚀 节点选择');
     expect(
       _degradationsOf(
         result,
@@ -536,12 +541,17 @@ void main() {
     expect(
       _degradationsOf(
         result,
-        SingBoxDegradationKind.groupNested,
-      ).map((d) => d.name),
-      contains('🚀 节点选择'),
+        SingBoxDegradationKind.groupMember,
+      ).where((d) => d.name == '🚀 节点选择').length,
+      2,
+    );
+    expect(
+      _degradationsOf(result, SingBoxDegradationKind.groupNested),
+      isEmpty,
     );
     expect(_degradationsOf(result, SingBoxDegradationKind.routing).length, 1);
     _expectAllReferencesResolve(result.config);
+    _expectDepthBound(result.config);
   });
 
   test('nested groups degrade; member pruning drops hollow groups', () {
@@ -578,16 +588,285 @@ void main() {
         result,
         SingBoxDegradationKind.groupDropped,
       ).map((d) => d.name),
-      contains('Inner'),
+      containsAll(['Inner', 'Outer']),
     );
     expect(
       _degradationsOf(
         result,
         SingBoxDegradationKind.groupNested,
       ).map((d) => d.name),
-      containsAll(['Outer', 'Top']),
+      contains('Top'),
+    );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupNested,
+      ).map((d) => d.name),
+      isNot(contains('Outer')),
     );
     _expectAllReferencesResolve(result.config);
+  });
+
+  test('one level of user nesting renders and roots the primary', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+        {
+          'name': 'VMess',
+          'type': 'vmess',
+          'server': '5.6.7.8',
+          'port': 443,
+          'uuid': '11111111-2222-3333-4444-555555555555',
+          'cipher': 'auto',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'Inner',
+          'type': 'select',
+          'proxies': ['SS'],
+        },
+        {
+          'name': 'Dual',
+          'type': 'url-test',
+          'proxies': ['SS', 'VMess'],
+          'url': 'https://www.gstatic.com/generate_204',
+          'interval': 300,
+        },
+        {
+          'name': 'Outer',
+          'type': 'select',
+          'proxies': ['Inner', 'Dual', 'SS'],
+        },
+      ],
+      'rules': ['MATCH,Outer'],
+    }, secret: 's');
+    final byTag = {
+      for (final outbound in _outbounds(result.config))
+        outbound['tag'].toString(): outbound,
+    };
+    expect(byTag['Outer']?['type'], 'selector');
+    expect(byTag['Outer']?['outbounds'], ['Inner', 'Dual', 'SS']);
+    expect(byTag['Dual']?['outbounds'], ['Dual · auto', 'SS', 'VMess']);
+    expect(byTag['Dual']?['default'], 'Dual · auto');
+    expect(byTag['Dual · auto']?['type'], 'urltest');
+    expect(byTag['Dual · auto']?['outbounds'], ['SS', 'VMess']);
+    expect((result.config['route'] as Map)['final'], 'Outer');
+    expect(
+      _degradationsOf(result, SingBoxDegradationKind.groupNested),
+      isEmpty,
+    );
+    _expectAllReferencesResolve(result.config);
+    _expectDepthBound(result.config);
+  });
+
+  test('an outer group listed before its inner group still renders', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+        {
+          'name': 'VMess',
+          'type': 'vmess',
+          'server': '5.6.7.8',
+          'port': 443,
+          'uuid': '11111111-2222-3333-4444-555555555555',
+          'cipher': 'auto',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'Outer',
+          'type': 'select',
+          'proxies': ['Inner', 'SS'],
+        },
+        {
+          'name': 'Inner',
+          'type': 'select',
+          'proxies': ['VMess'],
+        },
+      ],
+      'rules': ['MATCH,Outer'],
+    }, secret: 's');
+    final byTag = {
+      for (final outbound in _outbounds(result.config))
+        outbound['tag'].toString(): outbound,
+    };
+    expect(byTag['Outer']?['outbounds'], ['Inner', 'SS']);
+    expect(byTag['Inner']?['outbounds'], ['VMess']);
+    expect((result.config['route'] as Map)['final'], 'Outer');
+    _expectAllReferencesResolve(result.config);
+    _expectDepthBound(result.config);
+  });
+
+  test('two levels of user nesting drop only the outermost group', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'L0',
+          'type': 'select',
+          'proxies': ['SS'],
+        },
+        {
+          'name': 'L1',
+          'type': 'select',
+          'proxies': ['L0', 'SS'],
+        },
+        {
+          'name': 'L2',
+          'type': 'select',
+          'proxies': ['L1', 'SS'],
+        },
+      ],
+      'rules': ['MATCH,L2'],
+    }, secret: 's');
+    final byTag = {
+      for (final outbound in _outbounds(result.config))
+        outbound['tag'].toString(): outbound,
+    };
+    expect(byTag.containsKey('L0'), isTrue);
+    expect(byTag.containsKey('L1'), isTrue);
+    expect(byTag.containsKey('L2'), isFalse);
+    expect(byTag['L1']?['outbounds'], ['L0', 'SS']);
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupNested,
+      ).map((d) => d.name),
+      ['L2'],
+    );
+    expect((result.config['route'] as Map)['final'], 'L1');
+    _expectAllReferencesResolve(result.config);
+    _expectDepthBound(result.config);
+  });
+
+  test('a group referencing a cycle member prunes it, keeping leaves', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'A',
+          'type': 'select',
+          'proxies': ['B', 'SS'],
+        },
+        {
+          'name': 'B',
+          'type': 'select',
+          'proxies': ['C'],
+        },
+        {
+          'name': 'C',
+          'type': 'select',
+          'proxies': ['B', 'SS'],
+        },
+      ],
+      'rules': ['MATCH,A'],
+    }, secret: 's');
+    final byTag = {
+      for (final outbound in _outbounds(result.config))
+        outbound['tag'].toString(): outbound,
+    };
+    expect(byTag['A']?['outbounds'], ['SS']);
+    expect(byTag.containsKey('B'), isFalse);
+    expect(byTag.containsKey('C'), isFalse);
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupNested,
+      ).map((d) => d.name),
+      containsAll(['B', 'C']),
+    );
+    expect(
+      _degradationsOf(
+        result,
+        SingBoxDegradationKind.groupMember,
+      ).where((d) => d.name == 'A').length,
+      1,
+    );
+    expect((result.config['route'] as Map)['final'], 'A');
+    _expectAllReferencesResolve(result.config);
+    _expectDepthBound(result.config);
+  });
+
+  test('a url-test group holds a selector member through its auto child', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+        {
+          'name': 'VMess',
+          'type': 'vmess',
+          'server': '5.6.7.8',
+          'port': 443,
+          'uuid': '11111111-2222-3333-4444-555555555555',
+          'cipher': 'auto',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'Inner',
+          'type': 'select',
+          'proxies': ['VMess'],
+        },
+        {
+          'name': 'Outer',
+          'type': 'url-test',
+          'proxies': ['Inner', 'SS'],
+          'url': 'https://www.gstatic.com/generate_204',
+          'interval': 300,
+        },
+      ],
+      'rules': ['MATCH,Outer'],
+    }, secret: 's');
+    final byTag = {
+      for (final outbound in _outbounds(result.config))
+        outbound['tag'].toString(): outbound,
+    };
+    expect(byTag['Outer · auto']?['type'], 'urltest');
+    expect(byTag['Outer · auto']?['outbounds'], ['Inner', 'SS']);
+    expect(byTag['Outer']?['outbounds'], ['Outer · auto', 'Inner', 'SS']);
+    expect(byTag['Outer']?['default'], 'Outer · auto');
+    expect((result.config['route'] as Map)['final'], 'Outer');
+    _expectAllReferencesResolve(result.config);
+    _expectDepthBound(result.config);
   });
 
   test('dialer-proxy maps to a detour only when its target survives', () {
@@ -710,37 +989,9 @@ void main() {
       ).map((d) => d.name),
       containsAll(['CycleA', 'CycleB', 'SelfRef']),
     );
-    // The member graph is a star over leaves plus exactly one
-    // generated layer: a selector may list its own urltest child,
-    // whose members are leaves only, so no cycle can exist.
-    for (final outbound in outbounds) {
-      final members = outbound['outbounds'];
-      if (members is List) {
-        for (final member in members) {
-          final target = outbounds.firstWhere(
-            (entry) => entry['tag'] == member,
-          );
-          if (target.containsKey('outbounds')) {
-            expect(target['type'], 'urltest', reason: '$member');
-            expect(
-              member.toString().startsWith('${outbound['tag']} · auto'),
-              isTrue,
-              reason: '$member',
-            );
-            for (final childMember in target['outbounds'] as List) {
-              final childTarget = outbounds.firstWhere(
-                (entry) => entry['tag'] == childMember,
-              );
-              expect(
-                childTarget.containsKey('outbounds'),
-                isFalse,
-                reason: '$childMember',
-              );
-            }
-          }
-        }
-      }
-    }
+    // The member graph obeys the §2(b) depth bound, so no cycle can
+    // exist in a rendered config.
+    _expectDepthBound(result.config);
     _expectAllReferencesResolve(result.config);
   });
 
@@ -1167,6 +1418,42 @@ Map<String, Object?> _homeBroadbandShape() {
     ],
     'rules': ['MATCH,🚀 节点选择'],
   };
+}
+
+/// The §2(b) depth bound over a rendered config: on any chain of
+/// member references at most one edge joins two user groups; stepping
+/// from a selector into its own generated urltest child is free.
+void _expectDepthBound(Map<String, Object?> config) {
+  final outbounds = _outbounds(config);
+  final byTag = {
+    for (final outbound in outbounds) outbound['tag'].toString(): outbound,
+  };
+  int userDepth(String tag, Set<String> seen) {
+    final outbound = byTag[tag];
+    if (outbound == null || !seen.add(tag)) return 0;
+    var depth = 0;
+    final members = outbound['outbounds'];
+    if (members is List) {
+      for (final member in members) {
+        final name = member.toString();
+        final target = byTag[name];
+        if (target == null || !target.containsKey('outbounds')) continue;
+        final generated =
+            target['type'] == 'urltest' && name.startsWith('$tag · auto');
+        final inner = userDepth(name, seen) + (generated ? 0 : 1);
+        if (inner > depth) depth = inner;
+      }
+    }
+    return depth;
+  }
+
+  for (final outbound in outbounds) {
+    expect(
+      userDepth(outbound['tag'].toString(), {}),
+      lessThanOrEqualTo(1),
+      reason: '${outbound['tag']}',
+    );
+  }
 }
 
 /// Independent walk of every cross-reference in a rendered config;

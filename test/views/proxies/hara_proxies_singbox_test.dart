@@ -90,6 +90,33 @@ void main() {
     child: (type: 'URLTest', now: 'CF-01', all: ['CF-01', 'CF-02']),
   };
 
+  const outer = '🚀 节点选择';
+  const outerProfile = Profile(
+    id: 1,
+    label: 'Test',
+    type: ProfileType.url,
+    url: 'https://example.com/sub',
+    selectedMap: {},
+    autoUpdateDuration: Duration.zero,
+  );
+  const outerGroups = [
+    Group(
+      name: outer,
+      type: GroupType.Selector,
+      now: parent,
+      all: [
+        Proxy(name: parent, type: 'URLTest'),
+        Proxy(name: 'DIRECT', type: 'Direct'),
+        Proxy(name: 'CF-01', type: 'Http'),
+      ],
+    ),
+  ];
+  const outerPanel = <String, SingBoxPanelGroup>{
+    outer: (type: 'Selector', now: parent, all: [parent, 'direct', 'CF-01']),
+    parent: (type: 'Selector', now: 'CF-02', all: [child, 'CF-01', 'CF-02']),
+    child: (type: 'URLTest', now: 'CF-01', all: ['CF-01', 'CF-02']),
+  };
+
   const nativeProfile = Profile(
     id: 1,
     label: 'Test',
@@ -128,12 +155,10 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final core = _MockCoreHandlerInterface();
-    when(
-      () => core.changeProxy(any()),
-    ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
-    when(
-      () => core.getProxies(),
-    ).thenAnswer((_) async => const ProxiesData(proxies: {}, all: []));
+    when(() => core.changeProxy(any()))
+        .thenAnswer((_) async => const ChangeProxyResult(changed: true));
+    when(() => core.getProxies())
+        .thenAnswer((_) async => const ProxiesData(proxies: {}, all: []));
     final container = ProviderContainer(
       overrides: [
         profilesProvider.overrideWith(() => TestProfiles([profile])),
@@ -233,6 +258,32 @@ void main() {
       await tester.pump(const Duration(seconds: 15));
     },
   );
+
+  testWidgets('a nested selector group lists member groups as tappable rows', (
+    tester,
+  ) async {
+    final container = await pumpSection(
+      tester,
+      profile: outerProfile,
+      groups: outerGroups,
+      panel: outerPanel,
+      exitName: 'CF-01',
+    );
+    // No synthetic auto row: the outer selector has no URLTest member.
+    expect(find.text('Auto'), findsNothing);
+    expect(find.text(parent), findsOneWidget);
+    expect(find.text('DIRECT'), findsOneWidget);
+
+    await tester.tap(find.text(parent));
+    await tester.pump();
+    expect(container.read(selectedMapProvider)[outer], parent);
+    await tester.pump(const Duration(seconds: 15));
+
+    await tester.tap(find.text('DIRECT'));
+    await tester.pump();
+    expect(container.read(selectedMapProvider)[outer], 'DIRECT');
+    await tester.pump(const Duration(seconds: 15));
+  });
 
   testWidgets('a native URLTest group is labelled auto and locked', (
     tester,

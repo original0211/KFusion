@@ -351,82 +351,185 @@ typedef _FilteredGroup = ({
   List<String> members,
 });
 
-_FilteredGroup? _filterGroupMembers(
-  Map<String, Object?> group, {
+typedef _GroupCandidate = ({
+  Map<String, Object?> source,
+  String name,
+  String type,
+  List<String> rawMembers,
+});
+
+/// Resolves groups against [leafTags] in profile order. A group's
+/// depth is the longest chain of references to other contract groups:
+/// depth 0 takes leaves only, depth 1 may also take surviving depth 0
+/// groups; cycles and depth 2+ drop whole, the rest prune per member.
+List<_FilteredGroup> _resolveGroups(
+  List<Map<String, Object?>> groups, {
   required Set<String> leafTags,
-  required Set<String> sourceGroupNames,
   required List<SingBoxDegradation> degradations,
 }) {
-  final name = _asString(group['name']);
-  final type = _asString(group['type']);
-  if (type != 'select' && type != 'url-test') {
-    degradations.add(
-      SingBoxDegradation(
-        kind: SingBoxDegradationKind.groupType,
-        name: name,
-        reason: '组类型 $type 未承接（契约只保留 select / url-test）',
-        message: 'proxy-group type "$type" ($name)',
-      ),
-    );
-    return null;
-  }
-  final rawMembers = [
-    for (final entry in _asList(group['proxies'])) entry.toString(),
+  final ledgers = <List<SingBoxDegradation>>[
+    for (var i = 0; i < groups.length; i++) <SingBoxDegradation>[],
   ];
-  if (rawMembers.any(sourceGroupNames.contains)) {
-    degradations.add(
-      SingBoxDegradation(
-        kind: SingBoxDegradationKind.groupNested,
-        name: name,
-        reason: '组成员包含其他组，嵌套组未承接',
-        message: 'proxy-group "$name" nests other proxy-groups',
-      ),
-    );
-    return null;
-  }
-  final members = <String>[];
-  for (final member in rawMembers) {
-    if (member == 'REJECT') {
-      degradations.add(
+  final candidates = List<_GroupCandidate?>.filled(groups.length, null);
+  final candidateIndex = <String, int>{};
+  for (var i = 0; i < groups.length; i++) {
+    final group = groups[i];
+    final name = _asString(group['name']);
+    final type = _asString(group['type']);
+    if (type != 'select' && type != 'url-test') {
+      ledgers[i].add(
         SingBoxDegradation(
-          kind: SingBoxDegradationKind.groupMember,
+          kind: SingBoxDegradationKind.groupType,
           name: name,
-          reason: 'REJECT 成员在 sing-box 1.13+ 无对应出站，已剪除',
-          message:
-              'REJECT in proxy-group "$name" (no block outbound in '
-              'sing-box 1.13+)',
+          reason: '组类型 $type 未承接（契约只保留 select / url-test）',
+          message: 'proxy-group type "$type" ($name)',
         ),
       );
       continue;
     }
-    final tag = _target(member);
-    if (leafTags.contains(tag)) {
-      members.add(tag);
-    } else {
-      degradations.add(
+    candidates[i] = (
+      source: group,
+      name: name,
+      type: type,
+      rawMembers: [
+        for (final entry in _asList(group['proxies'])) entry.toString(),
+      ],
+    );
+    candidateIndex[name] = i;
+  }
+  List<String> referencesOf(int index) => [
+    for (final member in candidates[index]!.rawMembers)
+      if (candidateIndex.containsKey(member)) member,
+  ];
+  bool reachesItself(String start) {
+    final seen = <String>{};
+    final stack = [...referencesOf(candidateIndex[start]!)];
+    while (stack.isNotEmpty) {
+      final next = stack.removeLast();
+      if (next == start) return true;
+      if (seen.add(next)) {
+        stack.addAll(referencesOf(candidateIndex[next]!));
+      }
+    }
+    return false;
+  }
+
+  final cyclic = <String>{
+    for (final name in candidateIndex.keys)
+      if (reachesItself(name)) name,
+  };
+  final depthMemo = <String, int>{};
+  int depthOf(String name) {
+    final memo = depthMemo[name];
+    if (memo != null) return memo;
+    var depth = 0;
+    for (final reference in referencesOf(candidateIndex[name]!)) {
+      if (cyclic.contains(reference)) continue;
+      final inner = depthOf(reference) + 1;
+      if (inner > depth) depth = inner;
+    }
+    return depthMemo[name] = depth;
+  }
+
+  final dropped = <int>{};
+  for (var i = 0; i < groups.length; i++) {
+    final candidate = candidates[i];
+    if (candidate == null) continue;
+    if (cyclic.contains(candidate.name)) {
+      dropped.add(i);
+      ledgers[i].add(
         SingBoxDegradation(
-          kind: SingBoxDegradationKind.groupMember,
-          name: name,
-          reason: '成员 $member 在 sing-box 下不可用，已剪除',
+          kind: SingBoxDegradationKind.groupNested,
+          name: candidate.name,
+          reason: '组成员引用成环，整组未承接',
           message:
-              'proxy-group "$name" member "$member" has no sing-box '
-              'outbound',
+              'proxy-group "${candidate.name}" is part of a reference '
+              'cycle',
+        ),
+      );
+    } else if (depthOf(candidate.name) > 1) {
+      dropped.add(i);
+      ledgers[i].add(
+        SingBoxDegradation(
+          kind: SingBoxDegradationKind.groupNested,
+          name: candidate.name,
+          reason: '组成员嵌套超过一层，整组未承接',
+          message:
+              'proxy-group "${candidate.name}" nests proxy-groups '
+              'deeper than one level',
         ),
       );
     }
   }
-  if (members.isEmpty) {
-    degradations.add(
-      SingBoxDegradation(
-        kind: SingBoxDegradationKind.groupDropped,
-        name: name,
-        reason: '组内成员全部不可用',
-        message: 'proxy-group "$name" has no usable member',
-      ),
-    );
-    return null;
+  final surviving = <String>{};
+  final resolved = List<List<String>?>.filled(groups.length, null);
+  for (var tier = 0; tier <= 1; tier++) {
+    for (var i = 0; i < groups.length; i++) {
+      final candidate = candidates[i];
+      if (candidate == null || dropped.contains(i)) continue;
+      if (depthOf(candidate.name) != tier) continue;
+      final name = candidate.name;
+      final members = <String>[];
+      for (final member in candidate.rawMembers) {
+        if (member == 'REJECT') {
+          ledgers[i].add(
+            SingBoxDegradation(
+              kind: SingBoxDegradationKind.groupMember,
+              name: name,
+              reason: 'REJECT 成员在 sing-box 1.13+ 无对应出站，已剪除',
+              message:
+                  'REJECT in proxy-group "$name" (no block outbound in '
+                  'sing-box 1.13+)',
+            ),
+          );
+          continue;
+        }
+        final tag = _target(member);
+        if (leafTags.contains(tag)) {
+          members.add(tag);
+        } else if (tier == 1 && surviving.contains(member)) {
+          members.add(member);
+        } else {
+          ledgers[i].add(
+            SingBoxDegradation(
+              kind: SingBoxDegradationKind.groupMember,
+              name: name,
+              reason: '成员 $member 在 sing-box 下不可用，已剪除',
+              message:
+                  'proxy-group "$name" member "$member" has no sing-box '
+                  'outbound',
+            ),
+          );
+        }
+      }
+      if (members.isEmpty) {
+        ledgers[i].add(
+          SingBoxDegradation(
+            kind: SingBoxDegradationKind.groupDropped,
+            name: name,
+            reason: '组内成员全部不可用',
+            message: 'proxy-group "$name" has no usable member',
+          ),
+        );
+      } else {
+        resolved[i] = members;
+        surviving.add(name);
+      }
+    }
   }
-  return (source: group, type: type, members: members);
+  final filtered = <_FilteredGroup>[];
+  for (var i = 0; i < groups.length; i++) {
+    degradations.addAll(ledgers[i]);
+    final members = resolved[i];
+    if (members != null) {
+      filtered.add((
+        source: candidates[i]!.source,
+        type: candidates[i]!.type,
+        members: members,
+      ));
+    }
+  }
+  return filtered;
 }
 
 Map<String, Object?> _urlTestChild(
@@ -558,21 +661,14 @@ SingBoxRenderResult renderSingBox(
       leafOrder.add(node.name);
     }
   }
-  final sourceGroupNames = {
-    for (final group in profile.groups) _asString(group['name']),
+  final groupByName = <String, Map<String, Object?>>{
+    for (final group in profile.groups) _asString(group['name']): group,
   };
-  final groupByName = <String, Map<String, Object?>>{};
-  final filteredGroups = <_FilteredGroup>[];
-  for (final group in profile.groups) {
-    groupByName[_asString(group['name'])] = group;
-    final filtered = _filterGroupMembers(
-      group,
-      leafTags: leafTags,
-      sourceGroupNames: sourceGroupNames,
-      degradations: degradations,
-    );
-    if (filtered != null) filteredGroups.add(filtered);
-  }
+  final filteredGroups = _resolveGroups(
+    profile.groups,
+    leafTags: leafTags,
+    degradations: degradations,
+  );
   // A url-test group renders dual-layer (§2(b) exception).
   final takenTags = <String>{
     ...leafTags,
@@ -614,11 +710,24 @@ SingBoxRenderResult renderSingBox(
     allTags,
     degradations,
   );
+  final memberReferenced = <String>{
+    for (final group in survivingGroups)
+      for (final member in _asList(group['outbounds'])) member.toString(),
+  };
   var primaryOutbound = 'direct';
   for (final group in survivingGroups) {
-    if (group['type'] == 'selector') {
-      primaryOutbound = group['tag'].toString();
+    final tag = group['tag'].toString();
+    if (group['type'] == 'selector' && !memberReferenced.contains(tag)) {
+      primaryOutbound = tag;
       break;
+    }
+  }
+  if (primaryOutbound == 'direct') {
+    for (final group in survivingGroups) {
+      if (group['type'] == 'selector') {
+        primaryOutbound = group['tag'].toString();
+        break;
+      }
     }
   }
   if (primaryOutbound == 'direct') {

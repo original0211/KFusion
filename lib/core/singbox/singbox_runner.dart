@@ -192,7 +192,7 @@ class SingBoxClashApi {
     return _send(
       'PUT',
       '/proxies/${Uri.encodeComponent(groupName)}',
-      body: {'name': proxyName},
+      body: {'name': proxyName == 'DIRECT' ? 'direct' : proxyName},
     );
   }
 
