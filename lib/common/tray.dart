@@ -75,7 +75,7 @@ class AppTray implements TrayPort {
     int? shellLight;
     try {
       final key = CURRENT_USER.open(
-        r'Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize',
+        r'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize',
       );
       try {
         shellLight = key.getInt('SystemUsesLightTheme');

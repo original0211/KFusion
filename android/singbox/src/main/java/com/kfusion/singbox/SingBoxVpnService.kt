@@ -88,7 +88,7 @@ class SingBoxVpnService : SystemVpnService(), PlatformInterface, CommandServerHa
         ensureNotificationChannel()
         startForeground(
             NotificationCompat.Builder(this, GlobalState.NOTIFICATION_CHANNEL)
-                .setContentTitle("KFusion · sing-box")
+                .setContentTitle("Vessel · sing-box")
                 .setContentText(
                     if (commandServer != null) "sing-box VPN 运行中" else "sing-box VPN 正在启动",
                 )
