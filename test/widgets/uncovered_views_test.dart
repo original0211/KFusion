@@ -125,6 +125,37 @@ void main() {
     expect(find.byType(CommonPopupMenu), findsNothing);
   });
 
+  testWidgets('proxies setting toggles hidden timeout proxies', (tester) async {
+    final container = _containerFor(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(child: Scaffold(body: ProxiesSetting())),
+      ),
+    );
+    await tester.pump();
+    final l10n = AppLocalizations.current;
+
+    expect(
+      container.read(proxiesStyleSettingProvider).hideTimeoutProxies,
+      isFalse,
+    );
+    await tester.tap(find.text(l10n.hideTimeoutProxies));
+    await tester.pumpAndSettle();
+    expect(
+      container.read(proxiesStyleSettingProvider).hideTimeoutProxies,
+      isTrue,
+    );
+    await tester.tap(find.text(l10n.hideTimeoutProxies));
+    await tester.pumpAndSettle();
+    expect(
+      container.read(proxiesStyleSettingProvider).hideTimeoutProxies,
+      isFalse,
+    );
+    expect(tester.takeException(), null);
+  });
+
   testWidgets('about view renders version and link sections', (tester) async {
     final container = _containerFor(tester);
 
