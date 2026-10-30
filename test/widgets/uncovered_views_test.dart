@@ -125,6 +125,37 @@ void main() {
     expect(find.byType(CommonPopupMenu), findsNothing);
   });
 
+  testWidgets('proxies setting picks its card size from a menu', (
+    tester,
+  ) async {
+    final container = _containerFor(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(child: Scaffold(body: ProxiesSetting())),
+      ),
+    );
+    await tester.pump();
+    final l10n = AppLocalizations.current;
+
+    expect(
+      container.read(proxiesStyleSettingProvider).cardType,
+      ProxyCardType.standard,
+    );
+    await tester.tap(find.text(l10n.size));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(ProxyCardType.compact.label));
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(proxiesStyleSettingProvider).cardType,
+      ProxyCardType.compact,
+    );
+    expect(find.byType(CommonPopupMenu), findsNothing);
+    expect(tester.takeException(), null);
+  });
+
   testWidgets('proxies setting toggles hidden timeout proxies', (tester) async {
     final container = _containerFor(tester);
 

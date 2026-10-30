@@ -78,6 +78,19 @@ class ProxiesSetting extends ConsumerWidget {
               ),
             ),
           ),
+          _HaraOptions<ProxyCardType>(
+            ConfigOptionsItem<ProxyCardType>(
+              title: (l) => l.size,
+              options: ProxyCardType.values,
+              textBuilder: (type) => type.label,
+              selector: proxiesStyleSettingProvider.select(
+                (state) => state.cardType,
+              ),
+              onChanged: _writer(
+                (state, value) => state.copyWith(cardType: value),
+              ),
+            ),
+          ),
           if (isList)
             _HaraOptions<ProxiesIconStyle>(
               ConfigOptionsItem<ProxiesIconStyle>(
