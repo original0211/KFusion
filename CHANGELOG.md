@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.38 (2026-10-30)
+
+**Features**
+
+- The dialog layer joins the Hara A surface. The shared dialog components — the common alert, the input dialog and the facade the app calls them through — retire the liquid-glass material and the capsule buttons: panels are now flat fields in the page background colour, closed by a hairline border, and the action row is unfilled text whose hierarchy is carried by type weight alone, the default and destructive actions set a step heavier and the destructive action keeping its system red as a text colour. Titles and body copy take the shared type scale, and input fields take the square corner. Return values, barrier behaviour, validation and focus flow are exactly what they were — only the presentation changed. (8ae4ca0)
+
+**Bug Fixes**
+
+- Switching nodes under sing-box works for names beyond plain ASCII. The clash API client wrote its JSON request bodies as strings, and with no charset on the content type the HTTP stack fell back to Latin-1 — so any node or group name holding a character above U+00FF (Chinese names, flag-emoji names, in practice most real panels) raised an argument error on the device and the switch silently rolled back to the previous selection before a single byte was sent. Request bodies are now encoded as explicit UTF-8 bytes with a declared content length. The read paths never carried this defect, and the mode and connection calls, whose payloads are pure ASCII, send byte-for-byte what they sent before. (d0403e7)
+- The Android launcher icon is rebuilt on the standard adaptive structure. The foreground, which reached its bitmap through a bitmap element wrapping a mipmap, now references the full-colour vector glyph directly, and the monochrome layer — which pointed at that same colour bitmap — gains a dedicated monochrome vector of its own, the ring-and-point glyph carried in alpha. On ROM icon pipelines that mishandled the inherited structure the glyph was dropped or tinted into the white ground, and the icon rendered as a blank white disc in the drawer and the system app-info page; the resource change also gives those pipelines a new structure to generate from. The legacy raster icons used by older Android versions are untouched. (0792ff2)
+- The point returns to the Android system icons. The quick-settings tile, the foreground-service notification icon and the sing-box status icon drew ring and point inside a single even-odd path, and the fill rule cut away the part of the point that overlaps the ring band — roughly five percent of the point survived, a faint crescent where the mark carries a full dot. The point now stands in a filled path of its own, with every geometric parameter — the ring, the point radius, its seat on the ring midline and the 157-degree bearing — exactly as designed. (91c9500)
+
 ## v0.2.37 (2026-10-30)
 
 **Features**
