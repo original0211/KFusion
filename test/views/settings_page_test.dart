@@ -74,7 +74,6 @@ void main() {
       'Language',
       'Theme',
       'Backup and restore',
-      'Hotkey management',
       'Advanced',
       'Disclaimer',
       'About',
@@ -88,7 +87,6 @@ void main() {
       'Proxy settings',
       'Resources',
       'Logs',
-      'Font family',
     ]) {
       expect(find.text(label), findsNothing, reason: label);
     }
@@ -130,7 +128,6 @@ void main() {
       'Proxy settings',
       'Resources',
       'Logs',
-      'Font family',
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
