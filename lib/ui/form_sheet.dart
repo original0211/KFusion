@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:kfusion/ui/dialog.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/inherited.dart';
 import 'package:kfusion/ui/sheet.dart';
 import 'package:kfusion/ui/sheet_navigator.dart';
@@ -84,7 +85,7 @@ class _FormSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final palette = context.haraPalette;
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     return Semantics(
       scopesRoute: true,
@@ -105,8 +106,13 @@ class _FormSheet extends StatelessWidget {
                 child: Material(
                   color:
                       backgroundColor ??
-                      SurfaceLevel.page.colorOf(theme.colorScheme),
-                  shape: theme.dialogTheme.shape ?? AppShape.xxl,
+                      SurfaceLevel.page.colorOf(Theme.of(context).colorScheme),
+                  shape: AppShape.hara.copyWith(
+                    side: BorderSide(
+                      color: palette.line,
+                      width: HaraSpace.hairline,
+                    ),
+                  ),
                   clipBehavior: Clip.antiAlias,
                   child: MediaQuery.removeViewInsets(
                     context: context,

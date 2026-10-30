@@ -847,7 +847,7 @@ in `lib/views/config/network.dart` and `_appSettingToggle` in `lib/views/config/
 `ConsumerWidget` only when a row is genuinely reused across screens. Rows with bespoke behaviour — a custom dialog, a derived value, or a
 second provider write — stay hand-written rather than growing extra parameters on the shared items.
 
-In an inset grouped list (`generateSection`, `generateAnimatedSection`), a row's subtitle shows its value or state,
+In an inset grouped list (`generateSection`), a row's subtitle shows its value or state,
 never what the setting does. As iOS settings do, the explanation goes in the group's `footer`, drawn by `ListFooter`,
 one sentence per setting that names it. A section header carries its title and at most a few actions on the group, as
 `IconButtonData`: `ListHeader` draws them as 36 dp tonal buttons (`TonalButtonSize.section`), the first two grouped,

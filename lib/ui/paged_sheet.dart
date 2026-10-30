@@ -90,7 +90,7 @@ class PagedSheet extends StatelessWidget {
       animationDuration: Duration.zero,
       color: _sheetColorOf(context),
       shape: type == SheetType.bottomSheet
-          ? AppShape.top(AppCorner.floating)
+          ? AppShape.top(AppCorner.hara)
           : AppShape.none,
       clipBehavior: Clip.antiAlias,
       child: NavigatorResizable(child: child),

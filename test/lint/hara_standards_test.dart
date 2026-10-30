@@ -173,6 +173,41 @@ void main() {
       expect(source, contains('HaraHairline'));
     });
 
+    // The sheet layer is a shared component family: held by this pin, not aSurfaces.
+    test('the sheet layer keeps square corners and a square handle', () {
+      final snap = read('lib/ui/snap_sheet.dart');
+      expect(
+        snap.contains('AppCorner.floating'),
+        isFalse,
+        reason: 'snap_sheet.dart: AppCorner.floating',
+      );
+      expect(snap, contains('AppRadius.top(AppCorner.hara)'));
+      final paged = read('lib/ui/paged_sheet.dart');
+      expect(
+        paged.contains('AppCorner.floating'),
+        isFalse,
+        reason: 'paged_sheet.dart: AppCorner.floating',
+      );
+      expect(paged, contains('AppShape.top(AppCorner.hara)'));
+      final form = read('lib/ui/form_sheet.dart');
+      for (final token in const ['AppShape.xxl', 'dialogTheme.shape']) {
+        expect(
+          form.contains(token),
+          isFalse,
+          reason: 'form_sheet.dart: $token',
+        );
+      }
+      expect(form, contains('AppShape.hara'));
+      expect(form, contains('HaraSpace.hairline'));
+      final header = read('lib/ui/sheet_header.dart');
+      expect(
+        header.contains('AppShape.all'),
+        isFalse,
+        reason: 'sheet_header.dart: AppShape.all',
+      );
+      expect(header, contains('AppShape.hara'));
+    });
+
     test('the disc mark keeps its settled values', () {
       expect(DiscGeometry.dotDirection, closeTo(157 * math.pi / 180, 1e-12));
       expect(DiscGeometry.dotDiameterRatio, 0.16);

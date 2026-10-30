@@ -114,7 +114,7 @@ class _Banner extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: ShapeDecoration(
         color: color,
-        shape: AppShape.xl.copyWith(side: context.colorScheme.cabinRimSide),
+        shape: AppShape.hara.copyWith(side: context.colorScheme.cabinRimSide),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

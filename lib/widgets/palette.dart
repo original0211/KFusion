@@ -699,6 +699,7 @@ class _HexColorFieldState extends State<HexColorField> {
   @override
   Widget build(BuildContext context) {
     return FilledInputTheme(
+      borderRadius: AppRadius.hara,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: TextField(
         controller: _controller,

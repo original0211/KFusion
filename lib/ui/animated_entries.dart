@@ -6,7 +6,6 @@ import 'package:kfusion/ui/metrics.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'inherited.dart';
-import 'list.dart';
 
 /// Each entry runs on a controller of its own, so a change made while another
 /// entry still moves leaves that one running.
@@ -233,18 +232,4 @@ class _AnimatedEntriesState extends State<AnimatedEntries>
       ],
     );
   }
-}
-
-Widget generateAnimatedSection({
-  String? title,
-  required List<Widget> items,
-  String? footer,
-}) {
-  return Column(
-    children: [
-      if (items.isNotEmpty && title != null) ListHeader(title: title),
-      AnimatedEntries(grouped: true, children: items),
-      if (items.isNotEmpty && footer != null) ListFooter(text: footer),
-    ],
-  );
 }

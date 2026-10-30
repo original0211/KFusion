@@ -38,7 +38,7 @@ void main() {
     );
 
     expect(material.color, SurfaceLevel.page.colorOf(ColorScheme.of(context)));
-    expect(material.shape, AppShape.top(AppCorner.floating));
+    expect(material.shape, AppShape.top(AppCorner.hara));
     expect(material.clipBehavior, Clip.antiAlias);
   });
 

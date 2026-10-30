@@ -800,7 +800,7 @@ class _SnapSheetState extends State<_SnapSheet>
             _model.dragEnd(-(details.primaryVelocity ?? 0)),
         onVerticalDragCancel: () => _model.dragEnd(0),
         child: ClipRSuperellipse(
-          borderRadius: AppRadius.top(AppCorner.floating),
+          borderRadius: AppRadius.top(AppCorner.hara),
           child: Theme(
             data: theme.copyWith(scaffoldBackgroundColor: sheetColor),
             child: Material(

@@ -83,6 +83,11 @@ void main() {
         .first;
     expect(tester.getCenter(card).dx, 600);
     expect(tester.getSize(card).width, 440);
+    final cardShape = tester.widget<Material>(card).shape;
+    expect(cardShape, isA<RoundedSuperellipseBorder>());
+    final side = (cardShape as RoundedSuperellipseBorder).side;
+    expect(side.width, HaraSpace.hairline);
+    expect(cardShape.borderRadius, BorderRadius.zero);
     expect(_field(tester).textAlign, TextAlign.end);
     expect(_field(tester).decoration?.border, isA<NoInputBorder>());
     expect(find.widgetWithText(TextButton, 'Cancel'), findsOneWidget);
