@@ -158,7 +158,12 @@ class SingBoxClashApi {
       request.headers.set('Authorization', 'Bearer $secret');
       if (body != null) {
         request.headers.set('Content-Type', 'application/json');
-        request.write(json.encode(body));
+        // Names are user-controlled text; write() would encode the string
+        // as latin1 (the request default without a charset) and throw on
+        // any code point above U+00FF, so send UTF-8 bytes explicitly.
+        final bytes = utf8.encode(json.encode(body));
+        request.contentLength = bytes.length;
+        request.add(bytes);
       }
       final response = await request.close();
       final text = await response.transform(utf8.decoder).join();

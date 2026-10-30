@@ -331,7 +331,15 @@ void main() {
     Future<
       ({
         int port,
-        List<({String method, String path, String body, String? auth})>
+        List<
+          ({
+            String method,
+            String path,
+            String body,
+            List<int> bodyBytes,
+            String? auth,
+          })
+        >
         requests,
       })
     >
@@ -342,13 +350,25 @@ void main() {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       addTearDown(() => server.close(force: true));
       final requests =
-          <({String method, String path, String body, String? auth})>[];
+          <
+            ({
+              String method,
+              String path,
+              String body,
+              List<int> bodyBytes,
+              String? auth,
+            })
+          >[];
       server.listen((request) async {
-        final body = await utf8.decoder.bind(request).join();
+        final bodyBytes = await request.fold<List<int>>(
+          <int>[],
+          (bytes, chunk) => bytes..addAll(chunk),
+        );
         requests.add((
           method: request.method,
           path: request.uri.path,
-          body: body,
+          body: utf8.decode(bodyBytes),
+          bodyBytes: bodyBytes,
           auth: request.headers.value('Authorization'),
         ));
         request.response.statusCode = statusCode;
@@ -372,6 +392,33 @@ void main() {
       expect(json.decode(request.body), {'name': 'HK-01'});
       expect(request.auth, 'Bearer s3cr3t');
     });
+
+    test(
+      'changeProxy sends a flag-prefixed node name as UTF-8 bytes',
+      () async {
+        final api = await serveApi(statusCode: 204);
+        final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+        await client.changeProxy('⚡ CF前置', '🇹🇼_台湾-05-01');
+        expect(api.requests, hasLength(1));
+        final request = api.requests.single;
+        expect(request.method, 'PUT');
+        expect(request.bodyBytes, utf8.encode('{"name":"🇹🇼_台湾-05-01"}'));
+      },
+    );
+
+    test(
+      'changeProxy sends a plain Chinese node name as UTF-8 bytes',
+      () async {
+        final api = await serveApi(statusCode: 204);
+        final client = SingBoxClashApi(port: api.port, secret: 's3cr3t');
+        await client.changeProxy('节点选择', '台湾-05-01');
+        expect(api.requests, hasLength(1));
+        expect(
+          api.requests.single.bodyBytes,
+          utf8.encode('{"name":"台湾-05-01"}'),
+        );
+      },
+    );
 
     test('changeProxy surfaces the panel error message', () async {
       final api = await serveApi(
