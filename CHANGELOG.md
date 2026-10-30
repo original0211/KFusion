@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.40 (2026-10-31)
+
+**Features**
+
+- The resources, logs and developer pages behind the advanced gate join the Hara A surface. The three pages trade the stock list items for the settings family's hairline rows: a flat field in the page background colour, hairline rules and ink labels on the shared type scale. Nothing about what the pages do has changed — the log page keeps its scrolling, search and export, the resources page keeps its menus and sync actions, and the developer page keeps its mode switch and its cache actions; only the surface they sit on is new. (552bd54)
+- The sing-box renderer now carries one level of user group nesting. A subscription group whose members include another group — the common shape of a top-level selection group holding an automatic group — used to be dropped whole for nesting, so the outer group never reached the kernel and its members could not be chosen. The outer group is now rendered as a selector over the inner group and its leaf members, and the route's final outbound points at the outermost group, matching what the mihomo core does with the same profile. Nesting deeper than one level and groups that reference each other in a cycle are still refused and named in the degradation list; a circular outbound is never handed to the kernel. The renderer's own synthesized auto children do not count against the one user level. Selecting the direct outbound now also reaches the kernel under the tag it answers to. (8ff08e7)
+- The proxy settings page joins the Hara A surface. Its option rows — card style, sorting, layout, card size and icon style — and its timeout filter switch now render as the settings family's hairline rows, opening the same popup menu and writing the same values as before. The page's behaviour is unchanged; only its surface is new. (042eb2e)
+
+**Bug Fixes**
+
+- Record labels now take their emphasis weight from the shared text style tokens instead of a literal font weight, bringing the one place that set a weight outside the type scale back inside it. The labels render as they did; the weight now comes from the same token every other label uses. (f1eb067)
+- Under sing-box, the proxy panel no longer offers groups the kernel does not carry. The panel's group list and the kernel's own list could disagree — a group dropped by the renderer still showed as tappable and answered every tap with a 404 — so the panel now reconciles against the table the kernel reports: a group absent from that table is marked unavailable under sing-box and its members cannot be tapped, and the GLOBAL entry becomes an exit indicator showing the outbound traffic currently leaves through, instead of a group that was never an outbound. A failed panel fetch is no longer mistaken for an empty kernel table. The mihomo panel is untouched. (0343766)
+- The card size row is back on the proxy settings page. The page's move to the settings family rows dropped the row that switches the proxy card size; the row is restored in the new surface, in its old position, reading and writing the same setting through the same menu as before. (17183e2)
+- The Android launcher icon now reaches the drawer intact. The adaptive icon's foreground pointed at a vector drawable, and on launchers that rasterise that path the icon arrived as a plain white disc — the ring and the vermilion dot gone. The foreground now references the shipped raster mipmaps directly, the same bytes the icon has always shipped, so the mark the launcher draws is the mark that was designed. The monochrome layer and the themed-icon behaviour are unchanged. (1b6c413)
+
 ## v0.2.39 (2026-10-30)
 
 **Features**
