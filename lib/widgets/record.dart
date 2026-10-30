@@ -141,10 +141,9 @@ class RecordLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Text(
       label,
-      style: TextStyle(
-        color: tone.accentColor(context),
-        fontWeight: FontWeight.w500,
-      ),
+      style: AppTextStyle.caption1
+          .of(context, emphasized: true)
+          .copyWith(color: tone.accentColor(context)),
     );
     if (onPressed == null) return text;
     return GestureDetector(onTap: onPressed, child: text);
