@@ -146,8 +146,13 @@ void main() {
     expect(byTag['HY2']?['type'], 'hysteria2');
     expect(byTag['TUIC']?['type'], 'tuic');
     expect(byTag['PROXY']?['type'], 'selector');
-    expect(byTag['Auto']?['type'], 'urltest');
-    expect(byTag['Auto']?['interval'], '300s');
+    expect(byTag['Auto']?['type'], 'selector');
+    expect(byTag['Auto']?['outbounds'], ['Auto · auto', 'SS', 'VMess']);
+    expect(byTag['Auto']?['default'], 'Auto · auto');
+    expect(byTag['Auto · auto']?['type'], 'urltest');
+    expect(byTag['Auto · auto']?['outbounds'], ['SS', 'VMess']);
+    expect(byTag['Auto · auto']?['interval'], '300s');
+    expect(byTag['Auto · auto']?['tolerance'], 50);
     expect(byTag['direct']?['type'], 'direct');
     expect(byTag.containsKey('block'), isFalse);
     final route = config['route'] as Map;
@@ -389,7 +394,9 @@ void main() {
     };
     final result = renderSingBoxFromClash(clash, secret: 'test-secret');
     final route = result.config['route'] as Map;
-    expect(route['final'], 'PROXY');
+    // The url-test group now renders as a selector too (dual-layer),
+    // and it comes first, so it is the primary outbound.
+    expect(route['final'], 'Auto');
   });
 
   test('a group of only REJECT members is dropped entirely', () {
@@ -488,7 +495,14 @@ void main() {
     final front = outbounds.firstWhere(
       (outbound) => outbound['tag'] == '⚡ CF前置',
     );
-    expect(front['outbounds'], ['CF-01', 'CF-02']);
+    expect(front['type'], 'selector');
+    expect(front['outbounds'], ['⚡ CF前置 · auto', 'CF-01', 'CF-02']);
+    expect(front['default'], '⚡ CF前置 · auto');
+    final frontAuto = outbounds.firstWhere(
+      (outbound) => outbound['tag'] == '⚡ CF前置 · auto',
+    );
+    expect(frontAuto['type'], 'urltest');
+    expect(frontAuto['outbounds'], ['CF-01', 'CF-02']);
     final route = result.config['route'] as Map;
     expect(route['final'], '⚡ CF前置');
     expect(
@@ -696,8 +710,9 @@ void main() {
       ).map((d) => d.name),
       containsAll(['CycleA', 'CycleB', 'SelfRef']),
     );
-    // No emitted outbound may list another outbound as a member, so the
-    // member graph is a star over leaves and a cycle cannot exist.
+    // The member graph is a star over leaves plus exactly one
+    // generated layer: a selector may list its own urltest child,
+    // whose members are leaves only, so no cycle can exist.
     for (final outbound in outbounds) {
       final members = outbound['outbounds'];
       if (members is List) {
@@ -705,11 +720,116 @@ void main() {
           final target = outbounds.firstWhere(
             (entry) => entry['tag'] == member,
           );
-          expect(target.containsKey('outbounds'), isFalse, reason: '$member');
+          if (target.containsKey('outbounds')) {
+            expect(target['type'], 'urltest', reason: '$member');
+            expect(
+              member.toString().startsWith('${outbound['tag']} · auto'),
+              isTrue,
+              reason: '$member',
+            );
+            for (final childMember in target['outbounds'] as List) {
+              final childTarget = outbounds.firstWhere(
+                (entry) => entry['tag'] == childMember,
+              );
+              expect(
+                childTarget.containsKey('outbounds'),
+                isFalse,
+                reason: '$childMember',
+              );
+            }
+          }
         }
       }
     }
     _expectAllReferencesResolve(result.config);
+  });
+
+  test('url-test auto child tag escalates past taken tags', () {
+    expect(singBoxAutoGroupTag('Auto', const {}), 'Auto · auto');
+    expect(singBoxAutoGroupTag('Auto', const {'Auto · auto'}), 'Auto · auto 2');
+    expect(
+      singBoxAutoGroupTag('Auto', const {'Auto · auto', 'Auto · auto 2'}),
+      'Auto · auto 3',
+    );
+  });
+
+  test('a leaf owning the auto tag pushes the child to the next suffix', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+        {
+          'name': 'Auto · auto',
+          'type': 'ss',
+          'server': '1.2.3.5',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'Auto',
+          'type': 'url-test',
+          'proxies': ['SS', 'Auto · auto'],
+        },
+      ],
+    }, secret: 's');
+    final outbounds = _outbounds(result.config);
+    final byTag = {
+      for (final outbound in outbounds) outbound['tag'].toString(): outbound,
+    };
+    expect(byTag['Auto · auto']?['type'], 'shadowsocks');
+    expect(byTag['Auto · auto 2']?['type'], 'urltest');
+    expect(byTag['Auto']?['outbounds'], ['Auto · auto 2', 'SS', 'Auto · auto']);
+    expect(byTag['Auto']?['default'], 'Auto · auto 2');
+    _expectAllReferencesResolve(result.config);
+  });
+
+  test('a select-only render keeps its pre-dual-layer shape exactly', () {
+    final result = renderSingBoxFromClash({
+      'proxies': [
+        {
+          'name': 'SS',
+          'type': 'ss',
+          'server': '1.2.3.4',
+          'port': 8388,
+          'cipher': 'aes-256-gcm',
+          'password': 'pw',
+        },
+      ],
+      'proxy-groups': [
+        {
+          'name': 'PROXY',
+          'type': 'select',
+          'proxies': ['SS', 'DIRECT'],
+        },
+      ],
+      'rules': <String>[],
+    }, secret: 's');
+    expect(_outbounds(result.config), [
+      {
+        'tag': 'SS',
+        'server': '1.2.3.4',
+        'server_port': 8388,
+        'type': 'shadowsocks',
+        'method': 'aes-256-gcm',
+        'password': 'pw',
+      },
+      {
+        'type': 'selector',
+        'tag': 'PROXY',
+        'outbounds': ['SS', 'direct'],
+      },
+      {'type': 'direct', 'tag': 'direct'},
+    ]);
+    expect(result.degradations, isEmpty);
   });
 
   test('degradation ledger serializes to a stable json shape', () {
@@ -894,7 +1014,8 @@ void main() {
           },
         ],
       }, secret: 's');
-      expect(byTag(result.config, 'Auto')['interval'], '300s');
+      expect(byTag(result.config, 'Auto · auto')['interval'], '300s');
+      expect(byTag(result.config, 'Auto')['type'], 'selector');
     });
 
     test('an unsupported protocol degrades instead of rendering', () {

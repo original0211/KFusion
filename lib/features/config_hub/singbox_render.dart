@@ -333,7 +333,25 @@ Map<String, Object?>? _wireGuardEndpoint(
   };
 }
 
-Map<String, Object?>? _groupToSingBox(
+/// The tag of the urltest child the renderer generates inside a
+/// dual-layer url-test group (§2(b) exception); the UI shares it.
+String singBoxAutoGroupTag(String groupName, Set<String> takenTags) {
+  final base = '$groupName · auto';
+  if (!takenTags.contains(base)) return base;
+  var suffix = 2;
+  while (takenTags.contains('$base $suffix')) {
+    suffix++;
+  }
+  return '$base $suffix';
+}
+
+typedef _FilteredGroup = ({
+  Map<String, Object?> source,
+  String type,
+  List<String> members,
+});
+
+_FilteredGroup? _filterGroupMembers(
   Map<String, Object?> group, {
   required Set<String> leafTags,
   required Set<String> sourceGroupNames,
@@ -408,22 +426,23 @@ Map<String, Object?>? _groupToSingBox(
     );
     return null;
   }
-  switch (type) {
-    case 'select':
-      return {'type': 'selector', 'tag': name, 'outbounds': members};
-    case 'url-test':
-      return {
-        'type': 'urltest',
-        'tag': name,
-        'outbounds': members,
-        'url': _asString(group['url'], 'https://www.gstatic.com/generate_204'),
-        if (group['interval'] != null)
-          'interval': _intervalText(group['interval']),
-        if (group['tolerance'] != null) 'tolerance': group['tolerance'],
-      };
-    default:
-      return null;
-  }
+  return (source: group, type: type, members: members);
+}
+
+Map<String, Object?> _urlTestChild(
+  _FilteredGroup group, {
+  required String tag,
+}) {
+  final source = group.source;
+  return {
+    'type': 'urltest',
+    'tag': tag,
+    'outbounds': group.members,
+    'url': _asString(source['url'], 'https://www.gstatic.com/generate_204'),
+    if (source['interval'] != null)
+      'interval': _intervalText(source['interval']),
+    if (source['tolerance'] != null) 'tolerance': source['tolerance'],
+  };
 }
 
 String _intervalText(Object? value) {
@@ -543,16 +562,43 @@ SingBoxRenderResult renderSingBox(
     for (final group in profile.groups) _asString(group['name']),
   };
   final groupByName = <String, Map<String, Object?>>{};
-  final survivingGroups = <Map<String, Object?>>[];
+  final filteredGroups = <_FilteredGroup>[];
   for (final group in profile.groups) {
     groupByName[_asString(group['name'])] = group;
-    final outbound = _groupToSingBox(
+    final filtered = _filterGroupMembers(
       group,
       leafTags: leafTags,
       sourceGroupNames: sourceGroupNames,
       degradations: degradations,
     );
-    if (outbound != null) survivingGroups.add(outbound);
+    if (filtered != null) filteredGroups.add(filtered);
+  }
+  // A url-test group renders dual-layer (§2(b) exception).
+  final takenTags = <String>{
+    ...leafTags,
+    for (final filtered in filteredGroups) _asString(filtered.source['name']),
+  };
+  final survivingGroups = <Map<String, Object?>>[];
+  for (final filtered in filteredGroups) {
+    final name = _asString(filtered.source['name']);
+    switch (filtered.type) {
+      case 'select':
+        survivingGroups.add({
+          'type': 'selector',
+          'tag': name,
+          'outbounds': filtered.members,
+        });
+      case 'url-test':
+        final childTag = singBoxAutoGroupTag(name, takenTags);
+        takenTags.add(childTag);
+        survivingGroups.add(_urlTestChild(filtered, tag: childTag));
+        survivingGroups.add({
+          'type': 'selector',
+          'tag': name,
+          'outbounds': [childTag, ...filtered.members],
+          'default': childTag,
+        });
+    }
   }
   outbounds.addAll(survivingGroups);
   outbounds.add(const {'type': 'direct', 'tag': 'direct'});

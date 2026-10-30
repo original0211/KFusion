@@ -142,6 +142,7 @@ class ProxiesAction extends _$ProxiesAction {
         },
         retryIf: (res) => res.isEmpty,
       );
+      ref.invalidate(singBoxPanelGroupsProvider);
     } catch (e) {
       // The Core failure path already runs inside the retry task above; a
       // throw here only means ref.read hit a disposed container or the
@@ -188,6 +189,7 @@ class ProxiesAction extends _$ProxiesAction {
       final api = bearingSingBoxApi(ref);
       if (api != null) {
         await api.changeProxy(groupName, proxyName);
+        ref.invalidate(singBoxPanelGroupsProvider);
         result = const ChangeProxyResult(changed: true);
       } else {
         result = await _core.changeProxy(

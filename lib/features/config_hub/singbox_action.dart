@@ -1062,6 +1062,67 @@ SingBoxClashApi? bearingSingBoxApi(Ref ref) {
   return ref.read(singBoxActionProvider.notifier).api;
 }
 
+typedef SingBoxPanelGroup = ({String type, String now, List<String> all});
+
+/// The bearing panel's group table; empty while sing-box does not bear.
+final singBoxPanelGroupsProvider =
+    FutureProvider.autoDispose<Map<String, SingBoxPanelGroup>>((ref) async {
+      ref.watch(singBoxActionProvider);
+      final api = bearingSingBoxApi(ref);
+      if (api == null) {
+        return const {};
+      }
+      try {
+        return parseSingBoxPanelGroups(await api.getProxies());
+      } catch (_) {
+        return const {};
+      }
+    });
+
+Map<String, SingBoxPanelGroup> parseSingBoxPanelGroups(
+  Map<String, Object?> data,
+) {
+  final proxies = data['proxies'];
+  if (proxies is! Map) {
+    return const {};
+  }
+  final groups = <String, SingBoxPanelGroup>{};
+  for (final entry in proxies.entries) {
+    final value = entry.value;
+    if (value is! Map || value['all'] is! List) {
+      continue;
+    }
+    groups[entry.key.toString()] = (
+      type: value['type']?.toString() ?? '',
+      now: value['now']?.toString() ?? '',
+      all: [for (final member in value['all'] as List) member.toString()],
+    );
+  }
+  return groups;
+}
+
+/// The renderer's auto child under [groupName], replayed on the panel table.
+String? singBoxPanelAutoChild(
+  Map<String, SingBoxPanelGroup> panel,
+  String groupName,
+) {
+  final parent = panel[groupName];
+  if (parent == null || parent.type != 'Selector') {
+    return null;
+  }
+  final urlTestMembers = [
+    for (final member in parent.all)
+      if (panel[member]?.type == 'URLTest') member,
+  ];
+  for (final member in urlTestMembers) {
+    final taken = panel.keys.toSet()..remove(member);
+    if (singBoxAutoGroupTag(groupName, taken) == member) {
+      return member;
+    }
+  }
+  return urlTestMembers.length == 1 ? urlTestMembers.single : null;
+}
+
 /// The spelling sing-box's clash mode list carries for [mode].
 String singBoxClashModeName(Mode mode) {
   return switch (mode) {
