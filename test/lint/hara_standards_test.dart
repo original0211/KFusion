@@ -19,6 +19,7 @@ const aSurfaces = <String>[
   'lib/views/profiles/hara_profiles.dart',
   'lib/views/profiles/singbox_degradations.dart',
   'lib/views/profiles/universal_import.dart',
+  'lib/views/profiles/add.dart',
   'lib/views/tools.dart',
   'lib/views/advanced_gate.dart',
   'lib/views/config/advanced.dart',

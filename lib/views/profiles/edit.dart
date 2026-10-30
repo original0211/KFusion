@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:kfusion/common/common.dart';
@@ -299,8 +300,8 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     final appLocalizations = context.appLocalizations;
     final isUrl = widget.profile.type == ProfileType.url;
     final issue = _attempted ? _issue(appLocalizations) : null;
-    final sections = [
-      generateSection(
+    final sections = <Widget>[
+      _EditSection(
         items: [
           _ProfileNameField(
             controller: _labelController,
@@ -316,9 +317,9 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
           _AgeSecretKeyField(controller: _ageSecretKeyController),
         ],
       ),
-      generateSection(items: [_CoreKindField(profileId: widget.profile.id)]),
+      _EditSection(items: [_CoreKindField(profileId: widget.profile.id)]),
       if (isUrl)
-        generateSection(
+        _EditSection(
           items: [
             FormRow(
               title: appLocalizations.autoUpdate,
@@ -357,15 +358,28 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
               tooltip: appLocalizations.save,
             ),
             body: Builder(
-              builder: (context) => ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-                  top: context.contentTopPadding,
-                  bottom: BottomInsetScope.of(context) + 16,
+              builder: (context) => Material(
+                color: context.haraPalette.bg,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final side = max(
+                      HaraSpace.pageInset,
+                      (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+                    );
+                    return ListView(
+                      padding: EdgeInsets.fromLTRB(
+                        side,
+                        context.contentTopPadding,
+                        side,
+                        BottomInsetScope.of(context) + 16,
+                      ),
+                      children: [
+                        ErrorBanner(message: issue?.message),
+                        ...sections.separated(const SizedBox(height: 24)),
+                      ],
+                    );
+                  },
                 ),
-                children: [
-                  ErrorBanner(message: issue?.message),
-                  ...sections.separated(const SizedBox(height: 24)),
-                ],
               ),
             ),
           ),
@@ -702,6 +716,27 @@ class _ProfileFileItem extends StatelessWidget {
                 ),
         );
       },
+    );
+  }
+}
+
+/// Section grouping with the item positions [generateSection] assigned.
+class _EditSection extends StatelessWidget {
+  const _EditSection({required this.items});
+
+  final List<Widget> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < items.length; i++)
+          ItemPositionProvider(
+            position: ItemPosition.get(i, items.length),
+            child: items[i],
+          ),
+      ],
     );
   }
 }
