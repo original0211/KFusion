@@ -19,6 +19,8 @@ const aSurfaces = <String>[
   'lib/views/profiles/singbox_degradations.dart',
   'lib/views/profiles/universal_import.dart',
   'lib/views/tools.dart',
+  'lib/views/advanced_gate.dart',
+  'lib/views/config/advanced.dart',
   'lib/views/about.dart',
   'lib/views/access.dart',
   'lib/views/backup_and_restore.dart',

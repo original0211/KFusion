@@ -303,7 +303,9 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.byType(DecorationListItem), findsNWidgets(2));
+      expect(find.text('Network'), findsOneWidget);
+      expect(find.text('DNS'), findsOneWidget);
+      expect(find.byType(DecorationListItem), findsNothing);
     });
 
     ;
