@@ -2,6 +2,40 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.2.37",
+      "tag": "v0.2.37",
+      "date": "2026-10-30",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "5014645",
+              "text": "The dashboard disc completes its unification with the brand mark: the crescent bite that used to be cut out of the ring at 157 degrees is gone, and the ring now carries the mark's single point at the same angle. The point is a state light — it burns vermillion exactly while a core is running (connected, or suspended with the core alive) and the ring stands empty otherwise, the same rule the tray icon follows. The point takes over the status marker's old job, so the status row's separate dot retires and any one screen still shows at most one vermillion mark. The decorative readings of the disc — the brand empty state, the core-switch row glyph and the profile card watermark — render the same ring and never light."
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "e152147",
+              "text": "The brand mark now survives dark surfaces. The About page hero, which pointed at the monochrome asset, returns to the full-colour mark and picks a field by theme: ink ring with the vermillion point on light, a pale ring (#EDEDEA) with the dark-field point (#B03A30) on dark, where the ink version used to vanish — and took the point's colour with it even in light mode. The Windows tray gains dark-field variants of all four states, chosen from the taskbar's own light/dark setting and refreshed the moment the system theme changes. The launcher icon is regenerated at the design's small-size floor — a heavier ring and a full-size point — after the master's hairline weight shrank below visibility at drawer sizes and the icon rendered as a blank white disc. The Android quick-settings tile, foreground-service notification and sing-box status icons, which still carried the retired T-disc silhouette, now carry the current mark, and the last two hard-coded KFUSION brand strings read through the appName constant like everything else."
+            },
+            {
+              "id": "6d18e22",
+              "text": "Two leftovers from the rebrand and one silent failure. The tray's taskbar-theme probe read the registry with a malformed key path (doubled separators in a raw string), so the open always failed and the failure was swallowed — the SystemUsesLightTheme reading shipped in the dark-field work never actually took effect on a real machine and the icon always fell back to the platform brightness; the key now uses single separators like every other registry read in the tree. The Android notification channel name and the sing-box VPN notification title, which still said KFusion, now say Vessel Service and Vessel · sing-box (display strings only; the channel id is untouched, so existing notification settings carry over)."
+            },
+            {
+              "id": "25f01bd",
+              "text": "Sing-box becomes a full second core instead of a display-only one, and its process lifecycle is hardened. While sing-box bears the traffic, node selection, mode switching and delay tests now go to its panel API (new changeProxy, patchMode and closeConnections on the clash API client, with the panel's own error messages surfaced); the renderer emits the clash_mode rules that give the panel a real mode list (rule, Global, Direct) and the app mode is synced to the core at start. The dashboard ring, whose tap was hard-wired to nothing under sing-box, now stops sing-box exactly as it stops mihomo. On lifecycle: exiting the app stops sing-box as well as mihomo, so no orphaned sing-box.exe is left holding port 7890; a startup self-check reclaims any orphan that does survive, with process enumeration that reports its failures instead of silently returning an empty list (PowerShell CIM, with a corroborated tasklist fallback whose unverified entries are reclaimed only when they provably hold the port and match the app's own binary). A stop only counts when the run state and the port are actually released, and when port 7890 is occupied the failure message names the owner — a leftover sing-box from the previous run, this app's mihomo core process, another named program, or an explicitly unidentified one. Delay testing gains a visible testing state in the section head, and when a test-all run finishes the list re-sorts itself by delay (measured first, timeouts at the bottom) in presentation only — the stored configuration order and the current-exit marker are untouched."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.36",
       "tag": "v0.2.36",
       "date": "2026-10-30",
