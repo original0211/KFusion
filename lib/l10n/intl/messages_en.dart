@@ -1590,7 +1590,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "The UDP timeout is in seconds and works only with the gvisor, system and mixed stacks.",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("Ultra"),
-    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("Unavailable under sing-box"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage(
+      "Unavailable under sing-box",
+    ),
     "undo": MessageLookupByLibrary.simpleMessage("Undo"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("Unified delay"),
     "unknown": MessageLookupByLibrary.simpleMessage("Unknown"),

@@ -1705,7 +1705,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Le délai UDP est en secondes et ne fonctionne qu’avec les piles gvisor, system et mixed.",
     ),
     "ultra": MessageLookupByLibrary.simpleMessage("Ultra"),
-    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage("Indisponible sous sing-box"),
+    "unavailableUnderSingBox": MessageLookupByLibrary.simpleMessage(
+      "Indisponible sous sing-box",
+    ),
     "undo": MessageLookupByLibrary.simpleMessage("Annuler"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("Délai unifié"),
     "unknown": MessageLookupByLibrary.simpleMessage("Inconnu"),
