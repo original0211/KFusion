@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.41 (2026-10-31)
+
+**Features**
+
+- The profile add and edit pages join the Hara A surface. The add page's four entries — scan a QR code, import from a file, import from a link and the universal import — now render as the settings family's hairline rows, ink glyphs and labels on the shared type scale, and each row still leads exactly where it led. The edit page is recomposed in the same family layout — the same sections, name and URL fields, core switcher, auto-update switch and file actions on the shared page frame — while its validation, saving and update behaviour is unchanged. Only the surface the two pages sit on is new. (37acca7)
+- The sheet layer joins the Hara A surface, closing the internal unification series. Bottom sheets now rise with square top corners and a square drag handle in place of the rounded cap and pill; desktop form sheets are square cards with a hairline edge on the page background, the same form the dialogs took; and the theme colour picker's hex field takes the square corner too. Sheets open, drag, page and return their values exactly as before, menus and popups keep their sprung shape, and the grouped rows keep their card form — only the sheet corners changed. (9a08243)
+
 ## v0.2.40 (2026-10-31)
 
 **Features**
