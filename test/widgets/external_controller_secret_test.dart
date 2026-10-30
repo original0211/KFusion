@@ -43,12 +43,7 @@ void main() {
   }
 
   Future<void> tapControllerSwitch(WidgetTester tester) async {
-    await tester.tap(
-      find.descendant(
-        of: find.widgetWithText(ListTile, 'External controller'),
-        matching: find.byType(Switch),
-      ),
-    );
+    await tester.tap(find.text('External controller'));
     await tester.pumpAndSettle();
   }
 

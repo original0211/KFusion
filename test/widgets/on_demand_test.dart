@@ -257,10 +257,12 @@ void main() {
     tester,
   ) async {
     await pumpView(tester, isAndroid: true);
-    final batteryItem = find.ancestor(
-      of: find.text('Ignore battery optimization'),
-      matching: find.byType(DecorationListItem),
-    );
+    final batteryItem = find
+        .ancestor(
+          of: find.text('Ignore battery optimization'),
+          matching: find.byType(Row),
+        )
+        .first;
 
     await tester.tap(
       find.descendant(of: batteryItem, matching: find.text('Tap to authorize')),
@@ -282,10 +284,12 @@ void main() {
 
   testWidgets('an exempt app does not ask again', (tester) async {
     await pumpView(tester, isAndroid: true, batteryIgnored: true);
-    final batteryItem = find.ancestor(
-      of: find.text('Ignore battery optimization'),
-      matching: find.byType(DecorationListItem),
-    );
+    final batteryItem = find
+        .ancestor(
+          of: find.text('Ignore battery optimization'),
+          matching: find.byType(Row),
+        )
+        .first;
 
     await tester.tap(
       find.descendant(of: batteryItem, matching: find.text('Authorized')),
@@ -321,7 +325,14 @@ void main() {
     final appLocalizations = AppLocalizations.of(
       tester.element(find.byType(OnDemandView)),
     );
-    final row = tester.getRect(find.byType(DecorationListItem).first);
+    final row = tester.getRect(
+      find
+          .ancestor(
+            of: find.text(appLocalizations.locationPermission),
+            matching: find.byType(Row),
+          )
+          .first,
+    );
     final desc = find.text(appLocalizations.locationPermissionDesc);
     final button = tester.getRect(
       find
@@ -333,7 +344,7 @@ void main() {
     );
 
     expect(button.center.dy, closeTo(row.center.dy, 1));
-    expect(button.right, closeTo(row.right - 16, 1));
+    expect(button.right, closeTo(row.right, 1));
     expect(tester.getTopLeft(desc).dy, greaterThanOrEqualTo(row.bottom));
   });
 

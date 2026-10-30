@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
@@ -135,37 +136,45 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
   Widget _buildItem({
     required String ssid,
     required int index,
-    required int length,
     required bool isSelected,
     required bool isEditing,
   }) {
-    final position = ItemPosition.get(index, length);
     return ReorderableDelayedDragStartListener(
       key: ValueKey(ssid),
       index: index,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ItemPositionProvider(
-          position: position,
-          child: SelectedDecorationListItem(
-            isEditing: isEditing,
-            title: TooltipText(
-              text: Text(ssid, maxLines: 2, overflow: TextOverflow.ellipsis),
+      child: _HaraRow(
+        onTap: () {
+          if (isEditing) {
+            _handleSelect(ssid);
+            return;
+          }
+          _handleAddOrUpdate(ssid);
+        },
+        child: Row(
+          children: [
+            Expanded(
+              child: TooltipText(
+                text: Text(ssid, maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
             ),
-            isSelected: isSelected,
-            onSelected: () {
-              ref.read(itemsProvider(key).notifier).update((state) {
-                final newState = Set<String>.from(state)..addOrRemove(ssid);
-                return newState;
-              });
-            },
-            onPressed: () {
-              _handleAddOrUpdate(ssid);
-            },
-          ),
+            CommonCheckBox(
+              value: isSelected,
+              isCircle: true,
+              onChanged: (_) {
+                _handleSelect(ssid);
+              },
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  void _handleSelect(String ssid) {
+    ref.read(itemsProvider(key).notifier).update((state) {
+      final newState = Set<String>.from(state)..addOrRemove(ssid);
+      return newState;
+    });
   }
 
   void _handleSelectAll() {
@@ -235,7 +244,20 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
     required String title,
     required Widget action,
   }) {
-    return DecorationListItem(title: TooltipLabel(title), trailing: action);
+    final palette = context.haraPalette;
+    return _HaraRow(
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: HaraText.nodeName(context, palette.ink, current: false),
+            ),
+          ),
+          action,
+        ],
+      ),
+    );
   }
 
   Widget _buildBatteryOptimizationItem() {
@@ -280,43 +302,96 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
   }
 
   Widget _buildPrerequisites() {
+    final palette = context.haraPalette;
     final appLocalizations = context.appLocalizations;
-    return generateSection(
-      title: appLocalizations.prerequisites,
-      items: [
-        if (_isAndroid) _buildBatteryOptimizationItem(),
-        if (_isAndroid || _isMacOS) _buildLocationPermissionItem(),
+    final rows = [
+      if (_isAndroid) _buildBatteryOptimizationItem(),
+      if (_isAndroid || _isMacOS) _buildLocationPermissionItem(),
+    ];
+    if (rows.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final footer = [
+      if (_isAndroid) appLocalizations.batteryOptimizationDesc,
+      if (_isAndroid || _isMacOS) appLocalizations.locationPermissionDesc,
+    ].join('\n');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          appLocalizations.prerequisites,
+          style: HaraText.sectionTitle(context, palette.dim),
+        ),
+        const SizedBox(height: HaraSpace.sectionTitleGap),
+        HaraHairline(color: palette.line),
+        ...rows,
+        const SizedBox(height: 8),
+        Text(footer, style: HaraText.profileMeta(context, palette.dim)),
       ],
-      footer: [
-        if (_isAndroid) appLocalizations.batteryOptimizationDesc,
-        if (_isAndroid || _isMacOS) appLocalizations.locationPermissionDesc,
-      ].join('\n'),
     );
   }
 
   Widget _buildExcludeSsidsHeader() {
+    final palette = context.haraPalette;
     final appLocalizations = context.appLocalizations;
     final hasSelection = ref.watch(itemsProvider(key)).isNotEmpty;
-    return ListHeader(
-      title: appLocalizations.excludeSsids,
-      actions: [
-        if (hasSelection) ...[
-          IconButtonData(
-            glyph: AppGlyphs.delete,
-            tooltip: appLocalizations.delete,
-            onPressed: _handleDelete,
-          ),
-          IconButtonData(
-            glyph: AppGlyphs.selectAll,
-            tooltip: appLocalizations.selectAll,
-            onPressed: _handleSelectAll,
-          ),
-        ] else
-          IconButtonData(
-            glyph: AppGlyphs.addCircle,
-            tooltip: appLocalizations.add,
-            onPressed: _handleAddOrUpdate,
-          ),
+    final actions = [
+      if (hasSelection) ...[
+        IconButtonData(
+          glyph: AppGlyphs.delete,
+          tooltip: appLocalizations.delete,
+          onPressed: _handleDelete,
+        ),
+        IconButtonData(
+          glyph: AppGlyphs.selectAll,
+          tooltip: appLocalizations.selectAll,
+          onPressed: _handleSelectAll,
+        ),
+      ] else
+        IconButtonData(
+          glyph: AppGlyphs.addCircle,
+          tooltip: appLocalizations.add,
+          onPressed: _handleAddOrUpdate,
+        ),
+    ];
+    final grouped = actions.length > 1 ? actions.take(2) : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                appLocalizations.excludeSsids,
+                style: HaraText.sectionTitle(context, palette.dim),
+              ),
+            ),
+            TonalButtonTheme(
+              size: TonalButtonSize.section,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: appBarActionSpace,
+                children: [
+                  if (grouped != null)
+                    TonalButtonGroup(
+                      size: TonalButtonSize.section,
+                      children: [
+                        for (final data in grouped)
+                          AppBarActionButton(data: data),
+                      ],
+                    ),
+                  for (final data in actions.skip(grouped?.length ?? 0))
+                    ElasticPress(
+                      enabled: !data.isLoading && data.onPressed != null,
+                      child: AppBarActionButton(data: data),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: HaraSpace.sectionTitleGap),
+        HaraHairline(color: palette.line),
       ],
     );
   }
@@ -327,7 +402,7 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
   ) {
     if (excludeSSIDs.isEmpty) {
       return SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 12),
+        padding: const EdgeInsets.only(top: 12),
         sliver: SliverToBoxAdapter(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 48),
@@ -344,7 +419,6 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
       ssid: excludeSSIDs[index],
       index: index,
       isSelected: selectedItems.contains(excludeSSIDs[index]),
-      length: excludeSSIDs.length,
     );
     return SliverPadding(
       padding: const EdgeInsets.only(top: 12),
@@ -360,35 +434,84 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.haraPalette;
     final excludeSSIDs = ref.watch(excludeSSIDsProvider);
     final selectedItems = ref.watch(itemsProvider(key));
-    return CommonScaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(top: context.appBarInset),
-            sliver: SliverToBoxAdapter(child: _buildPrerequisites()),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(child: _buildExcludeSsidsHeader()),
-          ),
-          _buildExcludeSsidsList(excludeSSIDs, selectedItems),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(bottom: 16),
-            sliver: SliverToBoxAdapter(
-              child: ListFooter(
-                text: context.appLocalizations.excludeSsidsDesc,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return BaseScaffold(
       title: context.appLocalizations.onDemand,
+      body: Material(
+        color: palette.bg,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final side = max(
+              HaraSpace.pageInset,
+              (constraints.maxWidth - HaraSpace.contentMaxWidth) / 2,
+            );
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    side,
+                    context.appBarInset,
+                    side,
+                    0,
+                  ),
+                  sliver: SliverToBoxAdapter(child: _buildPrerequisites()),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    side,
+                    HaraSpace.groupGap,
+                    side,
+                    0,
+                  ),
+                  sliver: SliverToBoxAdapter(child: _buildExcludeSsidsHeader()),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: side),
+                  sliver: _buildExcludeSsidsList(excludeSSIDs, selectedItems),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(side, 8, side, 48),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      context.appLocalizations.excludeSsidsDesc,
+                      style: HaraText.profileMeta(context, palette.dim),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
+  }
+}
+
+/// One hairline row of the page: content over a bottom hairline.
+class _HaraRow extends StatelessWidget {
+  const _HaraRow({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
+          child: child,
+        ),
+        HaraHairline(color: palette.line),
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
   }
 }
