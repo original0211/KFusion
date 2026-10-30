@@ -821,70 +821,54 @@ class SingBoxAction extends AsyncNotifier<SingBoxStatus> {
 
   var _startupReclaimDone = false;
 
-  /// Startup self-check for a sing-box left holding the mixed port.
   Future<void> _reclaimStartupOrphans() async {
     if (_startupReclaimDone) {
       return;
     }
     _startupReclaimDone = true;
-    try {
-      final homeDir = await appPath.homeDirPath;
-      final binary = findSingBoxBinary(
-        singBoxCandidates(
-          executableDir: appPath.executableDirPath,
-          homeDir: homeDir,
-          storedPath: await Preferences().getSingBoxBinaryPath(),
-        ),
-      );
-      if (binary == null) {
-        return;
-      }
-      final configPath =
-          '$homeDir${Platform.pathSeparator}singbox'
-          '${Platform.pathSeparator}config.json';
-      final reclaimed = await reclaimOrphanedSingBoxProcesses(
-        executable: binary,
-        configPath: configPath,
-        corroborationPort: singBoxMixedPort,
-        onEvent: (message) =>
-            commonPrint.log(message, logLevel: LogLevel.warning),
-      );
-      if (reclaimed > 0) {
-        commonPrint.log('启动自检回收了 $reclaimed 个遗留 sing-box 进程');
-      }
-      final portFree = await CoreSwitch(
-        portWaitTimeout: const Duration(seconds: 2),
-      ).awaitPortFree(singBoxMixedPort);
-      if (!portFree) {
-        commonPrint.log(
-          '启动自检：${await portOccupiedDetail(port: singBoxMixedPort, singBoxBinary: binary)}',
-          logLevel: LogLevel.warning,
+    await reclaimStartupOrphans(
+      locateBinary: () async {
+        final homeDir = await appPath.homeDirPath;
+        return findSingBoxBinary(
+          singBoxCandidates(
+            executableDir: appPath.executableDirPath,
+            homeDir: homeDir,
+            storedPath: await Preferences().getSingBoxBinaryPath(),
+          ),
         );
-      }
-    } catch (error) {
-      commonPrint.log(
-        '启动自检回收遗留 sing-box 失败：$error',
-        logLevel: LogLevel.warning,
-      );
-    }
+      },
+      reclaim: (binary) async {
+        final homeDir = await appPath.homeDirPath;
+        final configPath =
+            '$homeDir${Platform.pathSeparator}singbox'
+            '${Platform.pathSeparator}config.json';
+        return reclaimOrphanedSingBoxProcesses(
+          executable: binary,
+          configPath: configPath,
+          corroborationPort: singBoxMixedPort,
+          onEvent: (message) =>
+              commonPrint.log(message, logLevel: LogLevel.warning),
+        );
+      },
+      portFree: () => CoreSwitch(
+        portWaitTimeout: const Duration(seconds: 2),
+      ).awaitPortFree(singBoxMixedPort),
+      occupiedDetail: (binary) =>
+          portOccupiedDetail(port: singBoxMixedPort, singBoxBinary: binary),
+      info: (message) => commonPrint.log(message),
+      warning: (message) =>
+          commonPrint.log(message, logLevel: LogLevel.warning),
+    );
   }
 
-  /// A rendered config starts on sing-box's default mode, so the app's mode is pushed.
   Future<void> _syncModeToSingBox(_PreparedSingBox prepared) async {
-    if (prepared.rendered == null) {
-      return;
-    }
-    final api = _api;
-    if (api == null) {
-      return;
-    }
-    try {
-      await api.patchMode(
-        singBoxClashModeName(ref.read(patchClashConfigProvider).mode),
-      );
-    } catch (error) {
-      commonPrint.log('sing-box 模式同步失败：$error', logLevel: LogLevel.warning);
-    }
+    await syncModeToSingBox(
+      api: _api,
+      rendered: prepared.rendered != null,
+      mode: ref.read(patchClashConfigProvider).mode,
+      warning: (message) =>
+          commonPrint.log(message, logLevel: LogLevel.warning),
+    );
   }
 
   Future<void> _handleCrash(int code, List<String> tail) async {
@@ -1023,6 +1007,49 @@ Future<void> ensureMihomoStopped({
   }
   if (verifyStopped != null && !await verifyStopped()) {
     throw StateError('mihomo 已应答停止，但运行状态或端口尚未释放，sing-box 未启动。');
+  }
+}
+
+/// Startup self-check for a sing-box left holding the mixed port.
+Future<void> reclaimStartupOrphans({
+  required Future<String?> Function() locateBinary,
+  required Future<int> Function(String binary) reclaim,
+  required Future<bool> Function() portFree,
+  required Future<String> Function(String binary) occupiedDetail,
+  required void Function(String message) info,
+  required void Function(String message) warning,
+}) async {
+  try {
+    final binary = await locateBinary();
+    if (binary == null) {
+      return;
+    }
+    final reclaimed = await reclaim(binary);
+    if (reclaimed > 0) {
+      info('启动自检回收了 $reclaimed 个遗留 sing-box 进程');
+    }
+    if (!await portFree()) {
+      warning('启动自检：${await occupiedDetail(binary)}');
+    }
+  } catch (error) {
+    warning('启动自检回收遗留 sing-box 失败：$error');
+  }
+}
+
+/// A rendered config starts on sing-box's default mode, so the app's mode is pushed.
+Future<void> syncModeToSingBox({
+  required SingBoxClashApi? api,
+  required bool rendered,
+  required Mode mode,
+  required void Function(String message) warning,
+}) async {
+  if (!rendered || api == null) {
+    return;
+  }
+  try {
+    await api.patchMode(singBoxClashModeName(mode));
+  } catch (error) {
+    warning('sing-box 模式同步失败：$error');
   }
 }
 

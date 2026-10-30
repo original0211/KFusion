@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kfusion/core/singbox/singbox_runner.dart';
+import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/features/config_hub/singbox_action.dart';
 import 'package:kfusion/features/config_hub/singbox_render.dart';
 
@@ -153,6 +154,31 @@ void main() {
       );
       expect(detail, '端口 7890 仍被 other.exe（PID 999）占用，sing-box 未启动');
     });
+
+    test(
+      'falls back to the executable file name without an image name',
+      () async {
+        final detail = await portOccupiedDetail(
+          port: 7890,
+          singBoxBinary: binary,
+          findOwner: (_) async => const PortOwnerInfo(
+            pid: 555,
+            imageName: '',
+            executablePath: r'C:\tools\proxy.exe',
+          ),
+        );
+        expect(detail, '端口 7890 仍被 proxy.exe（PID 555）占用，sing-box 未启动');
+      },
+    );
+
+    test('names a holder with neither image nor path as unknown', () async {
+      final detail = await portOccupiedDetail(
+        port: 7890,
+        singBoxBinary: binary,
+        findOwner: (_) async => const PortOwnerInfo(pid: 556, imageName: ''),
+      );
+      expect(detail, '端口 7890 仍被未知程序（PID 556）占用，sing-box 未启动');
+    });
   });
 
   group('waitForSingBoxApi', () {
@@ -263,6 +289,171 @@ void main() {
         for (final degradation in rendered.degradations) degradation.toJson(),
       ]);
       expect(ledger, isNotEmpty);
+    });
+  });
+
+  group('reclaimStartupOrphans', () {
+    const binary = r'C:\app\sing-box.exe';
+
+    test('does nothing when no binary is installed', () async {
+      var calls = 0;
+      await reclaimStartupOrphans(
+        locateBinary: () async => null,
+        reclaim: (_) async {
+          calls++;
+          return 0;
+        },
+        portFree: () async {
+          calls++;
+          return true;
+        },
+        occupiedDetail: (_) async => 'detail',
+        info: (_) {},
+        warning: (_) {},
+      );
+      expect(calls, 0);
+    });
+
+    test('logs the reclaim count and stays quiet on a free port', () async {
+      final infos = <String>[];
+      final warnings = <String>[];
+      await reclaimStartupOrphans(
+        locateBinary: () async => binary,
+        reclaim: (path) async {
+          expect(path, binary);
+          return 2;
+        },
+        portFree: () async => true,
+        occupiedDetail: (_) async => 'detail',
+        info: infos.add,
+        warning: warnings.add,
+      );
+      expect(infos, ['启动自检回收了 2 个遗留 sing-box 进程']);
+      expect(warnings, isEmpty);
+    });
+
+    test('warns with the owner detail while the port stays occupied', () async {
+      final warnings = <String>[];
+      await reclaimStartupOrphans(
+        locateBinary: () async => binary,
+        reclaim: (_) async => 0,
+        portFree: () async => false,
+        occupiedDetail: (path) async {
+          expect(path, binary);
+          return '端口 7890 仍被其他程序占用（未能判定属主），sing-box 未启动';
+        },
+        info: (_) {},
+        warning: warnings.add,
+      );
+      expect(warnings, ['启动自检：端口 7890 仍被其他程序占用（未能判定属主），sing-box 未启动']);
+    });
+
+    test('reports a locate failure instead of throwing', () async {
+      final warnings = <String>[];
+      await reclaimStartupOrphans(
+        locateBinary: () async => throw StateError('disk gone'),
+        reclaim: (_) async => 0,
+        portFree: () async => true,
+        occupiedDetail: (_) async => 'detail',
+        info: (_) {},
+        warning: warnings.add,
+      );
+      expect(warnings.single, contains('启动自检回收遗留 sing-box 失败'));
+      expect(warnings.single, contains('disk gone'));
+    });
+
+    test('reports a reclaim failure instead of throwing', () async {
+      final warnings = <String>[];
+      await reclaimStartupOrphans(
+        locateBinary: () async => binary,
+        reclaim: (_) async => throw StateError('enum broke'),
+        portFree: () async => true,
+        occupiedDetail: (_) async => 'detail',
+        info: (_) {},
+        warning: warnings.add,
+      );
+      expect(warnings.single, contains('启动自检回收遗留 sing-box 失败'));
+    });
+  });
+
+  group('syncModeToSingBox', () {
+    Future<HttpServer> serve(
+      void Function(String method, String path, String body) record, {
+      int status = HttpStatus.noContent,
+    }) async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        final body = await utf8.decodeStream(request);
+        record(request.method, request.uri.path, body);
+        request.response.statusCode = status;
+        await request.response.close();
+      });
+      return server;
+    }
+
+    test('pushes the current mode to a rendered bearer', () async {
+      final seen = <String>[];
+      final server = await serve(
+        (method, path, body) => seen.add('$method $path $body'),
+      );
+      addTearDown(server.close);
+      final warnings = <String>[];
+      await syncModeToSingBox(
+        api: SingBoxClashApi(port: server.port, secret: 's'),
+        rendered: true,
+        mode: Mode.global,
+        warning: warnings.add,
+      );
+      expect(seen, ['PATCH /configs {"mode":"Global"}']);
+      expect(warnings, isEmpty);
+    });
+
+    test('pushes direct mode with sing-box spelling', () async {
+      final seen = <String>[];
+      final server = await serve(
+        (method, path, body) => seen.add('$method $path $body'),
+      );
+      addTearDown(server.close);
+      await syncModeToSingBox(
+        api: SingBoxClashApi(port: server.port, secret: 's'),
+        rendered: true,
+        mode: Mode.direct,
+        warning: (_) {},
+      );
+      expect(seen, ['PATCH /configs {"mode":"Direct"}']);
+    });
+
+    test('skips a native config and a missing bearer', () async {
+      var hits = 0;
+      final server = await serve((_, _, _) => hits++);
+      addTearDown(server.close);
+      final api = SingBoxClashApi(port: server.port, secret: 's');
+      await syncModeToSingBox(
+        api: api,
+        rendered: false,
+        mode: Mode.direct,
+        warning: (_) {},
+      );
+      await syncModeToSingBox(
+        api: null,
+        rendered: true,
+        mode: Mode.direct,
+        warning: (_) {},
+      );
+      expect(hits, 0);
+    });
+
+    test('warns instead of throwing when the panel refuses', () async {
+      final server = await serve((_, _, _) {}, status: HttpStatus.badRequest);
+      addTearDown(server.close);
+      final warnings = <String>[];
+      await syncModeToSingBox(
+        api: SingBoxClashApi(port: server.port, secret: 's'),
+        rendered: true,
+        mode: Mode.rule,
+        warning: warnings.add,
+      );
+      expect(warnings.single, contains('sing-box 模式同步失败'));
     });
   });
 }

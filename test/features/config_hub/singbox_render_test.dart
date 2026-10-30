@@ -736,6 +736,243 @@ void main() {
     }
     expect(result.unsupported.length, result.degradations.length);
   });
+
+  group('transport variants and remaining branches', () {
+    Map<String, Object?> byTag(Map<String, Object?> config, String tag) {
+      return _outbounds(config).firstWhere((o) => o['tag'] == tag);
+    }
+
+    test('grpc, http and h2 transports convert with their options', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'GRPC',
+            'type': 'vmess',
+            'server': '1.1.0.1',
+            'port': 443,
+            'uuid': '11111111-2222-3333-4444-555555555555',
+            'cipher': 'auto',
+            'network': 'grpc',
+            'grpc-opts': {'grpc-service-name': 'svc'},
+          },
+          {
+            'name': 'HTTP',
+            'type': 'vmess',
+            'server': '1.1.0.2',
+            'port': 80,
+            'uuid': '11111111-2222-3333-4444-555555555555',
+            'cipher': 'auto',
+            'network': 'http',
+            'http-opts': {
+              'path': '/h',
+              'headers': {'X-Test': 'y'},
+            },
+          },
+          {
+            'name': 'H2',
+            'type': 'vmess',
+            'server': '1.1.0.3',
+            'port': 443,
+            'uuid': '11111111-2222-3333-4444-555555555555',
+            'cipher': 'auto',
+            'network': 'h2',
+            'h2-opts': {'host': 'h2.example', 'path': '/h2'},
+          },
+        ],
+      }, secret: 's');
+      expect(
+        jsonEncode(byTag(result.config, 'GRPC')['transport']),
+        contains('"service_name":"svc"'),
+      );
+      expect(
+        jsonEncode(byTag(result.config, 'HTTP')['transport']),
+        contains('"path":"/h"'),
+      );
+      expect(
+        jsonEncode(byTag(result.config, 'H2')['transport']),
+        contains('"host":"h2.example"'),
+      );
+    });
+
+    test('an explicit utls fingerprint wins over the reality default', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'V',
+            'type': 'vless',
+            'server': '2.2.2.2',
+            'port': 443,
+            'uuid': '22222222-3333-4444-5555-666666666666',
+            'tls': true,
+            'servername': 'v.example',
+            'fingerprint': 'firefox',
+            'reality-opts': {
+              'public-key': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+              'short-id': '01',
+            },
+          },
+        ],
+      }, secret: 's');
+      final tls = byTag(result.config, 'V')['tls'] as Map;
+      expect((tls['utls'] as Map)['fingerprint'], 'firefox');
+    });
+
+    test('hysteria2 carries its sni and tuic its congestion settings', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'HY',
+            'type': 'hysteria2',
+            'server': '3.3.3.3',
+            'port': 443,
+            'password': 'pw',
+            'sni': 'hy.example',
+          },
+          {
+            'name': 'TU',
+            'type': 'tuic',
+            'server': '3.3.3.4',
+            'port': 443,
+            'uuid': '33333333-4444-5555-6666-777777777777',
+            'password': 'pw',
+            'congestion-controller': 'bbr',
+            'udp-relay-mode': 'quic',
+          },
+        ],
+      }, secret: 's');
+      expect(
+        (byTag(result.config, 'HY')['tls'] as Map)['server_name'],
+        'hy.example',
+      );
+      expect(byTag(result.config, 'TU')['congestion_control'], 'bbr');
+      expect(byTag(result.config, 'TU')['udp_relay_mode'], 'quic');
+    });
+
+    test('wireguard peers carry keys and reserved bytes', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'WG',
+            'type': 'wireguard',
+            'server': '4.4.4.4',
+            'port': 51820,
+            'ip': '172.16.0.2',
+            'private-key': 'PRIV',
+            'public-key': 'PUB',
+            'preshared-key': 'PSK',
+            'reserved': [1, 2, 3],
+          },
+        ],
+      }, secret: 's');
+      final endpoints = result.config['endpoints'] as List;
+      final wg = endpoints.firstWhere((e) => (e as Map)['tag'] == 'WG') as Map;
+      final peer = (wg['peers'] as List).single as Map;
+      expect(peer['public_key'], 'PUB');
+      expect(peer['pre_shared_key'], 'PSK');
+      expect(peer['reserved'], [1, 2, 3]);
+    });
+
+    test('a fractional url-test interval renders whole seconds', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'SS',
+            'type': 'ss',
+            'server': '5.5.5.5',
+            'port': 8388,
+            'cipher': 'aes-256-gcm',
+            'password': 'pw',
+          },
+        ],
+        'proxy-groups': [
+          {
+            'name': 'Auto',
+            'type': 'url-test',
+            'proxies': ['SS'],
+            'url': 'https://www.gstatic.com/generate_204',
+            'interval': 300.0,
+          },
+        ],
+      }, secret: 's');
+      expect(byTag(result.config, 'Auto')['interval'], '300s');
+    });
+
+    test('an unsupported protocol degrades instead of rendering', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'SN',
+            'type': 'snell',
+            'server': '6.6.6.6',
+            'port': 6160,
+            'psk': 'pw',
+          },
+        ],
+      }, secret: 's');
+      expect(_outbounds(result.config).any((o) => o['tag'] == 'SN'), isFalse);
+      expect(result.degradations.any((d) => d.name == 'SN'), isTrue);
+    });
+
+    test('a rule pointing at a missing group never reaches the config', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'SS',
+            'type': 'ss',
+            'server': '5.5.5.5',
+            'port': 8388,
+            'cipher': 'aes-256-gcm',
+            'password': 'pw',
+          },
+        ],
+        'rules': ['MATCH,GHOST'],
+      }, secret: 's');
+      expect(jsonEncode(result.config), isNot(contains('GHOST')));
+      expect(
+        result.degradations.any(
+          (d) => d.kind == SingBoxDegradationKind.routing,
+        ),
+        isTrue,
+      );
+    });
+
+    test('circular group references degrade like nested groups', () {
+      final result = renderSingBoxFromClash({
+        'proxies': [
+          {
+            'name': 'SS',
+            'type': 'ss',
+            'server': '5.5.5.5',
+            'port': 8388,
+            'cipher': 'aes-256-gcm',
+            'password': 'pw',
+          },
+        ],
+        'proxy-groups': [
+          {
+            'name': 'A',
+            'type': 'select',
+            'proxies': ['B', 'SS'],
+          },
+          {
+            'name': 'B',
+            'type': 'select',
+            'proxies': ['A', 'SS'],
+          },
+        ],
+      }, secret: 's');
+      final tags = {for (final o in _outbounds(result.config)) o['tag']};
+      expect(tags, isNot(contains('A')));
+      expect(tags, isNot(contains('B')));
+      expect(
+        _degradationsOf(
+          result,
+          SingBoxDegradationKind.groupNested,
+        ).map((d) => d.name),
+        containsAll(['A', 'B']),
+      );
+    });
+  });
 }
 
 /// The CFDirect shape behind the v0.2.27 phone failure: VPNGate home

@@ -259,6 +259,19 @@ void main() {
       expect(detail, isNot(contains('节点协议')));
     });
 
+    test('wireguard, group-type, REJECT and other drops are counted', () {
+      final detail = singBoxNoUsableOutboundDetail(const [
+        'wireguard node "WG-01" has no local address (ip/ipv6)',
+        'proxy-group type "fallback" (G)',
+        'REJECT in proxy-group "G"',
+        'detour chain too deep',
+      ]);
+      expect(detail, contains('节点不可用 ×1'));
+      expect(detail, contains('分组类型不受支持 ×1'));
+      expect(detail, contains('REJECT 成员被跳过 ×1'));
+      expect(detail, contains('其他未翻译项 ×1'));
+    });
+
     test('an empty drop list blames the profile itself', () {
       expect(
         singBoxNoUsableOutboundDetail(const []),
