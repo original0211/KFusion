@@ -24,7 +24,7 @@ class HaraPalette {
   final Color line;
 
   /// Marks "current / connected" only; at most one dot per screen, consumed
-  /// solely through [HaraDot].
+  /// solely through [HaraDot] and the brand mark's point in disc_motif.
   final Color vermilion;
 
   static const light = HaraPalette(

@@ -407,6 +407,7 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
                 size: HaraSpace.ringSize,
                 color: ringColor,
                 strokeWidth: HaraSpace.ringStroke,
+                lit: phase == _Phase.connected || phase == _Phase.suspended,
               ),
             ),
           ),
@@ -424,10 +425,6 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (phase == _Phase.connected || phase == _Phase.suspended)
-                  const HaraDot(size: HaraSpace.dotStatus),
-                if (phase == _Phase.connected || phase == _Phase.suspended)
-                  const SizedBox(width: 9),
                 Flexible(
                   child: Text(
                     statusText,
@@ -542,10 +539,9 @@ class _HaraDashboardState extends ConsumerState<HaraDashboard>
                       size: HaraSpace.ringCompact,
                       color: palette.ink.withValues(alpha: 0.78),
                       strokeWidth: HaraSpace.ringStroke,
+                      lit: true,
                     ),
                     const SizedBox(width: 10),
-                    const HaraDot(size: HaraSpace.dotRow),
-                    const SizedBox(width: 8),
                     Text(
                       statusText,
                       style: HaraText.statusNode(context, palette.ink),

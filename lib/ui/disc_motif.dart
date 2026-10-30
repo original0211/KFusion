@@ -1,29 +1,26 @@
 import 'dart:math' as math;
 
+import 'package:kfusion/ui/hara.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// The settled disc geometry, shared by the filled brand mark and the
-/// outline ring so the two readings never drift apart.
 abstract final class DiscGeometry {
-  // The master's bite: centred just past the rim at 157 degrees, it cuts the disc back to 0.61 of its radius along that ray.
-  static const biteDirection = 157 * math.pi / 180;
-  static const biteDistance = 1.28;
-  static const biteRadius = 0.67;
+  // At 157 degrees on the ring's mid-line; diameter 0.16 of the outer radius.
+  static const dotDirection = 157 * math.pi / 180;
+  static const dotDiameterRatio = 0.16;
 
-  static Path path(Offset center, double radius) {
-    final biteCenter =
-        center + Offset.fromDirection(biteDirection, radius * biteDistance);
-    return Path.combine(
-      PathOperation.difference,
-      Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
-      Path()..addOval(
-        Rect.fromCircle(center: biteCenter, radius: radius * biteRadius),
-      ),
-    );
+  static Path ringPath(Offset center, double radius) {
+    return Path()..addOval(Rect.fromCircle(center: center, radius: radius));
+  }
+
+  static Offset dotCenter(Offset center, double ringRadius) {
+    return center + Offset.fromDirection(dotDirection, ringRadius);
+  }
+
+  static double dotRadius(double outerRadius) {
+    return outerRadius * dotDiameterRatio / 2;
   }
 }
 
-/// The brand mark as a flat decoration: the logo's disc with its crescent bite, at the master's proportions.
 class DashboardDiscMotif extends StatelessWidget {
   const DashboardDiscMotif({
     super.key,
@@ -36,74 +33,69 @@ class DashboardDiscMotif extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size.square(size),
-      painter: _DiscMotifPainter(color),
-    );
+    return DiscRingMotif(size: size, color: color);
   }
 }
 
-/// The outline reading of the brand disc: the same geometry as a fine
-/// stroke, its centre hollow.
 class DiscRingMotif extends StatelessWidget {
   const DiscRingMotif({
     super.key,
     required this.size,
     required this.color,
     this.strokeWidth = 1.3,
+    this.lit = false,
   });
 
   final double size;
   final Color color;
   final double strokeWidth;
+  final bool lit;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size.square(size),
-      painter: _DiscRingPainter(color, strokeWidth),
+      painter: _DiscRingPainter(
+        color,
+        strokeWidth,
+        lit ? context.haraPalette.vermilion : null,
+      ),
     );
   }
-}
-
-class _DiscMotifPainter extends CustomPainter {
-  const _DiscMotifPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final radius = size.width / 2;
-    canvas.drawPath(
-      DiscGeometry.path(Offset(radius, radius), radius),
-      Paint()..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_DiscMotifPainter oldDelegate) =>
-      oldDelegate.color != color;
 }
 
 class _DiscRingPainter extends CustomPainter {
-  const _DiscRingPainter(this.color, this.strokeWidth);
+  const _DiscRingPainter(this.color, this.strokeWidth, this.dotColor);
 
   final Color color;
   final double strokeWidth;
+  final Color? dotColor;
 
   @override
   void paint(Canvas canvas, Size size) {
     final radius = size.width / 2;
+    final center = Offset(radius, radius);
+    final ringRadius = radius - strokeWidth;
     canvas.drawPath(
-      DiscGeometry.path(Offset(radius, radius), radius - strokeWidth),
+      DiscGeometry.ringPath(center, ringRadius),
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth,
     );
+    final dot = dotColor;
+    if (dot != null) {
+      canvas.drawCircle(
+        DiscGeometry.dotCenter(center, ringRadius),
+        DiscGeometry.dotRadius(ringRadius + strokeWidth / 2),
+        Paint()..color = dot,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(_DiscRingPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
+      oldDelegate.color != color ||
+      oldDelegate.strokeWidth != strokeWidth ||
+      oldDelegate.dotColor != dotColor;
 }

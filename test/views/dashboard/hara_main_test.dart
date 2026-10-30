@@ -125,8 +125,13 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // The status row owns the screen's single vermilion dot.
-    expect(find.byType(HaraDot), findsOneWidget);
+    // The ring's lit point is the screen's single vermilion; the exit
+    // leaf takes a label, not a dot.
+    expect(find.byType(HaraDot), findsNothing);
+    expect(
+      tester.widget<DiscRingMotif>(find.byType(DiscRingMotif).first).lit,
+      isTrue,
+    );
     expect(find.text('Current exit'), findsOneWidget);
     final exitRow = find.ancestor(
       of: find.text('Current exit'),
@@ -193,7 +198,11 @@ void main() {
     expect(find.text('Connected'), findsWidgets);
     expect(find.text('sing-box'), findsOneWidget);
     expect(find.text('mihomo not running'), findsOneWidget);
-    expect(find.byType(HaraDot), findsOneWidget);
+    expect(find.byType(HaraDot), findsNothing);
+    expect(
+      tester.widget<DiscRingMotif>(find.byType(DiscRingMotif).first).lit,
+      isTrue,
+    );
 
     await tester.tap(find.byType(DiscRingMotif).first);
     await tester.pump();

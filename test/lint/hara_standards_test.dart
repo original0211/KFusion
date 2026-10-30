@@ -2,7 +2,8 @@
 // grows with each batch; the rules do not soften: radii come only from the
 // A aliases, no shadows or gradients, color literals live only in the
 // token layer, the vermilion is consumed only through HaraDot in the
-// whitelisted files, and the disc bite geometry has exactly one home.
+// whitelisted files and through the mark's point in disc_motif, and the
+// disc mark geometry has exactly one home.
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -95,10 +96,11 @@ void main() {
       expect(offenders, isEmpty, reason: offenders.join('\n'));
     });
 
-    test('the vermilion is read only in the token layer', () {
+    test('the vermilion is read only in the token layer and the mark', () {
       final offenders = <String>[];
       for (final file in libFiles()) {
         if (file.path.endsWith(tokenLayer)) continue;
+        if (file.path.endsWith('lib/ui/disc_motif.dart')) continue;
         if (file.readAsStringSync().contains('.vermilion')) {
           offenders.add(file.path);
         }
@@ -109,7 +111,6 @@ void main() {
     test('HaraDot is built only on whitelisted surfaces', () {
       const whitelist = <String>{
         tokenLayer,
-        'lib/views/dashboard/hara_dashboard.dart',
         'lib/views/proxies/hara_proxies.dart',
         'lib/views/profiles/hara_profiles.dart',
       };
@@ -123,7 +124,7 @@ void main() {
       expect(offenders, isEmpty, reason: offenders.join('\n'));
     });
 
-    test('the disc bite geometry has exactly one home', () {
+    test('the disc mark geometry has exactly one home', () {
       final definitions = libFiles()
           .where(
             (file) => file.readAsStringSync().contains('class DiscGeometry'),
@@ -132,11 +133,7 @@ void main() {
           .toList();
       expect(definitions, ['lib/ui/disc_motif.dart']);
       final source = read('lib/ui/disc_motif.dart');
-      for (final constant in const [
-        'biteDirection =',
-        'biteDistance =',
-        'biteRadius =',
-      ]) {
+      for (final constant in const ['dotDirection =', 'dotDiameterRatio =']) {
         expect(
           constant.allMatches(source).length,
           1,
@@ -145,10 +142,12 @@ void main() {
       }
     });
 
-    test('the disc bite keeps its settled values', () {
-      expect(DiscGeometry.biteDirection, closeTo(157 * math.pi / 180, 1e-12));
-      expect(DiscGeometry.biteDistance, 1.28);
-      expect(DiscGeometry.biteRadius, 0.67);
+    test('the disc mark keeps its settled values', () {
+      expect(DiscGeometry.dotDirection, closeTo(157 * math.pi / 180, 1e-12));
+      expect(DiscGeometry.dotDiameterRatio, 0.16);
+      expect(DiscGeometry.dotRadius(216), closeTo(17.28, 1e-9));
+      final center = DiscGeometry.dotCenter(const Offset(108, 108), 106.7);
+      expect((center - const Offset(108, 108)).distance, closeTo(106.7, 1e-9));
     });
   });
 }

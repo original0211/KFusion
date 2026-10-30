@@ -143,6 +143,7 @@ void main() {
     expect(ring.size, HaraSpace.ringSize);
     expect(ring.strokeWidth, HaraSpace.ringStroke);
     expect(ring.color, HaraPalette.light.dim);
+    expect(ring.lit, isFalse);
     expect(_statusText('Disconnected'), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
     expect(find.byType(HaraDot), findsNothing);
@@ -178,7 +179,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('connected shows one vermilion dot and live figures', (
+  testWidgets('connected lights the ring point and shows live figures', (
     tester,
   ) async {
     // The test font draws every glyph a full em wide, so the exit row's
@@ -196,9 +197,10 @@ void main() {
 
     expect(_statusText('Connected'), findsOneWidget);
     expect(find.text(_node), findsOneWidget);
-    expect(find.byType(HaraDot), findsOneWidget);
+    expect(find.byType(HaraDot), findsNothing);
     final ring = tester.widget<DiscRingMotif>(_ring());
     expect(ring.color, HaraPalette.light.ink.withValues(alpha: 0.78));
+    expect(ring.lit, isTrue);
     expect(find.text('United Kingdom'), findsOneWidget);
     expect(find.text('mihomo'), findsOneWidget);
     expect(find.text('sing-box not running'), findsOneWidget);
@@ -227,6 +229,7 @@ void main() {
     expect(status.style!.color, Theme.of(context).colorScheme.error);
     expect(find.text('Check failed'), findsOneWidget);
     expect(find.byType(HaraDot), findsNothing);
+    expect(tester.widget<DiscRingMotif>(_ring()).lit, isFalse);
     expect(tester.takeException(), isNull);
   });
 
@@ -269,7 +272,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(smallRing(), findsOneWidget);
-    expect(find.byType(HaraDot), findsNWidgets(2));
+    expect(find.byType(HaraDot), findsNothing);
+    for (final ring in tester.widgetList<DiscRingMotif>(_ring())) {
+      expect(ring.lit, isTrue);
+    }
     expect(tester.takeException(), isNull);
   });
 
