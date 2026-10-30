@@ -155,10 +155,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final core = _MockCoreHandlerInterface();
-    when(() => core.changeProxy(any()))
-        .thenAnswer((_) async => const ChangeProxyResult(changed: true));
-    when(() => core.getProxies())
-        .thenAnswer((_) async => const ProxiesData(proxies: {}, all: []));
+    when(
+      () => core.changeProxy(any()),
+    ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+    when(
+      () => core.getProxies(),
+    ).thenAnswer((_) async => const ProxiesData(proxies: {}, all: []));
     final container = ProviderContainer(
       overrides: [
         profilesProvider.overrideWith(() => TestProfiles([profile])),
