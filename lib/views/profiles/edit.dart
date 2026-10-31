@@ -501,16 +501,11 @@ class _CoreKindField extends ConsumerWidget {
     final kind = ref.watch(coreKindsProvider).value?[profileId];
     final current = kind ?? CoreKind.mihomo;
     final position = ItemPositionProvider.of(context)?.position;
-    final isStart =
-        position == ItemPosition.start || position == ItemPosition.startAndEnd;
     final isEnd =
         position == ItemPosition.end || position == ItemPosition.startAndEnd;
-    final borderRadius = AppRadius.vertical(
-      top: isStart ? AppCorner.xl : AppCorner.none,
-      bottom: isEnd ? AppCorner.xl : AppCorner.none,
-    );
     return CommonCard(
-      shape: AppShape.of(borderRadius),
+      shape: AppShape.hara,
+      flat: true,
       padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),

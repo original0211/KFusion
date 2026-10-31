@@ -206,6 +206,24 @@ void main() {
           find.descendant(of: field, matching: find.byType(SelectionCheck)),
           findsNothing,
         );
+        final card = tester.widget<CommonCard>(field);
+        expect(card.flat, isTrue);
+        expect(card.shape, AppShape.hara);
+        final cardStyle = tester
+            .widget<FilledButton>(
+              find.descendant(of: field, matching: find.byType(FilledButton)),
+            )
+            .style!;
+        expect(
+          (cardStyle.shape!.resolve({})! as RoundedSuperellipseBorder)
+              .borderRadius,
+          BorderRadius.zero,
+        );
+        expect(cardStyle.backgroundColor!.resolve({}), Colors.transparent);
+        expect(
+          cardStyle.side!.resolve({}),
+          BorderSide(color: HaraPalette.light.line, width: HaraSpace.hairline),
+        );
         expect(kindUnderline(tester, 'mihomo').color, const Color(0xFF1A1A1A));
         expect(kindUnderline(tester, 'sing-box').color, Colors.transparent);
         expect(
