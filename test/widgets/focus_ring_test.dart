@@ -253,9 +253,12 @@ void main() {
     tester,
   ) async {
     const row = Key('row');
-    // At rest the row carries the cabin rim; only a key-moved focus
+    // At rest the row carries the hairline; only a key-moved focus
     // trades it for the ring.
-    final rim = _theme.colorScheme.cabinRimSide;
+    final rim = BorderSide(
+      color: HaraPalette.light.line,
+      width: HaraSpace.hairline,
+    );
     await pumpRow(tester, remote: false);
 
     await tester.tap(find.byKey(const Key('field')));

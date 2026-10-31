@@ -46,25 +46,18 @@ class _DecorationListItemState extends State<DecorationListItem> {
     final sortable = SortableItem.maybeOf(context);
     final sorting = sortable?.sorting ?? false;
     final position = ItemPositionProvider.of(context)?.position;
-    final isStart = [
-      ItemPosition.start,
-      ItemPosition.startAndEnd,
-    ].contains(position);
     final isEnd = [
       ItemPosition.end,
       ItemPosition.startAndEnd,
     ].contains(position);
-    final borderRadius = AppRadius.vertical(
-      top: isStart ? AppCorner.xl : AppCorner.none,
-      bottom: isEnd ? AppCorner.xl : AppCorner.none,
-    );
     final row = _ListRowSeparator(
       separated: !proxyDecorator && !isEnd,
       emphasized: widget.invalid,
       states: _states,
       endIndent: 14,
       child: CommonCard(
-        shape: AppShape.of(borderRadius),
+        shape: AppShape.hara,
+        flat: true,
         isError: widget.invalid,
         isSelected: widget.isSelected,
         padding: EdgeInsets.zero,
@@ -103,12 +96,8 @@ class _DecorationListItemState extends State<DecorationListItem> {
     if (!proxyDecorator) {
       return row;
     }
-    // A change of the card's shape eases in over the button's own animation
-    // duration, which would trail the lift; the clip follows it frame by frame.
-    return ClipRSuperellipse(
-      borderRadius: AppRadius.all(AppCorner.xl * proxy!.lift),
-      child: row,
-    );
+    // The clip follows the row's shape frame by frame while it is lifted.
+    return ClipRSuperellipse(borderRadius: AppRadius.none, child: row);
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:kfusion/ui/context.dart';
 import 'package:kfusion/ui/focus.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/measure.dart';
 import 'package:kfusion/ui/metrics.dart';
@@ -113,6 +114,7 @@ class CommonCard extends StatelessWidget {
     this.statesController,
     this.inert = false,
     this.fillsSelection = false,
+    this.flat = false,
     required this.child,
   }) : isSelected = isSelected ?? false;
 
@@ -124,6 +126,11 @@ class CommonCard extends StatelessWidget {
   /// A selected card keeps its fill unless [fillsSelection]; callers mark it.
   final bool isSelected;
   final bool fillsSelection;
+
+  /// A flat card stands on the host field: no fill of its own and a
+  /// hairline edge instead of the cabin rim. Error and selection fills
+  /// still win, as they carry state rather than structure.
+  final bool flat;
   final bool isError;
   final void Function()? onPressed;
   final Widget child;
@@ -138,8 +145,14 @@ class CommonCard extends StatelessWidget {
     required bool ringed,
   }) {
     if (!ringed || !states.contains(WidgetState.focused)) {
-      return isError || _filled
-          ? BorderSide.none
+      if (isError || _filled) {
+        return BorderSide.none;
+      }
+      return flat
+          ? BorderSide(
+              color: context.haraPalette.line,
+              width: HaraSpace.hairline,
+            )
           : context.colorScheme.cabinRimSide;
     }
     final colorScheme = context.colorScheme;
@@ -156,6 +169,9 @@ class CommonCard extends StatelessWidget {
     }
     if (_filled) {
       return colorScheme.primary;
+    }
+    if (flat) {
+      return Colors.transparent;
     }
     return level.colorOf(colorScheme);
   }

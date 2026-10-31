@@ -24,6 +24,12 @@ block (tone 98.25) in the card. Dark mode only lightens, because a darker step i
 a hole rather than a layer. `inset` is the floor; nothing nests below it, so a design that needs a fifth level
 needs fewer containers instead.
 
+Revision (2026-10-31, FLAT): grouped runs of rows no longer take the `card` fill. A `DecorationListItem` row
+stands flat on the host field — transparent fill, square corners, the Hara hairline (0.7, palette line) in
+place of the cabin rim — under Brody's ruling overturning the U7b assessment that kept the row/card base
+untouched. Standalone cards still take the `card` level as before, and a row's error and selection fills are
+unchanged, as they carry state rather than structure.
+
 - A widget never picks its level at the call site. `CommonCard` and the other shared surfaces read
   `context.raisedSurfaceLevel` and wrap their child in `SurfaceScope`, so the same row is white on a page and gray
   inside a card. A branch on `isInBottomSheet` or on where a widget is placed to choose its fill is the bug this
