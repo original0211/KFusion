@@ -389,18 +389,18 @@ List<CommonPopupMenuItem> profileMenuItems(
           syncProfile(ref, profile);
         },
       ),
-    if (!isCustom)
+    if (!isCustom) ...[
+      CommonPopupMenuItem(
+        glyph: AppGlyphs.eye,
+        label: appLocalizations.runtimeConfig,
+        onPressed: () {
+          previewProfile(context, profile);
+        },
+      ),
       CommonPopupMenuItem(
         glyph: AppGlyphs.moreCircle,
         label: appLocalizations.more,
         subItems: [
-          CommonPopupMenuItem(
-            glyph: AppGlyphs.eye,
-            label: appLocalizations.runtimeConfig,
-            onPressed: () {
-              previewProfile(context, profile);
-            },
-          ),
           if (isUrl)
             CommonPopupMenuItem(
               glyph: AppGlyphs.copy,
@@ -418,6 +418,7 @@ List<CommonPopupMenuItem> profileMenuItems(
           ),
         ],
       ),
+    ],
     CommonPopupMenuItem(
       danger: true,
       glyph: AppGlyphs.delete,

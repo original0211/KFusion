@@ -1,7 +1,6 @@
 import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/providers/database.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/config/network.dart';
@@ -25,7 +24,6 @@ void main() {
     'general settings': const GeneralView(),
     'dns config': const DnsView(),
     'network config': const Scaffold(body: NetworkListView()),
-    'advanced config': const AdvancedConfigView(),
     'on demand config': const OnDemandView(),
     'theme': const ThemeView(),
     'backup and restore': const BackupAndRestore(),
@@ -78,10 +76,8 @@ void main() {
     'Theme': ThemeView,
     'Backup and restore': BackupAndRestore,
     'General': GeneralView,
-    'Advanced configuration': AdvancedConfigView,
+    'Network': NetworkListView,
   };
-
-  const gatedToolDestinations = {'General', 'Advanced configuration'};
 
   for (final entry in toolDestinations.entries) {
     testWidgets('tools opens ${entry.key}', (tester) async {
@@ -107,24 +103,14 @@ void main() {
       );
       await tester.pump();
 
-      if (gatedToolDestinations.contains(entry.key)) {
-        final gate = find.text('Advanced');
-        await tester.scrollUntilVisible(
-          gate,
-          500,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.tap(gate);
-        await tester.pumpAndSettle();
-        expect(find.byType(AdvancedGateView), findsOneWidget);
-      }
-
       final target = find.text(entry.key);
       await tester.scrollUntilVisible(
         target,
         500,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.ensureVisible(target);
+      await tester.pump();
       await tester.tap(target);
       await tester.pumpAndSettle();
 

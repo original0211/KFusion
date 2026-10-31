@@ -6,10 +6,15 @@ import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/about.dart';
 import 'package:kfusion/views/access.dart';
-import 'package:kfusion/views/advanced_gate.dart';
 import 'package:kfusion/views/backup_and_restore.dart';
+import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/config/network.dart';
+import 'package:kfusion/views/config/on_demand.dart';
+import 'package:kfusion/views/developer.dart';
+import 'package:kfusion/views/logs.dart';
+import 'package:kfusion/views/proxies/setting.dart';
+import 'package:kfusion/views/resources.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +26,8 @@ import 'theme.dart';
 // title, and hairline sections over the half page's own sections,
 // bindings and destinations. The core switch card keeps its panel
 // form — its corner档 and shadow are pinned by the cabin standards.
+// Since the flattening (2026-10-31) every destination page sits on
+// this index directly; there is no gate page behind it.
 class ToolsView extends ConsumerStatefulWidget {
   const ToolsView({super.key});
 
@@ -29,6 +36,26 @@ class ToolsView extends ConsumerStatefulWidget {
 }
 
 class _ToolViewState extends ConsumerState<ToolsView> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      final query = _searchController.text;
+      if (query != _query) {
+        setState(() => _query = query);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   // The takeover masters; their detail rows stay on the network page.
   List<ConsumerWidget> _takeoverItems() {
     if (system.isAndroid) {
@@ -64,62 +91,147 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final palette = context.haraPalette;
     final appLocalizations = context.appLocalizations;
     final takeover = _takeoverItems();
+    // The index: daily destinations first, then configuration, then
+    // maintenance, then the legal rows. Every entry is one tap from
+    // this page.
+    final daily = <_Destination>[
+      _Destination(appLocalizations.language, const _LocaleRow()),
+      _Destination(
+        appLocalizations.theme,
+        _HaraOpenRow(label: appLocalizations.theme, target: const ThemeView()),
+      ),
+      _Destination(
+        appLocalizations.proxySettings,
+        _HaraOpenRow(
+          label: appLocalizations.proxySettings,
+          target: BaseScaffold(
+            title: appLocalizations.proxySettings,
+            body: const ProxiesSetting(),
+          ),
+        ),
+      ),
+      _Destination(
+        appLocalizations.backupAndRestore,
+        _HaraOpenRow(
+          label: appLocalizations.backupAndRestore,
+          target: const BackupAndRestore(),
+        ),
+      ),
+      if (system.isAndroid)
+        _Destination(
+          appLocalizations.accessControl,
+          _HaraOpenRow(
+            label: appLocalizations.accessControl,
+            target: const AccessView(),
+          ),
+        ),
+    ];
+    final configuration = <_Destination>[
+      _Destination(
+        appLocalizations.general,
+        _HaraOpenRow(
+          label: appLocalizations.general,
+          target: const GeneralView(),
+        ),
+      ),
+      _Destination(
+        appLocalizations.network,
+        _HaraOpenRow(
+          label: appLocalizations.network,
+          target: BaseScaffold(
+            title: appLocalizations.network,
+            body: const NetworkListView(),
+          ),
+        ),
+      ),
+      const _Destination('DNS', _HaraOpenRow(label: 'DNS', target: DnsView())),
+      _Destination(
+        appLocalizations.onDemand,
+        _HaraOpenRow(
+          label: appLocalizations.onDemand,
+          target: const OnDemandView(),
+        ),
+      ),
+    ];
+    final maintenance = <_Destination>[
+      _Destination(
+        appLocalizations.logs,
+        _HaraOpenRow(label: appLocalizations.logs, target: const LogsView()),
+      ),
+      _Destination(
+        appLocalizations.resources,
+        _HaraOpenRow(
+          label: appLocalizations.resources,
+          target: const ResourcesView(),
+        ),
+      ),
+      _Destination(
+        appLocalizations.developerMode,
+        _HaraOpenRow(
+          label: appLocalizations.developerMode,
+          target: const DeveloperView(),
+        ),
+      ),
+    ];
+    final legal = <_Destination>[
+      _Destination(
+        appLocalizations.disclaimer,
+        _HaraOpenRow(
+          label: appLocalizations.disclaimer,
+          target: const DisclaimerView(),
+        ),
+      ),
+      _Destination(
+        appLocalizations.about,
+        _HaraOpenRow(label: appLocalizations.about, target: const AboutView()),
+      ),
+    ];
+    final destinations = [...daily, ...configuration, ...maintenance, ...legal];
+    final query = _query.trim().toLowerCase();
+    final searching = query.isNotEmpty;
+    final matches = searching
+        ? destinations
+              .where((item) => item.label.toLowerCase().contains(query))
+              .toList()
+        : const <_Destination>[];
     final sections = <Widget>[
       const ItemPositionProvider(
         position: ItemPosition.startAndEnd,
         child: CoreSwitchItem(),
       ),
-      _section(
-        title: appLocalizations.startupAndBackground,
-        rows: [
-          for (final item in startupSettingItems())
-            _HaraToggle(item as ConfigToggleItem),
-        ],
-        footer: [
-          if (system.isDesktop) appLocalizations.silentLaunchDesc,
-          appLocalizations.autoRunDesc,
-        ].join('\n'),
-      ),
-      if (takeover.isNotEmpty)
-        _section(rows: [for (final item in takeover) _HaraBoundToggle(item)]),
-      _section(
-        rows: [
-          const _LocaleRow(),
-          _HaraOpenRow(
-            label: appLocalizations.theme,
-            target: const ThemeView(),
-          ),
-          _HaraOpenRow(
-            label: appLocalizations.backupAndRestore,
-            target: const BackupAndRestore(),
-          ),
-          if (system.isAndroid)
-            _HaraOpenRow(
-              label: appLocalizations.accessControl,
-              target: const AccessView(),
-            ),
-        ],
-      ),
-      _section(
-        rows: [
-          _HaraOpenRow(
-            label: appLocalizations.advanced,
-            target: const AdvancedGateView(),
-          ),
-        ],
-      ),
-      _section(
-        rows: [
-          _HaraOpenRow(
-            label: appLocalizations.disclaimer,
-            target: const DisclaimerView(),
-          ),
-          _HaraOpenRow(
-            label: appLocalizations.about,
-            target: const AboutView(),
-          ),
-        ],
-      ),
+      _SearchRow(controller: _searchController),
+      if (!searching) ...[
+        _section(
+          title: appLocalizations.startupAndBackground,
+          rows: [
+            for (final item in startupSettingItems())
+              _HaraToggle(item as ConfigToggleItem),
+          ],
+          footer: [
+            if (system.isDesktop) appLocalizations.silentLaunchDesc,
+            appLocalizations.autoRunDesc,
+          ].join('\n'),
+        ),
+        if (takeover.isNotEmpty)
+          _section(rows: [for (final item in takeover) _HaraBoundToggle(item)]),
+        _section(rows: [for (final item in daily) item.row]),
+        _section(rows: [for (final item in configuration) item.row]),
+        _section(rows: [for (final item in maintenance) item.row]),
+        _section(rows: [for (final item in legal) item.row]),
+      ] else
+        _section(
+          rows: [
+            if (matches.isEmpty)
+              _HaraRow(
+                child: Text(
+                  appLocalizations.noData,
+                  style: HaraText.profileMeta(context, palette.dim),
+                ),
+              )
+            else
+              for (final item in matches) item.row,
+          ],
+        ),
     ];
     return Material(
       color: palette.bg,
@@ -288,6 +400,68 @@ class _HaraOpenRow extends StatelessWidget {
         return _HaraRow(onTap: action, child: _content(context));
       },
       openBuilder: (_, _) => target,
+    );
+  }
+}
+
+/// One destination of the settings index: the label the search row
+/// matches on, and the row itself.
+class _Destination {
+  const _Destination(this.label, this.row);
+
+  final String label;
+  final Widget row;
+}
+
+/// The search row under the core switch card: typing filters the
+/// index to the destinations whose label matches, so a long index
+/// never has to be scrolled end to end.
+class _SearchRow extends StatelessWidget {
+  const _SearchRow({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.haraPalette;
+    final appLocalizations = context.appLocalizations;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: HaraSpace.nodeRowVertical,
+          ),
+          child: Row(
+            children: [
+              GlyphIcon(AppGlyphs.search, color: palette.sub),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  style: HaraText.nodeName(
+                    context,
+                    palette.ink,
+                    current: false,
+                  ),
+                  cursorColor: palette.ink,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: appLocalizations.search,
+                    hintStyle: HaraText.nodeName(
+                      context,
+                      palette.dim,
+                      current: false,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        HaraHairline(color: palette.line),
+      ],
     );
   }
 }

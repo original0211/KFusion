@@ -21,8 +21,6 @@ const aSurfaces = <String>[
   'lib/views/profiles/universal_import.dart',
   'lib/views/profiles/add.dart',
   'lib/views/tools.dart',
-  'lib/views/advanced_gate.dart',
-  'lib/views/config/advanced.dart',
   'lib/views/config/general.dart',
   'lib/views/config/on_demand.dart',
   'lib/views/config/network.dart',
@@ -36,7 +34,6 @@ const aSurfaces = <String>[
   'lib/views/backup_and_restore.dart',
   'lib/views/disclaimer.dart',
   'lib/views/theme.dart',
-  'lib/views/theme_preview.dart',
 ];
 
 const tokenLayer = 'lib/ui/hara.dart';

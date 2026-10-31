@@ -4,7 +4,6 @@ import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/views/config/advanced.dart';
 import 'package:kfusion/views/config/general.dart';
 import 'package:kfusion/views/logs.dart';
 import 'package:kfusion/views/resources.dart';
@@ -296,12 +295,14 @@ void main() {
       expect(find.byType(DecorationListItem), findsNothing);
     });
 
-    testWidgets('the advanced index lists two cabin rows', (tester) async {
+    testWidgets('the settings index lists network and dns cabin rows', (
+      tester,
+    ) async {
       final container = _container(tester);
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const TestApp(child: AdvancedConfigView()),
+          child: const TestApp(child: ToolsView()),
         ),
       );
       await tester.pump();

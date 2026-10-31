@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:kfusion/providers/providers.dart';
 import 'package:kfusion/state.dart';
-import 'package:kfusion/views/advanced_gate.dart';
-import 'package:kfusion/views/config/advanced.dart';
+import 'package:kfusion/views/config/dns.dart';
 import 'package:kfusion/views/config/general.dart';
+import 'package:kfusion/views/config/network.dart';
+import 'package:kfusion/views/developer.dart';
 import 'package:kfusion/views/tools.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,26 +71,29 @@ void main() {
     for (final label in ['System proxy', 'TUN']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
+    // The index is flat: every destination is a row of this page,
+    // the developer row included — no gate, no condition.
     for (final label in [
       'Language',
       'Theme',
+      'Proxy settings',
       'Backup and restore',
-      'Advanced',
+      'General',
+      'Network',
+      'DNS',
+      'On demand',
+      'Logs',
+      'Resources',
+      'Developer mode',
       'Disclaimer',
       'About',
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
-    // The gated pages have no direct row on the daily surface.
-    for (final label in [
-      'Advanced configuration',
-      'General',
-      'Proxy settings',
-      'Resources',
-      'Logs',
-    ]) {
+    for (final label in ['Advanced', 'Advanced configuration']) {
       expect(find.text(label), findsNothing, reason: label);
     }
+    expect(find.byType(TextField), findsOneWidget);
   });
 
   testWidgets('toggle rows flip their settings and carry no switch', (
@@ -112,51 +116,76 @@ void main() {
     expect(container.read(networkSettingProvider).systemProxy, !systemProxy);
   });
 
-  testWidgets('the advanced gate gathers the gated pages behind one door', (
+  testWidgets('network and dns open straight from the index', (tester) async {
+    final container = _container(tester);
+    await _pumpSettings(tester, container);
+    await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.text('Network'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Network'));
+    await tester.pumpAndSettle();
+    expect(find.byType(NetworkListView), findsOneWidget);
+  });
+
+  testWidgets('the developer row stands on the index with no condition', (
     tester,
   ) async {
     final container = _container(tester);
     await _pumpSettings(tester, container);
     await tester.pump();
 
-    await tester.tap(find.text('Advanced'));
+    expect(container.read(appSettingProvider).developerMode, isFalse);
+    await tester.scrollUntilVisible(
+      find.text('Developer mode'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Developer mode'));
     await tester.pumpAndSettle();
-    expect(find.byType(AdvancedGateView), findsOneWidget);
-    for (final label in [
-      'Advanced configuration',
-      'General',
-      'Proxy settings',
-      'Resources',
-      'Logs',
-    ]) {
-      expect(find.text(label), findsOneWidget, reason: label);
-    }
-    expect(find.text('Developer mode'), findsNothing);
-
-    await tester.tap(find.text('Advanced configuration'));
-    await tester.pumpAndSettle();
-    expect(find.byType(AdvancedConfigView), findsOneWidget);
-    for (final label in ['Network', 'DNS']) {
-      expect(find.text(label), findsOneWidget, reason: label);
-    }
+    expect(find.byType(DeveloperView), findsOneWidget);
   });
 
-  testWidgets('the developer row keeps its condition inside the gate', (
+  testWidgets('search narrows the index and clearing restores it', (
     tester,
   ) async {
     final container = _container(tester);
-    container
-        .read(appSettingProvider.notifier)
-        .update((state) => state.copyWith(developerMode: true));
     await _pumpSettings(tester, container);
     await tester.pump();
 
-    await tester.tap(find.text('Advanced'));
-    await tester.pumpAndSettle();
-    expect(find.text('Developer mode'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'dns');
+    await tester.pump();
+    expect(find.text('DNS'), findsOneWidget);
+    for (final label in ['Theme', 'General', 'Network', 'Logs', 'About']) {
+      expect(find.text(label), findsNothing, reason: label);
+    }
+
+    await tester.enterText(find.byType(TextField), 'zzz');
+    await tester.pump();
+    expect(find.text('No data'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pump();
+    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('About'), findsOneWidget);
   });
 
-  testWidgets('the gated general page keeps the rest, minus the migrated', (
+  testWidgets('a search result opens its page directly', (tester) async {
+    final container = _container(tester);
+    await _pumpSettings(tester, container);
+    await tester.pump();
+
+    await tester.enterText(find.byType(TextField), 'dns');
+    await tester.pump();
+    await tester.tap(find.text('DNS'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DnsView), findsOneWidget);
+  });
+
+  testWidgets('the general page keeps the rest, minus the migrated', (
     tester,
   ) async {
     final container = _container(tester);
