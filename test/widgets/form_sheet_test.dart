@@ -109,6 +109,22 @@ void main() {
     expect(find.widgetWithText(TextButton, 'Cancel'), findsNothing);
   });
 
+  testWidgets('a mobile form sheet clips its hugging scaffold square', (
+    tester,
+  ) async {
+    await _open(tester, const Size(390, 844));
+
+    final clip = find.descendant(
+      of: find.byType(CommonScaffold),
+      matching: find.byType(ClipRSuperellipse),
+    );
+    expect(clip, findsOneWidget);
+    expect(
+      tester.widget<ClipRSuperellipse>(clip).borderRadius,
+      AppRadius.top(AppCorner.hara),
+    );
+  });
+
   testWidgets('a bare field floats no label, whose focus animation would lay '
       'the form out on every frame', (tester) async {
     await _open(tester, const Size(390, 844));

@@ -199,6 +199,13 @@ void main() {
       }
       expect(form, contains('AppShape.hara'));
       expect(form, contains('HaraSpace.hairline'));
+      final scaffold = read('lib/ui/scaffold.dart');
+      expect(
+        scaffold.contains('AppCorner.xxl'),
+        isFalse,
+        reason: 'scaffold.dart: AppCorner.xxl',
+      );
+      expect(scaffold, contains('AppRadius.top(AppCorner.hara)'));
       final header = read('lib/ui/sheet_header.dart');
       expect(
         header.contains('AppShape.all'),
