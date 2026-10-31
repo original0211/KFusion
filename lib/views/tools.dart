@@ -98,11 +98,11 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       _Destination(appLocalizations.language, const _LocaleRow()),
       _Destination(
         appLocalizations.theme,
-        _HaraOpenRow(label: appLocalizations.theme, target: const ThemeView()),
+        HaraOpenRow(label: appLocalizations.theme, target: const ThemeView()),
       ),
       _Destination(
         appLocalizations.proxySettings,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.proxySettings,
           target: BaseScaffold(
             title: appLocalizations.proxySettings,
@@ -112,7 +112,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       ),
       _Destination(
         appLocalizations.backupAndRestore,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.backupAndRestore,
           target: const BackupAndRestore(),
         ),
@@ -120,7 +120,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       if (system.isAndroid)
         _Destination(
           appLocalizations.accessControl,
-          _HaraOpenRow(
+          HaraOpenRow(
             label: appLocalizations.accessControl,
             target: const AccessView(),
           ),
@@ -129,14 +129,14 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final configuration = <_Destination>[
       _Destination(
         appLocalizations.general,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.general,
           target: const GeneralView(),
         ),
       ),
       _Destination(
         appLocalizations.network,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.network,
           target: BaseScaffold(
             title: appLocalizations.network,
@@ -144,10 +144,10 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           ),
         ),
       ),
-      const _Destination('DNS', _HaraOpenRow(label: 'DNS', target: DnsView())),
+      const _Destination('DNS', HaraOpenRow(label: 'DNS', target: DnsView())),
       _Destination(
         appLocalizations.onDemand,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.onDemand,
           target: const OnDemandView(),
         ),
@@ -156,18 +156,18 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final maintenance = <_Destination>[
       _Destination(
         appLocalizations.logs,
-        _HaraOpenRow(label: appLocalizations.logs, target: const LogsView()),
+        HaraOpenRow(label: appLocalizations.logs, target: const LogsView()),
       ),
       _Destination(
         appLocalizations.resources,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.resources,
           target: const ResourcesView(),
         ),
       ),
       _Destination(
         appLocalizations.developerMode,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.developerMode,
           target: const DeveloperView(),
         ),
@@ -176,14 +176,14 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final legal = <_Destination>[
       _Destination(
         appLocalizations.disclaimer,
-        _HaraOpenRow(
+        HaraOpenRow(
           label: appLocalizations.disclaimer,
           target: const DisclaimerView(),
         ),
       ),
       _Destination(
         appLocalizations.about,
-        _HaraOpenRow(label: appLocalizations.about, target: const AboutView()),
+        HaraOpenRow(label: appLocalizations.about, target: const AboutView()),
       ),
     ];
     final destinations = [...daily, ...configuration, ...maintenance, ...legal];
@@ -205,7 +205,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           title: appLocalizations.startupAndBackground,
           rows: [
             for (final item in startupSettingItems())
-              _HaraToggle(item as ConfigToggleItem),
+              HaraToggle(item as ConfigToggleItem),
           ],
           footer: [
             if (system.isDesktop) appLocalizations.silentLaunchDesc,
@@ -213,7 +213,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           ].join('\n'),
         ),
         if (takeover.isNotEmpty)
-          _section(rows: [for (final item in takeover) _HaraBoundToggle(item)]),
+          _section(rows: [for (final item in takeover) HaraBoundToggle(item)]),
         _section(rows: [for (final item in daily) item.row]),
         _section(rows: [for (final item in configuration) item.row]),
         _section(rows: [for (final item in maintenance) item.row]),
@@ -222,7 +222,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         _section(
           rows: [
             if (matches.isEmpty)
-              _HaraRow(
+              HaraRow(
                 child: Text(
                   appLocalizations.noData,
                   style: HaraText.profileMeta(context, palette.dim),
@@ -272,134 +272,6 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           },
         ),
       ),
-    );
-  }
-}
-
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
-/// A toggle row over an existing [ConfigToggleItem]: the item's own
-/// selector and writer drive it; the row tap flips the value.
-class _HaraToggle extends ConsumerWidget {
-  const _HaraToggle(this.item);
-
-  final ConfigToggleItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final palette = context.haraPalette;
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return Semantics(
-      toggled: value,
-      child: _HaraRow(
-        onTap: () => item.onChanged(ref, !value),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                item.title(appLocalizations),
-                style: HaraText.nodeName(context, palette.ink, current: false),
-              ),
-            ),
-            HaraToggleMark(
-              value: value,
-              word: value
-                  ? appLocalizations.enabled
-                  : appLocalizations.disabled,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// The takeover items belong to the gated network page; building one
-// here only assembles its ConfigToggleItem (a selector and a writer),
-// which the Hara row renders instead of the item's own Material row.
-class _HaraBoundToggle extends ConsumerWidget {
-  const _HaraBoundToggle(this.source);
-
-  final ConsumerWidget source;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return _HaraToggle(source.build(context, ref) as ConfigToggleItem);
-  }
-}
-
-/// A row that opens a page: an ink label and a sub arrow. The open
-/// follows the list row it replaces — sheet push or open container.
-class _HaraOpenRow extends StatelessWidget {
-  const _HaraOpenRow({required this.label, required this.target});
-
-  final String label;
-  final Widget target;
-
-  Widget _content(BuildContext context) {
-    final palette = context.haraPalette;
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: HaraText.nodeName(context, palette.ink, current: false),
-          ),
-        ),
-        Text('→', style: HaraText.addRowArrow(context, palette.sub)),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    if (!context.isMobileView) {
-      return _HaraRow(
-        onTap: () {
-          showExtend<dynamic>(
-            context,
-            props: const ExtendProps(forceFull: true),
-            builder: (_) => target,
-          );
-        },
-        child: _content(context),
-      );
-    }
-    return OpenContainer<dynamic>(
-      clipBehavior: Clip.none,
-      closedColor: palette.bg,
-      closedShape: AppShape.hara,
-      closedBuilder: (context, action) {
-        return _HaraRow(onTap: action, child: _content(context));
-      },
-      openBuilder: (_, _) => target,
     );
   }
 }
@@ -484,7 +356,7 @@ class _LocaleRow extends ConsumerWidget {
     );
     final currentLocale = getLocaleForString(locale);
     PopupOpen? openMenu;
-    return _HaraRow(
+    return HaraRow(
       onTap: () => openMenu?.call(),
       child: Row(
         children: [

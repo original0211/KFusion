@@ -9,7 +9,6 @@ import 'package:kfusion/features/form/form.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/providers.dart';
-import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/views/config/on_demand.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -459,208 +458,6 @@ class CoreSwitchCard extends StatelessWidget {
   }
 }
 
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
-/// A section of the page: a dim title, a hairline, its rows, and the
-/// section's footer note.
-class _HaraSection extends StatelessWidget {
-  const _HaraSection({this.title, required this.rows, this.footer});
-
-  final String? title;
-  final List<Widget> rows;
-  final String? footer;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (title != null) ...[
-          Text(title!, style: HaraText.sectionTitle(context, palette.dim)),
-          const SizedBox(height: HaraSpace.sectionTitleGap),
-        ],
-        HaraHairline(color: palette.line),
-        ...rows,
-        if (footer != null) ...[
-          const SizedBox(height: 8),
-          Text(footer!, style: HaraText.profileMeta(context, palette.dim)),
-        ],
-      ],
-    );
-  }
-}
-
-/// A toggle row over an existing [ConfigToggleItem]: the item's own
-/// selector and writer drive it; the row tap flips the value.
-class _HaraToggle extends ConsumerWidget {
-  const _HaraToggle(this.item);
-
-  final ConfigToggleItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final palette = context.haraPalette;
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return Semantics(
-      toggled: value,
-      child: _HaraRow(
-        onTap: () => item.onChanged(ref, !value),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                item.title(appLocalizations),
-                style: HaraText.nodeName(context, palette.ink, current: false),
-              ),
-            ),
-            HaraToggleMark(
-              value: value,
-              word: value
-                  ? appLocalizations.enabled
-                  : appLocalizations.disabled,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// An options row: the row tap opens the menu out of its end value, as
-/// the options row it replaces did.
-class _HaraOptionsRow<T> extends StatelessWidget {
-  const _HaraOptionsRow({
-    required this.label,
-    this.subtitle,
-    required this.options,
-    required this.value,
-    required this.textBuilder,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String? subtitle;
-  final List<T> options;
-  final T value;
-  final String Function(T value) textBuilder;
-  final ValueChanged<T>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final onChanged = this.onChanged;
-    PopupOpen? openMenu;
-    return _HaraRow(
-      onTap: onChanged == null ? null : () => openMenu?.call(),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: HaraText.nodeName(
-                    context,
-                    palette.ink,
-                    current: false,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: HaraSpace.profileMetaGap),
-                  Text(
-                    subtitle!,
-                    style: HaraText.profileMeta(context, palette.sub),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (onChanged != null)
-            CommonPopupBox(
-              targetBuilder: (open) {
-                openMenu = open;
-                return InkWell(
-                  customBorder: AppShape.hara,
-                  onTap: open,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        textBuilder(value),
-                        style: HaraText.statusNode(context, palette.sub),
-                      ),
-                      const SizedBox(width: 4),
-                      GlyphIcon(AppGlyphs.picker, color: palette.sub),
-                    ],
-                  ),
-                );
-              },
-              popupBuilder: (_) => CommonPopupMenu(
-                items: [
-                  for (final option in options)
-                    CommonPopupMenuItem(
-                      label: textBuilder(option),
-                      checked: option == value,
-                      onPressed: () => onChanged(option),
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// An options row over an existing [ConfigOptionsItem]: the item's own
-/// selector, options and writer drive it.
-class _HaraOptions<T> extends ConsumerWidget {
-  const _HaraOptions(this.item);
-
-  final ConfigOptionsItem<T> item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return _HaraOptionsRow<T>(
-      label: item.title(appLocalizations),
-      options: item.options,
-      value: value,
-      textBuilder: item.textBuilder,
-      onChanged: (value) => item.onChanged(ref, value),
-    );
-  }
-}
-
 /// An options row over a [ConfigOptionsItem] another widget assembles:
 /// building the source only assembles the item (a selector, options and
 /// a writer), which the Hara row renders instead of its own Material row.
@@ -671,37 +468,8 @@ class _HaraBoundOptions<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _HaraOptions<T>(source.build(context, ref) as ConfigOptionsItem<T>);
+    return HaraOptions<T>(source.build(context, ref) as ConfigOptionsItem<T>);
   }
-}
-
-/// The input dialog an input row opens, with the same plumbing the list
-/// row it replaces used: the floating dialog over the root navigator,
-/// the length limit as formatters, and the result handed back as-is.
-Future<void> _showConfigInputDialog({
-  required BuildContext context,
-  required String title,
-  required String value,
-  String? resetValue,
-  int? maxLength,
-  TextInputType? keyboardType,
-  FormFieldValidator<String>? validator,
-  required ValueChanged<String?> onChanged,
-}) async {
-  final result = await showFloatingDialog<String>(
-    context: Navigator.of(context, rootNavigator: true).context,
-    child: InputDialog(
-      title: title,
-      value: value,
-      resetValue: resetValue,
-      inputFormatters: maxLength == null
-          ? null
-          : TextInputLimits.limit(maxLength),
-      keyboardType: keyboardType,
-      validator: validator,
-    ),
-  );
-  onChanged(result);
 }
 
 /// An input row: the label, its value under it, and the input dialog on
@@ -720,7 +488,7 @@ class _HaraInputRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.haraPalette;
-    return _HaraRow(
+    return HaraRow(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,14 +505,6 @@ class _HaraInputRow extends StatelessWidget {
       ),
     );
   }
-}
-
-String? _normalizeConfigText(ConfigTextItem item, String? value) {
-  if (value == null) {
-    return null;
-  }
-  final normalize = item.normalize;
-  return normalize == null ? value : normalize(value);
 }
 
 /// An input row over an existing [ConfigTextItem]: the item's selector,
@@ -764,21 +524,21 @@ class _HaraText extends ConsumerWidget {
       label: label,
       value: value,
       onTap: () {
-        _showConfigInputDialog(
+        showConfigInputDialog(
           context: context,
           title: label,
           value: value,
           maxLength: item.maxLength,
           keyboardType: item.keyboardType,
           validator: (text) {
-            final normalized = _normalizeConfigText(item, text);
+            final normalized = normalizeConfigText(item, text);
             if (normalized == null || normalized.isEmpty) {
               return item.allowEmpty ? null : appLocalizations.emptyTip(label);
             }
             return item.validator?.call(normalized, appLocalizations);
           },
           onChanged: (text) {
-            final normalized = _normalizeConfigText(item, text);
+            final normalized = normalizeConfigText(item, text);
             if (normalized == null || normalized == value) {
               return;
             }
@@ -838,7 +598,7 @@ class _HaraOpenRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.haraPalette;
     if (!context.isMobileView) {
-      return _HaraRow(
+      return HaraRow(
         onTap: () async {
           final result = await showExtend<dynamic>(
             context,
@@ -855,7 +615,7 @@ class _HaraOpenRow extends StatelessWidget {
       closedColor: palette.bg,
       closedShape: AppShape.hara,
       closedBuilder: (context, action) {
-        return _HaraRow(onTap: action, child: _content(context));
+        return HaraRow(onTap: action, child: _content(context));
       },
       onClosed: onChanged,
       openBuilder: (_, _) => target,
@@ -873,7 +633,7 @@ class CurrentProfileCoreKindItem extends ConsumerWidget {
     final kind = profile == null
         ? null
         : ref.watch(coreKindsProvider).value?[profile.id];
-    return _HaraOptionsRow<CoreKind>(
+    return HaraOptionsRow<CoreKind>(
       label: '运行核心',
       subtitle: profile?.realLabel ?? '未选择配置',
       options: CoreKind.values,
@@ -901,7 +661,7 @@ class TestUrlItem extends ConsumerWidget {
       label: appLocalizations.testUrl,
       value: testUrl,
       onTap: () {
-        _showConfigInputDialog(
+        showConfigInputDialog(
           context: context,
           title: appLocalizations.testUrl,
           value: testUrl,
@@ -1063,14 +823,14 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _inboundItems({required bool externalController}) {
     return [
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => l.allowLan,
           select: (state) => state.allowLan,
           update: (state, value) => state.copyWith(allowLan: value),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => l.externalController,
           select: (state) =>
@@ -1091,21 +851,21 @@ class GeneralView extends ConsumerWidget {
   List<Widget> _connectionItems() {
     return [
       const TestUrlItem(),
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => l.unifiedDelay,
           select: (state) => state.unifiedDelay,
           update: (state, value) => state.copyWith(unifiedDelay: value),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => l.tcpConcurrent,
           select: (state) => state.tcpConcurrent,
           update: (state, value) => state.copyWith(tcpConcurrent: value),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => l.findProcessMode,
           select: (state) => state.findProcessMode == FindProcessMode.always,
@@ -1116,14 +876,14 @@ class GeneralView extends ConsumerWidget {
           ),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _appSettingToggle(
           title: (l) => l.autoCloseConnections,
           select: (state) => state.closeConnections,
           update: (state, value) => state.copyWith(closeConnections: value),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _appSettingToggle(
           title: (l) => l.onlyStatisticsProxy,
           select: (state) => state.onlyStatisticsProxy,
@@ -1135,14 +895,14 @@ class GeneralView extends ConsumerWidget {
 
   List<Widget> _requestItems() {
     return [
-      _HaraToggle(
+      HaraToggle(
         _appSettingToggle(
           title: (l) => l.checkCertificate,
           select: (state) => state.checkCertificate,
           update: (state, value) => state.copyWith(checkCertificate: value),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _appSettingToggle(
           title: (l) => l.autoCheckUpdate,
           select: (state) => state.autoCheckUpdate,
@@ -1155,7 +915,7 @@ class GeneralView extends ConsumerWidget {
   List<Widget> _coreItems() {
     return [
       const CurrentProfileCoreKindItem(),
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => 'IPv6',
           select: (state) => state.ipv6,
@@ -1163,7 +923,7 @@ class GeneralView extends ConsumerWidget {
         ),
       ),
       const HostsItem(),
-      _HaraToggle(
+      HaraToggle(
         ConfigToggleItem(
           title: (l) => l.appendSystemDns,
           selector: networkSettingProvider.select(
@@ -1174,7 +934,7 @@ class GeneralView extends ConsumerWidget {
               .update((state) => state.copyWith(appendSystemDns: value)),
         ),
       ),
-      _HaraToggle(
+      HaraToggle(
         _clashToggle(
           title: (l) => l.geodataLoader,
           select: (state) =>
@@ -1192,7 +952,7 @@ class GeneralView extends ConsumerWidget {
   List<Widget> _logItems() {
     return [
       const _HaraBoundOptions<LogLevel>(LogLevelItem()),
-      _HaraToggle(
+      HaraToggle(
         _appSettingToggle(
           title: (l) => l.logcat,
           select: (state) => state.openLogs,
@@ -1212,32 +972,32 @@ class GeneralView extends ConsumerWidget {
       ),
     );
     final sections = <Widget>[
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.startupAndBackground,
         rows: _startupItems(appLocalizations),
         footer: appLocalizations.onDemandDesc,
       ),
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.requestsAndUpdates,
         rows: _requestItems(),
         footer: appLocalizations.checkCertificateDesc,
       ),
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.inbound,
         rows: _inboundItems(externalController: externalController),
         footer: appLocalizations.externalControllerDesc,
       ),
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.connection,
         rows: _connectionItems(),
         footer: appLocalizations.autoCloseConnectionsDesc,
       ),
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.core,
         rows: _coreItems(),
         footer: appLocalizations.ipv6Desc,
       ),
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.logsAndDiagnostics,
         rows: _logItems(),
         footer: appLocalizations.logcatDesc,

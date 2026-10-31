@@ -60,33 +60,6 @@ class ThemeView extends StatelessWidget {
   }
 }
 
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
 /// A lone toggle between two groups: a top hairline, the label (and its
 /// description), and the A switch mark; the row tap flips the value.
 class _ThemeToggle extends StatelessWidget {
@@ -112,7 +85,7 @@ class _ThemeToggle extends StatelessWidget {
         HaraHairline(color: palette.line),
         Semantics(
           toggled: value,
-          child: _HaraRow(
+          child: HaraRow(
             onTap: () => onChanged(!value),
             child: Row(
               children: [
@@ -174,7 +147,7 @@ class _HaraOptionsRow<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.haraPalette;
     PopupOpen? openMenu;
-    return _HaraRow(
+    return HaraRow(
       onTap: () => openMenu?.call(),
       child: Row(
         children: [

@@ -171,17 +171,17 @@ class _HaraProfilesViewState extends ConsumerState<HaraProfilesView> {
         ),
         const SizedBox(height: HaraSpace.sectionTitleGap),
         HaraHairline(color: palette.line),
-        _HaraAddRow(
+        HaraAddRow(
           label: localizations.importFromLink,
           onTap: () => showAddProfileFromLinkForm(context, ref),
         ),
-        _HaraAddRow(
+        HaraAddRow(
           label: localizations.file,
           onTap: () => unawaited(
             ref.read(profilesActionProvider.notifier).addProfileFormFile(),
           ),
         ),
-        _HaraAddRow(
+        HaraAddRow(
           label: localizations.more,
           onTap: () => showAddProfilePage(context),
         ),
@@ -214,44 +214,6 @@ class _HaraProfilesEmpty extends StatelessWidget {
             style: HaraText.profileMeta(context, palette.dim),
             textAlign: TextAlign.center,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HaraAddRow extends StatelessWidget {
-  const _HaraAddRow({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    return InkWell(
-      customBorder: AppShape.hara,
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: HaraSpace.addRowVertical,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: HaraText.addRow(context, palette.sub),
-                  ),
-                ),
-                Text('→', style: HaraText.addRowArrow(context, palette.sub)),
-              ],
-            ),
-          ),
-          HaraHairline(color: palette.line),
         ],
       ),
     );

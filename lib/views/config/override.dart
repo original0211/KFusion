@@ -9,7 +9,6 @@ import 'package:kfusion/pages/editor.dart';
 import 'package:kfusion/providers/config.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
-import 'package:flutter/foundation.dart' show listEquals;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -141,7 +140,7 @@ class ToggleOverrideField<M> extends ValueOverrideField<M, bool> {
     required ConfigLabel title,
     required Widget leading,
   }) {
-    return _HaraToggle(
+    return HaraToggle(
       ConfigToggleItem(
         leading: leading,
         title: title,
@@ -172,7 +171,7 @@ class OptionsOverrideField<M, T extends Object>
     required ConfigLabel title,
     required Widget leading,
   }) {
-    return _HaraOptions(
+    return HaraOptions(
       ConfigOptionsItem<T>(
         leading: leading,
         title: title,
@@ -215,7 +214,7 @@ class NumberOverrideField<M> extends ValueOverrideField<M, int> {
     required ConfigLabel title,
     required Widget leading,
   }) {
-    return _HaraText(
+    return HaraTextItem(
       ConfigTextItem(
         leading: leading,
         title: title,
@@ -250,7 +249,7 @@ class TextOverrideField<M> extends ValueOverrideField<M, String> {
     required ConfigLabel title,
     required Widget leading,
   }) {
-    return _HaraText(
+    return HaraTextItem(
       ConfigTextItem(
         leading: leading,
         title: title,
@@ -282,7 +281,7 @@ class ListOverrideField<M> extends ValueOverrideField<M, List<String>> {
     required ConfigLabel title,
     required Widget leading,
   }) {
-    return _HaraListEdit(
+    return HaraListEdit(
       ConfigListEditItem(
         leading: leading,
         title: title,
@@ -650,33 +649,6 @@ class _RemoveButton<K extends OverrideKey, M> extends ConsumerWidget {
   }
 }
 
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
 /// A section of the entries list: a dim title, a hairline, its rows
 /// carried by the same entry transitions the section it replaces used,
 /// and the section's footer note.
@@ -711,409 +683,6 @@ class _HaraAnimatedSection extends StatelessWidget {
           Text(footer!, style: HaraText.profileMeta(context, palette.dim)),
         ],
       ],
-    );
-  }
-}
-
-/// A toggle row over an existing [ConfigToggleItem]: the item's own
-/// selector and writer drive it; the row tap flips the value.
-class _HaraToggle extends ConsumerWidget {
-  const _HaraToggle(this.item);
-
-  final ConfigToggleItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final palette = context.haraPalette;
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return Semantics(
-      toggled: value,
-      child: _HaraRow(
-        onTap: () => item.onChanged(ref, !value),
-        child: Row(
-          children: [
-            if (item.leading != null) ...[
-              item.leading!,
-              const SizedBox(width: 16),
-            ],
-            Expanded(
-              child: Text(
-                item.title(appLocalizations),
-                style: HaraText.nodeName(context, palette.ink, current: false),
-              ),
-            ),
-            HaraToggleMark(
-              value: value,
-              word: value
-                  ? appLocalizations.enabled
-                  : appLocalizations.disabled,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// An options row: the row tap opens the menu out of its end value, as
-/// the options row it replaces did.
-class _HaraOptionsRow<T> extends StatelessWidget {
-  const _HaraOptionsRow({
-    required this.label,
-    this.subtitle,
-    this.leading,
-    required this.options,
-    required this.value,
-    required this.textBuilder,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String? subtitle;
-  final Widget? leading;
-  final List<T> options;
-  final T value;
-  final String Function(T value) textBuilder;
-  final ValueChanged<T>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final onChanged = this.onChanged;
-    PopupOpen? openMenu;
-    return _HaraRow(
-      onTap: onChanged == null ? null : () => openMenu?.call(),
-      child: Row(
-        children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 16)],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: HaraText.nodeName(
-                    context,
-                    palette.ink,
-                    current: false,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: HaraSpace.profileMetaGap),
-                  Text(
-                    subtitle!,
-                    style: HaraText.profileMeta(context, palette.sub),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (onChanged != null)
-            CommonPopupBox(
-              targetBuilder: (open) {
-                openMenu = open;
-                return InkWell(
-                  customBorder: AppShape.hara,
-                  onTap: open,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        textBuilder(value),
-                        style: HaraText.statusNode(context, palette.sub),
-                      ),
-                      const SizedBox(width: 4),
-                      GlyphIcon(AppGlyphs.picker, color: palette.sub),
-                    ],
-                  ),
-                );
-              },
-              popupBuilder: (_) => CommonPopupMenu(
-                items: [
-                  for (final option in options)
-                    CommonPopupMenuItem(
-                      label: textBuilder(option),
-                      checked: option == value,
-                      onPressed: () => onChanged(option),
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// An options row over an existing [ConfigOptionsItem]: the item's own
-/// selector, options and writer drive it.
-class _HaraOptions<T> extends ConsumerWidget {
-  const _HaraOptions(this.item);
-
-  final ConfigOptionsItem<T> item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return _HaraOptionsRow<T>(
-      label: item.title(appLocalizations),
-      subtitle: item.subtitle?.call(appLocalizations),
-      leading: item.leading,
-      options: item.options,
-      value: value,
-      textBuilder: item.textBuilder,
-      onChanged: (value) => item.onChanged(ref, value),
-    );
-  }
-}
-
-/// The input dialog an input row opens, with the same plumbing the list
-/// row it replaces used: the floating dialog over the root navigator,
-/// the length limit as formatters, and the result handed back as-is.
-Future<void> _showConfigInputDialog({
-  required BuildContext context,
-  required String title,
-  required String value,
-  String? resetValue,
-  int? maxLength,
-  TextInputType? keyboardType,
-  FormFieldValidator<String>? validator,
-  required ValueChanged<String?> onChanged,
-}) async {
-  final result = await showFloatingDialog<String>(
-    context: Navigator.of(context, rootNavigator: true).context,
-    child: InputDialog(
-      title: title,
-      value: value,
-      resetValue: resetValue,
-      inputFormatters: maxLength == null
-          ? null
-          : TextInputLimits.limit(maxLength),
-      keyboardType: keyboardType,
-      validator: validator,
-    ),
-  );
-  onChanged(result);
-}
-
-/// An input row: the label, its value under it, and the input dialog on
-/// tap.
-class _HaraInputRow extends StatelessWidget {
-  const _HaraInputRow({
-    required this.label,
-    required this.value,
-    this.leading,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final Widget? leading;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    return _HaraRow(
-      onTap: onTap,
-      child: Row(
-        children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 16)],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: HaraText.nodeName(
-                    context,
-                    palette.ink,
-                    current: false,
-                  ),
-                ),
-                if (value.isNotEmpty) ...[
-                  const SizedBox(height: HaraSpace.profileMetaGap),
-                  Text(
-                    value,
-                    style: HaraText.profileMeta(context, palette.sub),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-String? _normalizeConfigText(ConfigTextItem item, String? value) {
-  if (value == null) {
-    return null;
-  }
-  final normalize = item.normalize;
-  return normalize == null ? value : normalize(value);
-}
-
-/// An input row over an existing [ConfigTextItem]: the item's selector,
-/// normalization, validation and writer drive it, through the same
-/// input dialog its own row opened.
-class _HaraText extends ConsumerWidget {
-  const _HaraText(this.item);
-
-  final ConfigTextItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    final label = item.title(appLocalizations);
-    return _HaraInputRow(
-      label: label,
-      value: value,
-      leading: item.leading,
-      onTap: () {
-        _showConfigInputDialog(
-          context: context,
-          title: label,
-          value: value,
-          maxLength: item.maxLength,
-          keyboardType: item.keyboardType,
-          validator: (text) {
-            final normalized = _normalizeConfigText(item, text);
-            if (normalized == null || normalized.isEmpty) {
-              return item.allowEmpty ? null : appLocalizations.emptyTip(label);
-            }
-            return item.validator?.call(normalized, appLocalizations);
-          },
-          onChanged: (text) {
-            final normalized = _normalizeConfigText(item, text);
-            if (normalized == null || normalized == value) {
-              return;
-            }
-            item.onChanged(ref, normalized);
-          },
-        );
-      },
-    );
-  }
-}
-
-/// A row that opens a page: an ink label, its value under it when it has
-/// one, and a sub arrow. The open follows the list row it replaces —
-/// sheet push or open container — and the result reaches [onChanged]
-/// the same way.
-class _HaraOpenRow extends StatelessWidget {
-  const _HaraOpenRow({
-    required this.label,
-    this.subtitle,
-    this.leading,
-    required this.target,
-    this.onChanged,
-  });
-
-  final String label;
-  final String? subtitle;
-  final Widget? leading;
-  final Widget target;
-  final ValueChanged<dynamic>? onChanged;
-
-  Widget _content(BuildContext context) {
-    final palette = context.haraPalette;
-    return Row(
-      children: [
-        if (leading != null) ...[leading!, const SizedBox(width: 16)],
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: HaraText.nodeName(context, palette.ink, current: false),
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: HaraSpace.profileMetaGap),
-                Text(
-                  subtitle!,
-                  style: HaraText.profileMeta(context, palette.sub),
-                ),
-              ],
-            ],
-          ),
-        ),
-        Text('→', style: HaraText.addRowArrow(context, palette.sub)),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    if (!context.isMobileView) {
-      return _HaraRow(
-        onTap: () async {
-          final result = await showExtend<dynamic>(
-            context,
-            props: const ExtendProps(forceFull: true),
-            builder: (_) => target,
-          );
-          onChanged?.call(result);
-        },
-        child: _content(context),
-      );
-    }
-    return OpenContainer<dynamic>(
-      clipBehavior: Clip.none,
-      closedColor: palette.bg,
-      closedShape: AppShape.hara,
-      closedBuilder: (context, action) {
-        return _HaraRow(onTap: action, child: _content(context));
-      },
-      onClosed: onChanged,
-      openBuilder: (_, _) => target,
-    );
-  }
-}
-
-/// A list-edit row over an existing [ConfigListEditItem]: the item's own
-/// selector and writer drive it; the summary under the label counts its
-/// items the way its own row did.
-class _HaraListEdit extends ConsumerWidget {
-  const _HaraListEdit(this.item);
-
-  final ConfigListEditItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    final label = item.title(appLocalizations);
-    final itemValidator = item.itemValidator;
-    return _HaraOpenRow(
-      label: label,
-      subtitle:
-          item.subtitle?.call(appLocalizations) ??
-          (value.isEmpty
-              ? appLocalizations.none
-              : appLocalizations.itemsCount(value.length)),
-      leading: item.leading,
-      target: ListEditView(
-        title: label,
-        items: value,
-        itemMaxLength: item.itemMaxLength,
-        itemValidator: itemValidator == null
-            ? null
-            : (item) => itemValidator(item, appLocalizations),
-        titleBuilder: (item) => Text(item),
-      ),
-      onChanged: (items) {
-        final next = List<String>.from(items as List);
-        if (!listEquals(next, value)) {
-          item.onChanged(ref, next);
-        }
-      },
     );
   }
 }

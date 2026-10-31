@@ -142,7 +142,7 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
     return ReorderableDelayedDragStartListener(
       key: ValueKey(ssid),
       index: index,
-      child: _HaraRow(
+      child: HaraRow(
         onTap: () {
           if (isEditing) {
             _handleSelect(ssid);
@@ -246,7 +246,7 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
     required Widget action,
   }) {
     final palette = context.haraPalette;
-    return _HaraRow(
+    return HaraRow(
       child: Row(
         children: [
           Expanded(
@@ -487,32 +487,5 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
         ),
       ),
     );
-  }
-}
-
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
   }
 }

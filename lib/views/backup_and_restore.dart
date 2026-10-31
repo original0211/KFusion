@@ -9,6 +9,7 @@ import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kfusion/widgets/hara_rows.dart';
 
 class BackupAndRestore extends ConsumerStatefulWidget {
   const BackupAndRestore({super.key});
@@ -105,7 +106,7 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
                   context,
                   appLocalizations.local,
                   rows: [
-                    _HaraRow(
+                    HaraRow(
                       onTap: _backupOnLocal,
                       child: Text(
                         appLocalizations.backup,
@@ -116,7 +117,7 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
                         ),
                       ),
                     ),
-                    _HaraRow(
+                    HaraRow(
                       onTap: _restoreOnLocal,
                       child: Text(
                         appLocalizations.restore,
@@ -153,33 +154,6 @@ Widget _section(
       ...rows,
     ],
   );
-}
-
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
 }
 
 class RestoreOptionsDialog extends StatefulWidget {

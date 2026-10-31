@@ -4,7 +4,6 @@ import 'package:kfusion/common/common.dart';
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/models/models.dart';
 import 'package:kfusion/providers/config.dart';
-import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,10 +29,10 @@ class ProxiesSetting extends ConsumerWidget {
       ),
     );
     final sections = <Widget>[
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.proxySettings,
         rows: [
-          _HaraOptions<ProxiesType>(
+          HaraOptions<ProxiesType>(
             ConfigOptionsItem<ProxiesType>(
               title: (l) => l.style,
               options: ProxiesType.values,
@@ -44,7 +43,7 @@ class ProxiesSetting extends ConsumerWidget {
               onChanged: _writer((state, value) => state.copyWith(type: value)),
             ),
           ),
-          _HaraOptions<ProxiesSortType>(
+          HaraOptions<ProxiesSortType>(
             ConfigOptionsItem<ProxiesSortType>(
               title: (l) => l.sort,
               options: ProxiesSortType.values,
@@ -61,7 +60,7 @@ class ProxiesSetting extends ConsumerWidget {
               ),
             ),
           ),
-          _HaraOptions<ProxiesLayout>(
+          HaraOptions<ProxiesLayout>(
             ConfigOptionsItem<ProxiesLayout>(
               title: (l) => l.layout,
               options: ProxiesLayout.values,
@@ -78,7 +77,7 @@ class ProxiesSetting extends ConsumerWidget {
               ),
             ),
           ),
-          _HaraOptions<ProxyCardType>(
+          HaraOptions<ProxyCardType>(
             ConfigOptionsItem<ProxyCardType>(
               title: (l) => l.size,
               options: ProxyCardType.values,
@@ -92,7 +91,7 @@ class ProxiesSetting extends ConsumerWidget {
             ),
           ),
           if (isList)
-            _HaraOptions<ProxiesIconStyle>(
+            HaraOptions<ProxiesIconStyle>(
               ConfigOptionsItem<ProxiesIconStyle>(
                 title: (l) => l.iconStyle,
                 options: ProxiesIconStyle.values,
@@ -111,11 +110,11 @@ class ProxiesSetting extends ConsumerWidget {
             ),
         ],
       ),
-      _HaraSection(
+      HaraSection(
         title: appLocalizations.filter,
         footer: appLocalizations.hideTimeoutProxiesDesc,
         rows: [
-          _HaraToggle(
+          HaraToggle(
             ConfigToggleItem(
               title: (l) => l.hideTimeoutProxies,
               selector: proxiesStyleSettingProvider.select(
@@ -148,208 +147,6 @@ class ProxiesSetting extends ConsumerWidget {
           );
         },
       ),
-    );
-  }
-}
-
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
-/// A section of the page: a dim title, a hairline, its rows, and the
-/// section's footer note.
-class _HaraSection extends StatelessWidget {
-  const _HaraSection({this.title, required this.rows, this.footer});
-
-  final String? title;
-  final List<Widget> rows;
-  final String? footer;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (title != null) ...[
-          Text(title!, style: HaraText.sectionTitle(context, palette.dim)),
-          const SizedBox(height: HaraSpace.sectionTitleGap),
-        ],
-        HaraHairline(color: palette.line),
-        ...rows,
-        if (footer != null) ...[
-          const SizedBox(height: 8),
-          Text(footer!, style: HaraText.profileMeta(context, palette.dim)),
-        ],
-      ],
-    );
-  }
-}
-
-/// A toggle row over an existing [ConfigToggleItem]: the item's own
-/// selector and writer drive it; the row tap flips the value.
-class _HaraToggle extends ConsumerWidget {
-  const _HaraToggle(this.item);
-
-  final ConfigToggleItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final palette = context.haraPalette;
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return Semantics(
-      toggled: value,
-      child: _HaraRow(
-        onTap: () => item.onChanged(ref, !value),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                item.title(appLocalizations),
-                style: HaraText.nodeName(context, palette.ink, current: false),
-              ),
-            ),
-            HaraToggleMark(
-              value: value,
-              word: value
-                  ? appLocalizations.enabled
-                  : appLocalizations.disabled,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// An options row: the row tap opens the menu out of its end value, as
-/// the options row it replaces did.
-class _HaraOptionsRow<T> extends StatelessWidget {
-  const _HaraOptionsRow({
-    required this.label,
-    this.subtitle,
-    required this.options,
-    required this.value,
-    required this.textBuilder,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String? subtitle;
-  final List<T> options;
-  final T value;
-  final String Function(T value) textBuilder;
-  final ValueChanged<T>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final onChanged = this.onChanged;
-    PopupOpen? openMenu;
-    return _HaraRow(
-      onTap: onChanged == null ? null : () => openMenu?.call(),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: HaraText.nodeName(
-                    context,
-                    palette.ink,
-                    current: false,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: HaraSpace.profileMetaGap),
-                  Text(
-                    subtitle!,
-                    style: HaraText.profileMeta(context, palette.sub),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (onChanged != null)
-            CommonPopupBox(
-              targetBuilder: (open) {
-                openMenu = open;
-                return InkWell(
-                  customBorder: AppShape.hara,
-                  onTap: open,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        textBuilder(value),
-                        style: HaraText.statusNode(context, palette.sub),
-                      ),
-                      const SizedBox(width: 4),
-                      GlyphIcon(AppGlyphs.picker, color: palette.sub),
-                    ],
-                  ),
-                );
-              },
-              popupBuilder: (_) => CommonPopupMenu(
-                items: [
-                  for (final option in options)
-                    CommonPopupMenuItem(
-                      label: textBuilder(option),
-                      checked: option == value,
-                      onPressed: () => onChanged(option),
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// An options row over an existing [ConfigOptionsItem]: the item's own
-/// selector, options and writer drive it.
-class _HaraOptions<T> extends ConsumerWidget {
-  const _HaraOptions(this.item);
-
-  final ConfigOptionsItem<T> item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return _HaraOptionsRow<T>(
-      label: item.title(appLocalizations),
-      options: item.options,
-      value: value,
-      textBuilder: item.textBuilder,
-      onChanged: (value) => item.onChanged(ref, value),
     );
   }
 }

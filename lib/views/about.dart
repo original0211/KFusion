@@ -8,6 +8,7 @@ import 'package:kfusion/state.dart';
 import 'package:kfusion/ui/ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kfusion/widgets/hara_rows.dart';
 
 class AboutView extends ConsumerWidget {
   const AboutView({super.key});
@@ -34,7 +35,7 @@ class AboutView extends ConsumerWidget {
     return Builder(
       builder: (context) {
         final palette = context.haraPalette;
-        return _HaraRow(
+        return HaraRow(
           onTap: () {
             dialogs.openUrl(url);
           },
@@ -141,33 +142,6 @@ Widget _section(
       ...rows,
     ],
   );
-}
-
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
 }
 
 class _AboutHero extends StatelessWidget {

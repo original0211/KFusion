@@ -13,7 +13,7 @@ class DeveloperView extends ConsumerWidget {
   List<Widget> _getDeveloperRows(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
     return [
-      _HaraRow(
+      HaraRow(
         onTap: () async {
           final storeAction = ref.read(storeActionProvider.notifier);
           final res = await dialogs.showMessage(
@@ -35,7 +35,7 @@ class DeveloperView extends ConsumerWidget {
           ),
         ),
       ),
-      _HaraRow(
+      HaraRow(
         onTap: () async {
           await ref.read(storeActionProvider.notifier).shakingStore();
         },
@@ -84,7 +84,7 @@ class DeveloperView extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: HaraSpace.groupGap),
-                _HaraSection(
+                HaraSection(
                   title: appLocalizations.options,
                   rows: _getDeveloperRows(context, ref),
                 ),
@@ -93,55 +93,6 @@ class DeveloperView extends ConsumerWidget {
           },
         ),
       ),
-    );
-  }
-}
-
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
-/// A section of the page: a dim title, a hairline, and its rows.
-class _HaraSection extends StatelessWidget {
-  const _HaraSection({required this.title, required this.rows});
-
-  final String title;
-  final List<Widget> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: HaraText.sectionTitle(context, palette.dim)),
-        const SizedBox(height: HaraSpace.sectionTitleGap),
-        HaraHairline(color: palette.line),
-        ...rows,
-      ],
     );
   }
 }
@@ -165,7 +116,7 @@ class _HaraToggleRow extends StatelessWidget {
     final appLocalizations = context.appLocalizations;
     return Semantics(
       toggled: value,
-      child: _HaraRow(
+      child: HaraRow(
         onTap: onTap,
         child: Row(
           children: [

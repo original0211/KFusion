@@ -707,7 +707,7 @@ class AccessControlPanel extends StatelessWidget {
                   context,
                   appLocalizations.source,
                   rows: [
-                    _HaraToggle(
+                    HaraToggle(
                       ConfigToggleItem(
                         title: (l) => l.systemApp,
                         selector: accessControlStateProvider.select(
@@ -719,7 +719,7 @@ class AccessControlPanel extends StatelessWidget {
                         ),
                       ),
                     ),
-                    _HaraToggle(
+                    HaraToggle(
                       ConfigToggleItem(
                         title: (l) => l.noNetworkApp,
                         selector: accessControlStateProvider.select(
@@ -759,70 +759,6 @@ Widget _section(
   );
 }
 
-/// One hairline row of the page: content over a bottom hairline.
-class _HaraRow extends StatelessWidget {
-  const _HaraRow({required this.child, this.onTap});
-
-  final Widget child;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.haraPalette;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: HaraSpace.nodeRowVertical,
-          ),
-          child: child,
-        ),
-        HaraHairline(color: palette.line),
-      ],
-    );
-    if (onTap == null) return content;
-    return InkWell(customBorder: AppShape.hara, onTap: onTap, child: content);
-  }
-}
-
-/// A toggle row over an existing [ConfigToggleItem]: the item's own
-/// selector and writer drive it; the row tap flips the value.
-class _HaraToggle extends ConsumerWidget {
-  const _HaraToggle(this.item);
-
-  final ConfigToggleItem item;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final palette = context.haraPalette;
-    final appLocalizations = context.appLocalizations;
-    final value = ref.watch(item.selector);
-    return Semantics(
-      toggled: value,
-      child: _HaraRow(
-        onTap: () => item.onChanged(ref, !value),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                item.title(appLocalizations),
-                style: HaraText.nodeName(context, palette.ink, current: false),
-              ),
-            ),
-            HaraToggleMark(
-              value: value,
-              word: value
-                  ? appLocalizations.enabled
-                  : appLocalizations.disabled,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// An options row over an existing [ConfigOptionsItem]: the item's own
 /// selector, options and writer drive it; the row tap opens the popup
 /// menu out of its end value, as the options row it replaces did.
@@ -837,7 +773,7 @@ class _HaraBoundOptions<T> extends ConsumerWidget {
     final appLocalizations = context.appLocalizations;
     final value = ref.watch(item.selector);
     PopupOpen? openMenu;
-    return _HaraRow(
+    return HaraRow(
       onTap: () => openMenu?.call(),
       child: Row(
         children: [
