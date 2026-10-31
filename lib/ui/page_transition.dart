@@ -1,5 +1,5 @@
 import 'package:kfusion/ui/drag_back.dart';
-import 'package:kfusion/ui/surface.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -41,7 +41,7 @@ mixin SharedXPageRouteMixin<T> on PageRoute<T>, DragBackRouteMixin<T> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    final surface = SurfaceLevel.page.colorOf(ColorScheme.of(context));
+    final surface = context.haraPalette.bg;
     final dragging = isDragBackActive;
     return dragBackDetector(
       dragBackSlide(

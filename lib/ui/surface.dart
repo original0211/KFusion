@@ -1,4 +1,5 @@
 import 'package:kfusion/ui/color.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/typography.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -185,6 +186,12 @@ class _ElevatedSurfaceScope extends InheritedWidget {
 }
 
 extension AppSurfaceThemeExt on ThemeData {
+  /// The Hara field pages and sheets stand on; the cabin ladder's page
+  /// step stays for components, but the field itself is the palette's.
+  Color get fieldColor =>
+      extension<HaraTheme>()?.palette.bg ??
+      HaraPalette.of(colorScheme.brightness).bg;
+
   ThemeData get elevated {
     final scheme = extension<ElevatedColorScheme>()?.colorScheme;
     if (scheme == null) {
@@ -197,7 +204,7 @@ extension AppSurfaceThemeExt on ThemeData {
   }
 
   ThemeData get withAppSurfaces {
-    final page = SurfaceLevel.page.colorOf(colorScheme);
+    final field = fieldColor;
     final card = SurfaceLevel.card.colorOf(colorScheme);
     final floatingLevel = SurfaceLevel.floatingOf(colorScheme);
     final floating = floatingLevel.colorOf(colorScheme);
@@ -207,7 +214,7 @@ extension AppSurfaceThemeExt on ThemeData {
       dividerTheme: dividerTheme.copyWith(
         color: colorScheme.onSurface.withValues(alpha: 0.14),
       ),
-      scaffoldBackgroundColor: page,
+      scaffoldBackgroundColor: field,
       cardTheme: cardTheme.copyWith(color: card, elevation: 0),
       dialogTheme: dialogTheme.copyWith(backgroundColor: floating),
       popupMenuTheme: popupMenuTheme.copyWith(color: floating),
@@ -243,8 +250,8 @@ extension AppSurfaceThemeExt on ThemeData {
         }),
       ),
       bottomSheetTheme: bottomSheetTheme.copyWith(
-        backgroundColor: page,
-        modalBackgroundColor: page,
+        backgroundColor: field,
+        modalBackgroundColor: field,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: standingRing.merge(filledButtonTheme.style),

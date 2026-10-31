@@ -318,9 +318,7 @@ class _ErrorActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: SurfaceLevel.page.colorOf(context.colorScheme),
-      ),
+      decoration: BoxDecoration(color: context.haraPalette.bg),
       child: SafeArea(
         top: false,
         child: Center(

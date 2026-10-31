@@ -63,7 +63,7 @@ class _HomeShell extends ConsumerWidget {
     final isMobile = state.viewMode == ViewMode.mobile;
     final navigationItems = state.navigationItems;
     return Material(
-      color: SurfaceLevel.page.colorOf(context.colorScheme),
+      color: context.haraPalette.bg,
       child: Column(
         children: [
           Expanded(

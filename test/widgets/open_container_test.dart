@@ -1,5 +1,5 @@
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/open_container.dart';
-import 'package:kfusion/ui/surface.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -114,9 +114,7 @@ void main() {
       ),
     );
 
-    final page = SurfaceLevel.page.colorOf(
-      Theme.of(tester.element(find.text('Card'))).colorScheme,
-    );
+    final field = HaraPalette.light.bg;
     Rect at(double progress) =>
         Rect.lerp(closedRect, Offset.zero & _viewSize, progress)!;
     await tester.pump();
@@ -125,14 +123,14 @@ void main() {
     expect(
       navigator,
       paints..path(
-        color: page,
+        color: field,
         includes: [opening.centerLeft + const Offset(2, 0)],
         excludes: [opening.centerLeft - const Offset(2, 0)],
       ),
     );
 
     await tester.pumpAndSettle();
-    expect(navigator, isNot(paints..path(color: page)));
+    expect(navigator, isNot(paints..path(color: field)));
 
     await tester.tap(find.text('Page'));
     await tester.pump();

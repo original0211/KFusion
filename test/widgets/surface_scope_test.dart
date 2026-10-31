@@ -1,3 +1,4 @@
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/surface.dart';
 import 'package:kfusion/ui/typography.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -150,7 +151,7 @@ void main() {
       ).elevated;
       expect(theme.colorScheme, carried);
       expect(theme.canvasColor, carried.surface);
-      expect(theme.scaffoldBackgroundColor, SurfaceLevel.page.colorOf(carried));
+      expect(theme.scaffoldBackgroundColor, HaraPalette.dark.bg);
     });
   });
 
@@ -158,8 +159,9 @@ void main() {
     final scheme = ColorScheme.fromSeed(seedColor: Colors.grey);
     final theme = ThemeData(colorScheme: scheme).withAppSurfaces;
 
-    test('the scaffold, cards and floats take their ladder colours', () {
-      expect(theme.scaffoldBackgroundColor, SurfaceLevel.page.colorOf(scheme));
+    test('the scaffold stands on the field while cards and floats take '
+        'their ladder colours', () {
+      expect(theme.scaffoldBackgroundColor, HaraPalette.light.bg);
       expect(theme.cardTheme.color, SurfaceLevel.card.colorOf(scheme));
       expect(theme.cardTheme.elevation, 0);
       final floating = SurfaceLevel.floatingOf(scheme).colorOf(scheme);
@@ -171,10 +173,10 @@ void main() {
       );
     });
 
-    test('sheets sit on the page colour, front and modal alike', () {
-      final page = SurfaceLevel.page.colorOf(scheme);
-      expect(theme.bottomSheetTheme.backgroundColor, page);
-      expect(theme.bottomSheetTheme.modalBackgroundColor, page);
+    test('sheets sit on the field, front and modal alike', () {
+      final field = HaraPalette.light.bg;
+      expect(theme.bottomSheetTheme.backgroundColor, field);
+      expect(theme.bottomSheetTheme.modalBackgroundColor, field);
     });
 
     test('the divider is the on-surface colour at its settled alpha', () {
@@ -203,6 +205,57 @@ void main() {
         WidgetState.selected,
       });
       expect(labelSelected?.fontWeight, FontWeight.w600);
+    });
+  });
+
+  group('the field colour', () {
+    ThemeData themed(HaraPalette palette, Brightness brightness) => ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.grey,
+        brightness: brightness,
+      ),
+      extensions: [HaraTheme(palette)],
+    ).withAppSurfaces;
+
+    test('is white under the light palette, scaffold and sheets alike', () {
+      final theme = themed(HaraPalette.light, Brightness.light);
+      expect(theme.fieldColor, const Color(0xFFFFFFFF));
+      expect(theme.scaffoldBackgroundColor, const Color(0xFFFFFFFF));
+      expect(theme.bottomSheetTheme.backgroundColor, const Color(0xFFFFFFFF));
+      expect(
+        theme.bottomSheetTheme.modalBackgroundColor,
+        const Color(0xFFFFFFFF),
+      );
+    });
+
+    test('is the dark ground under the dark palette', () {
+      final theme = themed(HaraPalette.dark, Brightness.dark);
+      expect(theme.fieldColor, const Color(0xFF101010));
+      expect(theme.scaffoldBackgroundColor, const Color(0xFF101010));
+      expect(theme.bottomSheetTheme.backgroundColor, const Color(0xFF101010));
+    });
+
+    test('is black under the pure black palette', () {
+      final theme = themed(
+        HaraPalette.of(Brightness.dark, pureBlack: true),
+        Brightness.dark,
+      );
+      expect(theme.fieldColor, const Color(0xFF000000));
+      expect(theme.scaffoldBackgroundColor, const Color(0xFF000000));
+    });
+
+    test('falls back to the brightness palette without an extension', () {
+      final dark = ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.grey,
+          brightness: Brightness.dark,
+        ),
+      ).withAppSurfaces;
+      expect(dark.fieldColor, const Color(0xFF101010));
+      final light = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
+      ).withAppSurfaces;
+      expect(light.fieldColor, const Color(0xFFFFFFFF));
     });
   });
 }

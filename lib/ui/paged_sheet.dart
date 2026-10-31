@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:kfusion/ui/deferred_push.dart';
 import 'package:kfusion/ui/drag_back.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/inherited.dart';
 import 'package:kfusion/ui/navigator_resizable.dart';
 import 'package:kfusion/ui/page_transition.dart';
@@ -9,11 +10,9 @@ import 'package:kfusion/ui/pop_scope.dart';
 import 'package:kfusion/ui/shape.dart';
 import 'package:kfusion/ui/sheet.dart';
 import 'package:kfusion/ui/sheet_navigator.dart';
-import 'package:kfusion/ui/surface.dart';
 import 'package:material_ui/material_ui.dart';
 
-Color _sheetColorOf(BuildContext context) =>
-    SurfaceLevel.page.colorOf(ColorScheme.of(context));
+Color _sheetColorOf(BuildContext context) => context.haraPalette.bg;
 
 class PagedSheetRoute<T> extends PageRoute<T>
     with

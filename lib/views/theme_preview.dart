@@ -456,6 +456,11 @@ class _MiniGeometry {
   late final Rect bar;
 }
 
+Color _fieldOf(ColorScheme scheme) => HaraPalette.of(
+  scheme.brightness,
+  pureBlack: scheme.surface.toARGB32() == 0xFF000000,
+).bg;
+
 class _MiniScreenPainter extends CustomPainter {
   const _MiniScreenPainter({
     required this.colorScheme,
@@ -527,10 +532,7 @@ class _MiniScreenPainter extends CustomPainter {
 
   void _paintPages(Canvas canvas, _MiniGeometry geometry) {
     final size = geometry.size;
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = SurfaceLevel.page.colorOf(colorScheme),
-    );
+    canvas.drawRect(Offset.zero & size, Paint()..color = _fieldOf(colorScheme));
     canvas.save();
     canvas.clipRect(Offset.zero & size, doAntiAlias: false);
     final previous = this.previous;
@@ -661,7 +663,7 @@ class _MiniScreenPainter extends CustomPainter {
 class _PageSketch {
   _PageSketch(this.canvas, this.colorScheme, this.unit, this.content)
     : width = content.width / unit,
-      ground = SurfaceLevel.page.colorOf(colorScheme),
+      ground = _fieldOf(colorScheme),
       wash = colorScheme.onSurface.withValues(
         alpha: colorScheme.brightness == Brightness.dark ? 0.09 : 0.05,
       ),

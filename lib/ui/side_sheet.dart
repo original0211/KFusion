@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:kfusion/ui/color.dart';
 import 'package:kfusion/ui/drag_back.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/shape.dart';
 import 'package:kfusion/ui/sheet_navigator.dart';
 import 'package:kfusion/ui/surface.dart';
@@ -47,9 +48,7 @@ class _SideSheetState extends State<SideSheet> {
   Widget build(BuildContext context) {
     return Material(
       key: _childKey,
-      color:
-          widget.backgroundColor ??
-          SurfaceLevel.page.colorOf(Theme.of(context).colorScheme),
+      color: widget.backgroundColor ?? context.haraPalette.bg,
       shape: AppShape.none,
       child: widget.builder(context),
     );
@@ -371,11 +370,9 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
     final Widget content = DisplayFeatureSubScreen(
       child: Builder(
         builder: (BuildContext context) {
-          final colorScheme = Theme.of(context).colorScheme;
           return _ModalSideSheet<T>(
             route: this,
-            backgroundColor:
-                backgroundColor ?? SurfaceLevel.page.colorOf(colorScheme),
+            backgroundColor: backgroundColor ?? context.haraPalette.bg,
           );
         },
       ),

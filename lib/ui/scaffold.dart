@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:kfusion/common/input_limits.dart';
 import 'package:kfusion/common/iterable.dart';
 import 'package:kfusion/ui/context.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/keyboard.dart';
 import 'package:kfusion/ui/l10n.dart';
@@ -618,9 +619,7 @@ class CommonScaffoldState extends State<CommonScaffold> {
   Widget _buildFloatingHeader(Widget appBar) {
     final top = MediaQuery.paddingOf(context).top;
     return FloatingHeader(
-      backgroundColor:
-          widget.backgroundColor ??
-          SurfaceLevel.page.colorOf(context.colorScheme),
+      backgroundColor: widget.backgroundColor ?? context.haraPalette.bg,
       fadeStart: top / (top + pageToolbarHeight),
       overhang: _headerOverhang,
       child: appBar,
@@ -821,9 +820,7 @@ class CommonScaffoldState extends State<CommonScaffold> {
       );
     }
     final sheetBody = FloatingHeaderBody(
-      backgroundColor:
-          widget.backgroundColor ??
-          SurfaceLevel.page.colorOf(context.colorScheme),
+      backgroundColor: widget.backgroundColor ?? context.haraPalette.bg,
       header: SheetToolBar(appBar: appBar, dragHandle: form.hasDragHandle),
       footer: form.dockedSearch == null || _sorting
           ? null

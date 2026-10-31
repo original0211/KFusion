@@ -365,6 +365,55 @@ void main() {
     });
   });
 
+  group('preview ground', () {
+    testWidgets('the mini screen ground is the field, not the page step', (
+      tester,
+    ) async {
+      Future<void> pumpScheme(ColorScheme scheme) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: SizedBox(
+                width: 200,
+                height: 400,
+                child: MiniScreen(colorScheme: scheme, floatingBar: false),
+              ),
+            ),
+          ),
+        );
+      }
+
+      final light = ColorScheme.fromSeed(seedColor: Colors.blue);
+      await pumpScheme(light);
+      expect(
+        find.descendant(
+          of: find.byType(MiniScreen),
+          matching: find.byType(CustomPaint),
+        ),
+        paints..rect(
+          color: const Color(0xFFFFFFFF),
+          rect: const Rect.fromLTWH(0, 0, 200, 400),
+        ),
+      );
+
+      final dark = ColorScheme.fromSeed(
+        seedColor: Colors.blue,
+        brightness: Brightness.dark,
+      );
+      await pumpScheme(dark);
+      expect(
+        find.descendant(
+          of: find.byType(MiniScreen),
+          matching: find.byType(CustomPaint),
+        ),
+        paints..rect(
+          color: const Color(0xFF101010),
+          rect: const Rect.fromLTWH(0, 0, 200, 400),
+        ),
+      );
+    });
+  });
+
   group('preview form', () {
     testWidgets('the option thumbs are square and hairline-framed', (
       tester,

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:kfusion/ui/context.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/scroll_behavior.dart';
-import 'package:kfusion/ui/shape.dart';
 import 'package:kfusion/ui/surface.dart';
+import 'package:kfusion/ui/shape.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/physics.dart';
@@ -781,7 +781,7 @@ class _SnapSheetState extends State<_SnapSheet>
   @override
   Widget build(BuildContext context) {
     final route = widget.route;
-    final sheetColor = SurfaceLevel.page.colorOf(context.colorScheme);
+    final sheetColor = context.haraPalette.bg;
     final theme = Theme.of(context);
     Widget content = route.builder(context, _scrollController);
     if (route.fitsContent) {

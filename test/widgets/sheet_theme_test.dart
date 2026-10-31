@@ -60,9 +60,7 @@ Color? _sheetColor(WidgetTester tester) => tester
     .color;
 
 void main() {
-  final darkSheetColor = SurfaceLevel.page.colorOf(
-    _theme(Brightness.dark).colorScheme,
-  );
+  final darkSheetColor = HaraPalette.dark.bg;
 
   for (final (kind, size, type, show) in [
     ('bottom sheet', const Size(400, 800), SheetType.bottomSheet, showSheet),
@@ -85,4 +83,42 @@ void main() {
       expect(_sheetColor(tester), darkSheetColor);
     });
   }
+
+  testWidgets('the page header band stands on the field in both themes', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final mode = ValueNotifier(ThemeMode.light);
+    addTearDown(mode.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          viewSizeProvider.overrideWithBuild((_, _) => const Size(400, 800)),
+        ],
+        child: ValueListenableBuilder(
+          valueListenable: mode,
+          builder: (_, themeMode, _) => TestApp(
+            theme: _theme(Brightness.light),
+            darkTheme: _theme(Brightness.dark),
+            themeMode: themeMode,
+            child: const CommonScaffold(title: 'Page', body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+
+    Color band() => tester
+        .widget<FloatingHeader>(find.byType(FloatingHeader))
+        .backgroundColor;
+
+    expect(band(), const Color(0xFFFFFFFF));
+
+    mode.value = ThemeMode.dark;
+    await tester.pumpAndSettle();
+
+    expect(band(), const Color(0xFF101010));
+  });
 }

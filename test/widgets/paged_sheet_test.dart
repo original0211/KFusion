@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/inherited.dart';
 import 'package:kfusion/ui/paged_sheet.dart';
 import 'package:kfusion/ui/shape.dart';
 import 'package:kfusion/ui/sheet.dart';
-import 'package:kfusion/ui/surface.dart';
 import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,7 +37,7 @@ void main() {
       ),
     );
 
-    expect(material.color, SurfaceLevel.page.colorOf(ColorScheme.of(context)));
+    expect(material.color, context.haraPalette.bg);
     expect(material.shape, AppShape.top(AppCorner.hara));
     expect(material.clipBehavior, Clip.antiAlias);
   });

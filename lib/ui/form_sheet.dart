@@ -104,9 +104,7 @@ class _FormSheet extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: Material(
-                  color:
-                      backgroundColor ??
-                      SurfaceLevel.page.colorOf(Theme.of(context).colorScheme),
+                  color: backgroundColor ?? context.haraPalette.bg,
                   shape: AppShape.hara.copyWith(
                     side: BorderSide(
                       color: palette.line,
