@@ -410,16 +410,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Access control picks which apps use the proxy.`
-  String get accessControlDesc {
-    return Intl.message(
-      'Access control picks which apps use the proxy.',
-      name: 'accessControlDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Edit`
   String get edit {
     return Intl.message('Edit', name: 'edit', desc: '', args: []);
@@ -810,16 +800,6 @@ class AppLocalizations {
     return Intl.message(
       'Local network permission denied: using the gvisor stack, LAN is unreachable.',
       name: 'localNetworkDeniedTip',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Compatibility mode`
-  String get compatible {
-    return Intl.message(
-      'Compatibility mode',
-      name: 'compatible',
       desc: '',
       args: [],
     );
@@ -1230,26 +1210,6 @@ class AppLocalizations {
     return Intl.message(
       'External link',
       name: 'externalLink',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Other contributors`
-  String get otherContributors {
-    return Intl.message(
-      'Other contributors',
-      name: 'otherContributors',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `App icon design`
-  String get appIconDesign {
-    return Intl.message(
-      'App icon design',
-      name: 'appIconDesign',
       desc: '',
       args: [],
     );
@@ -2620,16 +2580,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Advanced configuration holds network, DNS, added rules, and scripts.`
-  String get advancedConfigDesc {
-    return Intl.message(
-      'Advanced configuration holds network, DNS, added rules, and scripts.',
-      name: 'advancedConfigDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Add rule`
   String get addRule {
     return Intl.message('Add rule', name: 'addRule', desc: '', args: []);
@@ -2653,11 +2603,6 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
-  }
-
-  /// `Source IP`
-  String get sourceIp {
-    return Intl.message('Source IP', name: 'sourceIp', desc: '', args: []);
   }
 
   /// `Don't resolve IP`
@@ -3928,11 +3873,6 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
-  }
-
-  /// `Rule set`
-  String get ruleSet {
-    return Intl.message('Rule set', name: 'ruleSet', desc: '', args: []);
   }
 
   /// `Split strategy`

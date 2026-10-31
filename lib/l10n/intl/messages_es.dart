@@ -213,9 +213,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlAllowDesc": MessageLookupByLibrary.simpleMessage(
       "Solo las apps seleccionadas usan la VPN",
     ),
-    "accessControlDesc": MessageLookupByLibrary.simpleMessage(
-      "El control de acceso elige qué apps usan el proxy.",
-    ),
     "accessControlDisabledDesc": MessageLookupByLibrary.simpleMessage(
       "El control de acceso de apps está desactivado",
     ),
@@ -265,9 +262,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Configuración avanzada",
     ),
-    "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
-      "La configuración avanzada incluye la red, el DNS, las reglas añadidas y los scripts.",
-    ),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage(
       "Perfil cifrado",
     ),
@@ -287,9 +281,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "app": MessageLookupByLibrary.simpleMessage("App"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage(
       "Control de acceso de apps",
-    ),
-    "appIconDesign": MessageLookupByLibrary.simpleMessage(
-      "Diseño del icono de la app",
     ),
     "appendSystemDns": MessageLookupByLibrary.simpleMessage(
       "Añadir DNS del sistema",
@@ -435,9 +426,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "colorStyle": MessageLookupByLibrary.simpleMessage("Estilo de color"),
     "columns": MessageLookupByLibrary.simpleMessage("Columnas"),
     "compact": MessageLookupByLibrary.simpleMessage("Compacto"),
-    "compatible": MessageLookupByLibrary.simpleMessage(
-      "Modo de compatibilidad",
-    ),
     "confirm": MessageLookupByLibrary.simpleMessage("Confirmar"),
     "confirmClearAllData": MessageLookupByLibrary.simpleMessage(
       "¿Seguro que quieres borrar todos los datos?",
@@ -1178,9 +1166,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "optional": MessageLookupByLibrary.simpleMessage("Opcional"),
     "options": MessageLookupByLibrary.simpleMessage("Opciones"),
     "other": MessageLookupByLibrary.simpleMessage("Otros"),
-    "otherContributors": MessageLookupByLibrary.simpleMessage(
-      "Otros colaboradores",
-    ),
     "outbound": MessageLookupByLibrary.simpleMessage("Salida"),
     "outboundIp": MessageLookupByLibrary.simpleMessage("IP de salida"),
     "overrideEntries": MessageLookupByLibrary.simpleMessage(
@@ -1448,7 +1433,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleProviders": MessageLookupByLibrary.simpleMessage(
       "Proveedores de reglas",
     ),
-    "ruleSet": MessageLookupByLibrary.simpleMessage("Conjunto de reglas"),
     "ruleSetEmptyTip": MessageLookupByLibrary.simpleMessage(
       "El conjunto de reglas no tiene entradas utilizables",
     ),
@@ -1604,7 +1588,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "softStyle": MessageLookupByLibrary.simpleMessage("Suave"),
     "sort": MessageLookupByLibrary.simpleMessage("Ordenar"),
     "source": MessageLookupByLibrary.simpleMessage("Origen"),
-    "sourceIp": MessageLookupByLibrary.simpleMessage("IP de origen"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("Proxy especial"),
     "specialRules": MessageLookupByLibrary.simpleMessage("Reglas especiales"),
     "spectrum": MessageLookupByLibrary.simpleMessage("Espectro"),

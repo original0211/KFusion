@@ -1927,18 +1927,6 @@ abstract final class AppGlyphs {
     ], role: GlyphRole.line),
   ]);
 
-  static const iconTile = Glyph([
-    GlyphBox(3, 3, 21, 21, 5),
-    GlyphPolyline([
-      GlyphVertex(5.6, 16.8),
-      GlyphVertex(9.6, 12.8, 0.8),
-      GlyphVertex(12.8, 16, 0.8),
-      GlyphVertex(14.6, 14.2, 0.8),
-      GlyphVertex(18.4, 18),
-    ], role: GlyphRole.detail),
-    GlyphCircle(15.2, 8.8, 1.5, role: GlyphRole.detail, solid: true),
-  ]);
-
   static Glyph sidebar(double progress) {
     final divider = lerpDouble(8.5, 11.5, progress)!;
     return Glyph([

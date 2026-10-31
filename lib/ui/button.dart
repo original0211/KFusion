@@ -1,47 +1,12 @@
 import 'package:kfusion/ui/context.dart';
 import 'package:kfusion/ui/icons/icons.dart';
-import 'package:kfusion/ui/metrics.dart';
 import 'package:kfusion/ui/shape.dart';
 import 'package:kfusion/ui/surface.dart';
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'card.dart';
 import 'liquid_glass.dart';
 import 'elastic.dart';
-
-class MoreActionButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final String label;
-  final Widget? trailing;
-
-  const MoreActionButton({
-    super.key,
-    this.onPressed,
-    required this.label,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: CommonCard(
-        radius: AppCorner.xl,
-        onPressed: onPressed,
-        child: ListTile(
-          minTileHeight: listRowMinHeight,
-          minVerticalPadding: listRowVerticalPadding,
-          titleTextStyle: context.listTitleStyle,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(label),
-          trailing:
-              trailing ?? const GlyphIcon(AppGlyphs.chevronForward, size: 18),
-        ),
-      ),
-    );
-  }
-}
 
 enum TonalButtonSize {
   bar(button: 44, icon: 24),

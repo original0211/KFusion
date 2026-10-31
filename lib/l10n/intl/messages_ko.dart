@@ -187,9 +187,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlAllowDesc": MessageLookupByLibrary.simpleMessage(
       "선택한 앱만 VPN을 거칩니다",
     ),
-    "accessControlDesc": MessageLookupByLibrary.simpleMessage(
-      "접근 제어는 프록시를 사용할 앱을 선택합니다.",
-    ),
     "accessControlDisabledDesc": MessageLookupByLibrary.simpleMessage(
       "앱 접근 제어가 꺼져 있습니다",
     ),
@@ -221,9 +218,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "address": MessageLookupByLibrary.simpleMessage("주소"),
     "advanced": MessageLookupByLibrary.simpleMessage("고급"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("고급 구성"),
-    "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
-      "고급 구성에는 네트워크, DNS, 추가한 규칙, 스크립트가 포함됩니다.",
-    ),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("암호화된 프로필"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 비밀 키"),
     "ageSecretKeyRequiredTip": MessageLookupByLibrary.simpleMessage(
@@ -236,7 +230,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "answers": MessageLookupByLibrary.simpleMessage("응답"),
     "app": MessageLookupByLibrary.simpleMessage("앱"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage("앱 접근 제어"),
-    "appIconDesign": MessageLookupByLibrary.simpleMessage("앱 아이콘 디자인"),
     "appendSystemDns": MessageLookupByLibrary.simpleMessage("시스템 DNS 추가"),
     "authorize": MessageLookupByLibrary.simpleMessage("허용"),
     "authorized": MessageLookupByLibrary.simpleMessage("허용됨"),
@@ -335,7 +328,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "colorStyle": MessageLookupByLibrary.simpleMessage("색상 스타일"),
     "columns": MessageLookupByLibrary.simpleMessage("열"),
     "compact": MessageLookupByLibrary.simpleMessage("간결하게"),
-    "compatible": MessageLookupByLibrary.simpleMessage("호환 모드"),
     "confirm": MessageLookupByLibrary.simpleMessage("확인"),
     "confirmClearAllData": MessageLookupByLibrary.simpleMessage(
       "모든 데이터를 지우시겠습니까?",
@@ -935,7 +927,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "optional": MessageLookupByLibrary.simpleMessage("선택 사항"),
     "options": MessageLookupByLibrary.simpleMessage("옵션"),
     "other": MessageLookupByLibrary.simpleMessage("기타"),
-    "otherContributors": MessageLookupByLibrary.simpleMessage("기타 기여자"),
     "outbound": MessageLookupByLibrary.simpleMessage("아웃바운드"),
     "outboundIp": MessageLookupByLibrary.simpleMessage("아웃바운드 IP"),
     "overrideEntries": MessageLookupByLibrary.simpleMessage("덮어쓰기 항목"),
@@ -1145,7 +1136,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Apple 및 Microsoft 직접 연결",
     ),
     "ruleProviders": MessageLookupByLibrary.simpleMessage("규칙 공급자"),
-    "ruleSet": MessageLookupByLibrary.simpleMessage("규칙 세트"),
     "ruleSetEmptyTip": MessageLookupByLibrary.simpleMessage(
       "규칙 세트에 사용할 수 있는 항목이 없습니다",
     ),
@@ -1276,7 +1266,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "softStyle": MessageLookupByLibrary.simpleMessage("부드러움"),
     "sort": MessageLookupByLibrary.simpleMessage("정렬"),
     "source": MessageLookupByLibrary.simpleMessage("소스"),
-    "sourceIp": MessageLookupByLibrary.simpleMessage("출발지 IP"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("특수 프록시"),
     "specialRules": MessageLookupByLibrary.simpleMessage("특수 규칙"),
     "spectrum": MessageLookupByLibrary.simpleMessage("스펙트럼"),

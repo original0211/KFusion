@@ -187,9 +187,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlAllowDesc": MessageLookupByLibrary.simpleMessage(
       "選択したアプリのみVPNを経由します",
     ),
-    "accessControlDesc": MessageLookupByLibrary.simpleMessage(
-      "アクセス制御では、プロキシを利用するアプリを選びます。",
-    ),
     "accessControlDisabledDesc": MessageLookupByLibrary.simpleMessage(
       "アプリアクセス制御は無効です",
     ),
@@ -221,9 +218,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "address": MessageLookupByLibrary.simpleMessage("アドレス"),
     "advanced": MessageLookupByLibrary.simpleMessage("詳細設定"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("詳細設定"),
-    "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
-      "詳細設定には、ネットワーク、DNS、追加ルール、スクリプトがあります。",
-    ),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("暗号化されたプロファイル"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 秘密鍵"),
     "ageSecretKeyRequiredTip": MessageLookupByLibrary.simpleMessage(
@@ -236,7 +230,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "answers": MessageLookupByLibrary.simpleMessage("応答"),
     "app": MessageLookupByLibrary.simpleMessage("アプリ"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage("アプリアクセス制御"),
-    "appIconDesign": MessageLookupByLibrary.simpleMessage("アプリアイコンのデザイン"),
     "appendSystemDns": MessageLookupByLibrary.simpleMessage("システムDNSを追加"),
     "authorize": MessageLookupByLibrary.simpleMessage("許可"),
     "authorized": MessageLookupByLibrary.simpleMessage("許可済み"),
@@ -343,7 +336,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "colorStyle": MessageLookupByLibrary.simpleMessage("配色スタイル"),
     "columns": MessageLookupByLibrary.simpleMessage("列数"),
     "compact": MessageLookupByLibrary.simpleMessage("コンパクト"),
-    "compatible": MessageLookupByLibrary.simpleMessage("互換モード"),
     "confirm": MessageLookupByLibrary.simpleMessage("OK"),
     "confirmClearAllData": MessageLookupByLibrary.simpleMessage(
       "すべてのデータを消去してもよろしいですか？",
@@ -951,7 +943,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "optional": MessageLookupByLibrary.simpleMessage("任意"),
     "options": MessageLookupByLibrary.simpleMessage("オプション"),
     "other": MessageLookupByLibrary.simpleMessage("その他"),
-    "otherContributors": MessageLookupByLibrary.simpleMessage("その他の貢献者"),
     "outbound": MessageLookupByLibrary.simpleMessage("アウトバウンド"),
     "outboundIp": MessageLookupByLibrary.simpleMessage("アウトバウンド IP"),
     "overrideEntries": MessageLookupByLibrary.simpleMessage("上書き項目"),
@@ -1169,7 +1160,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Apple と Microsoft に直接接続",
     ),
     "ruleProviders": MessageLookupByLibrary.simpleMessage("ルールプロバイダー"),
-    "ruleSet": MessageLookupByLibrary.simpleMessage("ルールセット"),
     "ruleSetEmptyTip": MessageLookupByLibrary.simpleMessage(
       "ルールセットに使用できるエントリがありません",
     ),
@@ -1300,7 +1290,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "softStyle": MessageLookupByLibrary.simpleMessage("ソフト"),
     "sort": MessageLookupByLibrary.simpleMessage("並べ替え"),
     "source": MessageLookupByLibrary.simpleMessage("ソース"),
-    "sourceIp": MessageLookupByLibrary.simpleMessage("送信元IP"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("特殊プロキシ"),
     "specialRules": MessageLookupByLibrary.simpleMessage("特殊ルール"),
     "spectrum": MessageLookupByLibrary.simpleMessage("スペクトル"),

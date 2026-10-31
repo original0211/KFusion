@@ -216,37 +216,6 @@ class _RuleItemLabel extends StatelessWidget {
   }
 }
 
-class RuleStatusItem extends StatelessWidget {
-  final bool status;
-  final Rule rule;
-  final void Function(bool) onChange;
-
-  const RuleStatusItem({
-    super.key,
-    required this.status,
-    required this.rule,
-    required this.onChange,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DecorationListItem(
-      title: TooltipText(
-        text: Text(
-          rule.rawValue,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.subheadline.of(context).toJetBrainsMono,
-        ),
-      ),
-      trailing: Switch(value: status, onChanged: onChange),
-      onPressed: () {
-        onChange(!status);
-      },
-    );
-  }
-}
-
 enum _RuleField { content, target }
 
 class RuleForm extends StatefulWidget {

@@ -10,27 +10,6 @@ import 'form_row.dart';
 
 typedef NamedUrl = ({String label, String url, String ageSecretKey});
 
-Future<NamedUrl?> showNamedUrlForm(
-  BuildContext context, {
-  required String title,
-  String label = '',
-  String url = '',
-  FormFieldValidator<String>? labelValidator,
-  FormFieldValidator<String>? urlValidator,
-}) async {
-  final res = await showFormSheet<List<NamedUrl>>(
-    context: context,
-    builder: (_) => NamedUrlForm(
-      title: title,
-      label: label,
-      url: url,
-      labelValidator: labelValidator,
-      urlValidator: urlValidator,
-    ),
-  );
-  return res?.single;
-}
-
 /// A batch skips the urls in [existingUrls].
 Future<List<NamedUrl>?> showNamedUrlsForm(
   BuildContext context, {

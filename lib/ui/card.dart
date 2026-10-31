@@ -264,10 +264,3 @@ class CommonCard extends StatelessWidget {
     };
   }
 }
-
-/// A focus node left out of the traversal that walks between cards: a card
-/// that must not be a stop, or an action inside a card reached by arrow right.
-class SkipTraversalFocusNode extends FocusNode {
-  @override
-  bool get skipTraversal => true;
-}

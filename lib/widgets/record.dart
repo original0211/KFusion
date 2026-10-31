@@ -161,18 +161,6 @@ class RecordTimestamp extends StatelessWidget {
   }
 }
 
-class RecordArrow extends StatelessWidget {
-  const RecordArrow({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      '→',
-      style: RecordTextStyles.of(context).secondary.toJetBrainsMono,
-    );
-  }
-}
-
 class DetailRow extends StatelessWidget {
   final String title;
   final Widget? value;

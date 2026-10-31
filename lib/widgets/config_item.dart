@@ -23,17 +23,6 @@ String? validateCidr(String? value, AppLocalizations appLocalizations) {
   return isCidr(value ?? '') ? null : appLocalizations.invalidCidrContent;
 }
 
-/// The sniffer's address lists also take mihomo's geoip: and rule-set: items.
-String? validateIpMatcher(String? value, AppLocalizations appLocalizations) {
-  final lower = value?.toLowerCase() ?? '';
-  if (lower.startsWith('geoip:') || lower.startsWith('rule-set:')) {
-    return null;
-  }
-  return validateCidr(value, appLocalizations);
-}
-
-final _portRange = RegExp(r'^([0-9]{1,5})(?:-([0-9]{1,5}))?$');
-
 final _domainLabel = RegExp(
   r'^[A-Za-z0-9_]([A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$',
 );
@@ -71,15 +60,6 @@ String? validateListenAddress(
   final validPort =
       _port.hasMatch(port) && int.parse(port) > 0 && int.parse(port) <= 65535;
   return validHost && validPort ? null : appLocalizations.invalidListenContent;
-}
-
-String? validatePortRange(String? value, AppLocalizations appLocalizations) {
-  final match = _portRange.firstMatch(value ?? '');
-  if (match == null ||
-      [?match[1], ?match[2]].any((port) => int.parse(port) > 65535)) {
-    return appLocalizations.invalidPortRangeContent;
-  }
-  return null;
 }
 
 abstract class _ConfigItem<T> extends ConsumerWidget {

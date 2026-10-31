@@ -1,9 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
-import 'dart:io';
-
 import 'package:kfusion/common/context.dart';
-import 'package:kfusion/common/system.dart';
 import 'package:kfusion/ui/color.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/surface.dart';
@@ -11,25 +8,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-enum SupportPlatform {
-  Windows,
-  MacOS,
-  Linux,
-  Android;
-
-  static SupportPlatform get currentPlatform {
-    if (system.isWindows) {
-      return SupportPlatform.Windows;
-    } else if (system.isMacOS) {
-      return SupportPlatform.MacOS;
-    } else if (Platform.isLinux) {
-      return SupportPlatform.Linux;
-    } else if (system.isAndroid) {
-      return SupportPlatform.Android;
-    }
-    throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
-  }
-}
+enum SupportPlatform { Windows, MacOS, Linux, Android }
 
 const desktopPlatforms = [
   SupportPlatform.Linux,
@@ -130,24 +109,6 @@ extension RecordToneExt on RecordTone {
       RecordTone.warning => colorScheme.warning,
       RecordTone.error => colorScheme.error,
       RecordTone.neutral => null,
-    };
-  }
-
-  Color labelColor(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return switch (this) {
-      RecordTone.neutral => colorScheme.onSurfaceVariant,
-      RecordTone.warning => colorScheme.onWarningContainer,
-      RecordTone.error => colorScheme.onErrorContainer,
-    };
-  }
-
-  Color labelContainerColor(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return switch (this) {
-      RecordTone.neutral => context.raisedSurfaceLevel.colorOf(colorScheme),
-      RecordTone.warning => colorScheme.warningContainer,
-      RecordTone.error => colorScheme.errorContainer,
     };
   }
 }
@@ -808,13 +769,10 @@ enum LiquidGlassMode { none, standard, ultra }
 
 enum Language { yaml, javaScript, json }
 
-enum ScrollPositionCacheKey { proxiesTabList }
-
 enum QueryTag { proxies, access }
 
 enum LoadingTag {
   profiles,
-  scripts,
   ruleProviders,
   iconSets,
   backup_restore,

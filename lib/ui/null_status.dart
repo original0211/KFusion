@@ -17,20 +17,10 @@ import 'package:material_ui/material_ui.dart';
 enum NullStatusIllustration {
   data,
   logs,
-  proxies,
-  profile,
-  scripts,
-  rules,
-  connections,
-  requests,
   dns,
-  ntp,
-  sniffer,
   tun,
   wifi,
   apps,
-  icons,
-  fonts,
   permission,
   camera,
   error,
@@ -403,30 +393,7 @@ class _EmptyIllustrationState extends State<EmptyIllustration>
       MaterialShapes.cookie9Sided,
       AppGlyphs.logs,
     ),
-    NullStatusIllustration.proxies => (MaterialShapes.sunny, AppGlyphs.proxies),
-    NullStatusIllustration.profile => (
-      MaterialShapes.cookie7Sided,
-      AppGlyphs.profiles,
-    ),
-    NullStatusIllustration.scripts => (
-      MaterialShapes.cookie6Sided,
-      AppGlyphs.code,
-    ),
-    NullStatusIllustration.rules => (
-      MaterialShapes.clover8Leaf,
-      AppGlyphs.rules,
-    ),
-    NullStatusIllustration.connections => (
-      MaterialShapes.cookie4Sided,
-      AppGlyphs.connections,
-    ),
-    NullStatusIllustration.requests => (
-      MaterialShapes.softBurst,
-      AppGlyphs.requests,
-    ),
     NullStatusIllustration.dns => (MaterialShapes.puffy, AppGlyphs.dns),
-    NullStatusIllustration.ntp => (MaterialShapes.pentagon, AppGlyphs.clock),
-    NullStatusIllustration.sniffer => (MaterialShapes.gem, AppGlyphs.eye),
     NullStatusIllustration.tun => (MaterialShapes.clamShell, AppGlyphs.vpn),
     NullStatusIllustration.wifi => (
       MaterialShapes.cookie7Sided,
@@ -435,14 +402,6 @@ class _EmptyIllustrationState extends State<EmptyIllustration>
     NullStatusIllustration.apps => (
       MaterialShapes.clover4Leaf,
       AppGlyphs.appsList,
-    ),
-    NullStatusIllustration.icons => (
-      MaterialShapes.verySunny,
-      AppGlyphs.iconTile,
-    ),
-    NullStatusIllustration.fonts => (
-      MaterialShapes.puffyDiamond,
-      AppGlyphs.font,
     ),
     NullStatusIllustration.permission => (MaterialShapes.sunny, AppGlyphs.lock),
     NullStatusIllustration.camera => (
