@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.42 (2026-10-31)
+
+**Features**
+
+- Settings is now a single flat index and the advanced gate is gone. Every settings page — general, network, DNS, on-demand, logs, resources, developer and the rest — sits one tap from the settings tab, in a frequency-ordered index with a search row at the top that jumps straight to a setting by name. Proxy settings move into the settings index, beside the pages they belong with, instead of behind another tab’s gate; the theme row climbs out of the scroll depths; and the developer page is a plain index row, its switch on the page itself — the five-tap logo ritual on the About page is retired. On the profiles side, the runtime configuration preview is a first-level long-press menu item rather than a submenu stowaway. No page’s own behaviour changes; only the walk to reach it got shorter. (0734004)
+- The button family takes the square Hara form, closing the last rounded holdouts. The pill shape retires from all five button themes at once; the floating bar’s chips — the sheet header’s round close button and capsule action, and the editor page’s header buttons on the same family — are squared to match; the on-demand page’s teal capsule becomes a family button whose two authorisation states stay plainly distinct; and the disclaimer consent bar lands its long-prescribed form, ink text over an ink underline. Every button still does exactly what it did, in the same states — only the shape changed. (da510e4)
+
+**Bug Fixes**
+
+- Form sheets that hug their content now clip with the same square top corner as the sheet itself. The scaffold’s hugging path was still rounding that one clip with the largest corner token in the set — a leftover the unification pass had missed, invisible while sheet and page share a colour and plain the moment they do not. Sheet layout, sizing and insets are unchanged. (95a83ed)
+- The theme page’s preview is redrawn as a hairline schematic: the two rounded phone mock-ups and their glass rendering give way to square-cropped ink frames and wash blocks, so the preview shows the layout it stands for in the same visual language as the page around it. Theme selection, preview linkage and the colour palette behave exactly as before — only the drawing changed. (ceea49b)
+- Restore the theme preview’s entry in the unified-surface registry, which the settings flattening upload had overwritten with its baseline tree. The surface count and the coverage accounting that hangs off the registry are whole again. (8b9072e)
+
 ## v0.2.41 (2026-10-31)
 
 **Features**
