@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:kfusion/common/common.dart';
 import 'package:kfusion/features/form/custom_issue.dart';
+import 'package:kfusion/ui/hara.dart';
 import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/null_status.dart';
 import 'package:kfusion/ui/segmented_control.dart';
@@ -68,9 +69,8 @@ void main() {
       expect(text.style?.color, scheme.error);
     });
 
-    testWidgets('the error illustration keeps red on the glyph only', (
-      tester,
-    ) async {
+    testWidgets('the error illustration keeps red on its lines and glyph '
+        'only', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: MediaQuery(
@@ -95,12 +95,10 @@ void main() {
             )
             .first,
       );
-      final palette = (paint.painter as dynamic).palette;
-      expect(palette.ink as Color, scheme.error);
-      expect(palette.shape as Color, scheme.surfaceContainerHigh);
-      expect(palette.highlight as Color, scheme.onSurfaceVariant);
-      expect(palette.accent as Color, scheme.onSurfaceVariant);
-      expect(palette.accentContainer as Color, scheme.surfaceContainer);
+      final painter = paint.painter as dynamic;
+      expect(painter.glyphColor as Color, scheme.error);
+      expect(painter.frameColor as Color, scheme.error);
+      expect(painter.ruleColor as Color, HaraPalette.light.dim);
     });
   });
 

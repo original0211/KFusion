@@ -1,7 +1,14 @@
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:kfusion/common/app_localizations.dart';
 import 'package:kfusion/l10n/l10n.dart';
 import 'package:kfusion/providers/app.dart';
 import 'package:kfusion/ui/disc_motif.dart';
+import 'package:kfusion/ui/hara.dart';
+import 'package:kfusion/ui/icons/icons.dart';
 import 'package:kfusion/ui/null_status.dart';
 import 'package:kfusion/ui/paged_sheet.dart';
 import 'package:kfusion/ui/sheet.dart';
@@ -58,6 +65,114 @@ void main() {
       expect(tester.getSize(background), const Size.square(160));
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('reads each member as its own line glyph in the ink steps', (
+    tester,
+  ) async {
+    const glyphs = <NullStatusIllustration, Glyph>{
+      NullStatusIllustration.data: AppGlyphs.resources,
+      NullStatusIllustration.logs: AppGlyphs.logs,
+      NullStatusIllustration.dns: AppGlyphs.dns,
+      NullStatusIllustration.tun: AppGlyphs.vpn,
+      NullStatusIllustration.wifi: AppGlyphs.wifi,
+      NullStatusIllustration.apps: AppGlyphs.appsList,
+      NullStatusIllustration.permission: AppGlyphs.lock,
+      NullStatusIllustration.camera: AppGlyphs.camera,
+      NullStatusIllustration.error: AppGlyphs.error,
+      NullStatusIllustration.search: AppGlyphs.search,
+    };
+    for (final type in NullStatusIllustration.values) {
+      await tester.pumpWidget(
+        MaterialApp(home: EmptyIllustration(type: type, dimension: 160)),
+      );
+      await tester.pump();
+
+      final paint = tester.widget<CustomPaint>(find.byKey(ValueKey(type)));
+      final painter = paint.painter as dynamic;
+      expect(painter.glyph as Glyph, glyphs[type], reason: '$type');
+      expect(painter.ruleColor as Color, HaraPalette.light.dim);
+      if (type == NullStatusIllustration.error) {
+        final scheme = Theme.of(
+          tester.element(find.byType(EmptyIllustration)),
+        ).colorScheme;
+        expect(painter.glyphColor as Color, scheme.error);
+        expect(painter.frameColor as Color, scheme.error);
+      } else {
+        expect(painter.glyphColor as Color, HaraPalette.light.ink);
+        expect(painter.frameColor as Color, HaraPalette.light.sub);
+      }
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('the illustration runs no entrance animation of its own', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: EmptyIllustration(
+          type: NullStatusIllustration.data,
+          dimension: 160,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  testWidgets('paints no chromatic fill, and red only for the error member', (
+    tester,
+  ) async {
+    Future<({int chromatic, int redDominant, int dark})> census(
+      NullStatusIllustration type,
+    ) async {
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: RepaintBoundary(
+              key: key,
+              child: ColoredBox(
+                color: Colors.white,
+                child: EmptyIllustration(type: type, dimension: 160),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      late ByteData bytes;
+      await tester.runAsync(() async {
+        final boundary =
+            key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+        final image = await boundary.toImage();
+        bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+      });
+      var chromatic = 0, redDominant = 0, dark = 0;
+      for (var i = 0; i < bytes.lengthInBytes; i += 4) {
+        final r = bytes.getUint8(i);
+        final g = bytes.getUint8(i + 1);
+        final b = bytes.getUint8(i + 2);
+        final spread =
+            math.max(r, math.max(g, b)) - math.min(r, math.min(g, b));
+        if (spread > 24) {
+          chromatic++;
+          if (r > g && r > b && r - b > 12) redDominant++;
+        }
+        if (r < 100 && g < 100 && b < 100) dark++;
+      }
+      return (chromatic: chromatic, redDominant: redDominant, dark: dark);
+    }
+
+    final data = await census(NullStatusIllustration.data);
+    expect(data.chromatic, 0);
+    expect(data.dark, greaterThan(200));
+
+    final error = await census(NullStatusIllustration.error);
+    expect(error.chromatic, greaterThan(200));
+    expect(error.redDominant, error.chromatic);
   });
 
   testWidgets('the brand variant stands the disc mark for the illustration', (
