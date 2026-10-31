@@ -8,14 +8,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-enum SupportPlatform { Windows, MacOS, Linux, Android }
-
-const desktopPlatforms = [
-  SupportPlatform.Linux,
-  SupportPlatform.MacOS,
-  SupportPlatform.Windows,
-];
-
 enum GroupName { GLOBAL }
 
 enum GroupType {
@@ -428,18 +420,14 @@ enum DashboardWidget {
   currentOutbound,
   networkSpeed,
   outboundMode,
-  vpnButton(platforms: [SupportPlatform.Android]),
-  networkTakeover(platforms: desktopPlatforms),
+  vpnButton,
+  networkTakeover,
   serviceStatus,
   profiles,
   proxyGroups,
   connectionStats,
   intranetIp,
   memoryInfo;
-
-  final List<SupportPlatform> platforms;
-
-  const DashboardWidget({this.platforms = SupportPlatform.values});
 }
 
 enum DnsQueryInitiator { app, rule, direct, proxy, other }
