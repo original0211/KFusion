@@ -314,21 +314,23 @@ extension AppShapeThemeExt on ThemeData {
       borderRadius: AppRadius.full,
     ),
     filledButtonTheme: FilledButtonThemeData(
-      style: filledButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+      style: filledButtonTheme.style?.merge(_squareButton) ?? _squareButton,
     ),
     textButtonTheme: TextButtonThemeData(
-      style: textButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+      style: textButtonTheme.style?.merge(_squareButton) ?? _squareButton,
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: outlinedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+      style: outlinedButtonTheme.style?.merge(_squareButton) ?? _squareButton,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: elevatedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+      style: elevatedButtonTheme.style?.merge(_squareButton) ?? _squareButton,
     ),
     iconButtonTheme: IconButtonThemeData(
-      style: iconButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+      style: iconButtonTheme.style?.merge(_squareButton) ?? _squareButton,
     ),
   );
 }
 
-const _pillButton = ButtonStyle(shape: WidgetStatePropertyAll(AppShape.full));
+// Buttons take the family's square corner; a button's fill, outline or ink
+// alone carries its kind, never a capsule silhouette.
+const _squareButton = ButtonStyle(shape: WidgetStatePropertyAll(AppShape.hara));

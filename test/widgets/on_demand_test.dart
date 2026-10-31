@@ -196,6 +196,44 @@ void main() {
     expect(find.bySemanticsLabel('Tap to authorize'), findsNothing);
   });
 
+  testWidgets('the authorize button is square with an invitation fill', (
+    tester,
+  ) async {
+    await pumpView(
+      tester,
+      permission: WifiSsidPermission.denied,
+      isMacOS: true,
+    );
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Tap to authorize'),
+    );
+    expect(button.style?.shape?.resolve(<WidgetState>{}), AppShape.hara);
+    expect(
+      button.style?.backgroundColor?.resolve(<WidgetState>{}),
+      isNotNull,
+      reason: 'the unauthorized state keeps its invitation fill',
+    );
+  });
+
+  testWidgets('the authorized button is square with the plain filled fill', (
+    tester,
+  ) async {
+    await pumpView(
+      tester,
+      permission: WifiSsidPermission.granted,
+      isMacOS: true,
+    );
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Authorized'),
+    );
+    expect(button.style?.shape?.resolve(<WidgetState>{}), AppShape.hara);
+    expect(
+      button.style?.backgroundColor?.resolve(<WidgetState>{}),
+      isNull,
+      reason: 'the authorized state falls back to the plain filled fill',
+    );
+  });
+
   testWidgets('a refused location request leaves the permission as it was', (
     tester,
   ) async {

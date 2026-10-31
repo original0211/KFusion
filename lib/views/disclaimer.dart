@@ -272,12 +272,17 @@ class _ConsentBar extends StatelessWidget {
   });
 
   Widget _buildExitButton(BuildContext context) {
+    final palette = context.haraPalette;
     return ElasticButton(
-      child: OutlinedButton(
+      child: TextButton(
         onPressed: () {
           Navigator.of(context).pop(false);
         },
-        child: Text(context.appLocalizations.exit),
+        style: TextButton.styleFrom(foregroundColor: palette.sub),
+        child: Text(
+          context.appLocalizations.exit,
+          style: HaraText.action(context, palette.sub),
+        ),
       ),
     );
   }
@@ -294,10 +299,25 @@ class _ConsentBar extends StatelessWidget {
   }
 
   Widget _buildAgreeButton(BuildContext context) {
+    final palette = context.haraPalette;
     return ElasticButton(
-      child: FilledButton(
+      child: TextButton(
         onPressed: () => _handleAgree(context),
-        child: Text(context.appLocalizations.agree),
+        style: TextButton.styleFrom(foregroundColor: palette.ink),
+        child: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                context.appLocalizations.agree,
+                style: HaraText.action(context, palette.ink),
+              ),
+              const SizedBox(height: HaraSpace.modeUnderlineGap),
+              Container(height: HaraSpace.modeUnderline, color: palette.ink),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -46,11 +46,11 @@ Future<ProviderContainer> _pumpHost(
   return container;
 }
 
-FilledButton _disclaimerAgreeButton(WidgetTester tester) {
-  return tester.widget<FilledButton>(
+TextButton _disclaimerAgreeButton(WidgetTester tester) {
+  return tester.widget<TextButton>(
     find.descendant(
       of: find.byType(DisclaimerView),
-      matching: find.byType(FilledButton),
+      matching: find.widgetWithText(TextButton, 'Agree'),
     ),
   );
 }
@@ -333,8 +333,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.descendant(
-        of: find.byType(FilledButton),
-        matching: find.text('Agree'),
+        of: find.byType(DisclaimerView),
+        matching: find.widgetWithText(TextButton, 'Agree'),
       ),
       findsOneWidget,
     );
@@ -370,8 +370,8 @@ void main() {
       );
       expect(
         find.descendant(
-          of: find.byType(FilledButton),
-          matching: find.text('Agree'),
+          of: find.byType(DisclaimerView),
+          matching: find.widgetWithText(TextButton, 'Agree'),
         ),
         findsOneWidget,
       );

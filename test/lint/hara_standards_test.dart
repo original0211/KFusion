@@ -214,6 +214,46 @@ void main() {
       expect(header, contains('AppShape.hara'));
     });
 
+    // The button layers are shared themes too: held by this pin, not aSurfaces.
+    test('the button layers keep the square corner', () {
+      final shape = read('lib/ui/shape.dart');
+      expect(
+        shape.contains('_pillButton'),
+        isFalse,
+        reason: 'shape.dart: _pillButton',
+      );
+      expect(shape, contains('_squareButton'));
+      for (final file in const [
+        'lib/ui/button.dart',
+        'lib/ui/scaffold.dart',
+        'lib/views/disclaimer.dart',
+      ]) {
+        final source = read(file);
+        expect(
+          source.contains('AppShape.full'),
+          isFalse,
+          reason: '$file: AppShape.full',
+        );
+      }
+      final editor = read('lib/pages/editor.dart');
+      expect(
+        editor.contains('AppRadius.full'),
+        isFalse,
+        reason: 'editor.dart: AppRadius.full',
+      );
+      final disclaimer = read('lib/views/disclaimer.dart');
+      expect(
+        disclaimer.contains('FilledButton('),
+        isFalse,
+        reason: 'disclaimer.dart: FilledButton(',
+      );
+      expect(
+        disclaimer.contains('OutlinedButton('),
+        isFalse,
+        reason: 'disclaimer.dart: OutlinedButton(',
+      );
+    });
+
     test('the disc mark keeps its settled values', () {
       expect(DiscGeometry.dotDirection, closeTo(157 * math.pi / 180, 1e-12));
       expect(DiscGeometry.dotDiameterRatio, 0.16);

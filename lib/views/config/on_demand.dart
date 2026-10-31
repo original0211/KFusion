@@ -213,6 +213,7 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
               horizontal: _authorizeButtonPadding,
             ),
             minimumSize: const Size(_minAuthorizeButtonWidth, 40),
+            shape: AppShape.hara,
           ),
           onPressed: onPressed,
           child: Stack(

@@ -192,7 +192,7 @@ void main() {
     );
   });
 
-  testWidgets('a docked field is a pill that strokes only while focused', (
+  testWidgets('a docked field is square and strokes only while focused', (
     tester,
   ) async {
     await openModalSheet(tester);
@@ -203,10 +203,10 @@ void main() {
     final focused = inputTheme.focusedBorder;
 
     expect(border, isA<AppInputBorder>());
-    expect((border! as AppInputBorder).borderRadius, AppRadius.full);
+    expect((border! as AppInputBorder).borderRadius, AppRadius.hara);
     expect(border.borderSide, BorderSide.none);
     expect(focused, isA<AppInputBorder>());
-    expect((focused! as AppInputBorder).borderRadius, AppRadius.full);
+    expect((focused! as AppInputBorder).borderRadius, AppRadius.hara);
     expect(focused.borderSide.color, Theme.of(field).colorScheme.primary);
     final decorator = tester.widget<InputDecorator>(
       find.byType(InputDecorator),

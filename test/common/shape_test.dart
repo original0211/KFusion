@@ -21,7 +21,7 @@ void main() {
     expect(AppShape.sm.borderRadius, AppRadius.sm);
   });
 
-  testWidgets('pill buttons take the superellipse capsule, not the stadium', (
+  testWidgets('buttons take the square corner, not the capsule', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -32,6 +32,8 @@ void main() {
             children: [
               TextButton(onPressed: () {}, child: const Text('text')),
               OutlinedButton(onPressed: () {}, child: const Text('outlined')),
+              ElevatedButton(onPressed: () {}, child: const Text('elevated')),
+              IconButton(onPressed: () {}, icon: const Text('icon')),
               CommonMinFilledButtonTheme(
                 child: FilledButton(
                   onPressed: () {},
@@ -44,15 +46,84 @@ void main() {
       ),
     );
 
-    for (final type in [TextButton, OutlinedButton, FilledButton]) {
+    for (final type in [
+      TextButton,
+      OutlinedButton,
+      ElevatedButton,
+      FilledButton,
+      IconButton,
+    ]) {
       expect(
         _shapeOf(tester, find.byType(type)),
         isA<RoundedSuperellipseBorder>().having(
           (shape) => shape.borderRadius,
           'borderRadius',
-          AppRadius.full,
+          AppRadius.hara,
         ),
         reason: '$type',
+      );
+    }
+  });
+
+  testWidgets('bar buttons and their shared fills take the square corner', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(useMaterial3: true).withAppShapes.withAppSurfaces,
+        home: Scaffold(
+          body: Column(
+            children: [
+              TonalButtonTheme(
+                child: Row(
+                  children: [
+                    IconButton(onPressed: () {}, icon: const Text('icon')),
+                    FilledButton(onPressed: () {}, child: const Text('action')),
+                  ],
+                ),
+              ),
+              TonalButtonGroup(
+                children: [
+                  IconButton(onPressed: () {}, icon: const Text('one')),
+                  IconButton(onPressed: () {}, icon: const Text('two')),
+                ],
+              ),
+              TonalButton(label: 'labelled', onPressed: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final type in [IconButton, FilledButton]) {
+      expect(
+        _shapeOf(tester, find.byType(type).first),
+        isA<RoundedSuperellipseBorder>().having(
+          (shape) => shape.borderRadius,
+          'borderRadius',
+          AppRadius.hara,
+        ),
+        reason: '$type',
+      );
+    }
+    for (final host in [TonalButtonGroup, TonalButton]) {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(host),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final decoration = box.decoration as ShapeDecoration;
+      expect(
+        decoration.shape,
+        isA<RoundedSuperellipseBorder>().having(
+          (shape) => shape.borderRadius,
+          'borderRadius',
+          AppRadius.hara,
+        ),
+        reason: '$host',
       );
     }
   });

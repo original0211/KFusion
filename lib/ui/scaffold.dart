@@ -301,7 +301,7 @@ class CommonScaffoldState extends State<CommonScaffold> {
   Widget _buildDockedSearch(AppBarSearchState searchState) {
     final colorScheme = context.colorScheme;
     final glass = LiquidGlassScope.of(context);
-    final pill = AppShape.input.copyWith(borderRadius: AppRadius.full);
+    final square = AppShape.input.copyWith(borderRadius: AppRadius.hara);
     final fieldPadding =
         (BottomInsetScope.dockedSearchHeight -
             MeasureScope.of(context).textHeight(AppTextStyle.body)) /
@@ -310,8 +310,8 @@ class CommonScaffoldState extends State<CommonScaffold> {
       data: InputDecorationTheme.of(context).copyWith(
         filled: !glass,
         fillColor: SurfaceLevel.floatingOf(colorScheme).colorOf(colorScheme),
-        border: pill.copyWith(borderSide: BorderSide.none),
-        focusedBorder: pill.copyWith(
+        border: square.copyWith(borderSide: BorderSide.none),
+        focusedBorder: square.copyWith(
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(
@@ -344,7 +344,7 @@ class CommonScaffoldState extends State<CommonScaffold> {
               )
             : DecoratedBox(
                 decoration: ShapeDecoration(
-                  shape: AppShape.full,
+                  shape: AppShape.hara,
                   shadows: dockShadows(colorScheme),
                 ),
                 child: field,

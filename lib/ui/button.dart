@@ -54,7 +54,7 @@ enum TonalButtonSize {
   final double icon;
 }
 
-/// Buttons sharing one filled pill, which answers a press on any of them as a
+/// Buttons sharing one filled run, which answers a press on any of them as a
 /// single button does.
 class TonalButtonGroup extends StatefulWidget {
   const TonalButtonGroup({
@@ -118,7 +118,7 @@ class _TonalButtonGroupState extends State<TonalButtonGroup> {
           : DecoratedBox(
               decoration: ShapeDecoration(
                 color: context.raisedSurfaceLevel.colorOf(colorScheme),
-                shape: AppShape.full,
+                shape: AppShape.hara,
               ),
               child: buttons,
             ),
@@ -151,7 +151,7 @@ class TonalButton extends StatelessWidget {
       child: DecoratedBox(
         decoration: ShapeDecoration(
           color: context.raisedSurfaceLevel.colorOf(context.colorScheme),
-          shape: AppShape.full,
+          shape: AppShape.hara,
         ),
         child: TonalButtonTheme(
           grouped: true,
@@ -245,6 +245,7 @@ class TonalButtonTheme extends StatelessWidget {
             disabledForegroundColor: disabledForeground,
             fixedSize: Size.square(size.button),
             minimumSize: Size.square(size.button),
+            shape: AppShape.hara,
             padding: EdgeInsets.zero,
             iconSize: size.icon,
             visualDensity: VisualDensity.standard,
@@ -266,7 +267,7 @@ class TonalButtonTheme extends StatelessWidget {
               disabledForegroundColor: grouped ? disabledForeground : null,
               minimumSize: Size.square(size.button),
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              shape: AppShape.full,
+              shape: AppShape.hara,
               visualDensity: VisualDensity.standard,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),

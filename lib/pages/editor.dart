@@ -1148,7 +1148,7 @@ class _FindField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    final pill = AppShape.input.copyWith(borderRadius: AppRadius.full);
+    final square = AppShape.input.copyWith(borderRadius: AppRadius.hara);
     final height = _findButtonSize.button;
     return TextField(
       maxLines: 1,
@@ -1165,9 +1165,9 @@ class _FindField extends StatelessWidget {
         filled: true,
         fillColor: context.raisedSurfaceLevel.colorOf(colorScheme),
         hintText: hintText,
-        border: pill.copyWith(borderSide: BorderSide.none),
-        enabledBorder: pill.copyWith(borderSide: BorderSide.none),
-        focusedBorder: pill.copyWith(
+        border: square.copyWith(borderSide: BorderSide.none),
+        enabledBorder: square.copyWith(borderSide: BorderSide.none),
+        focusedBorder: square.copyWith(
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         contentPadding: const EdgeInsetsDirectional.only(end: 8),
