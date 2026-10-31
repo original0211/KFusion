@@ -427,7 +427,7 @@ enum DashboardWidget {
   proxyGroups,
   connectionStats,
   intranetIp,
-  memoryInfo;
+  memoryInfo,
 }
 
 enum DnsQueryInitiator { app, rule, direct, proxy, other }
