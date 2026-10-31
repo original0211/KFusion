@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.43 (2026-10-31)
+
+**Features**
+
+- Pages and sheets now stand on the Hara field colour. The warm cabin paper that tinted the bands above and below each page — and whole screens such as universal import and the MapEdit family — retires as the field: scaffolds, bottom sheets and the sheet-family defaults all read the one palette ground, white in light mode, #101010 in dark and pure black where that variant is chosen, and the theme preview’s painters read the same ground, so the schematic phones no longer sit on a fossil of the old paper. Card stock and the empty-state illustrations are untouched — only the ground everything stands on changed. (84f738c)
+
 ## v0.2.42 (2026-10-31)
 
 **Features**
