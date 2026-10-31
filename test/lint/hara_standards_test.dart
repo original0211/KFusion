@@ -36,6 +36,7 @@ const aSurfaces = <String>[
   'lib/views/backup_and_restore.dart',
   'lib/views/disclaimer.dart',
   'lib/views/theme.dart',
+  'lib/views/theme_preview.dart',
 ];
 
 const tokenLayer = 'lib/ui/hara.dart';

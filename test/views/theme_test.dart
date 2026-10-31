@@ -365,6 +365,65 @@ void main() {
     });
   });
 
+  group('preview form', () {
+    testWidgets('the option thumbs are square and hairline-framed', (
+      tester,
+    ) async {
+      await pumpThemeView(tester);
+      final palette = tester.element(find.byType(ThemeView)).haraPalette;
+
+      final thumbs = find.byType(MiniScreenThumb);
+      expect(thumbs, findsWidgets);
+      for (final thumb in tester.elementList(thumbs)) {
+        final scope = find.byWidget(thumb.widget);
+        final clip = find.descendant(
+          of: scope,
+          matching: find.byType(ClipRSuperellipse),
+        );
+        expect(
+          tester.widget<ClipRSuperellipse>(clip).borderRadius,
+          BorderRadius.zero,
+        );
+        final frame = find.descendant(
+          of: scope,
+          matching: find.byType(DecoratedBox),
+        );
+        final decoration =
+            tester.widget<DecoratedBox>(frame).decoration as ShapeDecoration;
+        final side = (decoration.shape as OutlinedBorder).side;
+        expect(side.color, palette.line);
+        expect(side.width, HaraSpace.hairline);
+      }
+    });
+
+    testWidgets('the live preview phones are square', (tester) async {
+      await pumpThemeView(tester);
+
+      final clips = find.descendant(
+        of: find.byType(ThemeLivePreview),
+        matching: find.byType(ClipRSuperellipse),
+      );
+      expect(clips, findsNWidgets(2));
+      for (final clip in tester.widgetList<ClipRSuperellipse>(clips)) {
+        expect(clip.borderRadius, BorderRadius.zero);
+      }
+    });
+
+    testWidgets('the choice rows mark the current value in ink', (
+      tester,
+    ) async {
+      await pumpThemeView(tester);
+      final palette = tester.element(find.byType(ThemeView)).haraPalette;
+
+      final checks = find.byType(SelectionCheck);
+      expect(checks, findsWidgets);
+      for (final check in tester.widgetList<SelectionCheck>(checks)) {
+        expect(check.color, palette.ink);
+        expect(check.color, isNot(palette.vermilion));
+      }
+    });
+  });
+
   group('text scale', () {
     testWidgets('follows the system until custom is picked', (tester) async {
       await pumpThemeView(tester);

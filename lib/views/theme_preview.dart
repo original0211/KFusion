@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter;
 
 import 'package:kfusion/enum/enum.dart';
 import 'package:kfusion/providers/config.dart';
@@ -130,21 +129,29 @@ class MiniScreenThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.haraPalette;
     return SizedBox(
       height: _height,
       width: _height * _screenSize.width / _shownHeight,
-      child: ClipRSuperellipse(
-        borderRadius: AppRadius.sm,
-        child: FittedBox(
-          child: SizedBox(
-            width: _screenSize.width,
-            height: _shownHeight,
-            child: ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.bottomCenter,
-                minHeight: _screenSize.height,
-                maxHeight: _screenSize.height,
-                child: screen,
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          shape: AppShape.hara.copyWith(
+            side: BorderSide(color: palette.line, width: HaraSpace.hairline),
+          ),
+        ),
+        child: ClipRSuperellipse(
+          borderRadius: AppRadius.hara,
+          child: FittedBox(
+            child: SizedBox(
+              width: _screenSize.width,
+              height: _shownHeight,
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.bottomCenter,
+                  minHeight: _screenSize.height,
+                  maxHeight: _screenSize.height,
+                  child: screen,
+                ),
               ),
             ),
           ),
@@ -235,27 +242,31 @@ class _ThemeLivePreviewState extends ConsumerState<ThemeLivePreview>
         (state) => state.liquidGlass != LiquidGlassMode.none,
       ),
     );
+    final palette = context.haraPalette;
     Widget phone(ColorScheme scheme, double width) => SizedBox(
       width: width,
       child: AspectRatio(
         aspectRatio: 9 / 17,
-        child: ClipRSuperellipse(
-          borderRadius: AppRadius.all(AppCorner.fit(width)),
-          child: TweenAnimationBuilder<ColorScheme>(
-            tween: _ColorSchemeTween(end: scheme),
-            duration: _duration,
-            builder: (_, colorScheme, _) => AnimatedBuilder(
-              animation: _slideCurve,
-              builder: (_, _) => MiniScreen(
-                key: ValueKey((floatingBar, liquidGlass)),
-                colorScheme: colorScheme,
-                floatingBar: floatingBar,
-                liquidGlass: liquidGlass,
-                selected: _selected,
-                previous: _previous,
-                progress: _previous == null ? 1 : _slideCurve.value,
-                tabAnimation: tabAnimation,
-                onSelect: _select,
+        child: CustomPaint(
+          foregroundPainter: _PreviewFramePainter(palette.line),
+          child: ClipRSuperellipse(
+            borderRadius: AppRadius.hara,
+            child: TweenAnimationBuilder<ColorScheme>(
+              tween: _ColorSchemeTween(end: scheme),
+              duration: _duration,
+              builder: (_, colorScheme, _) => AnimatedBuilder(
+                animation: _slideCurve,
+                builder: (_, _) => MiniScreen(
+                  key: ValueKey((floatingBar, liquidGlass)),
+                  colorScheme: colorScheme,
+                  floatingBar: floatingBar,
+                  liquidGlass: liquidGlass,
+                  selected: _selected,
+                  previous: _previous,
+                  progress: _previous == null ? 1 : _slideCurve.value,
+                  tabAnimation: tabAnimation,
+                  onSelect: _select,
+                ),
               ),
             ),
           ),
@@ -281,6 +292,29 @@ class _ThemeLivePreviewState extends ConsumerState<ThemeLivePreview>
 
 enum _MiniPage { dashboard, proxies, profiles, tools }
 
+/// The hairline frame of a live preview phone, painted over the sketch so
+/// the phones read as framed schematics on the page field.
+class _PreviewFramePainter extends CustomPainter {
+  const _PreviewFramePainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(
+      (Offset.zero & size).deflate(HaraSpace.hairline / 2),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = HaraSpace.hairline
+        ..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PreviewFramePainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
 /// A phone-shaped sketch of the home page, drawn in [colorScheme].
 ///
 /// With [previous], the page is caught [progress] of the way through a switch
@@ -303,8 +337,8 @@ class MiniScreen extends StatelessWidget {
   final ColorScheme colorScheme;
   final bool floatingBar;
 
-  /// Draws a floating bar as glass; a docked one stays a fill, as the app's
-  /// does.
+  /// Draws a floating bar with a second inner frame, the schematic's way of
+  /// showing the glass tier; a docked one stays a strip on the page foot.
   final bool liquidGlass;
 
   final int selected;
@@ -443,19 +477,31 @@ class _MiniScreenPainter extends CustomPainter {
 
   bool get _glass => floatingBar && liquidGlass;
 
+  bool get _dark => colorScheme.brightness == Brightness.dark;
+
+  /// The bar's wash: a step of the ground's own ink, never a tinted fill.
+  Color get _wash =>
+      colorScheme.onSurface.withValues(alpha: _dark ? 0.10 : 0.06);
+
+  Color get _frame => colorScheme.onSurface.withValues(alpha: 0.45);
+
   static _MiniPage _pageOf(int index) =>
       _MiniPage.values[index % _MiniPage.values.length];
 
-  static void _fill(
-    Canvas canvas,
-    Rect rect,
-    Color color,
-    ShapeBorder shape, {
-    List<BoxShadow>? shadows,
-  }) {
-    ShapeDecoration(color: color, shape: shape, shadows: shadows)
+  static void _fill(Canvas canvas, Rect rect, Color color, ShapeBorder shape) {
+    ShapeDecoration(color: color, shape: shape)
         .createBoxPainter(() {})
         .paint(canvas, rect.topLeft, ImageConfiguration(size: rect.size));
+  }
+
+  static void _strokeRect(Canvas canvas, Rect rect, Color color, double unit) {
+    canvas.drawRect(
+      rect.deflate(unit * 0.065),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = unit * 0.13
+        ..color = color,
+    );
   }
 
   @override
@@ -463,18 +509,18 @@ class _MiniScreenPainter extends CustomPainter {
     final geometry = _MiniGeometry(size, floatingBar: floatingBar);
     _paintPages(canvas, geometry);
     final unit = geometry.unit;
-    final dock = SurfaceLevel.floatingOf(colorScheme).colorOf(colorScheme);
-    final shadow = BoxShadow(
-      color: colorScheme.shadow.withValues(alpha: 0.12),
-      blurRadius: unit,
-      offset: Offset(0, unit * 0.3),
-    );
-    if (_glass) {
-      _paintGlassBar(canvas, geometry, shadow);
-    } else if (floatingBar) {
-      _fill(canvas, geometry.bar, dock, AppShape.full, shadows: [shadow]);
+    final bar = geometry.bar;
+    _fill(canvas, bar, _wash, AppShape.hara);
+    if (floatingBar) {
+      _strokeRect(canvas, bar, _frame, unit);
+      if (_glass) {
+        _strokeRect(canvas, bar.deflate(unit * 0.45), _frame, unit);
+      }
     } else {
-      canvas.drawRect(geometry.bar, Paint()..color = dock);
+      canvas.drawRect(
+        Rect.fromLTWH(bar.left, bar.top, bar.width, unit * 0.13),
+        Paint()..color = _frame,
+      );
     }
     _paintDestinations(canvas, geometry.bar, unit);
   }
@@ -511,58 +557,6 @@ class _MiniScreenPainter extends CustomPainter {
     canvas.restore();
   }
 
-  /// The page frosted under a tint, ringed with light and casting its shadow
-  /// only outside, after what [LiquidGlass] does at full size.
-  void _paintGlassBar(Canvas canvas, _MiniGeometry geometry, BoxShadow shadow) {
-    final bar = geometry.bar;
-    final unit = geometry.unit;
-    final path = AppShape.full.getOuterPath(bar);
-    final style = LiquidGlassStyle.pill(colorScheme);
-    final blur = unit * 0.4;
-    canvas
-      ..save()
-      ..clipPath(
-        Path()
-          ..fillType = PathFillType.evenOdd
-          ..addRect(bar.inflate(unit * 3))
-          ..addPath(path, Offset.zero),
-      );
-    AppShape.full.paintInterior(
-      canvas,
-      bar.shift(shadow.offset),
-      shadow.toPaint(),
-    );
-    canvas
-      ..restore()
-      ..save()
-      ..clipPath(path)
-      ..saveLayer(
-        bar,
-        Paint()..imageFilter = ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-      );
-    _paintPages(canvas, geometry);
-    final rimWidth = unit * 0.15;
-    canvas
-      ..restore()
-      ..drawPath(path, Paint()..color = style.tint)
-      ..drawPath(
-        AppShape.full.getOuterPath(bar.deflate(rimWidth / 2)),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = rimWidth
-          ..shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: style.rim),
-              Colors.white.withValues(alpha: style.rim * 0.15),
-              Colors.white.withValues(alpha: style.rim * 0.5),
-            ],
-          ).createShader(bar),
-      )
-      ..restore();
-  }
-
   void _paintPage(
     Canvas canvas,
     _MiniGeometry geometry,
@@ -583,7 +577,10 @@ class _MiniScreenPainter extends CustomPainter {
       size.height - geometry.pageBottom,
     );
     if (alpha < 255) {
-      canvas.saveLayer(null, Paint()..color = Color.fromARGB(alpha, 0, 0, 0));
+      canvas.saveLayer(
+        null,
+        Paint()..color = colorScheme.shadow.withAlpha(alpha),
+      );
     } else {
       canvas.save();
     }
@@ -600,9 +597,9 @@ class _MiniScreenPainter extends CustomPainter {
   void _paintDestinations(Canvas canvas, Rect bar, double unit) {
     final cell = bar.width / MiniScreen.destinationCount;
     final dark = colorScheme.brightness == Brightness.dark;
-    final indicator = _glass
-        ? colorScheme.onSurface.withValues(alpha: dark ? 0.14 : 0.08)
-        : SurfaceLevel.floatingOf(colorScheme).next.colorOf(colorScheme);
+    final indicator = colorScheme.onSurface.withValues(
+      alpha: dark ? 0.16 : 0.10,
+    );
     for (var i = 0; i < MiniScreen.destinationCount; i++) {
       final center = Offset(bar.left + cell * i + cell / 2, bar.center.dy);
       final icon = center.translate(0, -unit * 0.4);
@@ -622,11 +619,11 @@ class _MiniScreenPainter extends CustomPainter {
                   height: unit * 1.5,
                 ),
           indicator,
-          AppShape.full,
+          AppShape.hara,
         );
       }
       final ink = isSelected
-          ? colorScheme.primary
+          ? colorScheme.onSurface
           : colorScheme.onSurfaceVariant;
       _fill(
         canvas,
@@ -642,7 +639,7 @@ class _MiniScreenPainter extends CustomPainter {
           height: unit * 0.35,
         ),
         isSelected ? ink : ink.withValues(alpha: 0.6),
-        AppShape.full,
+        AppShape.hara,
       );
     }
   }
@@ -664,8 +661,10 @@ class _MiniScreenPainter extends CustomPainter {
 class _PageSketch {
   _PageSketch(this.canvas, this.colorScheme, this.unit, this.content)
     : width = content.width / unit,
-      card = SurfaceLevel.card.colorOf(colorScheme),
-      inset = SurfaceLevel.inset.colorOf(colorScheme),
+      ground = SurfaceLevel.page.colorOf(colorScheme),
+      wash = colorScheme.onSurface.withValues(
+        alpha: colorScheme.brightness == Brightness.dark ? 0.09 : 0.05,
+      ),
       text = colorScheme.onSurface.withValues(alpha: 0.72),
       line = colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
       faint = colorScheme.onSurfaceVariant.withValues(alpha: 0.16);
@@ -677,8 +676,8 @@ class _PageSketch {
   final double unit;
   final Rect content;
   final double width;
-  final Color card;
-  final Color inset;
+  final Color ground;
+  final Color wash;
   final Color text;
   final Color line;
   final Color faint;
@@ -703,15 +702,15 @@ class _PageSketch {
     h * unit,
   );
 
-  ShapeBorder _shape(double extent) =>
-      AppShape.all(AppCorner.fit(unit * extent));
-
-  void _block(Rect rect, Color color, {double extent = 5}) {
-    _MiniScreenPainter._fill(canvas, rect, color, _shape(extent));
+  /// A block of the sketch: a wash of the ground's ink inside a hairline
+  /// frame, where the drawn app would set a card.
+  void _block(Rect rect) {
+    _MiniScreenPainter._fill(canvas, rect, wash, AppShape.hara);
+    _MiniScreenPainter._strokeRect(canvas, rect, line, unit);
   }
 
   void _pill(double x, double y, double w, double h, Color color) {
-    _MiniScreenPainter._fill(canvas, _rect(x, y, w, h), color, AppShape.full);
+    _MiniScreenPainter._fill(canvas, _rect(x, y, w, h), color, AppShape.hara);
   }
 
   void _dot(double x, double y, double radius, Color color) {
@@ -728,7 +727,7 @@ class _PageSketch {
     _pill(0, 0.45, 7, 1.1, text);
     for (var i = 0; i < actions; i++) {
       final x = width - 1 - i * 2.4;
-      _dot(x, 1, 1, card);
+      _dot(x, 1, 1, wash);
       _dot(x, 1, 0.3, line);
     }
     return 2.8;
@@ -739,70 +738,50 @@ class _PageSketch {
     final status = _rect(0, y, width, 6.2);
     final buttonX = width - 3;
     final buttonY = y + 3.1;
-    _block(status, card);
-    canvas
-      ..save()
-      ..clipPath(_shape(5).getOuterPath(status))
-      ..drawCircle(
-        _rect(buttonX, buttonY, 0, 0).topLeft,
-        unit * 4.6,
-        Paint()..color = colorScheme.primary.withValues(alpha: 0.1),
-      )
-      ..restore();
+    _block(status);
     _dot(buttonX, buttonY, 1.8, colorScheme.primary);
     for (final dx in [-0.675, 0.325]) {
       _pill(buttonX + dx, buttonY - 0.6, 0.35, 1.2, colorScheme.onPrimary);
     }
     _pill(1, y + 0.9, 3, 0.7, line);
-    _dot(1.9, y + 3, 0.9, inset);
+    _dot(1.9, y + 3, 0.9, faint);
     _pill(3.5, y + 2.3, 5, 0.9, text);
-    _pill(3.5, y + 3.5, 2.4, 0.7, inset);
+    _pill(3.5, y + 3.5, 2.4, 0.7, faint);
     _pill(1, y + 4.8, 2.4, 0.7, line);
     _pill(4.6, y + 4.8, 3.6, 0.7, line);
     y += 6.2 + _gap;
 
-    _block(_rect(0, y, width, 5.8), card);
+    _block(_rect(0, y, width, 5.8));
     _pill(1, y + 0.9, 4.5, 0.7, line);
     final tileWidth = (width - 2.6) / 2;
     for (var i = 0; i < 2; i++) {
       final x = 1 + i * (tileWidth + 0.6);
       final tile = _rect(x, y + 2.1, tileWidth, 2.9);
-      _block(tile, inset, extent: 2.9);
+      _block(tile);
       _pill(x + 0.6, y + 2.65, 2.4, 0.7, line);
-      _speedGraph(
-        tile,
-        phase: i * 1.7,
-        color: i == 0
-            ? colorScheme.primary.withValues(alpha: 0.5)
-            : colorScheme.primary,
-      );
+      _speedGraph(tile, phase: i * 1.7, color: i == 0 ? line : text);
     }
     y += 5.8 + _gap;
 
-    _block(_rect(0, y, width, 4.4), card);
+    _block(_rect(0, y, width, 4.4));
     _pill(1, y + 0.9, 4, 0.7, line);
     final segment = (width - 2.6) / 3;
     for (var i = 0; i < 3; i++) {
       final x = 1 + i * (segment + 0.3);
-      _pill(x, y + 2.1, segment, 1.6, i == 0 ? colorScheme.primary : inset);
-      _dot(
-        x + segment / 2,
-        y + 2.9,
-        0.3,
-        i == 0 ? colorScheme.onPrimary : line,
-      );
+      _pill(x, y + 2.1, segment, 1.6, i == 0 ? text : wash);
+      _dot(x + segment / 2, y + 2.9, 0.3, i == 0 ? ground : line);
     }
     y += 4.4 + _gap;
 
-    _block(_rect(0, y, width, 3), card);
-    _dot(1.9, y + 1.5, 0.9, colorScheme.primary);
+    _block(_rect(0, y, width, 3));
+    _dot(1.9, y + 1.5, 0.9, text);
     _pill(3.4, y + 1.1, 2.4, 0.8, line);
-    _pill(width - 3.6, y + 0.8, 2.6, 1.4, colorScheme.primary);
-    _dot(width - 1.7, y + 1.5, 0.55, colorScheme.onPrimary);
+    _pill(width - 3.6, y + 0.8, 2.6, 1.4, text);
+    _dot(width - 1.7, y + 1.5, 0.55, ground);
     y += 3 + _gap;
 
     for (var i = 0; i < 3; i++) {
-      _block(_rect(0, y, width, 4.5), card);
+      _block(_rect(0, y, width, 4.5));
       _pill(1, y + 0.9, 3.5 + i % 2, 0.7, line);
       y += 4.5 + _gap;
     }
@@ -829,7 +808,7 @@ class _PageSketch {
       ..close();
     canvas
       ..save()
-      ..clipPath(_shape(2.9).getOuterPath(tile))
+      ..clipRect(tile)
       ..drawPath(area, Paint()..color = color.withValues(alpha: color.a * 0.2))
       ..drawPath(
         path,
@@ -844,12 +823,12 @@ class _PageSketch {
   void _proxies(double top) {
     var y = top;
     for (var i = 0; i < 9; i++) {
-      _block(_rect(0, y, width, 2.6), card);
-      _dot(1.5, y + 1.3, 0.8, inset);
+      _block(_rect(0, y, width, 2.6));
+      _dot(1.5, y + 1.3, 0.8, faint);
       _pill(3, y + 0.6, 3 + i % 3, 0.7, line);
       _pill(3, y + 1.55, 4, 0.5, faint);
       _pill(width - 4.4, y + 1.05, 1.8, 0.5, faint);
-      _dot(width - 1.3, y + 1.3, 0.55, inset);
+      _dot(width - 1.3, y + 1.3, 0.55, faint);
       y += 2.6 + _gap;
     }
   }
@@ -857,19 +836,13 @@ class _PageSketch {
   void _profiles(double top) {
     var y = top;
     for (var i = 0; i < 3; i++) {
-      _block(_rect(0, y, width, 2.8), card);
+      _block(_rect(0, y, width, 2.8));
       _pill(1, y + 0.7, 3.4 - i * 0.6, 0.75, line);
-      _pill(
-        4.8 - i * 0.6,
-        y + 0.72,
-        2.6,
-        0.7,
-        colorScheme.primary.withValues(alpha: 0.16),
-      );
+      _pill(4.8 - i * 0.6, y + 0.72, 2.6, 0.7, faint);
       _pill(1, y + 1.7, 3, 0.5, faint);
       _pill(width - 4.1, y + 1.15, 1.6, 0.5, faint);
       if (i == 0) {
-        _dot(width - 1.4, y + 1.4, 0.6, colorScheme.primary);
+        _dot(width - 1.4, y + 1.4, 0.6, text);
       }
       y += 2.8 + _gap;
     }
@@ -881,7 +854,7 @@ class _PageSketch {
     for (final rows in [4, 7]) {
       _pill(0.8, y + 0.2, 1.6 + rows * 0.15, 0.5, faint);
       y += 1.3;
-      _block(_rect(0, y, width, rows * rowHeight), card);
+      _block(_rect(0, y, width, rows * rowHeight));
       for (var i = 0; i < rows; i++) {
         final row = y + i * rowHeight;
         _dot(1.3, row + rowHeight / 2, 0.45, line);
